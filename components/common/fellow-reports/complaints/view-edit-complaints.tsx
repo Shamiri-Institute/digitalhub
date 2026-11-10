@@ -95,7 +95,7 @@ export default function ViewEditFellowComplaints({
               <label htmlFor="date" className="text-sm font-medium">
                 Date of Complaint
               </label>
-              <p className="text-gray-600">{fellowComplaints.date}</p>
+              <p className="text-muted-foreground">{fellowComplaints.date}</p>
             </div>
           </div>
 
@@ -129,7 +129,6 @@ export default function ViewEditFellowComplaints({
                     Cancel
                   </Button>
                   <Button
-                    variant="brand"
                     type="submit"
                     loading={form.formState.isSubmitting}
                     disabled={form.formState.isSubmitting}

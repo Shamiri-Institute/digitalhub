@@ -190,7 +190,7 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
         <div className="space-y-6">
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+              <span className="pb-2 text-xs uppercase text-muted-foreground">
                 School Information
               </span>
               <Separator />
@@ -436,7 +436,7 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
           </div>
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+              <span className="pb-2 text-xs uppercase text-muted-foreground">
                 Contact Information
               </span>
               <Separator />
@@ -544,7 +544,7 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
                               <Button
                                 variant="ghost"
                                 type="button"
-                                className="flex items-center text-shamiri-light-red hover:bg-red-bg"
+                                className="flex items-center text-destructive hover:bg-destructive-bg"
                                 aria-label={`Remove phone number ${index + 1}`}
                                 onClick={() => {
                                   const newValue = field.value?.split("/");
@@ -584,7 +584,7 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
                         <Button
                           variant="ghost"
                           type="button"
-                          className="flex items-center text-shamiri-new-blue"
+                          className="flex items-center text-primary"
                           aria-label="Add phone number"
                           onClick={() => {
                             if (isValidPhoneNumber(pointPersonPhone, "KE")) {
@@ -617,7 +617,7 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
           <Button
             variant="ghost"
             type="button"
-            className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+            className="text-base font-semibold leading-6 text-primary hover:text-primary"
             onClick={() => {
               setOpen(false);
             }}
@@ -625,7 +625,7 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
             Cancel
           </Button>
           <Button
-            className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white"
+            className="flex items-center gap-2 bg-primary text-base font-semibold leading-6 text-white"
             type="submit"
             disabled={form.formState.isSubmitting}
           >

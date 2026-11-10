@@ -56,9 +56,7 @@ export const columns = (
           }
           onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
           aria-label="Select all"
-          className={
-            "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-          }
+          className={"h-5 w-5"}
         />
       ),
       cell: ({ row }) => {
@@ -68,9 +66,7 @@ export const columns = (
               checked={row.getIsSelected()}
               onCheckedChange={(val) => row.toggleSelected(!!val)}
               aria-label="Select row"
-              className={
-                "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-              }
+              className={"h-5 w-5"}
             />
           </div>
         );
@@ -96,7 +92,7 @@ export const columns = (
         row.original.droppedOut ? (
           <Badge variant="destructive">Inactive</Badge>
         ) : (
-          <Badge variant="shamiri-green">Active</Badge>
+          <Badge variant="success">Active</Badge>
         ),
       header: "Status",
       id: "Status",
@@ -122,7 +118,7 @@ export const columns = (
                 <Tooltip>
                   <TooltipTrigger>
                     <div className="flex gap-1">
-                      <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
+                      <Icons.flagTriangleRight className="h-4 w-4 text-destructive" />
                       <span>{row.original.cellNumber}</span>
                     </div>
                   </TooltipTrigger>

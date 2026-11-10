@@ -52,7 +52,7 @@ export default function UndropSupervisor({
         <div className="space-y-5">
           <DialogFooter className="flex justify-end">
             <Button
-              className="text-shamiri-new-blue"
+              className="text-primary"
               type={"button"}
               variant="ghost"
               onClick={() => {

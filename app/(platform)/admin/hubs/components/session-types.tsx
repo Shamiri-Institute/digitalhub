@@ -113,7 +113,7 @@ export const sessionTypeCount = (count: number) =>
  */
 function ValueChange({ from, to, wrap = true }: { from: string; to: string; wrap?: boolean }) {
   if (from === to) {
-    return <span className="text-shamiri-text-dark-grey">{to}</span>;
+    return <span className="text-muted-foreground">{to}</span>;
   }
   return (
     <span
@@ -122,11 +122,11 @@ function ValueChange({ from, to, wrap = true }: { from: string; to: string; wrap
         wrap ? "flex-wrap" : "flex-nowrap",
       )}
     >
-      <del className="text-shamiri-text-dark-grey">
+      <del className="text-muted-foreground">
         <span className="sr-only">was </span>
         {from}
       </del>
-      <ArrowRight aria-hidden className="size-3.5 shrink-0 text-shamiri-new-blue" />
+      <ArrowRight aria-hidden className="size-3.5 shrink-0 text-primary" />
       <ins className="font-semibold text-foreground no-underline">
         <span className="sr-only">now </span>
         {to}
@@ -293,9 +293,9 @@ export function SessionTypeRows({
   const last = group.rows.at(-1);
   return (
     <div className={SESSION_ROW_GRID}>
-      <span className="pb-1 text-center text-xs font-medium text-shamiri-text-grey">Code</span>
-      <span className="pb-1 text-xs font-medium text-shamiri-text-grey">Label</span>
-      <span className="pb-1 text-right text-xs font-medium text-shamiri-text-grey">
+      <span className="pb-1 text-center text-xs font-medium text-muted-foreground">Code</span>
+      <span className="pb-1 text-xs font-medium text-muted-foreground">Label</span>
+      <span className="pb-1 text-right text-xs font-medium text-muted-foreground">
         <span className="sm:hidden">KES</span>
         <span className="hidden sm:inline">Amount (KES)</span>
       </span>
@@ -328,7 +328,7 @@ export function SessionTypeRows({
                     aria-disabled
                     aria-label={`Remove ${code}`}
                     aria-describedby={`${field.id}-remove-blocked`}
-                    className="cursor-not-allowed text-shamiri-text-grey opacity-50 hover:bg-transparent hover:text-shamiri-text-grey"
+                    className="cursor-not-allowed text-muted-foreground opacity-50 hover:bg-transparent hover:text-muted-foreground"
                   >
                     <Trash2 aria-hidden className="h-4 w-4" />
                     <span id={`${field.id}-remove-blocked`} className="sr-only">
@@ -343,7 +343,7 @@ export function SessionTypeRows({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="text-shamiri-text-dark-grey hover:bg-red-bg hover:text-shamiri-light-red focus-visible:text-shamiri-light-red"
+                className="text-muted-foreground hover:bg-destructive-bg hover:text-destructive focus-visible:text-destructive"
                 aria-label={`Remove ${code}`}
                 onClick={() => onRemove(index)}
               >
@@ -360,19 +360,19 @@ export function SessionTypeRows({
 function ChangedSessionCell({ change }: { change: SessionTypeChange }) {
   return (
     <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-      <span className="text-xs tabular-nums text-shamiri-text-grey">{change.code}</span>
+      <span className="text-xs tabular-nums text-muted-foreground">{change.code}</span>
       {change.kind === "changed" && <ValueChange from={change.label.from} to={change.label.to} />}
       {change.kind === "added" && (
         <>
           <span className="font-semibold text-foreground">{change.label}</span>
-          <Badge variant="shamiri-green" className="text-xs">
+          <Badge variant="success" className="text-xs">
             Added
           </Badge>
         </>
       )}
       {change.kind === "removed" && (
         <>
-          <del className="text-shamiri-text-dark-grey">
+          <del className="text-muted-foreground">
             <span className="sr-only">removed </span>
             {change.label}
           </del>
@@ -396,7 +396,7 @@ function ChangedAmountCell({ change }: { change: SessionTypeChange }) {
     );
   }
   if (change.kind === "removed") {
-    return <del className="text-shamiri-text-dark-grey">{amountFormat.format(change.amount)}</del>;
+    return <del className="text-muted-foreground">{amountFormat.format(change.amount)}</del>;
   }
   return (
     <span className="font-semibold text-foreground">{amountFormat.format(change.amount)}</span>
@@ -436,7 +436,7 @@ export function HubConfirmDialog({
       <DialogContent className="lg:w-[28rem] lg:max-w-[calc(100vw-2rem)]">
         <DialogHeader>
           <DialogTitle className="text-xl">{title}</DialogTitle>
-          <DialogDescription className="text-left text-shamiri-text-grey">
+          <DialogDescription className="text-left text-muted-foreground">
             {summary}
           </DialogDescription>
         </DialogHeader>
@@ -447,15 +447,12 @@ export function HubConfirmDialog({
             <p className="text-sm font-medium">
               {changesHeading}
               {changes.length > 3 && (
-                <span className="font-normal text-shamiri-text-dark-grey">
-                  {" "}
-                  · scroll to see all
-                </span>
+                <span className="font-normal text-muted-foreground"> · scroll to see all</span>
               )}
             </p>
             <section
               aria-label={changesHeading}
-              className="max-h-60 overflow-y-auto rounded-lg border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-shamiri-new-blue/60"
+              className="max-h-60 overflow-y-auto rounded-lg border"
             >
               <Table>
                 <TableHeader>
@@ -487,7 +484,7 @@ export function HubConfirmDialog({
           <Button
             variant="ghost"
             type="button"
-            className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+            className="text-base font-semibold leading-6 text-primary hover:text-primary"
             disabled={isSaving}
             onClick={() => onOpenChange(false)}
           >

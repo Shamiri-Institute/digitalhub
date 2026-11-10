@@ -52,10 +52,10 @@ export default function AssignFellowSupervisorSelect({
             className={cn(
               "h-auto gap-1 px-2 py-0.5",
               supervisorId !== null
-                ? "border-shamiri-light-blue bg-blue-bg text-shamiri-new-blue"
-                : "border-shamiri-red bg-red-bg text-shamiri-light-red",
+                ? "border-info-border bg-info-bg text-primary"
+                : "border-destructive bg-destructive-bg text-destructive",
               isPending
-                ? "pointer-events-none border-shamiri-light-grey bg-background-secondary text-shamiri-text-dark-grey focus:ring-shamiri-light-grey"
+                ? "pointer-events-none border-border bg-muted text-muted-foreground"
                 : "pointer-events-auto",
             )}
           >

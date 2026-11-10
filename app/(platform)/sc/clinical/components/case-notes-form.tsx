@@ -576,7 +576,7 @@ function CaseNotesContent({
               </Button>
             </DialogClose>
             {!fieldsLocked && (
-              <Button variant="brand" type="submit" loading={isSaving} disabled={isSaving}>
+              <Button type="submit" loading={isSaving} disabled={isSaving}>
                 Submit
               </Button>
             )}

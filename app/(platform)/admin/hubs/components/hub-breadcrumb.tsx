@@ -33,20 +33,17 @@ export default function HubBreadcrumb({
 
   return (
     <nav aria-label="Breadcrumb">
-      <div className="flex items-center gap-x-5 text-shamiri-text-dark-grey">
+      <div className="flex items-center gap-x-5 text-muted-foreground">
         <button
           type="button"
           aria-label="Back"
-          className="arrow-button shrink-0 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue"
+          className="arrow-button shrink-0 rounded-lg"
           onClick={() => router.back()}
         >
           <Icons.arrowLeft className="h-4 w-4" />
         </button>
         <div className="flex min-w-0 items-center gap-2">
-          <Link
-            href="/admin/hubs"
-            className="shrink-0 rounded-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue hover:text-shamiri-new-blue"
-          >
+          <Link href="/admin/hubs" className="shrink-0 rounded-sm hover:text-primary">
             Hubs
           </Link>
           <span aria-hidden>/</span>
@@ -54,7 +51,7 @@ export default function HubBreadcrumb({
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="flex min-w-0 cursor-pointer items-center gap-2 rounded-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue font-semibold text-foreground"
+                className="flex min-w-0 cursor-pointer items-center gap-2 rounded-sm font-semibold text-foreground"
               >
                 <span className="max-w-64 truncate">{currentHub.hubName}</span>
                 <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
@@ -86,7 +83,7 @@ export default function HubBreadcrumb({
                       key={h.id}
                       value={h.hubName}
                       asChild
-                      className="flex items-center justify-between gap-3 rounded-none border-b border-grey-border px-3 last:border-b-0"
+                      className="flex items-center justify-between gap-3 rounded-none border-b border-border px-3 last:border-b-0"
                     >
                       <Link href={hubPath(h.id)}>
                         <span className="font-medium">{h.hubName}</span>
@@ -144,7 +141,7 @@ function SiblingLink({
     <Link
       href={href(hub.id)}
       aria-label={`${label}: ${hub.hubName}`}
-      className="arrow-button rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue"
+      className="arrow-button rounded-lg"
     >
       {children}
     </Link>

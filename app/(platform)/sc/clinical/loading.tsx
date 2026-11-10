@@ -12,22 +12,22 @@ function CasesStatsSkeleton() {
         <Skeleton className="h-5 w-32" />
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-shamiri-light-grey" />
+            <div className="h-2 w-2 rounded-full bg-muted" />
             <Skeleton className="h-5 w-24" />
           </div>
-          <div className="h-4 w-px bg-shamiri-light-grey" />
+          <div className="h-4 w-px bg-muted" />
           <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-shamiri-light-grey" />
+            <div className="h-2 w-2 rounded-full bg-muted" />
             <Skeleton className="h-5 w-24" />
           </div>
-          <div className="h-4 w-px bg-shamiri-light-grey" />
+          <div className="h-4 w-px bg-muted" />
           <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-shamiri-light-grey" />
+            <div className="h-2 w-2 rounded-full bg-muted" />
             <Skeleton className="h-5 w-24" />
           </div>
         </div>
       </div>
-      <div className="h-2 w-full rounded-full bg-shamiri-light-grey" />
+      <div className="h-2 w-full rounded-full bg-muted" />
     </div>
   );
 }
@@ -48,11 +48,7 @@ export default function ClinicalTableSkeleton() {
   }));
 
   function renderTableActions() {
-    return (
-      <Button variant="brand" disabled>
-        New Case
-      </Button>
-    );
+    return <Button disabled>New Case</Button>;
   }
 
   return (

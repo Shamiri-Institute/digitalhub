@@ -45,11 +45,13 @@ const ACTION_LABELS: Record<string, string> = {
 
 function RiskBadge({ outcome }: { outcome: string | null }) {
   if (outcome === "ANY_YES")
-    return <Badge className="bg-red-bg text-red-base border-red-border">Risk +</Badge>;
+    return (
+      <Badge className="bg-destructive-bg text-destructive border-destructive-border">Risk +</Badge>
+    );
   if (outcome === "ALL_NO")
-    return <Badge className="bg-green-bg text-green-base border-green-border">Risk −</Badge>;
+    return <Badge className="bg-success-bg text-success border-success-border">Risk −</Badge>;
   return (
-    <Badge variant="outline" className="text-shamiri-text-grey">
+    <Badge variant="outline" className="text-muted-foreground">
       Incomplete
     </Badge>
   );
@@ -69,14 +71,14 @@ function EventRowMenu({ event }: { event: TriageEventRow }) {
         />
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>
-            <span className="text-shamiri-text-grey text-xs font-medium uppercase">Actions</span>
+            <span className="text-muted-foreground text-xs font-medium uppercase">Actions</span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-shamiri-black" onClick={() => setOpen("details")}>
+          <DropdownMenuItem className="text-foreground" onClick={() => setOpen("details")}>
             View details
           </DropdownMenuItem>
           {canCreateCase && (
-            <DropdownMenuItem className="text-shamiri-black" onClick={() => setOpen("case")}>
+            <DropdownMenuItem className="text-foreground" onClick={() => setOpen("case")}>
               Create clinical case
             </DropdownMenuItem>
           )}
@@ -122,7 +124,7 @@ const eventColumns: ColumnDef<TriageEventRow>[] = [
       return (
         <span>
           {label}
-          {date && <span className="text-shamiri-text-grey ml-1">· {date}</span>}
+          {date && <span className="text-muted-foreground ml-1">· {date}</span>}
         </span>
       );
     },
@@ -143,9 +145,9 @@ const eventColumns: ColumnDef<TriageEventRow>[] = [
     cell: ({ row }) => {
       const e = row.original;
       if (!e.referredSupervisor?.supervisorName)
-        return <span className="text-shamiri-text-grey">—</span>;
+        return <span className="text-muted-foreground">—</span>;
       return (
-        <span className={cn(!e.referredToMe && "text-shamiri-text-grey")}>
+        <span className={cn(!e.referredToMe && "text-muted-foreground")}>
           {e.referredToMe ? "You" : e.referredSupervisor.supervisorName}
         </span>
       );
@@ -156,9 +158,9 @@ const eventColumns: ColumnDef<TriageEventRow>[] = [
     header: "Case",
     cell: ({ row }) =>
       row.original.clinicalCaseExists ? (
-        <Badge className="bg-green-bg text-green-base border-green-border">Open</Badge>
+        <Badge className="bg-success-bg text-success border-success-border">Open</Badge>
       ) : (
-        <Badge variant="outline" className="text-shamiri-text-grey">
+        <Badge variant="outline" className="text-muted-foreground">
           None
         </Badge>
       ),
@@ -222,7 +224,7 @@ const fellowColumns: ColumnDef<FellowRow>[] = [
     id: "Breakdown",
     header: "Breakdown",
     cell: ({ row }) => (
-      <span className="text-shamiri-text-grey text-xs">{row.original.breakdown || "—"}</span>
+      <span className="text-muted-foreground text-xs">{row.original.breakdown || "—"}</span>
     ),
   },
   {
@@ -230,9 +232,7 @@ const fellowColumns: ColumnDef<FellowRow>[] = [
     header: "Referred to others",
     meta: { numeric: true },
     cell: ({ row }) => (
-      <span
-        className={cn(row.original.referredToOthers > 0 && "text-shamiri-light-red font-medium")}
-      >
+      <span className={cn(row.original.referredToOthers > 0 && "text-destructive font-medium")}>
         {row.original.referredToOthers}
       </span>
     ),
@@ -244,9 +244,9 @@ const fellowColumns: ColumnDef<FellowRow>[] = [
     cell: ({ row }) => {
       const rate = row.original.completionRate;
       return rate !== null ? (
-        <span className={cn(rate < 80 && "text-shamiri-light-red font-medium")}>{rate}%</span>
+        <span className={cn(rate < 80 && "text-destructive font-medium")}>{rate}%</span>
       ) : (
-        <span className="text-shamiri-text-grey">—</span>
+        <span className="text-muted-foreground">—</span>
       );
     },
   },

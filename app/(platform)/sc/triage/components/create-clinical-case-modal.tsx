@@ -64,7 +64,7 @@ function CreateClinicalCaseForm({
     <>
       <DialogHeader className="space-y-0 px-6 py-4">
         <DialogTitle className="text-base font-medium">Create clinical case</DialogTitle>
-        <p className="mt-1 text-sm text-shamiri-text-grey">
+        <p className="mt-1 text-sm text-muted-foreground">
           Enter a pseudonym to identify this student anonymously in the clinical case.
         </p>
       </DialogHeader>
@@ -86,7 +86,7 @@ function CreateClinicalCaseForm({
       </div>
       <div className="flex justify-end gap-2 px-6 pb-6">
         <DialogClose asChild>
-          <Button type="button" variant="ghost" className="text-shamiri-new-blue hover:bg-blue-bg">
+          <Button type="button" variant="ghost" className="text-primary hover:bg-info-bg">
             Cancel
           </Button>
         </DialogClose>

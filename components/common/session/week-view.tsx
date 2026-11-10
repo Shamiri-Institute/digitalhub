@@ -53,7 +53,7 @@ export function WeekView({
         >
           <table className="schedule-table rounded-t-[0.4375rem]">
             <thead {...headerProps}>
-              <tr className="border-b border-grey-border">
+              <tr className="border-b border-border">
                 <th className="time-cell" />
                 {state.getDatesInWeek(0).map((date, i) =>
                   date ? (
@@ -82,13 +82,13 @@ export function WeekView({
           <table {...gridProps} className="schedule-table rounded-b-[0.4375rem]">
             <tbody className="w-full">
               {hours.map((hour) => (
-                <tr key={`hour-${hour}`} className="table-row w-full divide-x divide-grey-border">
+                <tr key={`hour-${hour}`} className="table-row w-full divide-x divide-border">
                   <td
                     className={cn(
                       "time-cell truncate",
                       "h-[85px] xl:h-[112px]",
                       "w-[103px]",
-                      "bg-background-secondary text-sm",
+                      "bg-muted text-sm",
                     )}
                   >
                     <div className="flex">{formatHour(hour)}</div>
@@ -138,15 +138,15 @@ function WeekCalendarHeaderCell({
   return date ? (
     <th
       className={cn("relative px-4 py-3 text-left", {
-        "text-blue-base": isToday(date, state.timeZone),
-        "bg-background-secondary": colIdx === 0 || colIdx === 6,
+        "text-info": isToday(date, state.timeZone),
+        "bg-muted": colIdx === 0 || colIdx === 6,
       })}
     >
       {date.day} - {dayFormatter.format(date.toDate(state.timeZone))}
       {hasSessions && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-base" />
+            <span className="h-1.5 w-1.5 rounded-full bg-info" />
           </TooltipTrigger>
           <TooltipContent side="top">{sessions.length} sessions on this day</TooltipContent>
         </Tooltip>
@@ -186,8 +186,8 @@ function WeekCalendarCell({
   return (
     <td {...cellProps}>
       <div
-        className={cn("relative h-full lg:h-[85px] xl:h-[112px]", "border-t border-grey-border", {
-          "bg-background-secondary": colIdx === 0 || colIdx === 6,
+        className={cn("relative h-full lg:h-[85px] xl:h-[112px]", "border-t border-border", {
+          "bg-muted": colIdx === 0 || colIdx === 6,
         })}
       >
         {/* Behind the chips, not around them: buttons cannot nest. */}

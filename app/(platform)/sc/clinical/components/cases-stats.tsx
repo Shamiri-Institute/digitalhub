@@ -13,7 +13,7 @@ export default async function ClinicalCasesStats() {
     <div className="flex w-full flex-1 flex-col gap-2">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">Total Cases: {totalCases}</span>
-        <div className="flex items-center gap-2 divide-x divide-shamiri-light-grey">
+        <div className="flex items-center gap-2 divide-x divide-border">
           {segments.map(({ label, count, color }) => (
             <div key={label} className="flex items-center gap-2 pl-2 first:pl-0">
               <svg aria-hidden="true" className="size-2" viewBox="0 0 8 8">
@@ -29,7 +29,7 @@ export default async function ClinicalCasesStats() {
       {/* Segment widths are case counts in the viewBox, so the bar needs no inline style. */}
       <svg
         aria-hidden="true"
-        className="h-2 w-full overflow-hidden rounded-full bg-shamiri-light-grey"
+        className="h-2 w-full overflow-hidden rounded-full bg-muted"
         viewBox={`0 0 ${Math.max(totalCases, 1)} 1`}
         preserveAspectRatio="none"
       >

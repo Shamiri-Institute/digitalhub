@@ -218,14 +218,13 @@ function StudentGroupEvaluationForm({
       {children}
       {mode === "view" && evaluations.length === 0 ? (
         <div className="space-y-3">
-          <div className="item-center flex justify-center text-shamiri-text-dark-grey">
+          <div className="item-center flex justify-center text-muted-foreground">
             No evaluations found.
           </div>
           <Separator />
           <DialogFooter className="flex justify-end">
             <Button
               className=""
-              variant="brand"
               type="button"
               onClick={() => {
                 onOpenChange(false);
@@ -299,7 +298,7 @@ function StudentGroupEvaluationForm({
                 <div key={input.section} className="flex flex-col space-y-2 py-4">
                   <div>
                     <span className="text-bold text-lg">{input.section}</span>{" "}
-                    <span aria-hidden="true" className="text-shamiri-light-red">
+                    <span aria-hidden="true" className="text-destructive">
                       *
                     </span>
                   </div>
@@ -316,9 +315,7 @@ function StudentGroupEvaluationForm({
                             className="flex flex-col space-y-2"
                           >
                             <FormLabel>
-                              <span className="text-shamiri-text-dark-grey">
-                                {inputField.label}
-                              </span>
+                              <span className="text-muted-foreground">{inputField.label}</span>
                             </FormLabel>
                             <RatingStarsInput
                               value={field.value}
@@ -367,7 +364,6 @@ function StudentGroupEvaluationForm({
                   Cancel
                 </Button>
                 <Button
-                  variant="brand"
                   type="submit"
                   disabled={form.formState.isSubmitting || editWindowClosed}
                   loading={form.formState.isSubmitting}
@@ -380,7 +376,6 @@ function StudentGroupEvaluationForm({
             <DialogFooter className="flex justify-end">
               <Button
                 className=""
-                variant="brand"
                 type="button"
                 onClick={() => {
                   onOpenChange(false);

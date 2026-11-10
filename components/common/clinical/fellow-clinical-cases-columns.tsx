@@ -19,7 +19,7 @@ export const columns: ColumnDef<FellowClinicalCasesData>[] = [
     header: "Active Status",
     cell: ({ row }) => {
       return (
-        <Badge variant={colors[row.original.activeStatus] || "shamiri-green"}>
+        <Badge variant={colors[row.original.activeStatus] || "success"}>
           {row.original.activeStatus}
         </Badge>
       );
@@ -30,7 +30,7 @@ export const columns: ColumnDef<FellowClinicalCasesData>[] = [
     header: "Cases Referred",
     cell: ({ row }) => {
       return (
-        <div className="flex items-center gap-2 text-shamiri-black">
+        <div className="flex items-center gap-2 text-foreground">
           {String(row.original.casesReferred || 0)}
         </div>
       );
@@ -51,23 +51,17 @@ export const columns: ColumnDef<FellowClinicalCasesData>[] = [
   },
 ];
 
-type BadgeVariant =
-  | "destructive"
-  | "warning"
-  | "shamiri-green"
-  | "default"
-  | "secondary"
-  | "outline-solid";
+type BadgeVariant = "destructive" | "warning" | "success" | "default" | "secondary" | "outline";
 
 const colors: Record<string, BadgeVariant> = {
-  Active: "shamiri-green",
+  Active: "success",
   FollowUp: "warning",
   Referred: "destructive",
   Terminated: "destructive",
-  Low: "shamiri-green",
+  Low: "success",
   Mid: "warning",
   High: "destructive",
   Severe: "destructive",
-  No: "shamiri-green",
+  No: "success",
   Medium: "warning",
 };

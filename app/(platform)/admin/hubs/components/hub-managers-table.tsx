@@ -42,13 +42,13 @@ function hubManagerColumns(scope: HubScope): ColumnDef<HubManager>[] {
         const { archivedAt } = row.original;
         return archivedAt ? (
           <span className="flex items-center gap-2">
-            <Badge variant="outline-solid">Archived</Badge>
-            <span className="text-sm text-shamiri-text-grey">
+            <Badge variant="outline">Archived</Badge>
+            <span className="text-sm text-muted-foreground">
               {format(archivedAt, DISPLAY_DATE)}
             </span>
           </span>
         ) : (
-          <Badge variant="shamiri-green">Active</Badge>
+          <Badge variant="success">Active</Badge>
         );
       },
     },
@@ -108,10 +108,7 @@ function HubManagerMenu({ manager, scope }: { manager: HubManager; scope: HubSco
                 Restore {manager.coordinatorName}
               </DropdownMenuItem>
             ) : (
-              <DropdownMenuItem
-                className="text-shamiri-light-red"
-                onClick={() => setArchiveOpen(true)}
-              >
+              <DropdownMenuItem className="text-destructive" onClick={() => setArchiveOpen(true)}>
                 <Archive className="mr-2 h-4 w-4" />
                 Archive hub manager
               </DropdownMenuItem>
@@ -152,7 +149,7 @@ export default function HubManagersTable({
         editColumns={false}
         renderTableActions={
           scope.canManage && (
-            <Button variant="brand" className="flex gap-2" onClick={() => setAddOpen(true)}>
+            <Button className="flex gap-2" onClick={() => setAddOpen(true)}>
               <UserPlus className="h-4 w-4" />
               Add hub manager
             </Button>

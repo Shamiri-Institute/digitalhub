@@ -18,17 +18,17 @@ export const states = [
   {
     key: "held",
     label: "attended",
-    fill: "fill-green-base",
-    swatch: "bg-green-base",
+    fill: "fill-success",
+    swatch: "bg-success",
   },
   {
     key: "unmarked",
     label: "unmarked",
-    fill: "fill-shamiri-light-orange",
-    swatch: "bg-shamiri-light-orange",
+    fill: "fill-chart-5",
+    swatch: "bg-chart-5",
   },
-  { key: "upcoming", label: "upcoming", fill: "fill-blue-base", swatch: "bg-blue-base" },
-  { key: "cancelled", label: "cancelled", fill: "fill-red-base", swatch: "bg-red-base" },
+  { key: "upcoming", label: "upcoming", fill: "fill-info", swatch: "bg-info" },
+  { key: "cancelled", label: "cancelled", fill: "fill-destructive", swatch: "bg-destructive" },
 ] as const;
 
 export function StateBar({
@@ -41,7 +41,7 @@ export function StateBar({
   let offset = 0;
 
   return (
-    <svg aria-hidden className="h-1.5 w-full overflow-hidden rounded-full bg-shamiri-light-grey">
+    <svg aria-hidden className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
       {total > 0 &&
         states
           .filter((s) => counts[s.key] > 0)
@@ -65,7 +65,7 @@ export function StateBar({
 
 function Legend({ sessions }: { sessions: SessionStates }) {
   return (
-    <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-shamiri-text-dark-grey">
+    <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
       {states
         .filter((s) => s.key === "unmarked" || sessions[s.key] > 0)
         .map((s) => (
@@ -73,9 +73,7 @@ function Legend({ sessions }: { sessions: SessionStates }) {
             key={s.key}
             className={cn(
               "flex items-center gap-1.5",
-              s.key === "unmarked" &&
-                sessions.unmarked > 0 &&
-                "font-semibold text-shamiri-dark-orange",
+              s.key === "unmarked" && sessions.unmarked > 0 && "font-semibold text-warning",
             )}
           >
             <span aria-hidden className={cn("h-2.5 w-2.5 rounded-sm", s.swatch)} />
@@ -105,7 +103,7 @@ function InfoTip({
       <TooltipTrigger
         aria-label={label}
         className={cn(
-          "-my-1 inline-flex h-6 w-6 items-center justify-center rounded-sm text-shamiri-text-dark-grey hover:text-shamiri-black focus-visible:outline-2 focus-visible:outline-shamiri-new-blue",
+          "-my-1 inline-flex h-6 w-6 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground",
           className,
         )}
       >
@@ -119,13 +117,10 @@ function InfoTip({
 function Notice({ tone, children }: { tone: "attention" | "done"; children: React.ReactNode }) {
   const Icon = tone === "attention" ? TriangleAlert : CircleCheck;
   return (
-    <p className="flex items-center gap-2 text-sm font-medium text-shamiri-black">
+    <p className="flex items-center gap-2 text-sm font-medium text-foreground">
       <Icon
         aria-hidden
-        className={cn(
-          "h-4 w-4 shrink-0",
-          tone === "attention" ? "text-shamiri-dark-orange" : "text-green-base",
-        )}
+        className={cn("h-4 w-4 shrink-0", tone === "attention" ? "text-warning" : "text-success")}
       />
       {children}
     </p>
@@ -152,7 +147,7 @@ export function StatCell({
 }) {
   return (
     <div className="space-y-1 bg-white px-4 py-3 xl:whitespace-nowrap">
-      <p className="flex items-center gap-1 text-sm font-medium text-shamiri-black">
+      <p className="flex items-center gap-1 text-sm font-medium text-foreground">
         {label}
         {info && <InfoTip label={`What ${label.toLowerCase()} counts`}>{info}</InfoTip>}
       </p>
@@ -163,7 +158,7 @@ export function StatCell({
 
 export function Figure({ value, unit }: { value: React.ReactNode; unit?: string }) {
   return (
-    <p className="text-shamiri-black">
+    <p className="text-foreground">
       <span className="text-3xl font-semibold tabular-nums">{value}</span>
       {unit && <span className="ml-1.5 text-sm">{unit}</span>}
     </p>
@@ -171,7 +166,7 @@ export function Figure({ value, unit }: { value: React.ReactNode; unit?: string 
 }
 
 export function Note({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm text-shamiri-text-dark-grey">{children}</p>;
+  return <p className="text-sm text-muted-foreground">{children}</p>;
 }
 
 export function SessionsStat({
@@ -185,7 +180,7 @@ export function SessionsStat({
   return (
     <div className={cn("space-y-1 bg-white px-4 py-3 xl:whitespace-nowrap", className)}>
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-        <p className="text-sm font-medium text-shamiri-black">Sessions</p>
+        <p className="text-sm font-medium text-foreground">Sessions</p>
         {hasSessions ? <Legend sessions={sessions} /> : <Note>No sessions scheduled yet</Note>}
       </div>
       <Figure

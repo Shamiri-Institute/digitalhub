@@ -50,7 +50,7 @@ export default function AddNewSupervisor() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="brand" className="flex gap-2">
+        <Button className="flex gap-2">
           <Plus className="h-4 w-4" />
           Add supervisor
         </Button>
@@ -106,7 +106,7 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
         <div className="space-y-6">
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+              <span className="pb-2 text-xs uppercase text-muted-foreground">
                 Personal Information
               </span>
               <Separator />
@@ -313,7 +313,7 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
           </div>
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+              <span className="pb-2 text-xs uppercase text-muted-foreground">
                 M-PESA Information
               </span>
               <Separator />
@@ -362,7 +362,7 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
           <Button
             variant="ghost"
             type="button"
-            className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+            className="text-base font-semibold leading-6 text-primary hover:text-primary"
             onClick={() => {
               close();
             }}
@@ -370,7 +370,7 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
             Cancel
           </Button>
           <Button
-            className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white"
+            className="flex items-center gap-2 bg-primary text-base font-semibold leading-6 text-white"
             type="submit"
             disabled={form.formState.isSubmitting}
             loading={form.formState.isSubmitting}

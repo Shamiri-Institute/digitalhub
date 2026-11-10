@@ -175,7 +175,7 @@ function TriageEventForm({
         <DialogTitle className="text-xl font-bold">
           {readOnly ? "View triage" : "Document triage"}
         </DialogTitle>
-        <p className="text-sm text-shamiri-text-grey">
+        <p className="text-sm text-muted-foreground">
           {studentName ? (
             <span className="capitalize">{studentName.toLowerCase()}</span>
           ) : (
@@ -236,7 +236,7 @@ function TriageEventForm({
                   <FormLabel className="text-sm">
                     Reason risk screen not completed (required)
                   </FormLabel>
-                  <p className="text-xs text-shamiri-text-grey">
+                  <p className="text-xs text-muted-foreground">
                     Shown when Risk screen outcome is Not completed.
                   </p>
                   <Select
@@ -295,7 +295,7 @@ function TriageEventForm({
                   </SelectContent>
                 </Select>
                 {forceEscalated && (
-                  <p className="text-xs text-shamiri-text-grey">
+                  <p className="text-xs text-muted-foreground">
                     Risk positive requires escalation to supervisor.
                   </p>
                 )}
@@ -340,7 +340,7 @@ function TriageEventForm({
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel className="text-sm">Supervisor handoff status (required)</FormLabel>
-                  <p className="text-xs text-shamiri-text-grey">
+                  <p className="text-xs text-muted-foreground">
                     Shown when Action taken is Referred, Escalated, or Student refused.
                   </p>
                   <Select
@@ -382,7 +382,7 @@ function TriageEventForm({
                     {...field}
                   />
                 </FormControl>
-                <p className="text-xs text-shamiri-text-grey">{field.value?.length ?? 0}/200</p>
+                <p className="text-xs text-muted-foreground">{field.value?.length ?? 0}/200</p>
                 <FormMessage />
               </FormItem>
             )}
@@ -397,11 +397,7 @@ function TriageEventForm({
             ) : (
               <>
                 <DialogClose asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="text-shamiri-new-blue hover:bg-blue-bg"
-                  >
+                  <Button type="button" variant="ghost" className="text-primary hover:bg-info-bg">
                     Cancel
                   </Button>
                 </DialogClose>

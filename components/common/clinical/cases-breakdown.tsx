@@ -16,10 +16,10 @@ import { CASE_STATUS_COLORS } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 
 const RISK_STATUS_COLORS = {
-  No: "var(--color-shamiri-graph-green)",
-  Low: "var(--color-shamiri-graph-yellow)",
-  Medium: "var(--color-shamiri-light-orange)",
-  High: "var(--color-shamiri-light-red)",
+  No: "var(--color-success)",
+  Low: "var(--color-chart-5)",
+  Medium: "var(--color-chart-3)",
+  High: "var(--color-destructive)",
 };
 
 export default function CasesBreakdown({
@@ -66,7 +66,7 @@ export default function CasesBreakdown({
               >
                 <Label
                   position="center"
-                  className="fill-shamiri-black text-2xl font-semibold leading-8"
+                  className="fill-foreground text-2xl font-semibold leading-8"
                 >
                   {casesByStatus.reduce((acc, curr) => acc + curr.value, 0)}
                 </Label>
@@ -95,7 +95,7 @@ export default function CasesBreakdown({
               >
                 <Label
                   position="center"
-                  className="fill-shamiri-black text-2xl font-semibold leading-8"
+                  className="fill-foreground text-2xl font-semibold leading-8"
                 >
                   {casesByRiskStatus.reduce((acc, curr) => acc + curr.value, 0)}
                 </Label>
@@ -114,7 +114,7 @@ export default function CasesBreakdown({
               <XAxis dataKey="name" />
               <YAxis allowDecimals={false} />
               <Tooltip />
-              <Bar dataKey="total" name="Sessions" fill="var(--color-shamiri-new-blue)" />
+              <Bar dataKey="total" name="Sessions" fill="var(--color-primary)" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
@@ -133,7 +133,7 @@ export default function CasesBreakdown({
               <XAxis dataKey="name" />
               <YAxis allowDecimals={false} />
               <Tooltip />
-              <Bar dataKey="total" name="Cases" fill="var(--color-shamiri-new-blue)" />
+              <Bar dataKey="total" name="Cases" fill="var(--color-primary)" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}

@@ -58,7 +58,7 @@ export function ViewTerminationReasons({
 
               <div>
                 <p className="text-sm font-medium">Additional Information</p>
-                <div className="mt-1 rounded-md bg-background-secondary p-3">
+                <div className="mt-1 rounded-md bg-muted p-3">
                   <p className="whitespace-pre-wrap text-sm">
                     {termination.terminationReasonExplanation}
                   </p>

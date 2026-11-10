@@ -26,7 +26,7 @@ export default function ClinicalLeadCaseActionsDropdownMenu({
       <RowActionsTrigger label={`Actions for ${clinicalCase.pseudonym}`} className="bg-white" />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
+          <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 

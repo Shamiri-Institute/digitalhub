@@ -61,17 +61,15 @@ function DiffCell({
   after: Record<string, unknown>;
 }) {
   if (changedFields.length === 0)
-    return <span className="text-xs text-shamiri-text-grey">No changes recorded</span>;
+    return <span className="text-xs text-muted-foreground">No changes recorded</span>;
   return (
     <div className="space-y-1">
       {changedFields.map((field) => (
         <div key={field} className="text-xs">
           <span className="font-medium">{FIELD_LABELS[field] ?? field}: </span>
-          <span className="line-through text-shamiri-light-red">
-            {formatValue(field, before[field])}
-          </span>
-          <span className="mx-1 text-shamiri-text-grey">→</span>
-          <span className="text-green-base">{formatValue(field, after[field])}</span>
+          <span className="line-through text-destructive">{formatValue(field, before[field])}</span>
+          <span className="mx-1 text-muted-foreground">→</span>
+          <span className="text-success">{formatValue(field, after[field])}</span>
         </div>
       ))}
     </div>
@@ -88,7 +86,7 @@ const columns: ColumnDef<AuditRow>[] = [
     id: "Session",
     accessorKey: "sessionLabel",
     header: "Session",
-    cell: ({ row }) => <span className="text-shamiri-text-grey">{row.original.sessionLabel}</span>,
+    cell: ({ row }) => <span className="text-muted-foreground">{row.original.sessionLabel}</span>,
   },
   {
     id: "Session date",
@@ -96,7 +94,7 @@ const columns: ColumnDef<AuditRow>[] = [
     cell: ({ row }) => {
       const date = row.original.sessionDate;
       return (
-        <span className="text-shamiri-text-grey">
+        <span className="text-muted-foreground">
           {date
             ? new Date(date).toLocaleDateString("en-GB", {
                 day: "numeric",
@@ -112,7 +110,7 @@ const columns: ColumnDef<AuditRow>[] = [
     id: "Edit time",
     header: "Edit time",
     cell: ({ row }) => (
-      <span className="text-shamiri-text-grey">
+      <span className="text-muted-foreground">
         {row.original.editedAt.toLocaleDateString("en-GB", {
           day: "numeric",
           month: "short",
@@ -130,9 +128,9 @@ const columns: ColumnDef<AuditRow>[] = [
     cell: ({ row }) => {
       const hours = row.original.hoursAfterSession;
       return hours !== null ? (
-        <span className={cn(hours > 24 && "font-medium text-shamiri-dark-orange")}>{hours}h</span>
+        <span className={cn(hours > 24 && "font-medium text-warning")}>{hours}h</span>
       ) : (
-        <span className="text-shamiri-text-grey">—</span>
+        <span className="text-muted-foreground">—</span>
       );
     },
   },

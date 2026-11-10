@@ -41,9 +41,10 @@ import {
 } from "#/components/ui/dropdown-menu";
 
 import { roleHome } from "#/lib/auth/role-home";
+import { Icons } from "#/components/icons";
+import { toastOnError } from "#/components/ui/use-toast";
 import { cn, getInitials } from "#/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { toastOnError } from "#/components/ui/use-toast";
 
 export type AdminTabs = { users: boolean; surveys: boolean; payouts: boolean };
 
@@ -108,6 +109,14 @@ function roleTabs(mainRoute: string, adminTabs: AdminTabs) {
   }
 }
 
+const tabClass = (active: boolean) =>
+  cn(
+    "flex shrink-0 items-center gap-2 whitespace-nowrap border-b-[3px] py-2.5 font-semibold transition-colors [&_svg]:shrink-0",
+    active
+      ? "border-lime text-white"
+      : "border-transparent text-white/75 hover:border-white/40 hover:text-white",
+  );
+
 // Centres the active tab in the phone tab strip without scrolling the page.
 function revealActiveTab(activeTab: HTMLElement | null) {
   const tabStrip = activeTab?.parentElement;
@@ -151,7 +160,9 @@ export function LayoutClient({
   const avatar = (
     <Avatar className="h-8 w-8" aria-hidden>
       {avatarUrl ? <AvatarImage src={avatarUrl} width={32} height={32} alt="" /> : null}
-      <AvatarFallback>{userInitials}</AvatarFallback>
+      <AvatarFallback className="bg-lavender-20 text-sm font-bold text-primary">
+        {userInitials}
+      </AvatarFallback>
     </Avatar>
   );
 
@@ -163,11 +174,10 @@ export function LayoutClient({
           setLoading={setLoading}
           user={user}
           projects={adminProjects}
-          className="nav-link"
         />
       )}
       {personnel && (
-        <div className="nav-link">
+        <div>
           <RoleSwitcher
             loading={loading}
             setLoading={setLoading}
@@ -177,7 +187,7 @@ export function LayoutClient({
         </div>
       )}
       {isAdminUser && (
-        <div className="nav-link">
+        <div>
           <MembershipSwitcher
             loading={loading}
             setLoading={setLoading}
@@ -196,14 +206,14 @@ export function LayoutClient({
         className="gap-2 px-4 py-3 lg:px-2 lg:py-1.5"
         onSelect={() => setIsProfileOpen(true)}
       >
-        <UserRound className="size-4 text-shamiri-text-grey" />
+        <UserRound className="size-4 text-muted-foreground" />
         My Profile
       </DropdownMenuItem>
       <DropdownMenuItem
         className="gap-2 px-4 py-3 lg:px-2 lg:py-1.5"
         onSelect={toastOnError(signOut)}
       >
-        <LogOut className="size-4 text-shamiri-text-grey" />
+        <LogOut className="size-4 text-muted-foreground" />
         Sign out
       </DropdownMenuItem>
     </>
@@ -211,119 +221,117 @@ export function LayoutClient({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="bg-background-secondary border-b">
-        <div className="container space-y-4 px-4 pt-2 lg:px-8">
-          <div className="flex flex-col items-center justify-between lg:flex-row">
-            <div className="flex w-full flex-row items-center justify-between px-3 py-2 lg:py-0">
-              <Link href={homeHref} className="text-shamiri-new-blue text-2xl font-semibold">
-                Shamiri Hub
-              </Link>
-              <div className="relative lg:hidden">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      aria-label="Account menu"
-                      className="bg-white"
-                    >
-                      <Menu className="text-muted-foreground h-4 w-4 shrink-0" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] max-w-sm">
-                    <DropdownMenuLabel className="flex items-center gap-4 px-4 font-normal">
-                      {avatar}
-                      <span className="text-muted-foreground min-w-0 truncate text-base">
-                        {displayName}
-                      </span>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {hasSwitchers && (
-                      <>
-                        {renderSwitchers("flex flex-col py-2")}
-                        <DropdownMenuSeparator />
-                      </>
-                    )}
-                    {accountMenuItems}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-            <div className="hidden shrink-0 items-center gap-4 py-2 lg:flex">
-              {hasSwitchers && renderSwitchers("flex flex-row items-center gap-4")}
-              <DropdownMenu>
-                <DropdownMenuTrigger className="nav-link items-center rounded-md">
-                  {avatar}
-                  <span className="max-w-72 truncate">{displayName}</span>
-                  <ChevronDown className="size-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40 max-w-none">
-                  {accountMenuItems}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-          <nav
-            aria-label="Main"
-            className="no-scrollbar flex items-center gap-8 overflow-x-auto ps-2 pe-10 mask-r-from-90% lg:mask-none"
+      <header className="bg-primary text-white [&_:focus-visible]:outline-lime">
+        <div className="container flex items-center justify-between gap-4 px-4 pt-3 lg:px-8">
+          <Link
+            href={homeHref}
+            className="flex items-center gap-3 rounded-sm"
+            aria-label="Shamiri Digital Hub home"
           >
-            {roleTabs(mainRoute, adminTabs).map((tab) => {
-              const active = subRoute === tab.segment || subRoute === tab.alsoActiveOn;
-              return (
-                <Link
-                  key={tab.segment}
-                  href={`/${mainRoute}/${tab.segment}`}
-                  ref={active ? revealActiveTab : undefined}
-                  aria-current={active ? "page" : undefined}
-                  className={cn("tab-link", active && "active")}
-                >
-                  <tab.icon className="size-5" />
-                  {tab.label}
-                </Link>
-              );
-            })}
-            {hasReporting && (
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  ref={reportingActive ? revealActiveTab : undefined}
-                  className={cn("tab-link cursor-pointer", reportingActive && "active")}
-                >
-                  <ChartColumn className="size-5" />
-                  Reporting
-                  <ChevronDown className="size-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <DropdownMenuItem asChild>
-                    <Link href={`/${mainRoute}/reporting/expenses/fellows`}>Expenses</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href={`/${mainRoute}/reporting/school-reports`}>School Reports</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href={`/${mainRoute}/reporting/fellow-reports`}>Fellow Reports</Link>
-                  </DropdownMenuItem>
-                  {(mainRoute === "sc" || mainRoute === "hc") && (
-                    <DropdownMenuItem asChild>
-                      <Link href={`/${mainRoute}/reporting/monitoring-and-evaluation`}>
-                        Monitoring and Evaluation
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
-                  {mainRoute === "sc" && (
-                    <DropdownMenuItem asChild>
-                      <Link href={`/${mainRoute}/reporting/recordings`}>Session Recordings</Link>
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </nav>
+            <Icons.logo className="h-7 w-auto text-white" />
+            <span className="hidden border-l border-white/30 pl-3 text-sm font-semibold uppercase tracking-wider text-white/80 sm:block">
+              Digital Hub
+            </span>
+          </Link>
+          <div className="lg:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" aria-label="Account menu">
+                  <Menu className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] max-w-sm">
+                <DropdownMenuLabel className="flex items-center gap-4 px-4 font-normal">
+                  {avatar}
+                  <span className="min-w-0 truncate text-base text-muted-foreground">
+                    {displayName}
+                  </span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {hasSwitchers && (
+                  <>
+                    {renderSwitchers("flex flex-col gap-2 px-2 py-2")}
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                {accountMenuItems}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div className="hidden shrink-0 items-center gap-4 lg:flex">
+            {hasSwitchers && renderSwitchers("flex flex-row items-center gap-3")}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-2 rounded-md py-1 font-semibold text-white/90 hover:text-white">
+                {avatar}
+                <span className="max-w-72 truncate">{displayName}</span>
+                <ChevronDown className="size-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40 max-w-none">
+                {accountMenuItems}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
+        <nav
+          aria-label="Main"
+          className="no-scrollbar container mt-2 flex items-center gap-7 overflow-x-auto px-4 pe-10 mask-r-from-90% lg:px-8 lg:mask-none"
+        >
+          {roleTabs(mainRoute, adminTabs).map((tab) => {
+            const active = subRoute === tab.segment || subRoute === tab.alsoActiveOn;
+            return (
+              <Link
+                key={tab.segment}
+                href={`/${mainRoute}/${tab.segment}`}
+                ref={active ? revealActiveTab : undefined}
+                aria-current={active ? "page" : undefined}
+                className={tabClass(active)}
+              >
+                <tab.icon className="size-5" />
+                {tab.label}
+              </Link>
+            );
+          })}
+          {hasReporting && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                ref={reportingActive ? revealActiveTab : undefined}
+                className={cn(tabClass(reportingActive), "cursor-pointer")}
+              >
+                <ChartColumn className="size-5" />
+                Reporting
+                <ChevronDown className="size-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem asChild>
+                  <Link href={`/${mainRoute}/reporting/expenses/fellows`}>Expenses</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={`/${mainRoute}/reporting/school-reports`}>School Reports</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href={`/${mainRoute}/reporting/fellow-reports`}>Fellow Reports</Link>
+                </DropdownMenuItem>
+                {(mainRoute === "sc" || mainRoute === "hc") && (
+                  <DropdownMenuItem asChild>
+                    <Link href={`/${mainRoute}/reporting/monitoring-and-evaluation`}>
+                      Monitoring and Evaluation
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                {mainRoute === "sc" && (
+                  <DropdownMenuItem asChild>
+                    <Link href={`/${mainRoute}/reporting/recordings`}>Session Recordings</Link>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </nav>
       </header>
       {/* overflow-x-clip (not -hidden): hidden makes <main> a scroll container, which breaks
           position:sticky for every descendant; clip clips without capturing sticky.
           pb-20 lets the last row and the footer scroll clear of the floating Sentry button. */}
-      <main className="bg-background-secondary flex min-h-0 grow items-stretch overflow-x-clip pb-20">
+      <main className="flex min-h-0 grow items-stretch overflow-x-clip bg-white pb-20">
         {children}
       </main>
       {isProfileOpen && (

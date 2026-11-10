@@ -39,7 +39,7 @@ const ChartArea = memo(function ChartArea({
 }) {
   return (
     <div className="grid grid-cols-1 gap-5 py-5 sm:grid-cols-2 md:grid-cols-4">
-      <ChartCard title="Session progress" showCardFooter={false}>
+      <ChartCard title="Session progress">
         {schoolAttendances?.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -55,20 +55,20 @@ const ChartArea = memo(function ChartArea({
               <Bar
                 dataKey="count_attendance_marked"
                 stackId="a"
-                fill="var(--color-shamiri-new-blue)"
+                fill="var(--color-primary)"
                 name="Attendance marked"
               />
               <Bar
                 dataKey="count_attendance_unmarked"
                 stackId="a"
-                fill="var(--color-shamiri-new-lighter-blue)"
+                fill="var(--color-info-border)"
                 name="Attendance unmarked"
               />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
-      <ChartCard title="Drop out reasons" showCardFooter={false}>
+      <ChartCard title="Drop out reasons">
         {dropoutData.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307} aria-label="Drop out reasons">
@@ -86,7 +86,7 @@ const ChartArea = memo(function ChartArea({
               >
                 <Label
                   position="center"
-                  className="fill-shamiri-black text-2xl font-semibold leading-8"
+                  className="fill-foreground text-2xl font-semibold leading-8"
                 >
                   {dropoutData.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
@@ -96,17 +96,14 @@ const ChartArea = memo(function ChartArea({
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
-      <ChartCard title="School information completion" showCardFooter={false}>
+      <ChartCard title="School information completion">
         {schoolDataCompletenessData.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={250} height={250} aria-label="School information completion">
               <Pie
                 data={schoolDataCompletenessData.map((entry) => ({
                   ...entry,
-                  fill:
-                    entry.name === "actual"
-                      ? "var(--color-shamiri-new-blue)"
-                      : "var(--color-shamiri-new-light-blue)",
+                  fill: entry.name === "actual" ? "var(--color-primary)" : "var(--color-info-bg)",
                 }))}
                 dataKey="value"
                 nameKey="name"
@@ -117,7 +114,7 @@ const ChartArea = memo(function ChartArea({
               >
                 <Label
                   position="center"
-                  className="fill-shamiri-black text-2xl font-semibold leading-8"
+                  className="fill-foreground text-2xl font-semibold leading-8"
                 >
                   {`${schoolDataCompletenessData.find((d) => d.name === "actual")?.value}%`}
                 </Label>
@@ -126,7 +123,7 @@ const ChartArea = memo(function ChartArea({
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
-      <ChartCard title="Ratings" showCardFooter={false}>
+      <ChartCard title="Ratings">
         {sessionRatingsData?.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart width={307} height={307} data={sessionRatingsData} aria-label="Ratings">
@@ -137,15 +134,11 @@ const ChartArea = memo(function ChartArea({
               <Legend />
               <Line
                 dataKey="student_behavior"
-                stroke="var(--color-shamiri-new-blue)"
+                stroke="var(--color-chart-1)"
                 name="Student behaviour"
               />
-              <Line
-                dataKey="admin_support"
-                stroke="var(--color-shamiri-graph-green)"
-                name="Admin support"
-              />
-              <Line dataKey="workload" stroke="var(--color-shamiri-light-orange)" name="Workload" />
+              <Line dataKey="admin_support" stroke="var(--color-chart-2)" name="Admin support" />
+              <Line dataKey="workload" stroke="var(--color-chart-3)" name="Workload" />
             </LineChart>
           </ResponsiveContainer>
         ) : null}

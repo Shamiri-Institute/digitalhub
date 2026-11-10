@@ -43,7 +43,7 @@ export default function ClinicalCasesTable({
       hubs={hubs}
     >
       <DialogTrigger asChild={true}>
-        <Button variant="brand">
+        <Button>
           <Plus className="mr-2 h-4 w-4" />
           New case
         </Button>

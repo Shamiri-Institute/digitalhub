@@ -98,7 +98,7 @@ export function SessionList({
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="pointer-events-auto w-full rounded-sm text-left text-sm font-semibold text-grey-c3 hover:underline focus-visible:outline-2 focus-visible:outline-shamiri-new-blue"
+              className="pointer-events-auto w-full rounded-sm text-left text-sm font-semibold text-muted-foreground hover:underline"
             >
               + {moreSessions.length} more
             </button>
@@ -177,16 +177,16 @@ export function SessionDetail({
           "px-4 py-2": !withDropdown,
         },
         {
-          "border-green-border": completed,
-          "border-blue-border": !completed,
-          "border-red-border": cancelled,
-          "border-shamiri-text-dark-grey/30": rescheduled && !session.occurred,
+          "border-success-border": completed,
+          "border-info-border": !completed,
+          "border-destructive-border": cancelled,
+          "border-muted-foreground/30": rescheduled && !session.occurred,
         },
         {
-          "bg-green-bg": completed,
-          "bg-blue-bg": !completed,
-          "bg-red-bg": cancelled,
-          "bg-shamiri-light-grey/60": rescheduled && !session.occurred,
+          "bg-success-bg": completed,
+          "bg-info-bg": !completed,
+          "bg-destructive-bg": cancelled,
+          "bg-muted/60": rescheduled && !session.occurred,
         },
       )}
     >
@@ -194,10 +194,10 @@ export function SessionDetail({
         className={cn("font-semibold", {
           "text-[0.825rem]": withDropdown,
           "text-base": !withDropdown,
-          "text-green-base": completed,
-          "text-blue-base": !completed,
-          "text-red-base": cancelled,
-          "text-shamiri-text-dark-grey": rescheduled && !session.occurred,
+          "text-success": completed,
+          "text-info": !completed,
+          "text-destructive": cancelled,
+          "text-muted-foreground": rescheduled && !session.occurred,
         })}
       >
         <div className="flex items-center gap-1">
@@ -229,7 +229,7 @@ export function SessionDetail({
               <span className="invisible">t</span>
             </div>
             {session.status === "Rescheduled" && (
-              <span className="font-medium text-shamiri-light-red">RESCHEDULED</span>
+              <span className="font-medium text-destructive">RESCHEDULED</span>
             )}
           </div>
         )}
@@ -245,7 +245,7 @@ export function SessionDetail({
             type="button"
             className={cn(
               chipBoxClassName,
-              "group/chip pointer-events-auto block w-full rounded-lg text-left focus-visible:outline-2 focus-visible:outline-shamiri-new-blue",
+              "group/chip pointer-events-auto block w-full rounded-lg text-left",
             )}
           >
             {chipFace}
@@ -291,7 +291,7 @@ export function SessionDropDown({
       {children}
       <DropdownMenuContent align={"end"}>
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
+          <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {role === ImplementerRole.ADMIN && (
@@ -397,7 +397,7 @@ export function SessionDropDown({
               Reschedule session
             </DropdownMenuItem>
             <DropdownMenuItem
-              className="text-shamiri-light-red"
+              className="text-destructive"
               onClick={opens("cancel")}
               disabled={
                 session.status === "Cancelled" ||

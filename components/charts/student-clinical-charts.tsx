@@ -64,7 +64,7 @@ export default function HubStudentClinicalDataCharts({
 
   return (
     <div className="grid grid-cols-1 gap-5 py-5 sm:grid-cols-2 md:grid-cols-4">
-      <ChartCard title="Clinical cases by case status" showCardFooter={false}>
+      <ChartCard title="Clinical cases by case status">
         {caseStatusCounts.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={250} height={250} aria-label="Clinical cases by case status">
@@ -79,7 +79,7 @@ export default function HubStudentClinicalDataCharts({
               >
                 <Label
                   position="center"
-                  className="fill-shamiri-black text-xl font-semibold leading-8"
+                  className="fill-foreground text-xl font-semibold leading-8"
                 >
                   {caseStatusCounts.reduce((acc, d) => acc + d.value, 0)}
                 </Label>
@@ -91,7 +91,7 @@ export default function HubStudentClinicalDataCharts({
         ) : null}
       </ChartCard>
 
-      <ChartCard title={`Clinical sessions (${clinicalStats.sessionCount})`} showCardFooter={false}>
+      <ChartCard title={`Clinical sessions (${clinicalStats.sessionCount})`}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={filteredFormatedSessions}
@@ -104,14 +104,14 @@ export default function HubStudentClinicalDataCharts({
             <Tooltip />
             <Bar
               dataKey="count"
-              fill="var(--color-shamiri-new-blue)"
+              fill="var(--color-primary)"
               name="Sessions"
               radius={[4, 4, 0, 0]}
             />
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
-      <ChartCard title="Clinical cases by supervisor" showCardFooter={false}>
+      <ChartCard title="Clinical cases by supervisor">
         {clinicalStats.casesBySupervisor.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -130,17 +130,12 @@ export default function HubStudentClinicalDataCharts({
                 interval={0}
               />
               <Tooltip formatter={(value) => [`${value} cases`, "Cases"]} />
-              <Bar
-                dataKey="count"
-                fill="var(--color-shamiri-new-blue)"
-                name="Cases"
-                radius={[0, 4, 4, 0]}
-              />
+              <Bar dataKey="count" fill="var(--color-primary)" name="Cases" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
-      <ChartCard title="Clinical cases by initial contact" showCardFooter={false}>
+      <ChartCard title="Clinical cases by initial contact">
         {casesByInitialContact.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={250} height={250} aria-label="Clinical cases by initial contact">
@@ -155,7 +150,7 @@ export default function HubStudentClinicalDataCharts({
               >
                 <Label
                   position="center"
-                  className="fill-shamiri-black text-xl font-semibold leading-8"
+                  className="fill-foreground text-xl font-semibold leading-8"
                 >
                   {casesByInitialContact.reduce((acc, d) => acc + d.count, 0)}
                 </Label>

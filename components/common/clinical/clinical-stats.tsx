@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { SERIES_COLORS } from "#/components/charts/constants";
+import { seriesColor } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 
 export default function ClinicalStats({
@@ -41,14 +41,14 @@ export default function ClinicalStats({
 
   return (
     <div className="grid grid-cols-1 gap-5 py-2 sm:grid-cols-2 xl:grid-cols-4">
-      <ChartCard showCardFooter={false} title="Clinical Cases by Case Status">
+      <ChartCard title="Clinical Cases by Case Status">
         {casesByStatus.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
                 data={casesByStatus.map((entry, index) => ({
                   ...entry,
-                  fill: SERIES_COLORS[index % SERIES_COLORS.length],
+                  fill: seriesColor(index),
                 }))}
                 dataKey="value"
                 nameKey="name"
@@ -59,7 +59,7 @@ export default function ClinicalStats({
               >
                 <Label
                   position="center"
-                  className="text-2xl font-semibold leading-8 text-shamiri-black"
+                  className="text-2xl font-semibold leading-8 text-foreground"
                 >
                   {casesByStatus.reduce((acc, curr) => acc + curr.value, 0)}
                 </Label>
@@ -70,7 +70,7 @@ export default function ClinicalStats({
         ) : null}
       </ChartCard>
 
-      <ChartCard showCardFooter={false} title="Clinical Sessions">
+      <ChartCard title="Clinical Sessions">
         {casesBySession.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart width={307} height={307} data={casesBySession}>
@@ -78,13 +78,13 @@ export default function ClinicalStats({
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="value" fill={SERIES_COLORS[0]} />
+              <Bar dataKey="value" fill={seriesColor(0)} />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
 
-      <ChartCard showCardFooter={false} title="Clinical Cases by Supervisor">
+      <ChartCard title="Clinical Cases by Supervisor">
         {casesBySupervisor.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart width={307} height={307} data={casesBySupervisor}>
@@ -92,20 +92,20 @@ export default function ClinicalStats({
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="value" fill={SERIES_COLORS[0]} />
+              <Bar dataKey="value" fill={seriesColor(0)} />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
 
-      <ChartCard showCardFooter={false} title="Clinical Cases by Initial Contact">
+      <ChartCard title="Clinical Cases by Initial Contact">
         {casesByInitialContact.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
                 data={casesByInitialContact.map((entry, index) => ({
                   ...entry,
-                  fill: SERIES_COLORS[index % SERIES_COLORS.length],
+                  fill: seriesColor(index),
                 }))}
                 dataKey="value"
                 nameKey="name"
@@ -116,7 +116,7 @@ export default function ClinicalStats({
               >
                 <Label
                   position="center"
-                  className="text-2xl font-semibold leading-8 text-shamiri-black"
+                  className="text-2xl font-semibold leading-8 text-foreground"
                 >
                   {casesByInitialContact.reduce((acc, curr) => acc + curr.value, 0)}
                 </Label>

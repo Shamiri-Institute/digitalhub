@@ -44,9 +44,9 @@ export default function VersionMenu({ surveyId, surveyCode, version, hasDraft }:
         <button
           type="button"
           aria-label={`Actions for v${version.versionNumber}`}
-          className="absolute inset-0 flex items-center justify-center border-l focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-shamiri-new-blue"
+          className="absolute inset-0 flex items-center justify-center border-l focus-visible:-outline-offset-2"
         >
-          <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
+          <Icons.moreHorizontal className="h-5 w-5 text-muted-foreground" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

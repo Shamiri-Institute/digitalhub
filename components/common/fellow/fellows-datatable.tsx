@@ -109,7 +109,7 @@ export default function FellowsDatatable({
                 <DialogAlertWidget>
                   <div className="flex items-center gap-2">
                     <span>{fellow.fellowName}</span>
-                    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+                    <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
                     <span>{fellow.groupName}</span>
                   </div>
                 </DialogAlertWidget>
@@ -126,7 +126,7 @@ export default function FellowsDatatable({
                 <DialogAlertWidget separator={false}>
                   <div className="flex items-center gap-2">
                     <span>{fellow.fellowName}</span>
-                    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+                    <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
                     <span>{fellow.groupName}</span>
                   </div>
                 </DialogAlertWidget>

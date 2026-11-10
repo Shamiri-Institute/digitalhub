@@ -120,13 +120,9 @@ function SessionTypesEditor({
               <span className="flex flex-1 items-baseline justify-between gap-3 pr-2 text-left">
                 <span className="text-sm font-semibold text-foreground">{group.label}</span>
                 <span className="flex items-baseline gap-3 text-xs font-medium">
-                  {errorCount > 0 && (
-                    <span className="text-shamiri-light-red">{errorCount} to fix</span>
-                  )}
+                  {errorCount > 0 && <span className="text-destructive">{errorCount} to fix</span>}
                   <span
-                    className={
-                      group.rows.length > 0 ? "text-shamiri-new-blue" : "text-shamiri-text-grey"
-                    }
+                    className={group.rows.length > 0 ? "text-primary" : "text-muted-foreground"}
                   >
                     {group.rows.length === 0
                       ? "None"
@@ -137,9 +133,7 @@ function SessionTypesEditor({
             </AccordionTrigger>
             <AccordionContent className="space-y-3 pb-3">
               {group.rows.length === 0 ? (
-                <p className="text-sm text-shamiri-text-dark-grey">
-                  This hub has no {group.noun}s.
-                </p>
+                <p className="text-sm text-muted-foreground">This hub has no {group.noun}s.</p>
               ) : (
                 <SessionTypeRows
                   group={group}
@@ -152,7 +146,7 @@ function SessionTypesEditor({
                   <Button
                     type="button"
                     variant="outline"
-                    className="col-start-2 gap-2 border-dashed border-shamiri-new-blue/40 px-2 text-shamiri-new-blue shadow-none hover:border-shamiri-new-blue hover:bg-blue-bg hover:text-shamiri-new-blue sm:px-4"
+                    className="col-start-2 gap-2 border-dashed border-primary/40 px-2 text-primary shadow-none hover:border-primary hover:bg-info-bg hover:text-primary sm:px-4"
                     onClick={() => addRow(category)}
                   >
                     <Plus className="h-4 w-4" />
@@ -166,7 +160,7 @@ function SessionTypesEditor({
                     <Button
                       type="button"
                       variant="outline"
-                      className="col-span-2 gap-2 border-red-border px-2 text-shamiri-light-red shadow-none hover:bg-red-bg hover:text-shamiri-light-red sm:px-4"
+                      className="col-span-2 gap-2 border-destructive-border px-2 text-destructive shadow-none hover:bg-destructive-bg hover:text-destructive sm:px-4"
                       aria-label={`Remove all ${group.label.toLowerCase()}`}
                       onClick={() => remove(group.rows.map(({ index }) => index))}
                     >
@@ -206,7 +200,7 @@ function CreateHubForm({ onDone }: { onDone: () => void }) {
       >
         <DialogHeader className="shrink-0">
           <DialogTitle className="text-xl">Add a new hub</DialogTitle>
-          <DialogDescription className="text-left text-shamiri-text-grey">
+          <DialogDescription className="text-left text-muted-foreground">
             Name the hub, then review its session types. Expand a group to add or remove session
             types, or to change a label or an amount.
           </DialogDescription>
@@ -229,7 +223,7 @@ function CreateHubForm({ onDone }: { onDone: () => void }) {
           <Button
             variant="ghost"
             type="button"
-            className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+            className="text-base font-semibold leading-6 text-primary hover:text-primary"
             onClick={onDone}
           >
             Cancel

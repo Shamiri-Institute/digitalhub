@@ -17,8 +17,8 @@ import { DISPLAY_DATE } from "#/lib/date-utils";
 const riskBadgeVariant = {
   [riskStatusOptions.High]: "destructive",
   [riskStatusOptions.Medium]: "warning",
-  [riskStatusOptions.Low]: "shamiri-green",
-  [riskStatusOptions.No]: "outline-solid",
+  [riskStatusOptions.Low]: "success",
+  [riskStatusOptions.No]: "outline",
 } as const;
 
 export function CasesReferredToMe({ cases }: { cases: CaseReferredToMe[] }) {
@@ -70,7 +70,7 @@ function ReferredCaseCard({ referredCase }: { referredCase: CaseReferredToMe }) 
       <Card className="flex flex-col gap-4 bg-white p-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-base font-medium text-shamiri-new-blue">
+            <p className="text-base font-medium text-primary">
               {referredCase.student.studentName ?? referredCase.pseudonym}
             </p>
             {referredCase.pseudonym && (
@@ -102,7 +102,6 @@ function ReferredCaseCard({ referredCase }: { referredCase: CaseReferredToMe }) 
             Reject
           </Button>
           <Button
-            variant="brand"
             disabled={isPending}
             onClick={() => answer("accept")}
             aria-label="Accept referred case"

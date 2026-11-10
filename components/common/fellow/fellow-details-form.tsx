@@ -124,7 +124,7 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
             <DialogAlertWidget separator={true}>
               <div className="flex items-center gap-2">
                 <span>{fellow.fellowName}</span>
-                <span className="h-1 w-1 rounded-full bg-shamiri-new-blue" />
+                <span className="h-1 w-1 rounded-full bg-primary" />
                 <span>
                   {fellow.cellNumber &&
                     parsePhoneNumberFromString(fellow.cellNumber, "KE")?.formatNational()}
@@ -136,7 +136,7 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
         <div className="space-y-6">
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+              <span className="pb-2 text-xs uppercase text-muted-foreground">
                 Personal Information
               </span>
               <Separator />
@@ -355,7 +355,7 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
           </div>
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+              <span className="pb-2 text-xs uppercase text-muted-foreground">
                 M-PESA Information
               </span>
               <Separator />
@@ -399,7 +399,7 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
               <Button
                 variant="ghost"
                 type="button"
-                className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+                className="text-base font-semibold leading-6 text-primary hover:text-primary"
                 onClick={() => {
                   onOpenChange(false);
                 }}
@@ -407,7 +407,6 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
                 Cancel
               </Button>
               <Button
-                variant="brand"
                 type="submit"
                 disabled={form.formState.isSubmitting}
                 loading={form.formState.isSubmitting}
@@ -417,7 +416,6 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
             </>
           ) : (
             <Button
-              variant="brand"
               type="button"
               onClick={() => {
                 onOpenChange(false);

@@ -32,6 +32,19 @@ jobs:
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
         run: npm run typecheck
+  design_audit:
+    runs-on: ubuntu-latest
+    # Impeccable's detector checks the UI against DESIGN.md and its anti-pattern rules. It annotates
+    # findings without failing the build until the first baseline has been reviewed.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Impeccable design audit
+        run: npx --yes impeccable@4.8.2 detect --github app components
   shellcheck:
     runs-on: ubuntu-latest
     steps:

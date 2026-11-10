@@ -45,7 +45,7 @@ export default function MainSupervisorsDataTable({
       <DialogAlertWidget>
         <div className="flex items-center gap-2">
           <span>{supervisor?.supervisorName}</span>
-          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+          <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
           <span>
             {supervisor?.cellNumber &&
               parsePhoneNumberFromString(supervisor?.cellNumber, "KE")?.formatNational()}

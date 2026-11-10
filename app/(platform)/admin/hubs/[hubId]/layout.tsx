@@ -36,8 +36,8 @@ export default async function HubLayout(props: {
         <HubBreadcrumb hubs={siblingHubs} currentHub={hub} />
         <div className="space-y-2">
           <div className="space-y-2">
-            <h1 className="text-4xl font-semibold leading-[48px] text-black">{hub.hubName}</h1>
-            <p className="text-sm font-medium uppercase tracking-wide text-shamiri-text-dark-grey">
+            <h1 className="text-4xl font-semibold leading-[48px] text-foreground">{hub.hubName}</h1>
+            <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
               {hub.project.name}
             </p>
           </div>

@@ -16,7 +16,7 @@ export function SettingsSection({
     >
       <div className="space-y-1">
         <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-        <p className="text-sm text-shamiri-text-dark-grey">{description}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
       </div>
       <div className="min-w-0 space-y-6">{children}</div>
     </section>
@@ -40,8 +40,7 @@ export function SessionGroupHeading({
   return (
     <div className="flex items-center justify-between gap-3">
       <h4 className="text-sm font-semibold text-foreground">
-        {label}{" "}
-        <span className="font-normal tabular-nums text-shamiri-text-dark-grey">{count}</span>
+        {label} <span className="font-normal tabular-nums text-muted-foreground">{count}</span>
       </h4>
       {children}
     </div>

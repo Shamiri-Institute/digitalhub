@@ -101,7 +101,7 @@ function AddReportingNoteForm({ setIsOpen, student, children }: AddReportingNote
         <Separator />
         <DialogFooter className="flex justify-end">
           <Button
-            className="text-shamiri-new-blue hover:bg-blue-bg"
+            className="text-primary hover:bg-info-bg"
             variant="ghost"
             onClick={() => {
               setIsOpen(false);

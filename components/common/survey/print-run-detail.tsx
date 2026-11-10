@@ -45,7 +45,7 @@ export function PrintRunDetailView({
       <dl className="grid grid-cols-1 gap-x-8 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">
         {facts.map(([label, value]) => (
           <div key={label} className="contents">
-            <dt className="text-shamiri-text-grey">{label}</dt>
+            <dt className="text-muted-foreground">{label}</dt>
             <dd>{value}</dd>
           </div>
         ))}

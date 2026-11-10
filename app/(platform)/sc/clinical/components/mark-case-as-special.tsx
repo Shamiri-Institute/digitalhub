@@ -137,7 +137,6 @@ function FlagCaseForm({
         <div className="flex justify-end px-6 pb-6">
           <Button
             form="modifyFlagAction"
-            variant="brand"
             type="submit"
             className="w-full"
             disabled={isSaving}

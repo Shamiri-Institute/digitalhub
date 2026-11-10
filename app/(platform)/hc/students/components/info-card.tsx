@@ -6,7 +6,7 @@ export default function InfoCard({ content, title }: { content?: number; title: 
   return (
     <Card>
       <CardHeader className="border-b border-dashed px-4 py-[14px] text-lg">
-        <CardTitle as="h2" className="font-semibold leading-6 text-shamiri-black">
+        <CardTitle as="h2" className="font-semibold leading-6 text-foreground">
           {title}
         </CardTitle>
       </CardHeader>

@@ -40,9 +40,7 @@ export const columns = ({
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
-        className={
-          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-        }
+        className={"h-5 w-5"}
       />
     ),
     cell: ({ row }) => {
@@ -52,9 +50,7 @@ export const columns = ({
             checked={row.getIsSelected()}
             onCheckedChange={(val) => row.toggleSelected(!!val)}
             aria-label="Select row"
-            className={
-              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-            }
+            className={"h-5 w-5"}
           />
         </div>
       );
@@ -85,7 +81,7 @@ export const columns = ({
                 <button
                   type="button"
                   aria-label={`${schools.length - 1} more schools`}
-                  className="ml-2 cursor-pointer select-none rounded-sm text-shamiri-new-blue hover:underline focus-visible:outline-2 focus-visible:outline-shamiri-new-blue"
+                  className="ml-2 cursor-pointer select-none rounded-sm text-primary hover:underline"
                 >
                   +{schools.length - 1}
                 </button>
@@ -113,7 +109,7 @@ export const columns = ({
       row.original.archivedAt || row.original.droppedOut ? (
         <Badge variant="destructive">Inactive</Badge>
       ) : (
-        <Badge variant="shamiri-green">Active</Badge>
+        <Badge variant="success">Active</Badge>
       ),
   },
   // TODO: Refactor query to calculate average server side

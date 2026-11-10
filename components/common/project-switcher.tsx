@@ -64,7 +64,7 @@ export function ProjectSwitcher({
           <Button
             variant="outline"
             aria-expanded={open}
-            className="-mt-1 w-full min-w-[200px] justify-between bg-white px-2 text-left filter disabled:pointer-events-none disabled:grayscale"
+            className="w-full min-w-[200px] justify-between bg-white px-2 text-left filter disabled:pointer-events-none disabled:grayscale"
             disabled={loading}
           >
             <div className="flex flex-col items-start">
@@ -92,13 +92,13 @@ export function ProjectSwitcher({
                     handleProjectChange(project);
                     setOpen(false);
                   }}
-                  className="flex items-center justify-between gap-3 rounded-none border-b border-grey-border px-3 last:border-b-0"
+                  className="flex items-center justify-between gap-3 rounded-none border-b border-border px-3 last:border-b-0"
                 >
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{project.name}</span>
                     </div>
-                    <span className="text-xs uppercase tracking-widest pt-0.5 text-shamiri-new-blue">
+                    <span className="text-xs uppercase tracking-widest pt-0.5 text-primary">
                       {project.visibleId}
                     </span>
                   </div>

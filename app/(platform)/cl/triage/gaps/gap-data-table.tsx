@@ -39,7 +39,7 @@ const columns: ColumnDef<EscalationGap>[] = [
     id: "Escalation date",
     header: "Escalation date",
     cell: ({ row }) => (
-      <span className="text-shamiri-text-grey">
+      <span className="text-muted-foreground">
         {row.original.createdAt.toLocaleDateString("en-GB", {
           day: "numeric",
           month: "short",
@@ -58,8 +58,8 @@ const columns: ColumnDef<EscalationGap>[] = [
         <span
           className={cn(
             "font-medium",
-            days > 7 && "text-shamiri-light-red",
-            days > 3 && days <= 7 && "text-red-base",
+            days > 7 && "text-destructive",
+            days > 3 && days <= 7 && "text-destructive",
           )}
         >
           {days}d
@@ -75,7 +75,7 @@ const columns: ColumnDef<EscalationGap>[] = [
       return name ? (
         <span>{name}</span>
       ) : (
-        <Badge variant="outline" className="text-shamiri-text-grey">
+        <Badge variant="outline" className="text-muted-foreground">
           Unassigned
         </Badge>
       );
@@ -88,7 +88,7 @@ const columns: ColumnDef<EscalationGap>[] = [
       const status = row.original.supervisorHandoffStatus;
       const isRed = status === "COULD_NOT_REACH";
       const label = status ? (HANDOFF_LABELS[status] ?? status) : "Not recorded";
-      return <span className={cn(isRed && "text-red-base font-medium")}>{label}</span>;
+      return <span className={cn(isRed && "text-destructive font-medium")}>{label}</span>;
     },
   },
 ];

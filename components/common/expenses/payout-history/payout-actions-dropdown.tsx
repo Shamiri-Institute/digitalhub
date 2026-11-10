@@ -60,7 +60,7 @@ export default function PayoutActionsDropdown({ payout }: { payout: PayoutHistor
       />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
+          <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
         </DropdownMenuLabel>
 
         <DropdownMenuItem onSelect={downloadCSV}>Download .csv</DropdownMenuItem>

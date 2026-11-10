@@ -57,9 +57,9 @@ export default function StudentsDatatable({
       <DialogAlertWidget separator={false}>
         <div className="flex flex-wrap items-center gap-2 whitespace-nowrap">
           <span className="capitalize">{student?.studentName?.toLowerCase()}</span>
-          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue" />
+          <span className="h-1 w-1 rounded-full bg-primary" />
           <span>{student?.assignedGroup?.groupName}</span>
-          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue" />
+          <span className="h-1 w-1 rounded-full bg-primary" />
           <span>{student?.admissionNumber}</span>
         </div>
       </DialogAlertWidget>

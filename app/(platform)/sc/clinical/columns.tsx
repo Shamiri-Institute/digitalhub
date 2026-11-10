@@ -48,7 +48,7 @@ export function clinicalCaseColumns(referralOptions?: ReferralOptions): ColumnDe
         return (
           <div className="flex items-center gap-1">
             <span>{row.original.pseudonym}</span>
-            {flagged ? <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" /> : null}
+            {flagged ? <Icons.flagTriangleRight className="h-4 w-4 text-destructive" /> : null}
           </div>
         );
       },
@@ -71,7 +71,7 @@ export function clinicalCaseColumns(referralOptions?: ReferralOptions): ColumnDe
       cell: ({ row }) => {
         const caseStatus = row.original.caseStatus;
         return (
-          <Badge variant={colors[caseStatus || "shamiri-green"]} className="uppercase">
+          <Badge variant={colors[caseStatus || "success"]} className="uppercase">
             {caseStatus}
           </Badge>
         );
@@ -84,7 +84,7 @@ export function clinicalCaseColumns(referralOptions?: ReferralOptions): ColumnDe
         const riskLevel = row.original.risk || "N/A";
         return (
           <div className="flex flex-col items-start gap-1">
-            <Badge variant={colors[riskLevel || "shamiri-green"]} className="uppercase">
+            <Badge variant={colors[riskLevel || "success"]} className="uppercase">
               {riskLevel}
             </Badge>
             <span className="text-xs text-muted-foreground">
@@ -117,23 +117,17 @@ export function clinicalCaseColumns(referralOptions?: ReferralOptions): ColumnDe
   ];
 }
 
-type BadgeVariant =
-  | "destructive"
-  | "warning"
-  | "shamiri-green"
-  | "default"
-  | "secondary"
-  | "outline-solid";
+type BadgeVariant = "destructive" | "warning" | "success" | "default" | "secondary" | "outline";
 
 const colors: Record<string, BadgeVariant> = {
-  Active: "shamiri-green",
+  Active: "success",
   FollowUp: "warning",
   Referred: "destructive",
   Terminated: "destructive",
-  Low: "shamiri-green",
+  Low: "success",
   Mid: "warning",
   High: "destructive",
   Severe: "destructive",
-  No: "shamiri-green",
+  No: "success",
   Medium: "warning",
 };

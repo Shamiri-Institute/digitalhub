@@ -1,7 +1,7 @@
 "use client";
 
 import { Label, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { SERIES_COLORS, orderedSeriesColor } from "#/components/charts/constants";
+import { orderedSeriesColor, seriesColor } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 
 const pieLegend = (
@@ -37,7 +37,7 @@ export default function HubStudentDemographicsCharts({
 
   const formatedStudentsGroupedByGender = Object.entries(studentsGroupedByGender)
     .toSorted(([genderA], [genderB]) => genderA.localeCompare(genderB))
-    .map(([gender, value], index) => ({ gender, value, fill: SERIES_COLORS[index] }));
+    .map(([gender, value], index) => ({ gender, value, fill: seriesColor(index) }));
 
   const formatedStudentsGroupedByForm = Object.entries(studentsGroupedByForm).map(
     ([form, value], index, forms) => ({
@@ -57,7 +57,6 @@ export default function HubStudentDemographicsCharts({
       <ChartCard
         title="Students grouped by form"
         description={recordedBasis(studentsWithForm, totalStudents, "form")}
-        showCardFooter={false}
       >
         {formatedStudentsGroupedByForm.length ? (
           <ResponsiveContainer width="100%" height="100%">
@@ -73,7 +72,7 @@ export default function HubStudentDemographicsCharts({
               >
                 <Label
                   position="center"
-                  className="fill-shamiri-black text-xl font-semibold leading-8"
+                  className="fill-foreground text-xl font-semibold leading-8"
                 >
                   {studentsWithForm}
                 </Label>
@@ -87,7 +86,6 @@ export default function HubStudentDemographicsCharts({
       <ChartCard
         title="Students grouped by age"
         description={recordedBasis(studentsWithAge, totalStudents, "age")}
-        showCardFooter={false}
       >
         {formatedStudentsGroupedByAge.length ? (
           <ResponsiveContainer width="100%" height="100%">
@@ -113,7 +111,6 @@ export default function HubStudentDemographicsCharts({
       <ChartCard
         title="Students grouped by gender"
         description={recordedBasis(studentsWithGender, totalStudents, "gender")}
-        showCardFooter={false}
       >
         {formatedStudentsGroupedByGender.length ? (
           <ResponsiveContainer width="100%" height="100%">
@@ -129,7 +126,7 @@ export default function HubStudentDemographicsCharts({
               >
                 <Label
                   position="center"
-                  className="fill-shamiri-black text-xl font-semibold leading-8"
+                  className="fill-foreground text-xl font-semibold leading-8"
                 >
                   {studentsWithGender}
                 </Label>

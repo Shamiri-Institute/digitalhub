@@ -255,7 +255,7 @@ function MarkAttendanceContent({
                     aria-label="Attended"
                     value="attended"
                     id="mark_attended"
-                    className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
+                    className="custom-radio border-input data-[state=checked]:border-success"
                   />
                 </div>
                 <div className="relative">
@@ -264,7 +264,7 @@ function MarkAttendanceContent({
                     aria-label="Missed"
                     value="missed"
                     id="mark_missed"
-                    className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-red"
+                    className="custom-radio border-input  data-[state=checked]:border-destructive"
                   />
                 </div>
                 <div className="relative">
@@ -273,7 +273,7 @@ function MarkAttendanceContent({
                     aria-label="Unmarked"
                     value="unmarked"
                     id="Unmarked_"
-                    className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-new-blue"
+                    className="custom-radio border-input  data-[state=checked]:border-primary"
                   />
                 </div>
               </RadioGroup>
@@ -351,7 +351,7 @@ function MarkAttendanceContent({
         <Separator />
         <DialogFooter className="flex justify-end">
           <Button
-            className="text-shamiri-new-blue hover:bg-blue-bg"
+            className="text-primary hover:bg-info-bg"
             variant="ghost"
             onClick={() => {
               close();
@@ -379,7 +379,7 @@ export function CustomIndicator({ className, label }: { className: string; label
       <div className="flex items-center gap-3">
         <div
           className={cn(
-            "indicator h-4 w-4 rounded-full border border-gray-300 bg-white shadow-sm",
+            "indicator h-4 w-4 rounded-full border border-input bg-white shadow-sm",
             className,
           )}
         />

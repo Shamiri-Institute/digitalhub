@@ -365,7 +365,7 @@ export function ScheduleNewSession({
                             variant="ghost"
                             type="button"
                             size="sm"
-                            className="text-sm font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+                            className="text-sm font-semibold leading-6 text-primary hover:text-primary"
                             onClick={() => {
                               setTimePicker(false);
                             }}
@@ -373,7 +373,7 @@ export function ScheduleNewSession({
                             Cancel
                           </Button>
                           <Button
-                            className="flex items-center gap-2 bg-shamiri-new-blue text-sm font-semibold leading-6 text-white"
+                            className="flex items-center gap-2 bg-primary text-sm font-semibold leading-6 text-white"
                             type="button"
                             size="sm"
                             onClick={() => {
@@ -400,16 +400,12 @@ export function ScheduleNewSession({
             <Button
               variant="ghost"
               type="button"
-              className="text-shamiri-new-blue hover:text-shamiri-blue"
+              className="text-primary hover:text-primary"
               onClick={() => toggleDialog(false)}
             >
               Cancel
             </Button>
-            <Button
-              variant="brand"
-              loading={form.formState.isSubmitting}
-              disabled={form.formState.isSubmitting}
-            >
+            <Button loading={form.formState.isSubmitting} disabled={form.formState.isSubmitting}>
               Submit
             </Button>
           </div>

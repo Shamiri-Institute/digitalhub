@@ -310,7 +310,7 @@ function AddClinicalCaseFields({
         <div className="space-y-6 pt-4">
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+              <span className="pb-2 text-xs uppercase text-muted-foreground">
                 Student Information
               </span>
               <Separator />
@@ -336,7 +336,7 @@ function AddClinicalCaseFields({
                   <Button
                     type="button"
                     variant="link"
-                    className="h-auto p-0 text-sm text-shamiri-new-blue"
+                    className="h-auto p-0 text-sm text-primary"
                     onClick={toggleNewStudent}
                   >
                     {isNewStudent ? "Select existing student" : "Add new student"}
@@ -510,7 +510,7 @@ function AddClinicalCaseFields({
 
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">Case Details</span>
+              <span className="pb-2 text-xs uppercase text-muted-foreground">Case Details</span>
               <Separator />
             </div>
             <div className="space-y-4">
@@ -649,12 +649,12 @@ function AddClinicalCaseFields({
             <Button
               variant="ghost"
               type="button"
-              className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+              className="text-base font-semibold leading-6 text-primary hover:text-primary"
             >
               Cancel
             </Button>
           </DialogClose>
-          <Button variant="brand" type="submit" disabled={isSaving} loading={isSaving}>
+          <Button type="submit" disabled={isSaving} loading={isSaving}>
             Save
           </Button>
         </DialogFooter>

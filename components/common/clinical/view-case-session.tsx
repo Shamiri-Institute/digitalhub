@@ -17,19 +17,19 @@ export default function ViewCaseSessions({
     <div className="w-full">
       <Table>
         <TableBody>
-          <TableRow className="hover:bg-background-secondary">
+          <TableRow className="hover:bg-muted">
             <TableCell className="border font-medium">No. of clinical sessions</TableCell>
             <TableCell className="border">{noOfClinicalSessions}</TableCell>
           </TableRow>
-          <TableRow className="hover:bg-background-secondary">
+          <TableRow className="hover:bg-muted">
             <TableCell className="border font-medium">Upcoming session</TableCell>
             <TableCell className="border">{getNextSession(upcomingSession)}</TableCell>
           </TableRow>
-          <TableRow className="hover:bg-background-secondary">
+          <TableRow className="hover:bg-muted">
             <TableCell className="border font-medium">Initial contact</TableCell>
             <TableCell className="border">{initialContact}</TableCell>
           </TableRow>
-          <TableRow className="hover:bg-background-secondary">
+          <TableRow className="hover:bg-muted">
             <TableCell className="border font-medium">Case status</TableCell>
             <TableCell className="border">
               <Badge variant="warning">{caseStatus}</Badge>

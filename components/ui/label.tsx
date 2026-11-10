@@ -21,7 +21,7 @@ function Label({
     <LabelPrimitive.Root data-slot="label" className={cn(labelVariants(), className)} {...props}>
       {children}
       {required && (
-        <span aria-hidden="true" className="text-shamiri-light-red">
+        <span aria-hidden="true" className="text-destructive">
           {" *"}
         </span>
       )}

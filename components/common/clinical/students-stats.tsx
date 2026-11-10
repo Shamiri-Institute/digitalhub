@@ -1,7 +1,7 @@
 "use client";
 
 import { Label, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { SERIES_COLORS, orderedSeriesColor } from "#/components/charts/constants";
+import { orderedSeriesColor, seriesColor } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 
 export default function StudentsStatsBreakdown({
@@ -15,7 +15,7 @@ export default function StudentsStatsBreakdown({
 }) {
   return (
     <div className="grid grid-cols-1 gap-5 py-5 sm:grid-cols-2 md:grid-cols-3">
-      <ChartCard title="Students grouped by form" showCardFooter={false}>
+      <ChartCard title="Students grouped by form">
         {studentsStats.formStats.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307} aria-label="Students grouped by form">
@@ -33,7 +33,7 @@ export default function StudentsStatsBreakdown({
               >
                 <Label
                   position="center"
-                  className="fill-shamiri-black text-2xl font-semibold leading-8"
+                  className="fill-foreground text-2xl font-semibold leading-8"
                 >
                   {studentsStats.formStats.reduce(
                     (acc: number, val: { value: number }) => acc + val.value,
@@ -46,7 +46,7 @@ export default function StudentsStatsBreakdown({
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
-      <ChartCard title="Students grouped by age" showCardFooter={false}>
+      <ChartCard title="Students grouped by age">
         {studentsStats.ageStats.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307} aria-label="Students grouped by age">
@@ -71,14 +71,14 @@ export default function StudentsStatsBreakdown({
         ) : null}
       </ChartCard>
 
-      <ChartCard title="Students grouped by gender" showCardFooter={false}>
+      <ChartCard title="Students grouped by gender">
         {studentsStats.genderStats.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307} aria-label="Students grouped by gender">
               <Pie
                 data={studentsStats.genderStats.map((val, index) => ({
                   ...val,
-                  fill: SERIES_COLORS[index],
+                  fill: seriesColor(index),
                 }))}
                 dataKey="value"
                 nameKey="gender"
@@ -89,7 +89,7 @@ export default function StudentsStatsBreakdown({
               >
                 <Label
                   position="center"
-                  className="fill-shamiri-black text-2xl font-semibold leading-8"
+                  className="fill-foreground text-2xl font-semibold leading-8"
                 >
                   {studentsStats.genderStats.reduce(
                     (acc: number, val: { value: number }) => acc + val.value,

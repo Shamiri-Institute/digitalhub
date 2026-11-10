@@ -14,7 +14,7 @@ export const columns: ColumnDef<SupervisorClinicalCasesData>[] = [
     header: "Active Status",
     cell: ({ row }) => {
       return (
-        <Badge variant={colors[row.original.activeStatus] || "shamiri-green"}>
+        <Badge variant={colors[row.original.activeStatus] || "success"}>
           {row.original.activeStatus}
         </Badge>
       );
@@ -37,23 +37,17 @@ export const columns: ColumnDef<SupervisorClinicalCasesData>[] = [
   },
 ];
 
-type BadgeVariant =
-  | "destructive"
-  | "warning"
-  | "shamiri-green"
-  | "default"
-  | "secondary"
-  | "outline-solid";
+type BadgeVariant = "destructive" | "warning" | "success" | "default" | "secondary" | "outline";
 
 const colors: Record<string, BadgeVariant> = {
-  Active: "shamiri-green",
+  Active: "success",
   FollowUp: "warning",
   Referred: "destructive",
   Terminated: "destructive",
-  Low: "shamiri-green",
+  Low: "success",
   Mid: "warning",
   High: "destructive",
   Severe: "destructive",
-  No: "shamiri-green",
+  No: "success",
   Medium: "warning",
 };

@@ -41,18 +41,18 @@ export default function SchoolsBreadcrumb({
 
   return (
     <div className="flex items-center justify-between gap-3">
-      <div className="flex items-center gap-x-5 text-shamiri-text-dark-grey">
+      <div className="flex items-center gap-x-5 text-muted-foreground">
         <button
           type="button"
           aria-label="Back"
-          className="flex cursor-pointer items-center justify-center rounded-lg border p-3 hover:text-shamiri-new-blue hover:drop-shadow-sm active:scale-95"
+          className="flex cursor-pointer items-center justify-center rounded-lg border p-3 hover:text-primary hover:drop-shadow-sm active:scale-95"
           onClick={() => {
             router.back();
           }}
         >
           <Icons.arrowLeft className="h-4 w-4" />
         </button>
-        <div className="flex items-center gap-2 text-shamiri-text-grey">
+        <div className="flex items-center gap-2 text-muted-foreground">
           <Link
             href={
               role === "HUB_COORDINATOR"
@@ -65,19 +65,19 @@ export default function SchoolsBreadcrumb({
                       ? "/admin/hubs"
                       : "#"
             }
-            className="hover:text-shamiri-new-blue"
+            className="hover:text-primary"
           >
             {role === "ADMIN" ? "Hubs" : "Schools"}
           </Link>
           {role === "ADMIN" && (
             <>
               <span>/</span>
-              <span className="text-shamiri-text-dark-grey">{selectedSchool?.hub?.hubName}</span>
+              <span className="text-muted-foreground">{selectedSchool?.hub?.hubName}</span>
             </>
           )}
           <span>/</span>
           <Popover>
-            <PopoverTrigger className="flex cursor-pointer items-center gap-2 text-shamiri-text-dark-grey">
+            <PopoverTrigger className="flex cursor-pointer items-center gap-2 text-muted-foreground">
               {selectedSchool?.schoolName}
               <ChevronsUpDown className="h-3.5 w-3.5 opacity-60" />
             </PopoverTrigger>
@@ -94,11 +94,11 @@ export default function SchoolsBreadcrumb({
                       key={school.visibleId}
                       value={school.schoolName}
                       onSelect={() => handleSchoolSelect(school.visibleId)}
-                      className="flex items-center justify-between gap-3 rounded-none border-b border-grey-border px-3 last:border-b-0"
+                      className="flex items-center justify-between gap-3 rounded-none border-b border-border px-3 last:border-b-0"
                     >
                       <div className="flex flex-col">
                         <span className="font-medium">{school.schoolName}</span>
-                        <span className="text-xs uppercase tracking-widest text-muted-foreground text-shamiri-new-blue">
+                        <span className="text-xs uppercase tracking-widest text-muted-foreground text-primary">
                           {school.hub?.hubName ?? "No Hub"}
                         </span>
                       </div>

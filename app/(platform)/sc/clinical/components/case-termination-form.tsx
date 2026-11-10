@@ -190,7 +190,7 @@ function CaseTerminationFields({
               Cancel
             </Button>
           </DialogClose>
-          <Button variant="brand" type="submit" loading={isSaving} disabled={isSaving}>
+          <Button type="submit" loading={isSaving} disabled={isSaving}>
             Terminate Case
           </Button>
         </div>

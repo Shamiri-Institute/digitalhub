@@ -326,7 +326,7 @@ function SessionStudents({
             setMarkAttendanceDialog(true);
           }}
         >
-          <Icons.fileDown className="text-shamiri-text-grey h-4 w-4" />
+          <Icons.fileDown className="text-muted-foreground h-4 w-4" />
           <span>Mark student attendance</span>
         </Button>
       </div>
@@ -381,10 +381,8 @@ function SessionStudents({
       {selectedGroup && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="h-4 w-1 rounded-full bg-shamiri-new-blue" />
-            <h3 className="text-sm font-semibold text-shamiri-text-dark-grey">
-              Attendance Uploads
-            </h3>
+            <div className="h-4 w-1 rounded-full bg-primary" />
+            <h3 className="text-sm font-semibold text-muted-foreground">Attendance Uploads</h3>
           </div>
           <ViewAttendanceDocument sessionId={session.id} groupId={selectedGroup} role={role} />
         </div>
@@ -464,9 +462,9 @@ function SessionStudents({
                 <span>{attendance?.studentName}</span>
               )}
             </span>
-            <span className="bg-shamiri-new-blue h-1 w-1 rounded-full">{""}</span>
+            <span className="bg-primary h-1 w-1 rounded-full">{""}</span>
             <span>{sessionDisplayName(session.session?.sessionName ?? "")}</span>
-            <span className="bg-shamiri-new-blue h-1 w-1 rounded-full">{""}</span>
+            <span className="bg-primary h-1 w-1 rounded-full">{""}</span>
             <span>{session.school?.schoolName ?? session.venue}</span>
           </p>
         </DialogAlertWidget>
@@ -525,23 +523,23 @@ const NO_STUDENTS: StudentAttendanceData[] = [];
 const TRIAGE_BADGE_CONFIG: Record<string, { label: string; className: string }> = {
   SUPPORTED: {
     label: "Triaged",
-    className: "bg-muted text-shamiri-text-dark-grey border-grey-border",
+    className: "bg-muted text-muted-foreground border-border",
   },
   REFERRED: {
     label: "Escalated",
-    className: "bg-shamiri-light-orange/10 text-shamiri-dark-orange border-shamiri-light-orange/30",
+    className: "bg-warning-bg text-warning border-warning-border",
   },
   ESCALATED: {
     label: "Escalated",
-    className: "bg-shamiri-light-orange/10 text-shamiri-dark-orange border-shamiri-light-orange/30",
+    className: "bg-warning-bg text-warning border-warning-border",
   },
   REFUSED: {
     label: "Refused referral",
-    className: "bg-shamiri-light-orange/10 text-shamiri-dark-orange border-shamiri-light-orange/30",
+    className: "bg-warning-bg text-warning border-warning-border",
   },
   INTERRUPTED: {
     label: "Interrupted",
-    className: "bg-shamiri-light-orange/10 text-shamiri-dark-orange border-shamiri-light-orange/30",
+    className: "bg-warning-bg text-warning border-warning-border",
   },
 };
 
@@ -551,9 +549,7 @@ function TriageBadge({ event }: { event: TriageEventWithRelations }) {
 
   if (isIncomplete) {
     return (
-      <span className="text-shamiri-text-grey rounded border px-1.5 py-0.5 text-xs">
-        Incomplete
-      </span>
+      <span className="text-muted-foreground rounded border px-1.5 py-0.5 text-xs">Incomplete</span>
     );
   }
 
@@ -588,8 +584,8 @@ function TriageSessionSummary({
   if (incomplete > 0) parts.push(`${incomplete} incomplete`);
 
   return (
-    <p className="text-shamiri-text-grey text-sm">
-      <span className="text-shamiri-text-dark-grey font-medium">
+    <p className="text-muted-foreground text-sm">
+      <span className="text-muted-foreground font-medium">
         {total} student{total !== 1 ? "s" : ""} triaged
       </span>
       {parts.length > 0 && ` — ${parts.join(", ")}`}
@@ -623,9 +619,7 @@ const columns = (state: {
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
-        className={
-          "border-shamiri-light-grey data-[state=checked]:bg-shamiri-new-blue h-5 w-5 bg-white"
-        }
+        className={"h-5 w-5"}
       />
     ),
     cell: ({ row }) => {
@@ -635,9 +629,7 @@ const columns = (state: {
             checked={row.getIsSelected()}
             onCheckedChange={(val) => row.toggleSelected(!!val)}
             aria-label="Select row"
-            className={
-              "border-shamiri-light-grey data-[state=checked]:bg-shamiri-new-blue h-5 w-5 bg-white"
-            }
+            className={"h-5 w-5"}
           />
         </div>
       );

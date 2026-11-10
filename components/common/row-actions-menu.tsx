@@ -10,11 +10,11 @@ export function RowActionsTrigger({ label, className }: { label: string; classNa
     <DropdownMenuTrigger
       aria-label={label}
       className={cn(
-        "absolute inset-0 flex items-center justify-center border-l focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-shamiri-new-blue",
+        "absolute inset-0 flex items-center justify-center border-l focus-visible:-outline-offset-2",
         className,
       )}
     >
-      <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
+      <Icons.moreHorizontal className="h-5 w-5 text-muted-foreground" />
     </DropdownMenuTrigger>
   );
 }

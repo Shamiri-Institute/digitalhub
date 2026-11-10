@@ -140,7 +140,7 @@ export function SupervisorAttendanceDataTable({
               setMarkAttendanceDialog(true);
             }}
           >
-            <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
+            <Icons.fileDown className="h-4 w-4 text-muted-foreground" />
             <span>Mark supervisor attendance</span>
           </Button>
         </div>
@@ -215,11 +215,11 @@ export function SupervisorAttendanceDataTable({
             ) : (
               <span>{attendance?.supervisorName}</span>
             )}
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+            <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
             <span>
               {sessionDisplayName(attendance?.sessionType ?? session?.session?.sessionName ?? "")}
             </span>
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+            <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
             <span>{attendance?.schoolName ?? session?.school?.schoolName ?? session?.venue}</span>
           </div>
         </DialogAlertWidget>
@@ -263,9 +263,7 @@ const columns = (state: {
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
-        className={
-          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-        }
+        className={"h-5 w-5"}
       />
     ),
     cell: ({ row }) => {
@@ -277,9 +275,7 @@ const columns = (state: {
             onCheckedChange={(val) => row.toggleSelected(!!val)}
             disabled={sessionOccurredStatus}
             aria-label="Select row"
-            className={
-              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-            }
+            className={"h-5 w-5"}
           />
         </div>
       );
@@ -301,29 +297,29 @@ const columns = (state: {
             className={cn(
               "flex items-center rounded-lg border px-1.5 py-0.5",
               {
-                "border-green-border": attended,
-                "border-red-border": !attended,
-                "border-blue-border": attended === undefined || attended === null,
+                "border-success-border": attended,
+                "border-destructive-border": !attended,
+                "border-info-border": attended === undefined || attended === null,
               },
               {
-                "bg-green-bg": attended,
-                "bg-red-bg": !attended,
-                "bg-blue-bg": attended === undefined || attended === null,
+                "bg-success-bg": attended,
+                "bg-destructive-bg": !attended,
+                "bg-info-bg": attended === undefined || attended === null,
               },
             )}
           >
             {attended === null || attended === undefined ? (
-              <div className="flex items-center gap-1 text-blue-base">
+              <div className="flex items-center gap-1 text-info">
                 <Icons.helpCircle className="h-3 w-3" strokeWidth={2.5} />
                 <span>Not marked</span>
               </div>
             ) : attended ? (
-              <div className="flex items-center gap-1 text-green-base">
+              <div className="flex items-center gap-1 text-success">
                 <Icons.checkCircle className="h-3 w-3" strokeWidth={2.5} />
                 <span>Attended</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1 text-red-base">
+              <div className="flex items-center gap-1 text-destructive">
                 <Icons.crossCircleFilled className="h-3 w-3" strokeWidth={2.5} />
                 <span>Missed</span>
               </div>
@@ -347,7 +343,7 @@ const columns = (state: {
           <div className="relative flex items-center">
             <span>{schools[0]},</span>
             <DropdownMenu>
-              <DropdownMenuTrigger className="ml-2 cursor-pointer select-none text-shamiri-new-blue">
+              <DropdownMenuTrigger className="ml-2 cursor-pointer select-none text-primary">
                 +{schools.length - 1}
                 <span className="sr-only"> more schools</span>
               </DropdownMenuTrigger>
@@ -386,7 +382,7 @@ const columns = (state: {
               <Tooltip>
                 <TooltipTrigger>
                   <div className="flex gap-1">
-                    <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
+                    <Icons.flagTriangleRight className="h-4 w-4 text-destructive" />
                     <span>{row.original.phoneNumber}</span>
                   </div>
                 </TooltipTrigger>
@@ -438,7 +434,7 @@ export function SupervisorAttendanceDataTableMenu({
       <DropdownMenuPortal>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>
-            <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
+            <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem

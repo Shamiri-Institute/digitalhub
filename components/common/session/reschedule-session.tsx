@@ -227,7 +227,7 @@ export function RescheduleSessionForm({
                           variant="ghost"
                           type="button"
                           size="sm"
-                          className="text-sm font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+                          className="text-sm font-semibold leading-6 text-primary hover:text-primary"
                           onClick={() => {
                             setTimePicker(false);
                           }}
@@ -235,7 +235,7 @@ export function RescheduleSessionForm({
                           Cancel
                         </Button>
                         <Button
-                          className="flex items-center gap-2 bg-shamiri-new-blue text-sm font-semibold leading-6 text-white"
+                          className="flex items-center gap-2 bg-primary text-sm font-semibold leading-6 text-white"
                           type="button"
                           size="sm"
                           onClick={() => {
@@ -260,15 +260,11 @@ export function RescheduleSessionForm({
 
         <div className="flex justify-end gap-6">
           <DialogClose asChild>
-            <Button
-              variant="ghost"
-              type="button"
-              className="text-shamiri-new-blue hover:text-shamiri-blue"
-            >
+            <Button variant="ghost" type="button" className="text-primary hover:text-primary">
               Cancel
             </Button>
           </DialogClose>
-          <Button variant="brand" loading={isSaving} disabled={isSaving}>
+          <Button loading={isSaving} disabled={isSaving}>
             Save Changes
           </Button>
         </div>

@@ -166,7 +166,7 @@ function FellowDropoutSteps({
     <DialogAlertWidget separator={fellow.droppedOut ?? undefined}>
       <div className="flex items-center gap-2">
         <span>{fellow.fellowName}</span>
-        <span className="h-1 w-1 rounded-full bg-shamiri-new-blue" />
+        <span className="h-1 w-1 rounded-full bg-primary" />
         <span>
           {(fellow.cellNumber &&
             parsePhoneNumberFromString(fellow.cellNumber, "KE")?.formatNational()) ??
@@ -193,7 +193,7 @@ function FellowDropoutSteps({
         {alertWidget}
         <div className="space-y-4">
           <h3>For each of the following groups, assign a replacement or archive the group:</h3>
-          <div className="divide-shamiri-light-gray flex flex-col gap-2 divide-y">
+          <div className="divide-muted-foreground flex flex-col gap-2 divide-y">
             {activeGroups.map((group) => (
               <div key={group.id} className="flex items-center justify-between gap-2 px-4 py-2">
                 <p className="">
@@ -206,7 +206,7 @@ function FellowDropoutSteps({
                   </Button>
                   <Button
                     variant="outline"
-                    className="text-shamiri-light-red hover:bg-red-bg"
+                    className="text-destructive hover:bg-destructive-bg"
                     onClick={() => onArchive(group)}
                   >
                     Archive
@@ -268,8 +268,8 @@ function FellowDropoutSteps({
           <Button
             className={cn(
               fellow.droppedOut
-                ? "text-shamiri-new-blue hover:bg-blue-bg"
-                : "text-shamiri-light-red hover:bg-red-bg",
+                ? "text-primary hover:bg-info-bg"
+                : "text-destructive hover:bg-destructive-bg",
             )}
             variant="ghost"
             type="button"
@@ -279,7 +279,7 @@ function FellowDropoutSteps({
             Cancel
           </Button>
           <Button
-            variant={fellow.droppedOut ? "brand" : "destructive"}
+            variant={fellow.droppedOut ? "default" : "destructive"}
             type="submit"
             disabled={isSaving}
             loading={isSaving}
@@ -297,9 +297,9 @@ function GroupAlertWidget({ fellow, group }: { fellow: MainFellowTableData; grou
     <DialogAlertWidget>
       <div className="flex items-center gap-2">
         <span>{fellow.fellowName}</span>
-        <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+        <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
         <span>{group.groupName}</span>
-        <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+        <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
         <span>{group.school.schoolName}</span>
       </div>
     </DialogAlertWidget>

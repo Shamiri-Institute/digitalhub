@@ -50,8 +50,8 @@ export function ViewResolutionDialog({
           </LoadErrorBoundary>
         ) : (
           <div className="space-y-4">
-            <div className="rounded-md bg-blue-bg border border-blue-border p-4">
-              <p className="text-sm text-blue-base font-medium">
+            <div className="rounded-md bg-info-bg border border-info-border p-4">
+              <p className="text-sm text-info font-medium">
                 {ticket.currentTier
                   ? `This ticket has been escalated to ${ticket.currentTier.toLowerCase().replace("_", " ")} for resolution. It has not yet been resolved.`
                   : "This ticket has not yet been resolved."}
@@ -59,14 +59,12 @@ export function ViewResolutionDialog({
             </div>
             <Separator />
             <div>
-              <div className="text-sm font-medium text-shamiri-text-grey uppercase">Subject</div>
+              <div className="text-sm font-medium text-muted-foreground uppercase">Subject</div>
               <div className="text-base">{ticket.subject}</div>
             </div>
             <Separator />
             <div>
-              <div className="text-sm font-medium text-shamiri-text-grey uppercase">
-                Description
-              </div>
+              <div className="text-sm font-medium text-muted-foreground uppercase">Description</div>
               <div className="text-base">{ticket.description || "No description provided"}</div>
             </div>
           </div>
@@ -90,13 +88,13 @@ function ResolutionDetails({
   const result = use(resolutionPromise);
   const resolution = result.data;
   if (!result.success || !resolution) {
-    return <p className="text-sm text-shamiri-light-red">Could not load the resolution.</p>;
+    return <p className="text-sm text-destructive">Could not load the resolution.</p>;
   }
 
   return (
     <div className="space-y-4">
       <div>
-        <div className="text-sm font-medium text-shamiri-text-grey uppercase">Resolved By</div>
+        <div className="text-sm font-medium text-muted-foreground uppercase">Resolved By</div>
         <div className="text-base capitalize">
           {resolution.resolvedByRole
             ? resolution.resolvedByRole.toLowerCase().replace("_", " ")
@@ -105,14 +103,12 @@ function ResolutionDetails({
       </div>
       <Separator />
       <div>
-        <div className="text-sm font-medium text-shamiri-text-grey uppercase">
-          Resolution Reason
-        </div>
+        <div className="text-sm font-medium text-muted-foreground uppercase">Resolution Reason</div>
         <div className="text-base">{resolution.resolutionReason}</div>
       </div>
       <Separator />
       <div>
-        <div className="text-sm font-medium text-shamiri-text-grey uppercase">Date Resolved</div>
+        <div className="text-sm font-medium text-muted-foreground uppercase">Date Resolved</div>
         <div className="text-base">{formatSafeDate(resolution.createdAt)}</div>
       </div>
     </div>

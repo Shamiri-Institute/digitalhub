@@ -310,7 +310,7 @@ function ReferClinicalCaseForm({
                   Cancel
                 </Button>
               </DialogClose>
-              <Button variant="brand" type="submit" loading={isSaving} disabled={isSaving}>
+              <Button type="submit" loading={isSaving} disabled={isSaving}>
                 Save Changes
               </Button>
             </DialogFooter>

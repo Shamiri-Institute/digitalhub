@@ -50,7 +50,7 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
       return (
         <div className="flex items-center gap-1">
           <span>{row.original.pseudonym}</span>
-          {flagged ? <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" /> : null}
+          {flagged ? <Icons.flagTriangleRight className="h-4 w-4 text-destructive" /> : null}
           {row.original.studentHasMultipleOpenCases ? (
             <Badge variant="warning">Multiple open cases</Badge>
           ) : null}
@@ -69,7 +69,7 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
       const riskLevel = row.original.riskStatus || "N/A";
       return (
         <div className="flex flex-col items-start gap-1">
-          <Badge variant={colors[riskLevel || "shamiri-green"]} className="uppercase">
+          <Badge variant={colors[riskLevel || "success"]} className="uppercase">
             {riskLevel}
           </Badge>
           <span className="text-xs text-muted-foreground">
@@ -88,7 +88,7 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
       return (
         <div>
           {row.original.hasNotes ? (
-            <Badge variant="shamiri-green">Uploaded</Badge>
+            <Badge variant="success">Uploaded</Badge>
           ) : (
             <Badge variant="destructive">Unavailable</Badge>
           )}
@@ -103,7 +103,7 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
       return (
         <div>
           {row.original.treatmentPlan ? (
-            <Badge variant="shamiri-green">Uploaded</Badge>
+            <Badge variant="success">Uploaded</Badge>
           ) : (
             <Badge variant="destructive">Unavailable</Badge>
           )}
@@ -120,23 +120,17 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
   },
 ];
 
-type BadgeVariant =
-  | "destructive"
-  | "warning"
-  | "shamiri-green"
-  | "default"
-  | "secondary"
-  | "outline-solid";
+type BadgeVariant = "destructive" | "warning" | "success" | "default" | "secondary" | "outline";
 
 const colors: Record<string, BadgeVariant> = {
-  Active: "shamiri-green",
+  Active: "success",
   FollowUp: "warning",
   Referred: "destructive",
   Terminated: "destructive",
-  Low: "shamiri-green",
+  Low: "success",
   Mid: "warning",
   High: "destructive",
   Severe: "destructive",
-  No: "shamiri-green",
+  No: "success",
   Medium: "warning",
 };

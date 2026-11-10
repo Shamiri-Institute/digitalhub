@@ -107,7 +107,7 @@ export default function ViewMarkClinicalSessions({ currentcase }: { currentcase:
     <div className="w-full space-y-4">
       <Table>
         <TableHeader>
-          <TableRow className="bg-background-secondary">
+          <TableRow className="bg-muted">
             <TableHead className="border">Session</TableHead>
             <TableHead className="border">Date</TableHead>
             <TableHead className="w-[140px] border">Attendance</TableHead>
@@ -122,7 +122,7 @@ export default function ViewMarkClinicalSessions({ currentcase }: { currentcase:
               return currentcase.caseStatus === "FollowUp";
             },
           ).map((sessionType) => (
-            <TableRow key={sessionType.key} className="hover:bg-background-secondary">
+            <TableRow key={sessionType.key} className="hover:bg-muted">
               <TableCell className="border font-medium">{sessionType.value}</TableCell>
               <TableCell className="border">
                 <Popover>
@@ -157,7 +157,7 @@ export default function ViewMarkClinicalSessions({ currentcase }: { currentcase:
                 attendance[sessionType.key] !== undefined ? (
                   <div className="p-2">
                     <Badge
-                      variant={attendance[sessionType.key] ? "shamiri-green" : "destructive"}
+                      variant={attendance[sessionType.key] ? "success" : "destructive"}
                       className="w-20 justify-center"
                     >
                       {attendance[sessionType.key] ? (
@@ -176,14 +176,14 @@ export default function ViewMarkClinicalSessions({ currentcase }: { currentcase:
                     <button
                       type="button"
                       onClick={toastOnError(() => handleAttendance(sessionType.key, true))}
-                      className="flex items-center justify-center border-r p-3 text-shamiri-green transition-colors hover:bg-green-bg"
+                      className="flex items-center justify-center border-r p-3 text-success transition-colors hover:bg-success-bg"
                     >
                       <Check className="h-4 w-4" />
                     </button>
                     <button
                       type="button"
                       onClick={toastOnError(() => handleAttendance(sessionType.key, false))}
-                      className="flex items-center justify-center p-3 text-shamiri-light-red transition-colors hover:bg-red-bg"
+                      className="flex items-center justify-center p-3 text-destructive transition-colors hover:bg-destructive-bg"
                     >
                       <X className="h-4 w-4" />
                     </button>

@@ -86,13 +86,7 @@ function UnarchiveGroupConfirm({
               Cancel
             </Button>
           </DialogClose>
-          <Button
-            type="button"
-            variant="brand"
-            disabled={isSaving}
-            loading={isSaving}
-            onClick={onConfirm}
-          >
+          <Button type="button" disabled={isSaving} loading={isSaving} onClick={onConfirm}>
             Unarchive
           </Button>
         </DialogFooter>

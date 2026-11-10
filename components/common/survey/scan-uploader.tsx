@@ -282,34 +282,29 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
           addFiles(Array.from(event.dataTransfer.files));
         }}
         className={cn(
-          "flex flex-col items-center gap-1.5 rounded-lg border border-dashed border-shamiri-new-lighter-blue bg-blue-bg/50 px-6 py-9 text-center transition-colors duration-150",
-          "focus-within:border-shamiri-new-blue focus-within:ring-2 focus-within:ring-shamiri-new-blue/30",
+          "flex flex-col items-center gap-1.5 rounded-lg border border-dashed border-info-border bg-info-bg/50 px-6 py-9 text-center transition-colors duration-150",
+          "focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30",
           needsHub
-            ? "cursor-not-allowed border-grey-border bg-grey-bg"
-            : "cursor-pointer hover:border-shamiri-new-blue hover:bg-blue-bg",
-          dragging && "border-solid border-shamiri-new-blue bg-blue-bg",
+            ? "cursor-not-allowed border-border bg-muted"
+            : "cursor-pointer hover:border-primary hover:bg-info-bg",
+          dragging && "border-solid border-primary bg-info-bg",
         )}
       >
         <Icons.fileUp
           aria-hidden
-          className={cn(
-            "mb-1 size-7",
-            needsHub ? "text-shamiri-text-grey" : "text-shamiri-new-blue",
-          )}
+          className={cn("mb-1 size-7", needsHub ? "text-muted-foreground" : "text-primary")}
         />
-        <span className="font-medium text-shamiri-black">
+        <span className="font-medium text-foreground">
           {needsHub ? (
             "Choose a hub to upload its scans"
           ) : (
             <>
               Drop scans here, or{" "}
-              <span className="text-shamiri-new-blue underline underline-offset-4">
-                choose files
-              </span>
+              <span className="text-primary underline underline-offset-4">choose files</span>
             </>
           )}
         </span>
-        <span className="text-sm text-shamiri-text-dark-grey">
+        <span className="text-sm text-muted-foreground">
           PDF, JPEG or PNG, up to {formatBytes(MAX_SCAN_BYTES)} each. Add as many as you like.
         </span>
         <input
@@ -328,9 +323,9 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
       </label>
 
       {scans.length > 0 && (
-        <div className="rounded-lg border border-grey-border">
-          <div className="flex items-center justify-between border-b border-grey-border px-4 py-2">
-            <p className="text-sm text-shamiri-text-dark-grey" aria-live="polite">
+        <div className="rounded-lg border border-border">
+          <div className="flex items-center justify-between border-b border-border px-4 py-2">
+            <p className="text-sm text-muted-foreground" aria-live="polite">
               {[
                 `${uploadedCount} uploaded`,
                 uploadsInProgress > 0 && `${uploadsInProgress} to go`,
@@ -349,7 +344,7 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
               Clear list
             </Button>
           </div>
-          <ul aria-label="Files added" className="divide-y divide-grey-border">
+          <ul aria-label="Files added" className="divide-y divide-border">
             {scans.map((scan) => (
               <QueuedScanRow key={scan.id} scan={scan} onCancel={() => cancelUpload(scan)} />
             ))}
@@ -366,18 +361,20 @@ function QueuedScanRow({ scan, onCancel }: { scan: QueuedScan; onCancel: () => v
     <li className="flex items-center gap-3 px-4 py-2.5">
       <ScanStateIcon state={state} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-shamiri-black">{scan.file.name}</p>
-        <p className="text-xs text-shamiri-text-dark-grey">
+        <p className="truncate text-sm font-medium text-foreground">{scan.file.name}</p>
+        <p className="text-xs text-muted-foreground">
           <span className="tabular-nums">{formatBytes(scan.file.size)}</span>
           {scan.hubName && <> · {scan.hubName}</>}
         </p>
-        {state.kind === "refused" && <p className="mt-0.5 text-sm text-red-base">{state.reason}</p>}
+        {state.kind === "refused" && (
+          <p className="mt-0.5 text-sm text-destructive">{state.reason}</p>
+        )}
         {state.kind === "uploading" && (
           <progress
             value={state.percent}
             max={100}
             aria-label={`Uploading ${scan.file.name}`}
-            className="mt-1.5 block h-1 w-full appearance-none overflow-hidden rounded-full bg-blue-bg [&::-moz-progress-bar]:bg-shamiri-new-blue [&::-webkit-progress-bar]:bg-blue-bg [&::-webkit-progress-value]:bg-shamiri-new-blue [&::-webkit-progress-value]:transition-[width] [&::-webkit-progress-value]:duration-200"
+            className="mt-1.5 block h-1 w-full appearance-none overflow-hidden rounded-full bg-info-bg [&::-moz-progress-bar]:bg-primary [&::-webkit-progress-bar]:bg-info-bg [&::-webkit-progress-value]:bg-primary [&::-webkit-progress-value]:transition-[width] [&::-webkit-progress-value]:duration-200"
           />
         )}
       </div>
@@ -385,7 +382,7 @@ function QueuedScanRow({ scan, onCancel }: { scan: QueuedScan; onCancel: () => v
         <span
           className={cn(
             "shrink-0 text-sm tabular-nums",
-            state.kind === "uploaded" ? "text-shamiri-green" : "text-shamiri-text-dark-grey",
+            state.kind === "uploaded" ? "text-success" : "text-muted-foreground",
           )}
         >
           {scanStateText(state)}
@@ -396,7 +393,7 @@ function QueuedScanRow({ scan, onCancel }: { scan: QueuedScan; onCancel: () => v
           type="button"
           variant="ghost"
           size="icon"
-          className="size-7 shrink-0 text-shamiri-text-dark-grey"
+          className="size-7 shrink-0 text-muted-foreground"
           aria-label={`Cancel ${scan.file.name}`}
           onClick={onCancel}
         >
@@ -428,19 +425,16 @@ function ScanStateIcon({ state }: { state: ScanState }) {
   const className = "size-4 shrink-0";
   switch (state.kind) {
     case "uploaded":
-      return <Icons.check aria-hidden className={cn(className, "text-shamiri-green")} />;
+      return <Icons.check aria-hidden className={cn(className, "text-success")} />;
     case "refused":
-      return <Icons.alertCircle aria-hidden className={cn(className, "text-red-base")} />;
+      return <Icons.alertCircle aria-hidden className={cn(className, "text-destructive")} />;
     case "waiting":
-      return <Icons.fileUp aria-hidden className={cn(className, "text-shamiri-text-grey")} />;
+      return <Icons.fileUp aria-hidden className={cn(className, "text-muted-foreground")} />;
     case "cancelled":
-      return <Icons.minusCircle aria-hidden className={cn(className, "text-shamiri-text-grey")} />;
+      return <Icons.minusCircle aria-hidden className={cn(className, "text-muted-foreground")} />;
     default:
       return (
-        <Icons.loaderCircle
-          aria-hidden
-          className={cn(className, "animate-spin text-shamiri-new-blue")}
-        />
+        <Icons.loaderCircle aria-hidden className={cn(className, "animate-spin text-primary")} />
       );
   }
 }

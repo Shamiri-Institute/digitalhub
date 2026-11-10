@@ -15,7 +15,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { SERIES_COLORS } from "#/components/charts/constants";
+import { seriesColor } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 
 export default function StudentsDataBreakdown({
@@ -32,11 +32,11 @@ export default function StudentsDataBreakdown({
     value: number;
   }[];
 }) {
-  const dropoutColors = dropoutData.map((_, index) => SERIES_COLORS[index % SERIES_COLORS.length]);
+  const dropoutColors = dropoutData.map((_, index) => seriesColor(index));
 
   return (
     <div className="grid grid-cols-1 gap-5 py-2 sm:grid-cols-2 xl:grid-cols-4">
-      <ChartCard title="Attendance" showCardFooter={false}>
+      <ChartCard title="Attendance">
         {attendanceData.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart width={307} height={307} data={attendanceData}>
@@ -44,13 +44,13 @@ export default function StudentsDataBreakdown({
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="value" fill={SERIES_COLORS[0]} />
+              <Bar dataKey="value" fill={seriesColor(0)} />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
 
-      <ChartCard title="Drop-out reasons" showCardFooter={false}>
+      <ChartCard title="Drop-out reasons">
         {dropoutData.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
@@ -65,7 +65,7 @@ export default function StudentsDataBreakdown({
               >
                 <Label
                   position="center"
-                  className="text-2xl font-semibold leading-8 text-shamiri-black"
+                  className="text-2xl font-semibold leading-8 text-foreground"
                 >
                   {dropoutData.reduce((acc, curr) => acc + curr.value, 0)}
                 </Label>
@@ -76,17 +76,14 @@ export default function StudentsDataBreakdown({
         ) : null}
       </ChartCard>
 
-      <ChartCard title="Student information completion" showCardFooter={false}>
+      <ChartCard title="Student information completion">
         {completionData.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
                 data={completionData.map((entry) => ({
                   ...entry,
-                  fill:
-                    entry.name === "actual"
-                      ? SERIES_COLORS[0]
-                      : "var(--color-shamiri-new-light-blue)",
+                  fill: entry.name === "actual" ? seriesColor(0) : "var(--color-info-bg)",
                 }))}
                 dataKey="value"
                 nameKey="name"
@@ -97,7 +94,7 @@ export default function StudentsDataBreakdown({
               >
                 <Label
                   position="center"
-                  className="text-2xl font-semibold leading-8 text-shamiri-black"
+                  className="text-2xl font-semibold leading-8 text-foreground"
                 >
                   {`${completionData.find((d) => d.name === "actual")?.value ?? 0}%`}
                 </Label>
@@ -108,7 +105,7 @@ export default function StudentsDataBreakdown({
         ) : null}
       </ChartCard>
 
-      <ChartCard title="Student group ratings" showCardFooter={false}>
+      <ChartCard title="Student group ratings">
         {ratingsData.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart width={307} height={307} data={ratingsData}>
@@ -117,7 +114,7 @@ export default function StudentsDataBreakdown({
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="value" stroke={SERIES_COLORS[0]} />
+              <Line type="monotone" dataKey="value" stroke={seriesColor(0)} />
             </LineChart>
           </ResponsiveContainer>
         ) : null}

@@ -17,15 +17,17 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="relative z-10 mx-6 h-fit w-full max-w-md overflow-hidden rounded-2xl border border-border sm:shadow-xl lg:mx-0">
-      <div className="flex flex-col items-center justify-center space-y-3 border-b border-grey-border bg-white px-4 py-6 pt-8 text-center sm:px-16">
-        <Icons.logo className="h-9 text-shamiri-new-blue lg:h-10" />
-        <p className="text-sm text-muted-foreground">
-          The platform powering the Shamiri Intervention
-        </p>
+    <div className="mx-4 w-full max-w-md overflow-hidden rounded-xl border bg-white">
+      <div className="flex flex-col items-center gap-3 bg-primary px-6 pb-8 pt-10 text-center">
+        <Icons.logo className="h-10 w-auto text-white" />
+        <p className="text-sm font-semibold uppercase tracking-wider text-lime">Digital Hub</p>
       </div>
-      <div className="flex flex-col space-y-3 bg-background-secondary px-4 py-8 sm:px-16">
-        <React.Suspense fallback={<div className="mx-auto h-5 w-3/4 rounded-lg bg-muted" />}>
+      <div className="flex flex-col gap-6 px-6 py-8 sm:px-12">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold text-primary">Sign in</h1>
+          <p className="text-muted-foreground">The platform powering the Shamiri Intervention.</p>
+        </div>
+        <React.Suspense fallback={<div className="h-9 rounded-md bg-muted" />}>
           <LoginForm />
         </React.Suspense>
       </div>

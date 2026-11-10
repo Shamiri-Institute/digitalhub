@@ -114,7 +114,7 @@ export default function GroupsDataTable({
               <DialogAlertWidget>
                 <div className="flex items-center gap-2">
                   <span>{group.fellowName}</span>
-                  <span className="bg-shamiri-new-blue h-1 w-1 rounded-full">{""}</span>
+                  <span className="bg-primary h-1 w-1 rounded-full">{""}</span>
                   <span>{group.groupName}</span>
                 </div>
               </DialogAlertWidget>

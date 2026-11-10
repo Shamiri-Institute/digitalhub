@@ -161,7 +161,7 @@ function ResolveTicketForm({ ticketId, close }: { ticketId: string; close: () =>
               Cancel
             </Button>
           </DialogClose>
-          <Button variant="brand" type="submit" disabled={isSaving} loading={isSaving}>
+          <Button type="submit" disabled={isSaving} loading={isSaving}>
             Resolve Ticket
           </Button>
         </DialogFooter>

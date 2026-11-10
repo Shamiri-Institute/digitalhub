@@ -100,7 +100,7 @@ export default function EntryListEditor({
                     )}
                   />
                   {published && (
-                    <Lock className="absolute right-2 top-2.5 h-4 w-4 text-shamiri-text-grey" />
+                    <Lock className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   )}
                 </div>
                 <Input
@@ -128,7 +128,7 @@ export default function EntryListEditor({
                     <IconButton
                       label={`Remove ${lower} ${position}`}
                       disabled={published}
-                      className="text-shamiri-light-red"
+                      className="text-destructive"
                       onClick={() => onChange(entries.filter((_, i) => i !== index))}
                     >
                       <X className="h-4 w-4" />

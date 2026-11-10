@@ -45,7 +45,7 @@ export function MonthView({
                   <th
                     key={day}
                     className={cn({
-                      "bg-background-secondary": index === 0 || index === 6,
+                      "bg-muted": index === 0 || index === 6,
                     })}
                   >
                     {day}
@@ -126,7 +126,7 @@ export function MonthCalendarCell({
     <td
       {...cellProps}
       className={cn({
-        "bg-background-secondary": weekend,
+        "bg-muted": weekend,
       })}
     >
       {/* The date button sits behind the chips rather than around them: a chip is its own
@@ -140,7 +140,7 @@ export function MonthCalendarCell({
           tabIndex={buttonProps.tabIndex ?? -1}
           ref={ref}
           className={cn("absolute inset-0 transition ease-in-out", {
-            "outline-solid outline-2 outline-shamiri-new-blue": isSameDay(date, state.focusedDate),
+            "outline-solid outline-2 outline-primary": isSameDay(date, state.focusedDate),
             selected: isSelected,
             disabled: isDisabled,
             unavailable: isUnavailable,
@@ -158,12 +158,12 @@ export function MonthCalendarCell({
           <div
             aria-hidden
             className={cn("flex", {
-              "text-grey-c3": isOutsideVisibleRange,
+              "text-muted-foreground": isOutsideVisibleRange,
             })}
           >
             <div
               className={cn("flex h-6 w-6 items-center justify-center rounded-full p-0.5", {
-                "bg-shamiri-new-blue text-white": isSameDay(date, state.focusedDate),
+                "bg-primary text-white": isSameDay(date, state.focusedDate),
               })}
             >
               {formattedDate}

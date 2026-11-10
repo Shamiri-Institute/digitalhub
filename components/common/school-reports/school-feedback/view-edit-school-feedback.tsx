@@ -170,7 +170,6 @@ export default function ViewEditSchoolFeedback({
                     Cancel
                   </Button>
                   <Button
-                    variant="brand"
                     type="submit"
                     loading={form.formState.isSubmitting}
                     disabled={form.formState.isSubmitting}

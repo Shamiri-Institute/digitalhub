@@ -51,8 +51,8 @@ export default function AttendanceDocumentDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <div className="h-4 w-1 rounded-full bg-shamiri-new-blue" />
-              <h3 className="text-sm font-semibold text-shamiri-text-dark-grey">View Document</h3>
+              <div className="h-4 w-1 rounded-full bg-primary" />
+              <h3 className="text-sm font-semibold text-muted-foreground">View Document</h3>
             </div>
             <ViewAttendanceDocument
               key={refreshKey}
@@ -63,12 +63,12 @@ export default function AttendanceDocumentDialog({
             />
           </div>
 
-          <div className="border-t border-shamiri-light-grey" />
+          <div className="border-t border-border" />
 
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <div className="h-4 w-1 rounded-full bg-shamiri-green" />
-              <h3 className="text-sm font-semibold text-shamiri-text-dark-grey">Upload Document</h3>
+              <div className="h-4 w-1 rounded-full bg-success" />
+              <h3 className="text-sm font-semibold text-muted-foreground">Upload Document</h3>
             </div>
             <UploadStudentAttendanceDocument
               groupId={groupId}

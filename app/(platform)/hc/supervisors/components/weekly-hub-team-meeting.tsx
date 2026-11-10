@@ -68,7 +68,7 @@ export default function WeeklyHubTeamMeetingButton({
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
-        <Button variant="brand">
+        <Button>
           <span className="text-white">Weekly team meeting</span>
         </Button>
       </DialogTrigger>
@@ -263,12 +263,12 @@ function WeeklyHubTeamMeetingForm({
           <DialogFooter>
             <Button
               variant="ghost"
-              className="text-base font-semibold leading-6 text-shamiri-red"
+              className="text-base font-semibold leading-6 text-destructive"
               onClick={close}
             >
               Cancel
             </Button>
-            <Button className="bg-shamiri-new-blue text-base font-semibold leading-6 text-white">
+            <Button className="bg-primary text-base font-semibold leading-6 text-white">
               {form.formState.isSubmitting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}

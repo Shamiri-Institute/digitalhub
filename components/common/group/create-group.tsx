@@ -49,7 +49,7 @@ export default function CreateGroup(props: CreateGroupProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="brand" className="flex gap-1" disabled={props.disabled}>
+        <Button className="flex gap-1" disabled={props.disabled}>
           <Icons.plusCircle className="h-4 w-4" />
           <span>New group</span>
         </Button>
@@ -115,7 +115,7 @@ function CreateGroupForm({
             />
             <Separator className="my-2" />
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+              <span className="pb-2 text-xs uppercase text-muted-foreground">
                 Assign a leader to this group
               </span>
             </div>
@@ -126,7 +126,7 @@ function CreateGroupForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Select supervisor <span className="text-shamiri-light-red">*</span>
+                      Select supervisor <span className="text-destructive">*</span>
                     </FormLabel>
                     <Select
                       onValueChange={(val) => {
@@ -161,7 +161,7 @@ function CreateGroupForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Select fellow <span className="text-shamiri-light-red">*</span>
+                      Select fellow <span className="text-destructive">*</span>
                     </FormLabel>
                     <Select
                       onValueChange={field.onChange}
@@ -207,7 +207,7 @@ function CreateGroupForm({
           <Button
             variant="ghost"
             type="button"
-            className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+            className="text-base font-semibold leading-6 text-primary hover:text-primary"
             onClick={() => {
               close();
             }}
@@ -215,7 +215,6 @@ function CreateGroupForm({
             Cancel
           </Button>
           <Button
-            variant="brand"
             type="submit"
             disabled={form.formState.isSubmitting}
             loading={form.formState.isSubmitting}

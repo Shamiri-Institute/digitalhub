@@ -10,9 +10,9 @@ import { formatDateTimeIn } from "#/lib/date-utils";
 import type { PrintRunRows } from "#/lib/survey/print-run-queries";
 
 const PRINT_STATUS_VARIANT: Record<SurveyPrintStatus, BadgeProps["variant"]> = {
-  QUEUED: "outline-solid",
+  QUEUED: "outline",
   RENDERING: "warning",
-  READY: "shamiri-green",
+  READY: "success",
   FAILED: "destructive",
 };
 
@@ -31,10 +31,7 @@ function printRunColumns(showHub: boolean): ColumnDef<PrintRunRow>[] {
       header: "Created",
       id: "Created",
       cell: ({ row }) => (
-        <Link
-          href={row.original.href}
-          className="font-medium text-shamiri-new-blue hover:underline"
-        >
+        <Link href={row.original.href} className="font-medium text-primary hover:underline">
           {row.original.created}
         </Link>
       ),
@@ -46,7 +43,7 @@ function printRunColumns(showHub: boolean): ColumnDef<PrintRunRow>[] {
       cell: ({ row }) => (
         <>
           {row.original.version.survey.title}{" "}
-          <span className="text-shamiri-text-grey">{row.original.version.survey.code}</span>
+          <span className="text-muted-foreground">{row.original.version.survey.code}</span>
         </>
       ),
     },

@@ -53,7 +53,7 @@ const sessionsColumn: ColumnDef<AdminHub> = {
       <Tooltip>
         <TooltipTrigger
           aria-label="What the session colours mean"
-          className="inline-flex h-6 w-6 items-center justify-center rounded-sm text-shamiri-text-dark-grey hover:text-shamiri-black focus-visible:outline-2 focus-visible:outline-shamiri-new-blue"
+          className="inline-flex h-6 w-6 items-center justify-center rounded-sm text-muted-foreground hover:text-foreground"
         >
           <Info aria-hidden className="h-3.5 w-3.5" />
         </TooltipTrigger>
@@ -73,7 +73,7 @@ const sessionsColumn: ColumnDef<AdminHub> = {
         <Tooltip>
           <TooltipTrigger
             aria-label={`${row.original.hubName} sessions: ${sessionsBreakdown(sessions)}`}
-            className="min-w-0 flex-1 rounded-full py-1.5 focus-visible:outline-2 focus-visible:outline-shamiri-new-blue"
+            className="min-w-0 flex-1 rounded-full py-1.5"
           >
             <StateBar counts={sessions} />
           </TooltipTrigger>
@@ -82,7 +82,7 @@ const sessionsColumn: ColumnDef<AdminHub> = {
           </TooltipContent>
         </Tooltip>
         <span className="w-24 shrink-0 tabular-nums">
-          <strong className="text-shamiri-black">{formatCount(sessions.held)}</strong> of{" "}
+          <strong className="text-foreground">{formatCount(sessions.held)}</strong> of{" "}
           {formatCount(sessions.scheduled)}
         </span>
       </div>
@@ -99,7 +99,7 @@ export const columns: ColumnDef<AdminHub>[] = [
     cell: ({ row }) => (
       <Link
         href={`/admin/hubs/${row.original.id}`}
-        className="font-semibold text-shamiri-black hover:underline"
+        className="font-semibold text-foreground hover:underline"
       >
         {row.original.hubName}
       </Link>
@@ -127,7 +127,7 @@ export const columns: ColumnDef<AdminHub>[] = [
       <Link
         href={`/admin/hubs/${row.original.id}`}
         aria-label={`Open ${row.original.hubName}`}
-        className="absolute inset-0 flex items-center justify-center border-l text-shamiri-text-grey hover:text-shamiri-new-blue"
+        className="absolute inset-0 flex items-center justify-center border-l text-muted-foreground hover:text-primary"
       >
         <ChevronRight className="h-5 w-5" />
       </Link>

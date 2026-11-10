@@ -1,0 +1,6 @@
+{
+  "detector": {
+    "designSystem": { "enabled": true },
+    "ignoreFiles": ["lib/survey/**", "tests/**", "public/**"]
+  }
+}

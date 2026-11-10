@@ -60,29 +60,29 @@ const supervisorAttendanceColumns = (state: {
             className={cn(
               "flex items-center rounded-lg border px-1.5 py-0.5",
               {
-                "border-green-border": attended,
-                "border-red-border": !attended,
-                "border-blue-border": attended === undefined || attended === null,
+                "border-success-border": attended,
+                "border-destructive-border": !attended,
+                "border-info-border": attended === undefined || attended === null,
               },
               {
-                "bg-green-bg": attended,
-                "bg-red-bg": !attended,
-                "bg-blue-bg": attended === undefined || attended === null,
+                "bg-success-bg": attended,
+                "bg-destructive-bg": !attended,
+                "bg-info-bg": attended === undefined || attended === null,
               },
             )}
           >
             {attended === null || attended === undefined ? (
-              <div className="flex items-center gap-1 text-blue-base">
+              <div className="flex items-center gap-1 text-info">
                 <Icons.helpCircle className="h-3 w-3" strokeWidth={2.5} />
                 <span>Not marked</span>
               </div>
             ) : attended ? (
-              <div className="flex items-center gap-1 text-green-base">
+              <div className="flex items-center gap-1 text-success">
                 <Icons.checkCircle className="h-3 w-3" strokeWidth={2.5} />
                 <span>Attended</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1 text-red-base">
+              <div className="flex items-center gap-1 text-destructive">
                 <Icons.crossCircleFilled className="h-3 w-3" strokeWidth={2.5} />
                 <span>Missed</span>
               </div>
@@ -204,25 +204,25 @@ const renderSessionTypeAndStatus = (
         className={cn(
           "select-none rounded-lg border px-1.5 py-0.5",
           {
-            "border-green-border": completed,
-            "border-blue-border": !completed,
-            "border-red-border": cancelled,
-            "border-shamiri-text-dark-grey/30": rescheduled,
+            "border-success-border": completed,
+            "border-info-border": !completed,
+            "border-destructive-border": cancelled,
+            "border-muted-foreground/30": rescheduled,
           },
           {
-            "bg-green-bg": completed,
-            "bg-blue-bg": !completed,
-            "bg-red-bg": cancelled,
-            "bg-shamiri-light-grey/60": rescheduled,
+            "bg-success-bg": completed,
+            "bg-info-bg": !completed,
+            "bg-destructive-bg": cancelled,
+            "bg-muted/60": rescheduled,
           },
         )}
       >
         <div
           className={cn("text-[0.825rem] font-semibold", {
-            "text-green-base": completed,
-            "text-blue-base": !completed,
-            "text-red-base": cancelled,
-            "text-shamiri-text-dark-grey": rescheduled,
+            "text-success": completed,
+            "text-info": !completed,
+            "text-destructive": cancelled,
+            "text-muted-foreground": rescheduled,
           })}
         >
           <div className="flex items-center gap-1">

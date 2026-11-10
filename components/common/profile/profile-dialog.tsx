@@ -208,7 +208,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
               />
             </div>
           )}
-          <p className="text-wrap text-[20px] font-semibold text-shamiri-text-dark-grey">
+          <p className="text-wrap text-[20px] font-semibold text-muted-foreground">
             <span>
               {personnelProfile &&
                 ("coordinatorName" in personnelProfile
@@ -224,7 +224,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                           : session?.user?.name)}
             </span>
             {hubName && (
-              <span className="text-[20px] font-semibold text-shamiri-text-dark-grey">
+              <span className="text-[20px] font-semibold text-muted-foreground">
                 {" "}
                 - <span className="capitalize">{hubName}</span>
               </span>
@@ -234,7 +234,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
         <div className="space-y-6">
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+              <span className="pb-2 text-xs uppercase text-muted-foreground">
                 Personal Information
               </span>
               <Separator />
@@ -246,7 +246,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                 render={({ field }) => (
                   <FormItem className="col-span-2">
                     <FormLabel>
-                      Full name <span className="text-shamiri-light-red">*</span>
+                      Full name <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input {...field} disabled />
@@ -261,7 +261,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Email address <span className="text-shamiri-light-red">*</span>
+                      Email address <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input {...field} type="email" disabled />
@@ -276,7 +276,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Phone number <span className="text-shamiri-light-red">*</span>
+                      Phone number <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -301,7 +301,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      National ID <span className="text-shamiri-light-red">*</span>
+                      National ID <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input {...field} disabled={isFellow} />
@@ -316,7 +316,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Gender <span className="text-shamiri-light-red">*</span>
+                      Gender <span className="text-destructive">*</span>
                     </FormLabel>
                     <Select
                       onValueChange={field.onChange}
@@ -347,7 +347,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Date of birth <span className="text-shamiri-light-red">*</span>
+                      Date of birth <span className="text-destructive">*</span>
                     </FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
@@ -387,7 +387,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      County <span className="text-shamiri-light-red">*</span>
+                      County <span className="text-destructive">*</span>
                     </FormLabel>
                     <Select
                       onValueChange={(value) => {
@@ -425,7 +425,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Sub-county <span className="text-shamiri-light-red">*</span>
+                      Sub-county <span className="text-destructive">*</span>
                     </FormLabel>
                     <Select
                       onValueChange={field.onChange}
@@ -463,7 +463,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
           {personnelProfile && "fellowName" in personnelProfile && (
             <div className="flex flex-col">
               <div className="col-span-2 py-2">
-                <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+                <span className="pb-2 text-xs uppercase text-muted-foreground">
                   M-PESA Information
                 </span>
                 <Separator />
@@ -477,7 +477,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                       <FormLabel>
                         M-Pesa number{" "}
                         {session?.user?.activeMembership?.role === ImplementerRole.FELLOW && (
-                          <span className="text-shamiri-light-red">*</span>
+                          <span className="text-destructive">*</span>
                         )}
                       </FormLabel>
                       <FormControl>
@@ -505,7 +505,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                       <FormLabel>
                         M-Pesa name{" "}
                         {session?.user?.activeMembership?.role === ImplementerRole.FELLOW && (
-                          <span className="text-shamiri-light-red">*</span>
+                          <span className="text-destructive">*</span>
                         )}
                       </FormLabel>
                       <FormControl>
@@ -521,7 +521,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
           {showBankInfo && (
             <div className="flex flex-col">
               <div className="col-span-2 py-2">
-                <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+                <span className="pb-2 text-xs uppercase text-muted-foreground">
                   Bank Information
                 </span>
                 <Separator />
@@ -534,7 +534,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                     <FormItem>
                       <FormLabel>
                         Bank name
-                        {showBankInfo && <span className="text-shamiri-light-red">*</span>}
+                        {showBankInfo && <span className="text-destructive">*</span>}
                       </FormLabel>
                       <FormControl>
                         <Input {...field} disabled={isFellow} />
@@ -550,7 +550,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                     <FormItem>
                       <FormLabel>
                         Bank branch
-                        {showBankInfo && <span className="text-shamiri-light-red">*</span>}
+                        {showBankInfo && <span className="text-destructive">*</span>}
                       </FormLabel>
                       <FormControl>
                         <Input {...field} disabled={isFellow} />
@@ -566,7 +566,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                     <FormItem>
                       <FormLabel>
                         Account number
-                        {showBankInfo && <span className="text-shamiri-light-red">*</span>}
+                        {showBankInfo && <span className="text-destructive">*</span>}
                       </FormLabel>
                       <FormControl>
                         <Input {...field} disabled={isFellow} />
@@ -582,7 +582,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                     <FormItem>
                       <FormLabel>
                         Account name
-                        {showBankInfo && <span className="text-shamiri-light-red">*</span>}
+                        {showBankInfo && <span className="text-destructive">*</span>}
                       </FormLabel>
                       <FormControl>
                         <Input {...field} disabled={isFellow} />
@@ -598,7 +598,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                     <FormItem>
                       <FormLabel>
                         KRA PIN
-                        {showBankInfo && <span className="text-shamiri-light-red">*</span>}
+                        {showBankInfo && <span className="text-destructive">*</span>}
                       </FormLabel>
                       <FormControl>
                         <Input {...field} disabled={isFellow} />
@@ -616,7 +616,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
           <Button
             variant="ghost"
             type="button"
-            className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+            className="text-base font-semibold leading-6 text-primary hover:text-primary"
             onClick={() => {
               onOpenChange(false);
             }}
@@ -625,7 +625,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
           </Button>
           {!isFellow && (
             <Button
-              className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white"
+              className="flex items-center gap-2 bg-primary text-base font-semibold leading-6 text-white"
               type="submit"
               disabled={form.formState.isSubmitting}
               loading={form.formState.isSubmitting}

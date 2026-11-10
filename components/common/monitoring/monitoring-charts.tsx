@@ -16,7 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { SERIES_COLORS, orderedSeriesColor } from "#/components/charts/constants";
+import { orderedSeriesColor, seriesColor } from "#/components/charts/constants";
 import {
   formatCell,
   pivotRowsBySeries,
@@ -27,10 +27,6 @@ import type { CardRow, CardView, ChartSeries } from "#/lib/monitoring/types";
 
 const MUTED_OPACITY = 0.35;
 const MAX_BARS_WITH_LABELS = 24;
-
-function seriesColor(index: number) {
-  return SERIES_COLORS[index % SERIES_COLORS.length];
-}
 
 type DrawnSeries = ChartSeries & { colorIndex: number; muted?: boolean; stackId?: string };
 
@@ -154,7 +150,7 @@ type LegendItem = { key: string; label: string; color: string | undefined; muted
 
 function ChartLegend({ items }: { items: LegendItem[] }) {
   return (
-    <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 pt-2 text-xs text-shamiri-text-dark-grey">
+    <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 pt-2 text-xs text-muted-foreground">
       {items.map(({ key, label, color, muted }) => (
         <li key={key} className="flex items-center gap-1.5">
           <svg aria-hidden="true" className="size-3" viewBox="0 0 12 12">
@@ -224,7 +220,7 @@ export function CartesianChart({
       <Tooltip formatter={formatValue} />
       {coloredSeries.length > 1 && <Legend content={<ChartLegend items={coloredSeries} />} />}
       {view.goal !== undefined && (
-        <ReferenceLine y={view.goal} stroke="var(--color-shamiri-red)" strokeDasharray="4 4" />
+        <ReferenceLine y={view.goal} stroke="var(--color-destructive)" strokeDasharray="4 4" />
       )}
     </>
   );
@@ -294,7 +290,7 @@ export function PieCard({
             data={pieRows}
             dataKey="value"
             nameKey="name"
-            label={{ fill: "var(--color-shamiri-text-dark-grey)", fontSize: 12 }}
+            label={{ fill: "var(--color-muted-foreground)", fontSize: 12 }}
           />
           <Tooltip />
           <Legend

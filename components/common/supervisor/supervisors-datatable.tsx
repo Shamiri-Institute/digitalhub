@@ -58,7 +58,7 @@ export default function SupervisorsDataTable({
             }
             onClick={() => setDialog({ kind: "markSelectedAttendance" })}
           >
-            <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
+            <Icons.fileDown className="h-4 w-4 text-muted-foreground" />
             <span>Mark supervisor attendance</span>
           </Button>
         )}
@@ -135,7 +135,7 @@ export default function SupervisorsDataTable({
             ) : (
               <span>{supervisor?.supervisorName}</span>
             )}
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+            <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
             <span>{school?.schoolName}</span>
           </div>
         </DialogAlertWidget>

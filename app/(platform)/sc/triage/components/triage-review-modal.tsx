@@ -68,7 +68,7 @@ function TriageReviewForm({
         <DialogTitle className="text-base font-medium">
           Mark reviewed — no clinical case needed
         </DialogTitle>
-        <p className="text-shamiri-text-grey mt-1 text-sm">
+        <p className="text-muted-foreground mt-1 text-sm">
           Record your reason for closing this escalation without opening a clinical case. This note
           is visible to the Clinical Lead.
         </p>
@@ -84,12 +84,12 @@ function TriageReviewForm({
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
-          <p className="text-shamiri-text-grey text-xs">{note.length}/300</p>
+          <p className="text-muted-foreground text-xs">{note.length}/300</p>
         </div>
       </div>
       <div className="flex justify-end gap-2 px-6 pb-6">
         <DialogClose asChild>
-          <Button type="button" variant="ghost" className="text-shamiri-new-blue hover:bg-blue-bg">
+          <Button type="button" variant="ghost" className="text-primary hover:bg-info-bg">
             Cancel
           </Button>
         </DialogClose>

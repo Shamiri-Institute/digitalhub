@@ -120,7 +120,7 @@ export const columns = ({
           const recent = sessions[sessions.length - 1];
           if (recent && recent.sessionRatingsCount > 0) {
             return (
-              <Badge variant="shamiri-green">
+              <Badge variant="success">
                 {`${sessionDisplayName(recent.session?.sessionName)} - Report submitted`}
               </Badge>
             );
@@ -151,7 +151,7 @@ export const columns = ({
         row.original.archivedAt || row.original.droppedOut ? (
           <Badge variant="destructive">Inactive</Badge>
         ) : (
-          <Badge variant="shamiri-green">Active</Badge>
+          <Badge variant="success">Active</Badge>
         ),
     },
     {

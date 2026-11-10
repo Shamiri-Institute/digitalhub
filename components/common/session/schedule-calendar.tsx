@@ -291,7 +291,7 @@ function CreateSessionButton({
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
-        <Button variant="brand" disabled={loading} className="flex items-center gap-2 text-base">
+        <Button disabled={loading} className="flex items-center gap-2 text-base">
           <Icons.plusCircle className="h-4 w-4" />
           <span>Schedule a session</span>
         </Button>
@@ -313,7 +313,7 @@ function CreateSessionButton({
 function SessionsLoader({ loading }: { loading: boolean }) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 px-4 text-shamiri-new-blue">
+      <div className="flex items-center justify-center gap-2 px-4 text-primary">
         <svg
           className="-ml-1 h-4 w-4 animate-spin"
           xmlns="http://www.w3.org/2000/svg"
@@ -630,7 +630,7 @@ function NavigationButtons({
   nextProps: AriaButtonProps;
 }) {
   return (
-    <div className="inline-flex shrink-0 divide-x divide-gray-300 overflow-auto rounded-lg border border-gray-300 shadow-xs">
+    <div className="inline-flex shrink-0 divide-x divide-input overflow-auto rounded-lg border border-input shadow-xs">
       <NavigationButton aria-label="Previous Month" {...prevProps}>
         <Icons.chevronLeft className="h-5 w-5" />
       </NavigationButton>
@@ -652,8 +652,8 @@ function NavigationButton({ children, ...props }: { children: React.ReactNode })
     <button
       {...mergeProps(buttonProps, focusProps)}
       ref={ref}
-      className={`inline-flex h-9 items-center bg-white px-2 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-0 ${
-        isFocusVisible ? "ring-2 ring-blue-base ring-offset-2" : ""
+      className={`inline-flex h-9 items-center bg-white px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted ${
+        isFocusVisible ? "ring-2 ring-info ring-offset-2" : ""
       }`}
     >
       {children}

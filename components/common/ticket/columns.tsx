@@ -77,7 +77,7 @@ export const columns = (state: TicketTableState): ColumnDef<TicketData>[] => {
         return tier ? (
           <span className="text-sm">{tier.toLowerCase().replace("_", " ")}</span>
         ) : (
-          <span className="text-shamiri-text-grey text-sm">No escalation</span>
+          <span className="text-muted-foreground text-sm">No escalation</span>
         );
       },
     },
@@ -88,15 +88,19 @@ export const columns = (state: TicketTableState): ColumnDef<TicketData>[] => {
       cell: ({ row }) => {
         const status = row.original.status;
         const styles: Record<string, { bg: string; border: string; text: string }> = {
-          OPEN: { bg: "bg-yellow-bg", border: "border-yellow-border", text: "text-yellow-base" },
-          ESCALATED: { bg: "bg-blue-bg", border: "border-blue-border", text: "text-blue-base" },
-          RESOLVED: { bg: "bg-green-bg", border: "border-green-border", text: "text-green-base" },
-          CANCELLED: { bg: "bg-red-bg", border: "border-red-border", text: "text-red-base" },
+          OPEN: { bg: "bg-warning-bg", border: "border-warning-border", text: "text-warning" },
+          ESCALATED: { bg: "bg-info-bg", border: "border-info-border", text: "text-info" },
+          RESOLVED: { bg: "bg-success-bg", border: "border-success-border", text: "text-success" },
+          CANCELLED: {
+            bg: "bg-destructive-bg",
+            border: "border-destructive-border",
+            text: "text-destructive",
+          },
         };
         const s = styles[status] ?? {
-          bg: "bg-yellow-bg",
-          border: "border-yellow-border",
-          text: "text-yellow-base",
+          bg: "bg-warning-bg",
+          border: "border-warning-border",
+          text: "text-warning",
         };
         return (
           <div className="flex">

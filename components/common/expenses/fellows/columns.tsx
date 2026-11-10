@@ -84,9 +84,7 @@ export const subColumns: ColumnDef<
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
-        className={
-          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-        }
+        className={"h-5 w-5"}
       />
     ),
     cell: ({ row }) => {
@@ -96,9 +94,7 @@ export const subColumns: ColumnDef<
             checked={row.getIsSelected()}
             onCheckedChange={(val) => row.toggleSelected(!!val)}
             aria-label="Select row"
-            className={
-              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-            }
+            className={"h-5 w-5"}
           />
         </div>
       );
@@ -175,14 +171,14 @@ export function renderPayoutStatus(status: null | Date, amount: number, confirme
   if (amount > 0) {
     if (confirmedAt !== null) {
       return (
-        <Badge variant="shamiri-green" className="text-xs">
+        <Badge variant="success" className="text-xs">
           Payment Completed
         </Badge>
       );
     }
     if (status !== null) {
       return (
-        <Badge variant="shamiri-green" className="text-xs">
+        <Badge variant="success" className="text-xs">
           Payment Initiated
         </Badge>
       );

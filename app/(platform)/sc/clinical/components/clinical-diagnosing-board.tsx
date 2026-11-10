@@ -190,7 +190,6 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
               Clear All
             </Button>
             <Button
-              variant="brand"
               onClick={toastOnError(handleSaveAll)}
               disabled={!hasChanges || isSaving}
               loading={isSaving}
@@ -223,7 +222,7 @@ function EmergencyPresentingIssues({
     <div className="w-full space-y-4">
       <Table>
         <TableHeader>
-          <TableRow className="bg-background-secondary">
+          <TableRow className="bg-muted">
             <TableHead className="w-[50%] border">Emergency presenting issues</TableHead>
             {emergency_presenting_issues_scale.map((scaleItem) => (
               <TableHead key={scaleItem} className="border text-center">
@@ -234,7 +233,7 @@ function EmergencyPresentingIssues({
         </TableHeader>
         <TableBody>
           {emergency_presenting_issues.map((issue) => (
-            <TableRow key={issue.id} className="hover:bg-background-secondary">
+            <TableRow key={issue.id} className="hover:bg-muted">
               <TableCell className="border font-medium">{issue.name}</TableCell>
               {emergency_presenting_issues_scale.map((severity) => (
                 <TableCell key={severity} className="border text-center">
@@ -248,8 +247,8 @@ function EmergencyPresentingIssues({
                       className={cn(
                         "h-6 w-6 border",
                         selectedSeverities[issue.id] === severity
-                          ? "text-white data-[state=checked]:border-brand data-[state=checked]:bg-brand"
-                          : "border-grey-border",
+                          ? "text-white data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+                          : "border-border",
                       )}
                     />
                   </div>
@@ -281,14 +280,14 @@ function GeneralPresentingIssues({
     <div className="w-full space-y-4">
       <Table>
         <TableHeader>
-          <TableRow className="bg-background-secondary">
+          <TableRow className="bg-muted">
             <TableHead className="w-[75%] border">General presenting issues</TableHead>
             <TableHead className="w-[25%] border text-center">{""}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {general_presenting_issues.map((issue) => (
-            <TableRow key={issue.id} className="hover:bg-background-secondary">
+            <TableRow key={issue.id} className="hover:bg-muted">
               <TableCell className="border font-medium">{issue.name}</TableCell>
               <TableCell className="border text-center">
                 <div className="flex justify-center">
@@ -301,8 +300,8 @@ function GeneralPresentingIssues({
                     className={cn(
                       "h-6 w-6 border",
                       selectedIssues[issue.id]
-                        ? "text-white data-[state=checked]:border-brand data-[state=checked]:bg-brand"
-                        : "border-grey-border",
+                        ? "text-white data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+                        : "border-border",
                     )}
                   />
                 </div>

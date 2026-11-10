@@ -368,7 +368,7 @@ function StudentDetailsFormContent({
           <Separator className="my-6" />
           <DialogFooter className="flex justify-end gap-2">
             <Button
-              variant={mode === "view" ? "brand" : "ghost"}
+              variant={mode === "view" ? "default" : "ghost"}
               type="button"
               onClick={() => {
                 onOpenChange(false);
@@ -378,7 +378,6 @@ function StudentDetailsFormContent({
             </Button>
             {mode !== "view" && (
               <Button
-                variant="brand"
                 type="submit"
                 disabled={form.formState.isSubmitting}
                 loading={form.formState.isSubmitting}
@@ -400,9 +399,9 @@ function StudentDetailsFormContent({
           <DialogAlertWidget>
             <div className="flex flex-wrap items-center gap-2">
               <span className="capitalize">{form.getValues("studentName")?.toLowerCase()}</span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+              <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
               <span>Admission no. {form.getValues("admissionNumber")}</span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+              <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
               <div className="flex gap-1">
                 <span>Form {form.getValues("form")}</span>
                 <span>{form.getValues("stream")}</span>
@@ -411,7 +410,7 @@ function StudentDetailsFormContent({
           </DialogAlertWidget>
           <div className="flex flex-col gap-1">
             <span>Duplicate admission number found.</span>
-            <span className="text-shamiri-text-dark-grey">
+            <span className="text-muted-foreground">
               Please select one of the students below if their information matches one of the
               options
             </span>
@@ -427,23 +426,19 @@ function StudentDetailsFormContent({
                 <label
                   key={student.id}
                   htmlFor={student.id}
-                  className="flex gap-x-3 rounded-lg border bg-background-secondary px-4 py-3 lg:items-center"
+                  className="flex gap-x-3 rounded-lg border bg-muted px-4 py-3 lg:items-center"
                 >
-                  <RadioGroupItem
-                    value={index.toString()}
-                    id={student.id}
-                    className="h-5 w-5 rounded border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue data-[state=checked]:text-white"
-                  />
+                  <RadioGroupItem value={index.toString()} id={student.id} className="h-5 w-5" />
                   <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
                     <span className="capitalize">{student.studentName?.toLowerCase()}</span>
-                    <span className="hidden h-1 w-1 rounded-full bg-gray-900 lg:block">{""}</span>
+                    <span className="hidden h-1 w-1 rounded-full bg-foreground lg:block">{""}</span>
                     <span>Admission no. {student.admissionNumber}</span>
-                    <span className="hidden h-1 w-1 rounded-full bg-gray-900 lg:block">{""}</span>
+                    <span className="hidden h-1 w-1 rounded-full bg-foreground lg:block">{""}</span>
                     <div className="flex gap-1">
                       <span>Form {student.form}</span>
                       <span>{student.stream}</span>
                     </div>
-                    <span className="hidden h-1 w-1 rounded-full bg-gray-900 lg:block">{""}</span>
+                    <span className="hidden h-1 w-1 rounded-full bg-foreground lg:block">{""}</span>
                     <span>Group {student.assignedGroup?.groupName}</span>
                   </div>
                 </label>
@@ -451,13 +446,9 @@ function StudentDetailsFormContent({
             })}
             <label
               htmlFor="none"
-              className="flex items-center space-x-3 rounded-lg border bg-background-secondary px-4 py-3"
+              className="flex items-center space-x-3 rounded-lg border bg-muted px-4 py-3"
             >
-              <RadioGroupItem
-                value={"-1"}
-                id="none"
-                className="h-5 w-5 rounded border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue data-[state=checked]:text-white"
-              />
+              <RadioGroupItem value={"-1"} id="none" className="h-5 w-5" />
               <span>None of the above</span>
             </label>
           </RadioGroup>
@@ -465,7 +456,7 @@ function StudentDetailsFormContent({
             <div className="flex flex-col gap-y-4">
               <Separator />
               <span>Are you sure?</span>
-              <div className="flex items-start gap-2 rounded-lg border border-shamiri-red/30 bg-red-bg px-4 py-2 text-red-base">
+              <div className="flex items-start gap-2 rounded-lg border border-destructive-border bg-destructive-bg px-4 py-2 text-destructive">
                 <Icons.info className="mt-1 h-5 w-5 shrink-0" />
                 <div>
                   {`This student already exists in ${matchedStudents[transferOption]?.assignedGroup?.leader.fellowName}’s group (${matchedStudents[transferOption]?.assignedGroup?.groupName}). If you continue you confirm that they will be transferred to group ${groupName}`}
@@ -480,10 +471,10 @@ function StudentDetailsFormContent({
               type="button"
               className={cn(
                 transferOption === undefined
-                  ? "text-shamiri-new-blue hover:bg-blue-bg"
+                  ? "text-primary hover:bg-info-bg"
                   : transferOption < 0
-                    ? "text-shamiri-new-blue hover:bg-blue-bg"
-                    : "text-shamiri-light-red hover:bg-red-bg",
+                    ? "text-primary hover:bg-info-bg"
+                    : "text-destructive hover:bg-destructive-bg",
               )}
               onClick={() => {
                 closeTransferDialog();
@@ -494,10 +485,10 @@ function StudentDetailsFormContent({
             <Button
               variant={
                 transferOption === undefined
-                  ? "brand"
+                  ? "default"
                   : transferOption > -1
                     ? "destructive"
-                    : "brand"
+                    : "default"
               }
               type="button"
               onClick={submitTransferOption}

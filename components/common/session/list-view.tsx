@@ -63,24 +63,24 @@ export function ListView({
           {sessionGroups.map((groupDate) => {
             return (
               <tbody key={groupDate}>
-                <tr className="bg-background-secondary">
+                <tr className="bg-muted">
                   <td
                     className={cn(
                       "h-auto!",
-                      groupDate === today ? "border-b border-b-shamiri-new-blue!" : "",
+                      groupDate === today ? "border-b border-b-primary!" : "",
                     )}
                     colSpan={3}
                   >
                     <div
                       className={cn(
                         "flex items-center gap-2 text-lg",
-                        groupDate === today ? "text-shamiri-new-blue" : "",
+                        groupDate === today ? "text-primary" : "",
                       )}
                     >
                       <div
                         className={cn(
                           "flex h-8 w-8 items-center justify-center rounded-full p-2",
-                          groupDate === today ? "bg-shamiri-new-blue text-white" : "bg-transparent",
+                          groupDate === today ? "bg-primary text-white" : "bg-transparent",
                         )}
                       >
                         <span>{format(new Date(groupDate), "dd")}</span>
@@ -123,9 +123,7 @@ export function ListView({
                               checked={undefined}
                               onCheckedChange={() => {}}
                               aria-label="Select row"
-                              className={
-                                "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-                              }
+                              className={"h-5 w-5"}
                             />
                           </div>
                         </td>
@@ -142,22 +140,22 @@ export function ListView({
                               className={cn(
                                 "shrink-0 select-none rounded-lg border px-1.5 py-0.5",
                                 {
-                                  "border-green-border": completed,
-                                  "border-blue-border": !completed,
-                                  "border-red-border": cancelled,
+                                  "border-success-border": completed,
+                                  "border-info-border": !completed,
+                                  "border-destructive-border": cancelled,
                                 },
                                 {
-                                  "bg-green-bg": completed,
-                                  "bg-blue-bg": !completed,
-                                  "bg-red-bg": cancelled,
+                                  "bg-success-bg": completed,
+                                  "bg-info-bg": !completed,
+                                  "bg-destructive-bg": cancelled,
                                 },
                               )}
                             >
                               <div
                                 className={cn("text-[0.825rem] font-semibold", {
-                                  "text-green-base": completed,
-                                  "text-blue-base": !completed,
-                                  "text-red-base": cancelled,
+                                  "text-success": completed,
+                                  "text-info": !completed,
+                                  "text-destructive": cancelled,
                                 })}
                               >
                                 <div className="flex items-center gap-1">

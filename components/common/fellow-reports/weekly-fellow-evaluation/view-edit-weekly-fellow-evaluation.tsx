@@ -239,7 +239,6 @@ export default function ViewEditWeeklyFellowEvaluation({
                     Cancel
                   </Button>
                   <Button
-                    variant="brand"
                     type="submit"
                     loading={form.formState.isSubmitting}
                     disabled={form.formState.isSubmitting}

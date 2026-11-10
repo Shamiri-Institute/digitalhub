@@ -63,17 +63,17 @@ function CaseReviewCard({ review }: { review: CaseToReview }) {
       <Card className="flex flex-col gap-4 bg-white p-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-base font-medium text-shamiri-new-blue">
+            <p className="text-base font-medium text-primary">
               {reviewedChange.clinicalCase?.pseudonym ?? "Anonymous"}
             </p>
-            <Badge variant={reviewedChange.kind === "Terminated" ? "destructive" : "shamiri-green"}>
+            <Badge variant={reviewedChange.kind === "Terminated" ? "destructive" : "success"}>
               {reviewedChange.kind}
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground">{changeDetails.join(" · ")}</p>
           <p className="text-sm whitespace-pre-line">{reviewedChange.reason}</p>
         </div>
-        <Button variant="brand" disabled={isPending} onClick={markReviewed} className="shrink-0">
+        <Button disabled={isPending} onClick={markReviewed} className="shrink-0">
           Mark reviewed
         </Button>
       </Card>

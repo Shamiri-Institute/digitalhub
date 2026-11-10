@@ -199,7 +199,6 @@ export default function ViewEditStudentGroupEvaluation({
                     Cancel
                   </Button>
                   <Button
-                    variant="brand"
                     type="submit"
                     loading={form.formState.isSubmitting}
                     disabled={form.formState.isSubmitting}

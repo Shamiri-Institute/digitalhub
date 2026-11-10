@@ -65,7 +65,7 @@ export default function StudentsInGroup({
               <Button
                 variant="ghost"
                 type="button"
-                className="text-shamiri-new-blue hover:text-shamiri-new-blue"
+                className="text-primary hover:text-primary"
                 onClick={() => {
                   onOpenChange(false);
                 }}
@@ -73,7 +73,6 @@ export default function StudentsInGroup({
                 Cancel
               </Button>
               <Button
-                variant="brand"
                 onClick={() => {
                   setAddStudentDialog(true);
                 }}

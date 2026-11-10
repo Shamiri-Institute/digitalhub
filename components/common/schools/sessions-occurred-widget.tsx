@@ -45,25 +45,25 @@ export default function SessionsOccurredWidget({
               className={cn(
                 "select-none rounded-lg border px-1.5 py-0.5",
                 {
-                  "border-green-border": occurredStatus,
-                  "border-blue-border": !occurredStatus,
-                  "border-red-border": cancelledStatus,
-                  "border-shamiri-text-dark-grey/30": rescheduledStatus,
+                  "border-success-border": occurredStatus,
+                  "border-info-border": !occurredStatus,
+                  "border-destructive-border": cancelledStatus,
+                  "border-muted-foreground/30": rescheduledStatus,
                 },
                 {
-                  "bg-green-bg": occurredStatus,
-                  "bg-blue-bg": !occurredStatus,
-                  "bg-red-bg": cancelledStatus,
-                  "bg-shamiri-light-grey/60": rescheduledStatus,
+                  "bg-success-bg": occurredStatus,
+                  "bg-info-bg": !occurredStatus,
+                  "bg-destructive-bg": cancelledStatus,
+                  "bg-muted/60": rescheduledStatus,
                 },
               )}
             >
               <div
                 className={cn("flex gap-1 text-[0.825rem] font-semibold", {
-                  "text-green-base": occurredStatus,
-                  "text-blue-base": !occurredStatus,
-                  "text-red-base": cancelledStatus,
-                  "text-shamiri-text-dark-grey": rescheduledStatus,
+                  "text-success": occurredStatus,
+                  "text-info": !occurredStatus,
+                  "text-destructive": cancelledStatus,
+                  "text-muted-foreground": rescheduledStatus,
                 })}
               >
                 <div className="flex items-center gap-1">

@@ -276,7 +276,7 @@ function TreatmentPlanFields({
                 Cancel
               </Button>
             </DialogClose>
-            <Button variant="brand" type="submit" loading={isSaving} disabled={isSaving}>
+            <Button type="submit" loading={isSaving} disabled={isSaving}>
               Submit
             </Button>
           </div>

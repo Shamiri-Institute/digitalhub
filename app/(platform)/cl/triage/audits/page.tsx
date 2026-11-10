@@ -36,7 +36,7 @@ export default function TriageAuditTrailPage() {
       <div className="container flex min-h-0 w-full flex-1 flex-col space-y-6 py-10">
         <div>
           <PageHeading title="Triage audit trail" />
-          <p className="mt-1 text-sm text-shamiri-text-grey">
+          <p className="mt-1 text-sm text-muted-foreground">
             Triage records that were edited after initial save. Edits &gt;24 hours after the session
             are highlighted. This view is for pattern detection, not punitive use.
           </p>

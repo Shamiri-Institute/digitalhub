@@ -70,7 +70,7 @@ function ScaleField({
       name={name}
       render={({ field }) => (
         <FormItem required className="space-y-2">
-          <FormLabel className="font-medium text-shamiri-text-dark-grey">{question}</FormLabel>
+          <FormLabel className="font-medium text-muted-foreground">{question}</FormLabel>
           <RadioGroup
             value={field.value === undefined ? "" : String(field.value)}
             onValueChange={(value) => field.onChange(Number(value))}
@@ -80,7 +80,7 @@ function ScaleField({
               <label
                 key={option.value}
                 htmlFor={`${name}-${option.value}`}
-                className="flex cursor-pointer items-center gap-2 rounded-md p-2 text-sm hover:bg-blue-bg"
+                className="flex cursor-pointer items-center gap-2 rounded-md p-2 text-sm hover:bg-info-bg"
               >
                 <RadioGroupItem value={String(option.value)} id={`${name}-${option.value}`} />
                 <span>{option.label}</span>
@@ -109,7 +109,7 @@ function YesNoField({
       name={name}
       render={({ field }) => (
         <FormItem required className="space-y-2">
-          <FormLabel className="font-medium text-shamiri-text-dark-grey">{question}</FormLabel>
+          <FormLabel className="font-medium text-muted-foreground">{question}</FormLabel>
           <RadioGroup
             value={field.value === undefined ? "" : field.value ? "yes" : "no"}
             onValueChange={(value) => field.onChange(value === "yes")}
@@ -154,7 +154,7 @@ function TextField({
       name={name}
       render={({ field }) => (
         <FormItem required={required} className="space-y-2">
-          <FormLabel className="font-medium text-shamiri-text-dark-grey">{question}</FormLabel>
+          <FormLabel className="font-medium text-muted-foreground">{question}</FormLabel>
           <FormControl>
             <Textarea
               rows={3}
@@ -169,7 +169,7 @@ function TextField({
           </FormControl>
           <div className="flex justify-between">
             <FormMessage />
-            <span className="text-xs text-shamiri-text-grey">
+            <span className="text-xs text-muted-foreground">
               {((field.value as string) ?? "").length}/{MAX_REPORT_TEXT}
             </span>
           </div>
@@ -190,7 +190,7 @@ function SectionShell({
 }) {
   return (
     <div ref={innerRef} className="flex flex-col space-y-4 py-5">
-      <div className="text-lg font-semibold text-shamiri-text-dark-grey">
+      <div className="text-lg font-semibold text-muted-foreground">
         Section {index + 1} — {SECTION_TITLES[index]}
       </div>
       {children}
@@ -292,7 +292,7 @@ export default function FellowGroupReportForm({
             <DialogHeader className="flex flex-row items-center justify-between border-b px-6 py-4">
               <div className="flex flex-col text-left">
                 <DialogTitle className="text-xl font-bold">Group Report</DialogTitle>
-                <span className="text-sm text-shamiri-text-grey">
+                <span className="text-sm text-muted-foreground">
                   {groupName} · Section {currentSection + 1} of {SECTION_TITLES.length}
                 </span>
               </div>
@@ -345,7 +345,7 @@ export default function FellowGroupReportForm({
                         name="adaptationType"
                         render={({ field }) => (
                           <FormItem required className="space-y-2">
-                            <FormLabel className="font-medium text-shamiri-text-dark-grey">
+                            <FormLabel className="font-medium text-muted-foreground">
                               If yes, what type was most common?
                             </FormLabel>
                             <Select value={field.value} onValueChange={field.onChange}>
@@ -448,7 +448,7 @@ export default function FellowGroupReportForm({
                     options={TRANSFER_OPTIONS}
                   />
                   <FormItem required className="space-y-2">
-                    <FormLabel className="font-medium text-shamiri-text-dark-grey">
+                    <FormLabel className="font-medium text-muted-foreground">
                       How often did students engage with home practice activities?
                     </FormLabel>
                     <label
@@ -562,7 +562,7 @@ export default function FellowGroupReportForm({
                     name="supportType"
                     render={({ field }) => (
                       <FormItem required className="space-y-2">
-                        <FormLabel className="font-medium text-shamiri-text-dark-grey">
+                        <FormLabel className="font-medium text-muted-foreground">
                           What type of support would have been most helpful during this cycle?
                         </FormLabel>
                         <RadioGroup
@@ -574,7 +574,7 @@ export default function FellowGroupReportForm({
                             <label
                               key={option.value}
                               htmlFor={`support-${option.value}`}
-                              className="flex cursor-pointer items-center gap-2 rounded-md p-2 text-sm hover:bg-blue-bg"
+                              className="flex cursor-pointer items-center gap-2 rounded-md p-2 text-sm hover:bg-info-bg"
                             >
                               <RadioGroupItem value={option.value} id={`support-${option.value}`} />
                               <span>{option.label}</span>
@@ -601,7 +601,6 @@ export default function FellowGroupReportForm({
                 </Button>
                 <Button
                   type="submit"
-                  variant="brand"
                   disabled={!form.formState.isValid || form.formState.isSubmitting}
                   loading={form.formState.isSubmitting}
                 >
@@ -618,7 +617,7 @@ export default function FellowGroupReportForm({
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">Close without saving?</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-shamiri-text-dark-grey">
+          <p className="text-sm text-muted-foreground">
             Your answers will not be saved. Are you sure you want to close?
           </p>
           <DialogFooter className={cn("flex justify-end gap-2")}>

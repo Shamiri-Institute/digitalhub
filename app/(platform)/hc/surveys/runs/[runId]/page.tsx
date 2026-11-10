@@ -38,7 +38,7 @@ export default async function HubPrintRunPage(props: {
       <div className="container w-full grow space-y-3 py-10">
         <Link
           href="/hc/surveys"
-          className="flex items-center gap-1 text-sm font-medium text-shamiri-new-blue hover:underline"
+          className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
         >
           <ChevronLeft className="h-4 w-4" />
           Surveys

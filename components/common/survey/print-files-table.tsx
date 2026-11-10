@@ -63,13 +63,13 @@ const PRINT_FILE_COLUMNS: ColumnDef<PrintFileRow>[] = [
         <div className="text-right">
           <a
             href={`/api/survey-print-files/${file.id}`}
-            className="font-medium text-shamiri-new-blue hover:underline"
+            className="font-medium text-primary hover:underline"
             aria-label={`Download ${file.school.schoolName} ${file.part}`}
           >
             Download
           </a>{" "}
           {file.byteSize !== null && (
-            <span className="text-xs text-shamiri-text-grey">
+            <span className="text-xs text-muted-foreground">
               {(file.byteSize / 1_000_000).toFixed(1)} MB
             </span>
           )}
@@ -117,7 +117,7 @@ export function PrintFilesTable({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-shamiri-text-grey">
+        <p className="text-sm text-muted-foreground">
           {ready} of {files.length} {files.length === 1 ? "file" : "files"} ready
         </p>
         {runStatus === SurveyPrintStatus.FAILED && <RetryButton printRunId={printRunId} />}

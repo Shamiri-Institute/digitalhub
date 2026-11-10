@@ -5,19 +5,16 @@ import * as React from "react";
 import { cn } from "#/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-md text-sm font-medium transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 shrink-0",
+  "inline-flex shrink-0 items-center justify-center rounded-md text-sm font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         base: "",
-        default: "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90",
-        brand:
-          "bg-shamiri-new-blue text-white dark:bg-card-foreground dark:text-card dark:font-semibold shadow-sm hover:shadow-lg",
-        destructive: "bg-shamiri-light-red text-white",
-        outline:
-          "border border-input bg-transparent shadow-xs hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
-        ghost: "hover:bg-accent text-shamiri-new-blue",
+        default: "bg-primary text-primary-foreground hover:bg-navy-80",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline: "border border-input bg-white text-foreground hover:bg-accent",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-lavender-20",
+        ghost: "text-primary hover:bg-accent",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
@@ -33,7 +30,7 @@ const buttonVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "brand",
+      variant: "default",
       size: "default",
       active: "default",
     },

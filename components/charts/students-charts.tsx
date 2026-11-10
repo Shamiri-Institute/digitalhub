@@ -71,7 +71,7 @@ export default function HubStudentsDetailsCharts({
 
   return (
     <div className="grid grid-cols-1 gap-5 py-5 sm:grid-cols-2 md:grid-cols-4">
-      <ChartCard title="Attendance" showCardFooter={false}>
+      <ChartCard title="Attendance">
         {filteredFormatedSessions?.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -84,12 +84,12 @@ export default function HubStudentsDetailsCharts({
               <XAxis dataKey="sessionType" tickFormatter={sessionLabel} />
               <YAxis dataKey="attendance" allowDecimals={false} />
               <Tooltip labelFormatter={(value) => `Session: ${sessionLabel(String(value))}`} />
-              <Bar dataKey="attendance" name="Sessions" fill="var(--color-shamiri-new-blue)" />
+              <Bar dataKey="attendance" name="Sessions" fill="var(--color-primary)" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
-      <ChartCard title="Drop-out reasons" showCardFooter={false}>
+      <ChartCard title="Drop-out reasons">
         {formatedStudentsDropOutReasons.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307} aria-label="Drop-out reasons">
@@ -107,7 +107,7 @@ export default function HubStudentsDetailsCharts({
               >
                 <Label
                   position="center"
-                  className="fill-shamiri-black text-2xl font-semibold leading-8"
+                  className="fill-foreground text-2xl font-semibold leading-8"
                 >
                   {formatedStudentsDropOutReasons.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
@@ -117,17 +117,14 @@ export default function HubStudentsDetailsCharts({
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
-      <ChartCard title="Student information completion" showCardFooter={false}>
+      <ChartCard title="Student information completion">
         {studentInfoCompletion.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={250} height={250} aria-label="Student information completion">
               <Pie
                 data={studentInfoCompletion.map((entry) => ({
                   ...entry,
-                  fill:
-                    entry.name === "actual"
-                      ? "var(--color-shamiri-new-blue)"
-                      : "var(--color-shamiri-new-light-blue)",
+                  fill: entry.name === "actual" ? "var(--color-primary)" : "var(--color-info-bg)",
                 }))}
                 dataKey="value"
                 nameKey="name"
@@ -138,7 +135,7 @@ export default function HubStudentsDetailsCharts({
               >
                 <Label
                   position="center"
-                  className="fill-shamiri-black text-2xl font-semibold leading-8"
+                  className="fill-foreground text-2xl font-semibold leading-8"
                 >
                   {`${studentInfoCompletion.find((d) => d.name === "actual")?.value ?? 0}%`}
                 </Label>
@@ -148,7 +145,7 @@ export default function HubStudentsDetailsCharts({
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
-      <ChartCard title="Student group ratings" showCardFooter={false}>
+      <ChartCard title="Student group ratings">
         {studentGroupRatings.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
@@ -169,7 +166,7 @@ export default function HubStudentsDetailsCharts({
                 type="monotone"
                 dataKey="value"
                 name="Avg rating"
-                stroke="var(--color-shamiri-new-blue)"
+                stroke="var(--color-primary)"
               />
             </LineChart>
           </ResponsiveContainer>

@@ -75,7 +75,7 @@ function TriggerFollowupConfirm({ caseId, close }: { caseId: string; close: () =
         <DialogClose asChild>
           <Button variant="ghost">Cancel</Button>
         </DialogClose>
-        <Button variant="brand" disabled={isSaving} loading={isSaving} onClick={handleConfirm}>
+        <Button disabled={isSaving} loading={isSaving} onClick={handleConfirm}>
           Confirm
         </Button>
       </DialogFooter>

@@ -63,7 +63,6 @@ export function LoginForm() {
   return (
     <div className="flex flex-col space-y-4">
       <Button
-        variant="brand"
         disabled={isLoading}
         onClick={() => {
           setClickedGoogle(true);
@@ -93,9 +92,7 @@ export function LoginForm() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background-secondary px-2 text-muted-foreground">
-                Or continue with email
-              </span>
+              <span className="bg-white px-2 text-muted-foreground">Or continue with email</span>
             </div>
           </div>
 
@@ -135,8 +132,8 @@ export function LoginForm() {
             </Button>
           </form>
 
-          <div className="rounded-md bg-shamiri-light-orange/10 p-3 text-center">
-            <p className="text-xs text-shamiri-dark-orange">
+          <div className="rounded-md border border-warning-border bg-warning-bg p-3 text-center">
+            <p className="text-sm text-warning">
               Development mode - Email login is only available in non-production environments
             </p>
           </div>

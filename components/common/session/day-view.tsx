@@ -48,18 +48,18 @@ export function DayView({
     <div className="w-full rounded-t-[0.4375rem] border">
       <table className="schedule-table sticky top-0 z-10 rounded-t-[0.4375rem] bg-white">
         <thead>
-          <tr className="flex divide-x divide-grey-border border-b border-grey-border bg-grey-bg">
+          <tr className="flex divide-x divide-border border-b border-border bg-muted">
             <th className="time-cell hidden lg:block" />
             <th
               className={cn("relative flex shrink-0 items-center justify-between gap-2", {
-                "text-blue-base": isToday(currentDate, state.timeZone),
+                "text-info": isToday(currentDate, state.timeZone),
               })}
             >
               {headerLabel}&#8203;
               {hasSessions && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="h-1.5 w-1.5 rounded-full bg-blue-base" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-info" />
                   </TooltipTrigger>
                   <TooltipContent side="top">{sessions.length} sessions on this day</TooltipContent>
                 </Tooltip>
@@ -129,13 +129,9 @@ function DayCalendarCell({
   return (
     <td {...cellProps}>
       <div
-        className={cn(
-          "relative h-full w-full lg:h-[85px] xl:h-[112px]",
-          "border-t border-grey-border",
-          {
-            "border-t-0": rowIdx === 0,
-          },
-        )}
+        className={cn("relative h-full w-full lg:h-[85px] xl:h-[112px]", "border-t border-border", {
+          "border-t-0": rowIdx === 0,
+        })}
       >
         {/* Behind the chips, not around them: buttons cannot nest. */}
         <div

@@ -59,14 +59,17 @@ export default function PageProof({
         <span
           className={cn(
             "text-xs",
-            problems.length > 0 ? "font-medium text-red-base" : "text-shamiri-text-grey",
+            problems.length > 0 ? "font-medium text-destructive" : "text-muted-foreground",
           )}
         >
           {problems.length > 0 ? "Doesn't print" : "A4 · fits"}
         </span>
       </figcaption>
       {problems.map((problem) => (
-        <p key={problem} className="rounded-md bg-red-bg px-3 py-2 text-sm text-red-base">
+        <p
+          key={problem}
+          className="rounded-md bg-destructive-bg px-3 py-2 text-sm text-destructive"
+        >
           {problem}
         </p>
       ))}
@@ -95,12 +98,12 @@ export default function PageProof({
                 rx={4}
                 strokeWidth={open ? 2 : 1.5}
                 className={
-                  open ? "fill-blue-bg stroke-shamiri-new-blue" : "fill-red-bg stroke-red-base"
+                  open ? "fill-info-bg stroke-primary" : "fill-destructive-bg stroke-destructive"
                 }
               />
             );
           })}
-          <g className="fill-shamiri-black">
+          <g className="fill-foreground">
             {Object.entries(page.markers).map(([corner, marker]) => (
               <rect key={corner} x={marker.x} y={marker.y} width={marker.w} height={marker.h} />
             ))}
@@ -130,7 +133,7 @@ export default function PageProof({
           {page.items.map(
             ({ itemId, standIn }) =>
               standIn && (
-                <Text key={itemId} run={standIn} className="fill-shamiri-text-grey italic" />
+                <Text key={itemId} run={standIn} className="fill-muted-foreground italic" />
               ),
           )}
           {page.items.length === 0 && (
@@ -139,7 +142,7 @@ export default function PageProof({
               y={paper.height / 2}
               fontSize={11}
               textAnchor="middle"
-              className="fill-shamiri-text-grey"
+              className="fill-muted-foreground"
             >
               Items you add appear here as they print.
             </text>
@@ -159,7 +162,7 @@ function Text({ run, className }: { run: TextRun; className?: string }) {
       fontWeight={run.weight}
       textLength={run.width > 0 ? run.width : undefined}
       lengthAdjust="spacing"
-      className={cn("fill-shamiri-black whitespace-pre", className)}
+      className={cn("fill-foreground whitespace-pre", className)}
     >
       {run.text}
     </text>
@@ -179,7 +182,7 @@ function Ink({ drawable }: { drawable: Drawable }) {
           width={w}
           height={h}
           strokeWidth={drawable.stroke}
-          className="fill-none stroke-shamiri-black"
+          className="fill-none stroke-foreground"
         />
       );
     }
@@ -190,10 +193,7 @@ function Ink({ drawable }: { drawable: Drawable }) {
           cy={drawable.cy}
           r={drawable.r}
           strokeWidth={drawable.stroke}
-          className={cn(
-            "stroke-shamiri-black",
-            drawable.filled ? "fill-shamiri-black" : "fill-none",
-          )}
+          className={cn("stroke-foreground", drawable.filled ? "fill-foreground" : "fill-none")}
         />
       );
     case "line":
@@ -206,7 +206,7 @@ function Ink({ drawable }: { drawable: Drawable }) {
           strokeWidth={drawable.stroke}
           strokeDasharray={drawable.dotted ? "0.1 2.5" : undefined}
           strokeLinecap={drawable.dotted ? "round" : undefined}
-          className="stroke-shamiri-black"
+          className="stroke-foreground"
         />
       );
   }
@@ -214,7 +214,7 @@ function Ink({ drawable }: { drawable: Drawable }) {
 
 function Qr({ text, box }: { text: string; box: Rect }) {
   return (
-    <g className="fill-shamiri-black">
+    <g className="fill-foreground">
       {qrRects(text, box).map(({ x, y, w, h }) => (
         <rect key={`${x},${y}`} x={x} y={y} width={w} height={h} />
       ))}

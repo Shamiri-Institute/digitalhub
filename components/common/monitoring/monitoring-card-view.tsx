@@ -89,15 +89,15 @@ function ScopedFigures({
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <div>
-        <p className="text-center text-sm font-semibold text-shamiri-new-blue">You</p>
+        <p className="text-center text-sm font-semibold text-primary">You</p>
         {ownRows.length > 0 ? (
           renderFigure(ownRows, "You")
         ) : (
-          <p className="py-10 text-center text-shamiri-text-grey">No data available</p>
+          <p className="py-10 text-center text-muted-foreground">No data available</p>
         )}
       </div>
       <div>
-        <p className="text-center text-sm font-semibold text-shamiri-text-dark-grey">Hub</p>
+        <p className="text-center text-sm font-semibold text-muted-foreground">Hub</p>
         {renderFigure(hubRows, "Hub")}
       </div>
     </div>
@@ -110,7 +110,7 @@ function ProgressFigure({ current, goal }: { current: number; goal: number }) {
       <p className="text-center text-2xl font-semibold">
         {formatCell(current)} / {formatCell(goal)}
       </p>
-      <progress className="h-2 w-full accent-shamiri-new-blue" value={current} max={goal} />
+      <progress className="h-2 w-full accent-primary" value={current} max={goal} />
     </div>
   );
 }
@@ -127,7 +127,7 @@ export function MonitoringCardView({
   emphasis?: SupervisorEmphasis;
 }) {
   if (rows.length === 0) {
-    return <p className="py-10 text-center text-shamiri-text-grey">No data available</p>;
+    return <p className="py-10 text-center text-muted-foreground">No data available</p>;
   }
   const markedRows = emphasis
     ? rows.map((row) =>

@@ -101,7 +101,7 @@ function ReplaceFellowForm({
         <div className="space-y-6">
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+              <span className="pb-2 text-xs uppercase text-muted-foreground">
                 Assign group to replacement fellow
               </span>
             </div>
@@ -192,12 +192,12 @@ function ReplaceFellowForm({
             <Button
               variant="ghost"
               type="button"
-              className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+              className="text-base font-semibold leading-6 text-primary hover:text-primary"
             >
               Cancel
             </Button>
           </DialogClose>
-          <Button variant="brand" type="submit" disabled={isSaving} loading={isSaving}>
+          <Button type="submit" disabled={isSaving} loading={isSaving}>
             Replace
           </Button>
         </DialogFooter>

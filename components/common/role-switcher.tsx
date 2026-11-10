@@ -86,7 +86,7 @@ export function RoleSwitcher({ loading, setLoading, user, implementerMembers }: 
         <Button
           variant="outline"
           aria-expanded={open}
-          className="-mt-1 w-full lg:min-w-[300px] justify-between bg-white px-2 text-left filter disabled:pointer-events-none disabled:grayscale"
+          className="w-full lg:min-w-[300px] justify-between bg-white px-2 text-left filter disabled:pointer-events-none disabled:grayscale"
           disabled={loading || !activeMembership}
         >
           <div className="flex flex-col items-start">
@@ -100,7 +100,7 @@ export function RoleSwitcher({ loading, setLoading, user, implementerMembers }: 
                       )?.label
                     }
                   </span>
-                  <span className="text-xs uppercase tracking-widest text-shamiri-new-blue">
+                  <span className="text-xs uppercase tracking-widest text-primary">
                     {" - "}
                     {activeMembership.role.replace("_", " ")}
                   </span>
@@ -132,8 +132,8 @@ export function RoleSwitcher({ loading, setLoading, user, implementerMembers }: 
                   className={cn(
                     "h-8 w-8 p-0",
                     selectedRoles.size > 0
-                      ? "text-shamiri-new-blue"
-                      : "text-muted-foreground hover:text-shamiri-new-blue",
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-primary",
                   )}
                   aria-label="Filter by role"
                 >
@@ -169,7 +169,7 @@ export function RoleSwitcher({ loading, setLoading, user, implementerMembers }: 
                 <div className="flex flex-col">
                   <div className="flex flex-col">
                     <span className="text-xs uppercase tracking-widest text-muted-foreground">
-                      <span className="text-shamiri-new-blue">{member.role.replace("_", " ")}</span>
+                      <span className="text-primary">{member.role.replace("_", " ")}</span>
                     </span>
                     <span className="font-medium">{member.label}</span>
                     <span className="min-h-4 text-xs uppercase tracking-widest text-muted-foreground">

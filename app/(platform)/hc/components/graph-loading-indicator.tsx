@@ -16,10 +16,10 @@ export function CardSkeleton() {
   return (
     <div className={`${shimmer} relative overflow-hidden rounded-xl bg-muted p-2 shadow-xs`}>
       <div className="flex p-4">
-        <div className="ml-2 h-4 w-32 rounded-md bg-shamiri-light-grey text-sm font-medium" />
+        <div className="ml-2 h-4 w-32 rounded-md bg-muted text-sm font-medium" />
       </div>
       <div className="flex items-center justify-center">
-        <div className="h-64 w-64 rounded-full bg-shamiri-light-grey" />
+        <div className="h-64 w-64 rounded-full bg-muted" />
       </div>
     </div>
   );

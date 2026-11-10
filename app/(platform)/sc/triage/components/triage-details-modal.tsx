@@ -30,7 +30,7 @@ const HANDOFF_LABELS: Record<string, string> = {
 function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-3 gap-3 px-6 py-2">
-      <span className="text-shamiri-text-grey text-sm">{label}</span>
+      <span className="text-muted-foreground text-sm">{label}</span>
       <span className="col-span-2 text-sm">{children}</span>
     </div>
   );
@@ -47,11 +47,17 @@ function formatDate(date: Date | string | null | undefined) {
 
 function RiskBadge({ outcome }: { outcome: string | null }) {
   if (outcome === "ANY_YES")
-    return <Badge className="bg-red-bg text-red-base border-red-border">Risk positive</Badge>;
+    return (
+      <Badge className="bg-destructive-bg text-destructive border-destructive-border">
+        Risk positive
+      </Badge>
+    );
   if (outcome === "ALL_NO")
-    return <Badge className="bg-green-bg text-green-base border-green-border">Risk negative</Badge>;
+    return (
+      <Badge className="bg-success-bg text-success border-success-border">Risk negative</Badge>
+    );
   return (
-    <Badge variant="outline" className="text-shamiri-text-grey">
+    <Badge variant="outline" className="text-muted-foreground">
       Not completed
     </Badge>
   );
@@ -79,7 +85,7 @@ export default function TriageDetailsModal({
           <DialogTitle className="text-base font-medium capitalize">
             {event.student.studentName?.toLowerCase() ?? event.student.visibleId ?? "Triage event"}
           </DialogTitle>
-          <p className="text-shamiri-text-grey mt-1 text-sm">
+          <p className="text-muted-foreground mt-1 text-sm">
             Triage detail recorded by {event.fellow.fellowName ?? "the fellow"}.
           </p>
         </DialogHeader>
@@ -88,7 +94,7 @@ export default function TriageDetailsModal({
           <DetailRow label="Student">
             <span className="capitalize">{event.student.studentName?.toLowerCase() ?? "—"}</span>
             {event.student.visibleId && (
-              <span className="text-shamiri-text-grey ml-1">· {event.student.visibleId}</span>
+              <span className="text-muted-foreground ml-1">· {event.student.visibleId}</span>
             )}
           </DetailRow>
           <DetailRow label="School">{event.student.school?.schoolName ?? "—"}</DetailRow>
@@ -96,7 +102,7 @@ export default function TriageDetailsModal({
           <DetailRow label="Session">
             {sessionLabel}
             {event.session.sessionDate && (
-              <span className="text-shamiri-text-grey ml-1">
+              <span className="text-muted-foreground ml-1">
                 · {formatDate(event.session.sessionDate)}
               </span>
             )}
@@ -127,9 +133,9 @@ export default function TriageDetailsModal({
           </DetailRow>
           <DetailRow label="Clinical case">
             {event.clinicalCaseExists ? (
-              <Badge className="bg-green-bg text-green-base border-green-border">Open</Badge>
+              <Badge className="bg-success-bg text-success border-success-border">Open</Badge>
             ) : (
-              <Badge variant="outline" className="text-shamiri-text-grey">
+              <Badge variant="outline" className="text-muted-foreground">
                 None
               </Badge>
             )}
@@ -141,7 +147,7 @@ export default function TriageDetailsModal({
             {event.note ? (
               <span className="whitespace-pre-wrap">{event.note}</span>
             ) : (
-              <span className="text-shamiri-text-grey">No note recorded.</span>
+              <span className="text-muted-foreground">No note recorded.</span>
             )}
           </DetailRow>
 
@@ -154,7 +160,7 @@ export default function TriageDetailsModal({
                 {event.reviewNote ? (
                   <span className="whitespace-pre-wrap">{event.reviewNote}</span>
                 ) : (
-                  <span className="text-shamiri-text-grey">No review note.</span>
+                  <span className="text-muted-foreground">No review note.</span>
                 )}
               </DetailRow>
             </>

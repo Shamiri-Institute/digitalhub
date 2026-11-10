@@ -48,18 +48,16 @@ export default function PdfViewerInner({ url, className }: PdfViewerInnerProps) 
         onLoadSuccess={({ numPages }) => setNumPages(numPages)}
         onLoadError={() => setLoadError(true)}
         loading={
-          <div className="flex flex-col items-center justify-center py-16 text-shamiri-text-grey">
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <Icons.loaderCircle className="h-10 w-10 mb-4 animate-spin" />
             <p>Loading PDF...</p>
             <p className="text-sm mt-1">This may take a moment on slower connections.</p>
           </div>
         }
         error={
-          <div className="flex flex-col items-center justify-center py-16 text-shamiri-light-red">
+          <div className="flex flex-col items-center justify-center py-16 text-destructive">
             <p className="text-lg font-medium">Failed to load PDF</p>
-            <p className="text-sm mt-1 text-shamiri-text-grey">
-              Check the file path and try again.
-            </p>
+            <p className="text-sm mt-1 text-muted-foreground">Check the file path and try again.</p>
           </div>
         }
       >

@@ -182,7 +182,7 @@ function FellowAttendanceContent({
         />
         <div className="flex justify-end gap-6">
           <Button
-            className="bg-shamiri-new-blue"
+            className="bg-primary"
             onClick={() => {
               setIsOpen(false);
             }}
@@ -238,7 +238,7 @@ export function FellowAttendanceDataTable({
             setAttendanceDialog(true);
           }}
         >
-          <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
+          <Icons.fileDown className="h-4 w-4 text-muted-foreground" />
           <span>Mark fellow attendance</span>
         </Button>
       </div>
@@ -315,11 +315,11 @@ export function FellowAttendanceDataTable({
               ) : (
                 <span>{attendance?.fellowName}</span>
               )}
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+              <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
               <span>
                 {sessionDisplayName(attendance?.sessionName ?? session?.session?.sessionName ?? "")}
               </span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+              <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
               <span>{attendance?.schoolName ?? session?.school?.schoolName ?? session?.venue}</span>
             </div>
           </DialogAlertWidget>
@@ -348,7 +348,7 @@ export function FellowAttendanceDataTable({
       {closeDialogFn && (
         <Button
           type="button"
-          className="border-0 bg-shamiri-new-blue text-white hover:bg-shamiri-new-blue/80"
+          className="border-0 bg-primary text-white hover:bg-primary/80"
           onClick={() => {
             closeDialogFn(false);
           }}
@@ -404,9 +404,7 @@ export const columns = (state: {
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
-        className={
-          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-        }
+        className={"h-5 w-5"}
       />
     ),
     cell: ({ row }) => {
@@ -417,9 +415,7 @@ export const columns = (state: {
             disabled={!row.getCanSelect()}
             onCheckedChange={(val) => row.toggleSelected(!!val)}
             aria-label="Select row"
-            className={
-              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-            }
+            className={"h-5 w-5"}
           />
         </div>
       );
@@ -441,13 +437,13 @@ export const columns = (state: {
           {row.original.processedAt && (
             <Tooltip>
               <TooltipTrigger>
-                <div className="flex items-center rounded-lg border border-green-border bg-green-bg px-1.5 py-1.5">
-                  <div className="flex items-center gap-1 text-green-base">
+                <div className="flex items-center rounded-lg border border-success-border bg-success-bg px-1.5 py-1.5">
+                  <div className="flex items-center gap-1 text-success">
                     <CheckCheck className="h-3 w-3" strokeWidth={2.5} />
                   </div>
                 </div>
               </TooltipTrigger>
-              <TooltipContent className="border bg-background-secondary text-foreground drop-shadow-sm">
+              <TooltipContent className="border bg-muted text-foreground drop-shadow-sm">
                 <div className="px-2 py-1 text-sm">
                   Processed on {format(row.original.processedAt, DISPLAY_DATE_TIME)}
                 </div>
@@ -471,11 +467,11 @@ export const columns = (state: {
           {Array.from(Array(5).keys()).map((index) => {
             return (
               <div key={index.toString()} className="relative h-5 w-5 shrink">
-                <Icons.starRating className="h-full w-full text-shamiri-light-grey" />
+                <Icons.starRating className="h-full w-full text-navy-5" />
               </div>
             );
           })}
-          <div className="absolute inset-0 flex items-center gap-1 text-shamiri-light-orange">
+          <div className="absolute inset-0 flex items-center gap-1 text-rating">
             {Array.from(Array(Math.floor(rating)).keys()).map((index) => {
               return <Icons.starRating key={index} className="h-5 w-5" />;
             })}
@@ -517,10 +513,7 @@ export const columns = (state: {
       const type = row.original.groupType;
       return (
         type && (
-          <Badge
-            variant={type === "TREATMENT" ? "default" : "outline-solid"}
-            className="capitalize"
-          >
+          <Badge variant={type === "TREATMENT" ? "default" : "outline"} className="capitalize">
             {type?.toLowerCase()}
           </Badge>
         )

@@ -96,7 +96,7 @@ export default function PageItems({
           </Field>
         </fieldset>
         <div className="flex items-center gap-3 pb-2">
-          <span className="text-sm text-shamiri-text-grey">
+          <span className="text-sm text-muted-foreground">
             {page.items.length} {page.items.length === 1 ? "item" : "items"}, {questions}{" "}
             {questions === 1 ? "question" : "questions"}
           </span>
@@ -123,7 +123,7 @@ export default function PageItems({
                     : `Delete page ${number}`
                 }
                 disabled={page.items.length > 0}
-                className="text-shamiri-light-red"
+                className="text-destructive"
                 onClick={() => dispatch({ type: "deletePage", page: pageIndex })}
               >
                 <Trash2 className="h-4 w-4" />
@@ -136,7 +136,7 @@ export default function PageItems({
       {page.items.length === 0 && (
         <div className="rounded-lg border border-dashed px-6 py-10 text-center">
           <p className="text-sm font-medium">Nothing on this page yet</p>
-          <p className="mt-1 text-sm text-shamiri-text-grey">
+          <p className="mt-1 text-sm text-muted-foreground">
             {editable
               ? "Add questions, headings or text. The preview shows how the page will print."
               : "No items were added to this page."}
@@ -174,27 +174,27 @@ export default function PageItems({
               <li
                 key={item.id}
                 className={cn(
-                  "flex items-center gap-1 rounded-lg border bg-white pr-1 transition-colors hover:border-shamiri-new-blue/40",
-                  hasIssue && "border-red-border bg-red-bg",
+                  "flex items-center gap-1 rounded-lg border bg-white pr-1 transition-colors hover:border-primary/40",
+                  hasIssue && "border-destructive-border bg-destructive-bg",
                 )}
               >
                 <button
                   type="button"
                   onClick={() => dispatch({ type: "select", selection: { item: item.id } })}
-                  className="flex min-w-0 grow flex-col items-start gap-0.5 rounded-lg px-4 py-3 text-left focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue"
+                  className="flex min-w-0 grow flex-col items-start gap-0.5 rounded-lg px-4 py-3 text-left"
                 >
-                  <span className="flex w-full items-center gap-2 text-xs text-shamiri-text-grey">
+                  <span className="flex w-full items-center gap-2 text-xs text-muted-foreground">
                     {ITEM_KIND_LABELS[item.kind]}
                     {isQuestion(item) && <span className="font-mono">{item.key}</span>}
                     {isQuestion(item) && item.required && <span>· required</span>}
                     {hasIssue && (
-                      <span className="ml-auto font-medium text-red-base">Needs a fix</span>
+                      <span className="ml-auto font-medium text-destructive">Needs a fix</span>
                     )}
                   </span>
                   <span
                     className={cn(
                       "w-full truncate text-sm",
-                      !summary && "italic text-shamiri-text-grey",
+                      !summary && "italic text-muted-foreground",
                     )}
                   >
                     {summary || placeholder(item)}
@@ -206,14 +206,11 @@ export default function PageItems({
           }
 
           return (
-            <li
-              key={item.id}
-              className="rounded-lg border-2 border-shamiri-new-blue bg-white shadow-sm"
-            >
+            <li key={item.id} className="rounded-lg border-2 border-primary bg-white shadow-sm">
               <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2">
                 <span className="mr-auto text-sm">
                   <span className="font-semibold">{ITEM_KIND_LABELS[item.kind]}</span>
-                  <span className="text-shamiri-text-grey">
+                  <span className="text-muted-foreground">
                     {isQuestion(item) ? " · question" : " · printed, not answered"}
                   </span>
                 </span>
@@ -243,7 +240,7 @@ export default function PageItems({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="gap-1 text-shamiri-light-red hover:text-shamiri-light-red"
+                      className="gap-1 text-destructive hover:text-destructive"
                       onClick={() => dispatch({ type: "deleteItem", itemId: item.id })}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -293,7 +290,7 @@ function AddItemMenu({
           type="button"
           variant="outline"
           aria-label={`Add item to page ${pageNumber}`}
-          className="w-full gap-2 border-dashed text-shamiri-new-blue hover:text-shamiri-new-blue"
+          className="w-full gap-2 border-dashed text-primary hover:text-primary"
         >
           <Plus className="h-4 w-4" />
           Add item

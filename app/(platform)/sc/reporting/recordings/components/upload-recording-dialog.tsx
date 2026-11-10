@@ -446,7 +446,7 @@ function UploadRecordingForm({
           <input type="hidden" {...form.register("schoolId")} />
 
           {duplicateExists && (
-            <div className="rounded-lg border border-red-border bg-red-bg p-3 text-sm text-red-base">
+            <div className="rounded-lg border border-destructive-border bg-destructive-bg p-3 text-sm text-destructive">
               <div className="flex items-center gap-2">
                 <Icons.alertCircle className="h-4 w-4" />
                 <span>A recording already exists for this session</span>
@@ -466,25 +466,27 @@ function UploadRecordingForm({
                   className={cn(
                     "flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors",
                     fileInputDisabled
-                      ? "cursor-not-allowed border-gray-200 bg-gray-50"
-                      : "border-gray-300 hover:border-shamiri-new-blue",
-                    audioFile.status === "invalid" && "border-red-border",
+                      ? "cursor-not-allowed border-border bg-muted"
+                      : "border-input hover:border-primary",
+                    audioFile.status === "invalid" && "border-destructive-border",
                   )}
                 >
                   {audioFile.status === "ready" ? (
                     <div className="flex items-center gap-2 text-sm">
-                      <Icons.check className="h-4 w-4 text-shamiri-green" />
+                      <Icons.check className="h-4 w-4 text-success" />
                       <span>{audioFile.file.name}</span>
-                      <span className="text-gray-500">({formatBytes(audioFile.file.size)})</span>
+                      <span className="text-muted-foreground">
+                        ({formatBytes(audioFile.file.size)})
+                      </span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center gap-2 text-center">
-                      <Icons.uploadCloudIcon className="h-8 w-8 text-gray-400" />
+                      <Icons.uploadCloudIcon className="h-8 w-8 text-muted-foreground" />
                       <div className="text-sm">
-                        <span className="font-medium text-shamiri-new-blue">Click to upload</span>
+                        <span className="font-medium text-primary">Click to upload</span>
                         {" or drag and drop"}
                       </div>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted-foreground">
                         {ALLOWED_EXTENSIONS.join(", ")} (max 500MB)
                       </span>
                     </div>
@@ -499,10 +501,10 @@ function UploadRecordingForm({
                   />
                 </label>
                 {audioFile.status === "invalid" && (
-                  <p className="text-sm text-red-base">{audioFile.error}</p>
+                  <p className="text-sm text-destructive">{audioFile.error}</p>
                 )}
                 {audioFile.status === "validating" && (
-                  <p className="text-sm text-gray-500">Validating file...</p>
+                  <p className="text-sm text-muted-foreground">Validating file...</p>
                 )}
               </div>
             </>
@@ -514,9 +516,9 @@ function UploadRecordingForm({
                 <span>Uploading...</span>
                 <span>{uploadProgress}%</span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full bg-shamiri-new-blue transition-all duration-300"
+                  className="h-full bg-primary transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
@@ -531,7 +533,6 @@ function UploadRecordingForm({
             </DialogClose>
             <Button
               type="submit"
-              variant="brand"
               disabled={audioFile.status !== "ready" || isUploading || duplicateExists}
               loading={isUploading}
             >

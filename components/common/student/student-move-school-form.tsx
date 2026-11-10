@@ -111,7 +111,7 @@ function StudentMoveSchoolFormForm({
       </DialogHeader>
       {children}
       <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
-        <div className="flex items-start gap-2 rounded-lg border border-shamiri-red/30 bg-red-bg px-4 py-2 text-sm text-red-base">
+        <div className="flex items-start gap-2 rounded-lg border border-destructive-border bg-destructive-bg px-4 py-2 text-sm text-destructive">
           <Icons.info className="mt-0.5 h-5 w-5 shrink-0" />
           <span>
             Moving this student reassigns them to a new school, group and fellow. Their existing
@@ -143,7 +143,7 @@ function StudentMoveSchoolFormForm({
                 </FormControl>
                 <SelectContent className="max-h-[200px]">
                   {schools.length === 0 ? (
-                    <div className="px-2 py-1.5 text-sm text-shamiri-text-grey">
+                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
                       No other schools available
                     </div>
                   ) : (
@@ -185,7 +185,7 @@ function StudentMoveSchoolFormForm({
                 </FormControl>
                 <SelectContent className="max-h-[200px]">
                   {groups.length === 0 && !loadingGroups && selectedSchoolId ? (
-                    <div className="px-2 py-1.5 text-sm text-shamiri-text-grey">
+                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
                       No groups found in this school
                     </div>
                   ) : (
@@ -206,7 +206,6 @@ function StudentMoveSchoolFormForm({
             Cancel
           </Button>
           <Button
-            variant="brand"
             type="submit"
             disabled={form.formState.isSubmitting}
             loading={form.formState.isSubmitting}

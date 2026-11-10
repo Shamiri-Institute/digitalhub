@@ -30,7 +30,7 @@ export default function MainFellowsDatatableMenu({
       <RowActionsTrigger label={`Actions for ${fellow.fellowName}`} className="bg-white" />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
+          <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {role === ImplementerRole.ADMIN ? (
@@ -58,9 +58,9 @@ export default function MainFellowsDatatableMenu({
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => openDialog("dropout", fellow)}>
               {fellow.droppedOut ? (
-                <div className="text-shamiri-red">Undo drop out</div>
+                <div className="text-destructive">Undo drop out</div>
               ) : (
-                <div className="text-shamiri-red">Drop-out fellow</div>
+                <div className="text-destructive">Drop-out fellow</div>
               )}
             </DropdownMenuItem>
           </>

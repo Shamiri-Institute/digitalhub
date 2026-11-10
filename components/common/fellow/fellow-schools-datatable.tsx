@@ -88,7 +88,7 @@ export default function FellowSchoolsDatatable({
           mode={"add"}
         >
           <DialogTrigger asChild={true}>
-            <Button variant="brand">Add new fellow</Button>
+            <Button>Add new fellow</Button>
           </DialogTrigger>
         </FellowDetailsForm>
       </div>
@@ -100,7 +100,7 @@ export default function FellowSchoolsDatatable({
       <DialogAlertWidget>
         <div className="flex items-center gap-2">
           <span>{fellow.fellowName}</span>
-          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+          <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
           <span>
             {fellow.cellNumber &&
               parsePhoneNumberFromString(fellow.cellNumber, "KE")?.formatNational()}
@@ -115,7 +115,7 @@ export default function FellowSchoolsDatatable({
       <DialogAlertWidget>
         <div className="flex flex-wrap items-center gap-2 whitespace-nowrap">
           <span>Group {fellowGroup.groupName}</span>
-          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+          <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
           <span>{fellowGroup.school.schoolName}</span>
         </div>
       </DialogAlertWidget>

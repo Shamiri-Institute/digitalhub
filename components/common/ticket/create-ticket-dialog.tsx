@@ -45,7 +45,7 @@ export default function CreateTicketDialog({ disabled }: { disabled?: boolean })
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="brand" className="flex gap-1" disabled={disabled}>
+        <Button className="flex gap-1" disabled={disabled}>
           <Icons.plusCircle className="h-4 w-4" />
           <span>New ticket</span>
         </Button>
@@ -182,12 +182,12 @@ function CreateTicketForm({ close }: { close: () => void }) {
             <Button
               variant="ghost"
               type="button"
-              className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+              className="text-base font-semibold leading-6 text-primary hover:text-primary"
             >
               Cancel
             </Button>
           </DialogClose>
-          <Button variant="brand" type="submit" disabled={isSaving} loading={isSaving}>
+          <Button type="submit" disabled={isSaving} loading={isSaving}>
             Submit
           </Button>
         </DialogFooter>

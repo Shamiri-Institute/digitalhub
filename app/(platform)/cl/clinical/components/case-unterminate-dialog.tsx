@@ -65,7 +65,7 @@ function CaseUnterminateForm({ caseId, close }: { caseId: string; close: () => v
     <>
       <div className="flex flex-col gap-y-4">
         <Separator />
-        <div className="flex gap-2 rounded-lg border border-shamiri-red/30 bg-red-bg px-4 py-2 text-red-base">
+        <div className="flex gap-2 rounded-lg border border-destructive-border bg-destructive-bg px-4 py-2 text-destructive">
           <Icons.info className="mt-1 h-4 w-4 shrink-0 stroke-2" />
           <div>
             This will restore the case to Active status. The termination record stays in the case
@@ -89,7 +89,7 @@ function CaseUnterminateForm({ caseId, close }: { caseId: string; close: () => v
       <div className="flex justify-end gap-4">
         <DialogClose asChild>
           <Button
-            className="text-shamiri-light-red hover:bg-red-bg hover:text-shamiri-light-red"
+            className="text-destructive hover:bg-destructive-bg hover:text-destructive"
             variant="ghost"
           >
             Cancel

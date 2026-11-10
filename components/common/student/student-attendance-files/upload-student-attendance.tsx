@@ -154,9 +154,9 @@ export default function UploadStudentAttendanceDocument({
     <div className="space-y-3">
       <div className="flex items-start gap-4">
         <div className="flex shrink-0 justify-center">
-          <label className="flex cursor-pointer flex-col items-center rounded-lg border-2 border-dashed border-shamiri-new-blue bg-blue-bg p-6 transition-colors hover:bg-blue-bg/80">
-            <Icons.camera className="h-8 w-8 text-shamiri-new-blue" />
-            <span className="mt-2 text-sm font-medium text-shamiri-new-blue">Take Photo</span>
+          <label className="flex cursor-pointer flex-col items-center rounded-lg border-2 border-dashed border-primary bg-info-bg p-6 transition-colors hover:bg-info-bg/80">
+            <Icons.camera className="h-8 w-8 text-primary" />
+            <span className="mt-2 text-sm font-medium text-primary">Take Photo</span>
             <input
               aria-label="Attendance photos"
               type="file"
@@ -167,7 +167,7 @@ export default function UploadStudentAttendanceDocument({
             />
           </label>
         </div>
-        <div className="mt-2 space-y-1 text-xs text-shamiri-text-grey">
+        <div className="mt-2 space-y-1 text-xs text-muted-foreground">
           <p className="font-medium">Instructions:</p>
           <p>- Take a picture of all the pages</p>
           <p>- Ensure the pictures are visible and clear</p>
@@ -196,7 +196,7 @@ export default function UploadStudentAttendanceDocument({
                   removeFile(i);
                 }}
                 disabled={uploading}
-                className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-shamiri-light-red text-white"
+                className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-destructive text-white"
                 aria-label={`Remove ${file.name}`}
               >
                 <Icons.crossCircleFilled className="h-4 w-4" />
@@ -242,15 +242,14 @@ export default function UploadStudentAttendanceDocument({
 
       <Separator />
       <DialogFooter className="flex justify-end">
-        <Button className="text-shamiri-new-blue" variant="ghost" onClick={() => onClose(false)}>
+        <Button className="text-primary" variant="ghost" onClick={() => onClose(false)}>
           Cancel
         </Button>
         <Button
           type="button"
           disabled={photos.length === 0 || uploading}
-          variant="brand"
           onClick={toastOnError(handleUpload)}
-          className="bg-shamiri-new-blue"
+          className="bg-primary"
           loading={uploading}
         >
           {uploading ? "Processing upload..." : "Upload"}

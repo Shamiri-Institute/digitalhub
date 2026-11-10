@@ -28,7 +28,7 @@ export function AllSupervisorsDataTableMenu({
       <RowActionsTrigger label={`Actions for ${supervisor.supervisorName}`} className="bg-white" />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
+          <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {role === ImplementerRole.ADMIN ? (
@@ -71,7 +71,7 @@ export function AllSupervisorsDataTableMenu({
             <DropdownMenuItem disabled>Overall supervisor evaluation</DropdownMenuItem>
             {supervisor.droppedOut === null || !supervisor.droppedOut ? (
               <DropdownMenuItem onClick={() => openDialog("dropout", supervisor)}>
-                <div className="text-shamiri-red">Drop out supervisor</div>
+                <div className="text-destructive">Drop out supervisor</div>
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem onClick={() => openDialog("undrop", supervisor)}>

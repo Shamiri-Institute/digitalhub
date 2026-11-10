@@ -119,7 +119,7 @@ function MarkSessionOccurrenceSteps({
         <div className="flex flex-col gap-y-4">
           <Separator />
           <span>Are you sure?</span>
-          <div className="flex gap-2 rounded-lg border border-shamiri-red/30 bg-red-bg px-4 py-2 text-red-base">
+          <div className="flex gap-2 rounded-lg border border-destructive-border bg-destructive-bg px-4 py-2 text-destructive">
             <Icons.info className="mt-1 h-4 w-4 shrink-0 stroke-2" />
             <div>
               Once this change has been made it is irreversible and will need you to contact support
@@ -130,7 +130,7 @@ function MarkSessionOccurrenceSteps({
         <Separator />
         <div className="flex justify-end gap-4">
           <Button
-            className="text-shamiri-light-red hover:bg-red-bg hover:text-shamiri-light-red"
+            className="text-destructive hover:bg-destructive-bg hover:text-destructive"
             variant="ghost"
             type="button"
             disabled={isSaving}
@@ -179,7 +179,7 @@ function MarkSessionOccurrenceSteps({
                       aria-label="Attended"
                       value="attended"
                       id="mark_attended"
-                      className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
+                      className="custom-radio border-input data-[state=checked]:border-success"
                     />
                   </div>
                   <div className="relative">
@@ -188,7 +188,7 @@ function MarkSessionOccurrenceSteps({
                       aria-label="Unmarked"
                       value="unmarked"
                       id="Unmarked_"
-                      className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-new-blue"
+                      className="custom-radio border-input  data-[state=checked]:border-primary"
                     />
                   </div>
                 </RadioGroup>
@@ -199,7 +199,7 @@ function MarkSessionOccurrenceSteps({
           <Separator />
           <DialogFooter className="flex justify-end">
             <Button
-              className="text-shamiri-new-blue hover:bg-blue-bg"
+              className="text-primary hover:bg-info-bg"
               variant="ghost"
               onClick={() => {
                 close();
@@ -224,7 +224,7 @@ function MarkSessionOccurrenceSteps({
               <div
                 // oxlint-disable-next-line react/no-array-index-key -- static display list
                 key={index.toString()}
-                className="flex items-center gap-x-2 rounded-lg border bg-background-secondary px-4 py-3"
+                className="flex items-center gap-x-2 rounded-lg border bg-muted px-4 py-3"
               >
                 <span>{sessionDisplayName(session.session?.sessionName)}</span>
                 <span>- {session.school?.schoolName ?? session.venue} -</span>
@@ -237,7 +237,6 @@ function MarkSessionOccurrenceSteps({
           <Separator />
           <div className="flex justify-end">
             <Button
-              variant="brand"
               onClick={() => {
                 close();
               }}

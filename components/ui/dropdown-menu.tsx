@@ -50,7 +50,7 @@ function DropdownMenuSubContent({
     <DropdownMenuPrimitive.SubContent
       data-slot="dropdown-menu-sub-content"
       className={cn(
-        "z-50 min-w-32 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:motion-safe:zoom-out-95 data-[state=open]:motion-safe:zoom-in-95 data-[side=bottom]:motion-safe:slide-in-from-top-2 data-[side=left]:motion-safe:slide-in-from-right-2 data-[side=right]:motion-safe:slide-in-from-left-2 data-[side=top]:motion-safe:slide-in-from-bottom-2",
+        "z-50 min-w-32 overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:motion-safe:zoom-out-95 data-[state=open]:motion-safe:zoom-in-95 data-[side=bottom]:motion-safe:slide-in-from-top-2 data-[side=left]:motion-safe:slide-in-from-right-2 data-[side=right]:motion-safe:slide-in-from-left-2 data-[side=top]:motion-safe:slide-in-from-bottom-2",
         className,
       )}
       {...props}
@@ -115,8 +115,8 @@ function DropdownMenuCheckboxItem({
       checked={checked}
       {...props}
     >
-      <span className="absolute left-2 flex h-4 w-4 items-center justify-center overflow-hidden rounded border border-shamiri-light-grey bg-white drop-shadow-sm data-[state=checked]:border-shamiri-new-blue">
-        <DropdownMenuPrimitive.ItemIndicator className="data-[state=checked]:bg-shamiri-new-blue data-[state=checked]:text-white">
+      <span className="absolute left-2 flex h-4 w-4 items-center justify-center overflow-hidden rounded border border-border bg-white drop-shadow-sm data-[state=checked]:border-primary">
+        <DropdownMenuPrimitive.ItemIndicator className="data-[state=checked]:bg-primary data-[state=checked]:text-white">
           <Check className="h-4 w-4" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>

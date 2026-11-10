@@ -28,7 +28,7 @@ export default function HubsDataTable({
         emptyStateMessage="No hubs found"
         renderTableActions={
           canManageHubs ? (
-            <Button variant="brand" className="flex gap-2" onClick={() => setShowAdd(true)}>
+            <Button className="flex gap-2" onClick={() => setShowAdd(true)}>
               <Plus className="h-4 w-4" />
               Add hub
             </Button>

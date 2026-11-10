@@ -180,7 +180,7 @@ function QuestionSettings({
               )}
             />
             {lockedBy && (
-              <Lock className="absolute right-2.5 top-2.5 h-4 w-4 text-shamiri-text-grey" />
+              <Lock className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             )}
           </div>
         </Field>
@@ -222,7 +222,7 @@ function QuestionSettings({
         <AccordionItem value="review">
           <AccordionTrigger className="gap-2 py-3 hover:no-underline">
             <span className="font-semibold">Scan review</span>
-            <span className="font-normal text-shamiri-text-grey">{reviewSummary(review)}</span>
+            <span className="font-normal text-muted-foreground">{reviewSummary(review)}</span>
           </AccordionTrigger>
           <AccordionContent className="space-y-4 pb-4">
             <p className="text-xs text-muted-foreground">

@@ -69,12 +69,7 @@ export default function TriggerConfirmPayout({ dateAdded, disabled }: TriggerCon
           <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
             Cancel
           </Button>
-          <Button
-            variant="brand"
-            onClick={toastOnError(handleConfirm)}
-            disabled={loading}
-            loading={loading}
-          >
+          <Button onClick={toastOnError(handleConfirm)} disabled={loading} loading={loading}>
             Confirm Payout
           </Button>
         </DialogFooter>

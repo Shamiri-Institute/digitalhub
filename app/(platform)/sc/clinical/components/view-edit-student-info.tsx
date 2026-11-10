@@ -177,7 +177,7 @@ function EditStudentInfoFields({
                   <FormItem>
                     <FormLabel>School</FormLabel>
                     <FormControl>
-                      <Input {...field} disabled className="bg-gray-100" />
+                      <Input {...field} disabled className="bg-muted" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -218,7 +218,7 @@ function EditStudentInfoFields({
                   <FormItem className="flex-1">
                     <FormLabel>Shamiri ID</FormLabel>
                     <FormControl>
-                      <Input {...field} disabled className="bg-gray-100" />
+                      <Input {...field} disabled className="bg-muted" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -275,7 +275,7 @@ function EditStudentInfoFields({
                 <FormItem>
                   <FormLabel>Group</FormLabel>
                   <FormControl>
-                    <Input {...field} disabled className="bg-gray-100" />
+                    <Input {...field} disabled className="bg-muted" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -288,7 +288,7 @@ function EditStudentInfoFields({
                   Cancel
                 </Button>
               </DialogClose>
-              <Button variant="brand" type="submit" loading={isSaving} disabled={isSaving}>
+              <Button type="submit" loading={isSaving} disabled={isSaving}>
                 Save Changes
               </Button>
             </DialogFooter>

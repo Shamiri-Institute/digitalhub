@@ -32,7 +32,7 @@ export default async function HubsPage() {
         <PageHeading title="Hubs" />
         <div className="space-y-2">
           {activeProject && (
-            <p className="text-sm font-medium uppercase tracking-wide text-shamiri-text-dark-grey">
+            <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
               {activeProject.name}
             </p>
           )}

@@ -15,6 +15,7 @@
     "start": "next start",
     "format": "oxfmt",
     "stylecheck": "oxfmt --check && oxlint --type-aware",
+    "design:audit": "npx --yes impeccable@4.8.2 detect app components",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test:ci": "playwright test",

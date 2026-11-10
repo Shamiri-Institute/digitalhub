@@ -18,7 +18,7 @@ export function ScheduleModeToggle({
       onValueChange={(nextMode) => {
         if (nextMode) onModeChange(nextMode as Mode);
       }}
-      className="gap-0 divide-x divide-gray-300 overflow-hidden rounded-lg border border-border py-0 shadow-xs"
+      className="gap-0 divide-x divide-input overflow-hidden rounded-lg border border-border py-0 shadow-xs"
     >
       <ToggleGroupItem
         value="day"
