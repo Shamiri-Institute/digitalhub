@@ -101,7 +101,7 @@ function SessionTypesEditor({
 
   return (
     <Accordion
-      type="multiple"
+      multiple
       value={openGroups}
       onValueChange={onOpenGroupsChange}
       className="rounded-lg border"

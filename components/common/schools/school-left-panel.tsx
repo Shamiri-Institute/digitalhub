@@ -48,7 +48,7 @@ export default function SchoolLeftPanel({
     <div className="h-auto w-full space-y-6 px-0 py-0 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:border-r lg:border-solid lg:border-border lg:px-6 lg:py-4">
       {/* The visible name sits inside the accordion's button, where a heading cannot go. */}
       <h1 className="sr-only">{school.schoolName}</h1>
-      <Accordion type="single" defaultValue={open ? "default" : ""} collapsible={!open}>
+      <Accordion {...(open ? { value: ["default"] } : { defaultValue: [] })}>
         <AccordionItem value="default">
           <AccordionTrigger
             iconClass={open ? "hidden" : ""}
@@ -89,7 +89,7 @@ export default function SchoolLeftPanel({
               />
             </div>
             <div>
-              <Accordion type="multiple" defaultValue={[]} className="w-full">
+              <Accordion multiple className="w-full">
                 <AccordionItem value="contact-information">
                   <AccordionTrigger className="border-b">
                     <div className="flex w-full justify-between gap-2 text-base">

@@ -17,8 +17,9 @@ and the tests that cover the change pass. Use npm only.
 
 ## UI
 
-- Build from `components/ui` (shadcn on Radix, variants through `cva`) and `components/common` (feature components, `data-table.tsx`). Extend an existing component through props or composition before writing a new one.
-- Style with Tailwind classes merged through `cn()`. The design tokens (`shamiri-new-blue`, `red-bg`, `blue-border`, ...) are the `@theme` colors in `app/globals.css`; use them in place of the default palette (`bg-red-500`) or arbitrary values. No inline `style`, no new CSS files.
+- Build from `components/ui` (shadcn components, variants through `cva`) and `components/common` (feature components, `data-table.tsx`). Extend an existing component through props or composition before writing a new one.
+- `components/ui` is moving from Radix to Base UI (`@base-ui/react`). Separator, Avatar, Label, Checkbox, RadioGroup, ToggleGroup, Accordion and `FormControl` are Base UI; compose them with the `render` prop. The overlays (Dialog, Popover, DropdownMenu, Select, Tooltip, Toast) are still Radix and use `asChild`. They must move together: a Base UI popup inside a Radix modal, or the reverse, is inert.
+- Style with Tailwind classes merged through `cn()`. The design tokens (`primary`, `muted-foreground`, `destructive-bg`, `info-border`, ...) are the `@theme` colors in `app/globals.css`, documented in `DESIGN.md`; Tailwind's default palette is switched off. No arbitrary colours, no inline `style`, no new CSS files.
 - Forms use React Hook Form with Zod.
 
 ## React hooks

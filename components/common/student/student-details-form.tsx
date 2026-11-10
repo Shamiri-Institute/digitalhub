@@ -418,7 +418,7 @@ function StudentDetailsFormContent({
           <RadioGroup
             className="flex flex-col gap-3"
             onValueChange={(value) => {
-              setTransferOption(Number.parseInt(value, 10));
+              setTransferOption(Number.parseInt(String(value), 10));
             }}
           >
             {matchedStudents.map((student, index) => {

@@ -106,7 +106,7 @@ function MarkClinicalAttendanceForm({
               aria-label="Attended"
               value="attended"
               id="mark_attended"
-              className="custom-radio border-border data-[state=checked]:border-success"
+              className="custom-radio border-border data-checked:border-success"
             />
           </div>
           <div className="relative">
@@ -115,7 +115,7 @@ function MarkClinicalAttendanceForm({
               aria-label="Missed"
               value="missed"
               id="mark_missed"
-              className="custom-radio border-border data-[state=checked]:border-destructive"
+              className="custom-radio border-border data-checked:border-destructive"
             />
           </div>
           <div className="relative">
@@ -124,7 +124,7 @@ function MarkClinicalAttendanceForm({
               aria-label="Unmarked"
               value="unmarked"
               id="unmarked"
-              className="custom-radio border-border data-[state=checked]:border-primary"
+              className="custom-radio border-border data-checked:border-primary"
             />
           </div>
         </RadioGroup>

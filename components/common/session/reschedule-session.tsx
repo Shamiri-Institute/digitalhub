@@ -1,4 +1,3 @@
-import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { ChevronsUpDown } from "lucide-react";
 import { type Dispatch, type SetStateAction, useState } from "react";
@@ -19,7 +18,7 @@ import {
 } from "#/components/ui/dialog";
 import { Form, FormControl, FormField, FormLabel, FormMessage } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import { Popover, PopoverContent } from "#/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import {
   Select,
   SelectContent,

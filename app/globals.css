@@ -92,27 +92,8 @@
   --color-chart-5: #6f9400;
   --color-chart-6: #3d6fd9;
 
-  --animate-accordion-down: accordion-down 0.2s ease-out;
-  --animate-accordion-up: accordion-up 0.2s ease-out;
-
   --breakpoint-xs: 375px;
 
-  @keyframes accordion-down {
-    from {
-      height: 0;
-    }
-    to {
-      height: var(--radix-accordion-content-height);
-    }
-  }
-  @keyframes accordion-up {
-    from {
-      height: var(--radix-accordion-content-height);
-    }
-    to {
-      height: 0;
-    }
-  }
   @keyframes shimmer {
     100% {
       transform: translateX(100%);
@@ -190,7 +171,7 @@
   .form-toggle-button {
     @apply flex-1 rounded-md text-base transition-colors;
 
-    &[data-state="on"],
+    &[data-checked],
     &[aria-current="page"] {
       @apply bg-white font-semibold text-primary shadow-xs;
     }
@@ -214,14 +195,14 @@
 
   /* An attendance choice: a large radio whose dot takes the tone named on the indicator. */
   .custom-radio {
-    @apply h-20! w-full! rounded-lg! bg-muted! transition-colors! data-[state=checked]:border-2! data-[state=checked]:bg-white!;
+    @apply h-20! w-full! rounded-lg! bg-muted! transition-colors! data-checked:border-2! data-checked:bg-white!;
 
-    & svg {
+    & > * {
       @apply hidden;
     }
   }
 
-  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) .indicator {
+  .custom-indicator:has(+ .custom-radio[data-checked]) .indicator {
     @apply border-4;
 
     &.green {

@@ -1,4 +1,4 @@
-import { Slot } from "@radix-ui/react-slot";
+import { useRender } from "@base-ui/react/use-render";
 import * as React from "react";
 import {
   Controller,
@@ -95,19 +95,24 @@ function FormLabel({ className, ...props }: React.ComponentProps<typeof Label>) 
   );
 }
 
-function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
+/** Gives its single child, the field's control, the id and ARIA attributes that tie it to the label. */
+function FormControl({
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLElement> & { children: React.ReactElement }) {
   const { error, formItemId, formDescriptionId, formMessageId, required } = useFormField();
 
-  return (
-    <Slot
-      data-slot="form-control"
-      id={formItemId}
-      aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
-      aria-invalid={!!error}
-      aria-required={required || undefined}
-      {...props}
-    />
-  );
+  return useRender({
+    render: children,
+    props: {
+      "data-slot": "form-control",
+      id: formItemId,
+      "aria-describedby": !error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`,
+      "aria-invalid": !!error,
+      "aria-required": required || undefined,
+      ...props,
+    },
+  });
 }
 
 function FormDescription({ className, ...props }: React.ComponentProps<"p">) {

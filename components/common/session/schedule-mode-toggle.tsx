@@ -13,7 +13,6 @@ export function ScheduleModeToggle({
 }) {
   return (
     <ToggleGroup
-      type="single"
       value={mode}
       onValueChange={(nextMode) => {
         if (nextMode) onModeChange(nextMode as Mode);

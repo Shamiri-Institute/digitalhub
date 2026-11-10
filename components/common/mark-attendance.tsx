@@ -255,7 +255,7 @@ function MarkAttendanceContent({
                     aria-label="Attended"
                     value="attended"
                     id="mark_attended"
-                    className="custom-radio border-input data-[state=checked]:border-success"
+                    className="custom-radio border-input data-checked:border-success"
                   />
                 </div>
                 <div className="relative">
@@ -264,7 +264,7 @@ function MarkAttendanceContent({
                     aria-label="Missed"
                     value="missed"
                     id="mark_missed"
-                    className="custom-radio border-input  data-[state=checked]:border-destructive"
+                    className="custom-radio border-input data-checked:border-destructive"
                   />
                 </div>
                 <div className="relative">
@@ -273,7 +273,7 @@ function MarkAttendanceContent({
                     aria-label="Unmarked"
                     value="unmarked"
                     id="Unmarked_"
-                    className="custom-radio border-input  data-[state=checked]:border-primary"
+                    className="custom-radio border-input data-checked:border-primary"
                   />
                 </div>
               </RadioGroup>

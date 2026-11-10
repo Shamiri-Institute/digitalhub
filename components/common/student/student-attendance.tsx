@@ -614,9 +614,8 @@ const columns = (state: {
     id: "checkbox",
     header: ({ table }) => (
       <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
+        checked={table.getIsAllPageRowsSelected()}
+        indeterminate={table.getIsSomePageRowsSelected()}
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
         className={"h-5 w-5"}

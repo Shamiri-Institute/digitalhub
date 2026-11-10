@@ -367,7 +367,6 @@ export function TableView({
     <div className="flex flex-col gap-3 py-3">
       <div className="flex">
         <ToggleGroup
-          type="single"
           className="form-toggle"
           value={selectedDay.toString()}
           onValueChange={(value) => {
@@ -394,11 +393,10 @@ export function TableView({
       </div>
       <div className="flex">
         <ToggleGroup
-          type="single"
           className="form-toggle"
           value={attendanceRole}
-          onValueChange={(value: AttendanceRole) => {
-            if (value) onAttendanceRoleChange(value);
+          onValueChange={(value) => {
+            if (value) onAttendanceRoleChange(value as AttendanceRole);
           }}
         >
           <ToggleGroupItem

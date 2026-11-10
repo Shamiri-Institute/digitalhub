@@ -1,17 +1,14 @@
 "use client";
 
-import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
-import { Check } from "lucide-react";
+import { Radio } from "@base-ui/react/radio";
+import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group";
 import type * as React from "react";
 
 import { cn } from "#/lib/utils";
 
-function RadioGroup({
-  className,
-  ...props
-}: React.ComponentProps<typeof RadioGroupPrimitive.Root>) {
+function RadioGroup({ className, ...props }: React.ComponentProps<typeof RadioGroupPrimitive>) {
   return (
-    <RadioGroupPrimitive.Root
+    <RadioGroupPrimitive
       data-slot="radio-group"
       className={cn("grid gap-2", className)}
       {...props}
@@ -19,23 +16,18 @@ function RadioGroup({
   );
 }
 
-function RadioGroupItem({
-  className,
-  ...props
-}: React.ComponentProps<typeof RadioGroupPrimitive.Item>) {
+function RadioGroupItem({ className, ...props }: React.ComponentProps<typeof Radio.Root>) {
   return (
-    <RadioGroupPrimitive.Item
+    <Radio.Root
       data-slot="radio-group-item"
       className={cn(
-        "aspect-square h-4 w-4 rounded-full border border-primary text-primary shadow-sm disabled:cursor-not-allowed disabled:opacity-50",
+        "flex aspect-square h-4 w-4 items-center justify-center rounded-full border border-input bg-white data-checked:border-primary data-disabled:cursor-not-allowed data-disabled:opacity-50",
         className,
       )}
       {...props}
     >
-      <RadioGroupPrimitive.Indicator className="flex items-center justify-center">
-        <Check className="h-3.5 w-3.5 fill-primary" />
-      </RadioGroupPrimitive.Indicator>
-    </RadioGroupPrimitive.Item>
+      <Radio.Indicator className="h-2 w-2 rounded-full bg-primary" />
+    </Radio.Root>
   );
 }
 

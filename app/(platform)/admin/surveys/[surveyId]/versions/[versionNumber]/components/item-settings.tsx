@@ -67,9 +67,6 @@ export default function ItemSettings({
           <div className="flex items-center gap-3">
             <Label id={fieldId("align")}>Align</Label>
             <ToggleGroup
-              type="single"
-              variant="outline"
-              size="sm"
               aria-labelledby={fieldId("align")}
               value={item.align ?? "left"}
               // Left is the default, so it is stored as no value; an empty value is a click on the
@@ -78,10 +75,10 @@ export default function ItemSettings({
                 value && replace({ ...item, align: value === "center" ? "center" : undefined })
               }
             >
-              <ToggleGroupItem value="left" aria-label="Align left">
+              <ToggleGroupItem variant="outline" size="sm" value="left" aria-label="Align left">
                 <AlignLeft className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="center" aria-label="Align centre">
+              <ToggleGroupItem variant="outline" size="sm" value="center" aria-label="Align centre">
                 <AlignCenter className="h-4 w-4" />
               </ToggleGroupItem>
             </ToggleGroup>
@@ -213,10 +210,8 @@ function QuestionSettings({
       />
 
       <Accordion
-        type="single"
-        collapsible
-        value={reviewOpenNow ? "review" : ""}
-        onValueChange={(value) => setReviewOpen(value === "review")}
+        value={reviewOpenNow ? ["review"] : []}
+        onValueChange={(value) => setReviewOpen(value.includes("review"))}
         className="rounded-lg border bg-muted/40 px-4"
       >
         <AccordionItem value="review">

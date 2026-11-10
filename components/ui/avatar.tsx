@@ -1,9 +1,9 @@
 "use client";
 
-import * as AvatarPrimitive from "@radix-ui/react-avatar";
+import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
 import type * as React from "react";
 
-import { cn, getInitials } from "#/lib/utils";
+import { cn } from "#/lib/utils";
 
 function Avatar({ className, ...props }: React.ComponentProps<typeof AvatarPrimitive.Root>) {
   return (
@@ -42,55 +42,3 @@ function AvatarFallback({
 }
 
 export { Avatar, AvatarFallback, AvatarImage };
-
-function UserAvatar({
-  className,
-  src,
-  fallback,
-  fallbackClasses,
-  ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Root> & {
-  src: string;
-  fallback: string;
-  fallbackClasses?: string;
-}) {
-  return (
-    <Avatar
-      data-slot="user-avatar"
-      className={cn("h-11 w-11 rounded-full bg-foreground/5 dark:bg-foreground/10", className)}
-      {...props}
-    >
-      <AvatarImage src={src} />
-      <AvatarFallback className={cn("rounded-xl", fallbackClasses)}>
-        {getInitials(fallback)}
-      </AvatarFallback>
-    </Avatar>
-  );
-}
-
-function ImplementerAvatar({
-  className,
-  src,
-  fallback,
-  fallbackClasses,
-  ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Root> & {
-  src: string;
-  fallback: string;
-  fallbackClasses?: string;
-}) {
-  return (
-    <Avatar
-      data-slot="implementer-avatar"
-      className={cn("h-11 w-11 rounded-lg bg-foreground/5 dark:bg-foreground/10", className)}
-      {...props}
-    >
-      <AvatarImage src={src} />
-      <AvatarFallback className={cn("rounded-lg", fallbackClasses)}>
-        {getInitials(fallback)}
-      </AvatarFallback>
-    </Avatar>
-  );
-}
-
-export { ImplementerAvatar as OrganizationAvatar, UserAvatar };
