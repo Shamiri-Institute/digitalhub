@@ -1,5 +1,5 @@
 {
-  "id": "a01a86e3-35db-4d72-9b78-4f7c86b3b02d",
+  "id": "91757757-8cd9-4c64-98a3-d13901012f11",
   "prevId": "3430e828-32ac-4a13-b242-766243281a70",
   "version": "7",
   "dialect": "postgresql",
@@ -11065,6 +11065,142 @@
       },
       "isRLSEnabled": false
     },
+    "public.ticket_escalations": {
+      "name": "ticket_escalations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "ticket_id": {
+          "name": "ticket_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "escalated_by": {
+          "name": "escalated_by",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "escalated_to": {
+          "name": "escalated_to",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "escalation_reason": {
+          "name": "escalation_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "ticket_escalations_ticket_id_idx": {
+          "name": "ticket_escalations_ticket_id_idx",
+          "columns": [
+            {
+              "expression": "ticket_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ticket_escalations_escalated_by_idx": {
+          "name": "ticket_escalations_escalated_by_idx",
+          "columns": [
+            {
+              "expression": "escalated_by",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ticket_escalations_escalated_to_idx": {
+          "name": "ticket_escalations_escalated_to_idx",
+          "columns": [
+            {
+              "expression": "escalated_to",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "ticket_escalations_ticket_id_fkey": {
+          "name": "ticket_escalations_ticket_id_fkey",
+          "tableFrom": "ticket_escalations",
+          "tableTo": "tickets",
+          "columnsFrom": ["ticket_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "ticket_escalations_escalated_by_fkey": {
+          "name": "ticket_escalations_escalated_by_fkey",
+          "tableFrom": "ticket_escalations",
+          "tableTo": "users",
+          "columnsFrom": ["escalated_by"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "ticket_escalations_escalated_to_fkey": {
+          "name": "ticket_escalations_escalated_to_fkey",
+          "tableFrom": "ticket_escalations",
+          "tableTo": "users",
+          "columnsFrom": ["escalated_to"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.ticket_events": {
       "name": "ticket_events",
       "schema": "",
@@ -11211,6 +11347,269 @@
       },
       "isRLSEnabled": false
     },
+    "public.ticket_reassignments": {
+      "name": "ticket_reassignments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "ticket_id": {
+          "name": "ticket_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "escalation_id": {
+          "name": "escalation_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reassigned_from": {
+          "name": "reassigned_from",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reassigned_to": {
+          "name": "reassigned_to",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reassignment_reason": {
+          "name": "reassignment_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "ticket_reassignments_escalation_id_key": {
+          "name": "ticket_reassignments_escalation_id_key",
+          "columns": [
+            {
+              "expression": "escalation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ticket_reassignments_ticket_id_idx": {
+          "name": "ticket_reassignments_ticket_id_idx",
+          "columns": [
+            {
+              "expression": "ticket_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ticket_reassignments_reassigned_from_idx": {
+          "name": "ticket_reassignments_reassigned_from_idx",
+          "columns": [
+            {
+              "expression": "reassigned_from",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ticket_reassignments_reassigned_to_idx": {
+          "name": "ticket_reassignments_reassigned_to_idx",
+          "columns": [
+            {
+              "expression": "reassigned_to",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "ticket_reassignments_ticket_id_fkey": {
+          "name": "ticket_reassignments_ticket_id_fkey",
+          "tableFrom": "ticket_reassignments",
+          "tableTo": "tickets",
+          "columnsFrom": ["ticket_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "ticket_reassignments_escalation_id_fkey": {
+          "name": "ticket_reassignments_escalation_id_fkey",
+          "tableFrom": "ticket_reassignments",
+          "tableTo": "ticket_escalations",
+          "columnsFrom": ["escalation_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "ticket_reassignments_reassigned_from_fkey": {
+          "name": "ticket_reassignments_reassigned_from_fkey",
+          "tableFrom": "ticket_reassignments",
+          "tableTo": "users",
+          "columnsFrom": ["reassigned_from"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "ticket_reassignments_reassigned_to_fkey": {
+          "name": "ticket_reassignments_reassigned_to_fkey",
+          "tableFrom": "ticket_reassignments",
+          "tableTo": "users",
+          "columnsFrom": ["reassigned_to"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ticket_resolutions": {
+      "name": "ticket_resolutions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "ticket_id": {
+          "name": "ticket_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resolved_by": {
+          "name": "resolved_by",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resolution_reason": {
+          "name": "resolution_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "ticket_resolutions_resolved_by_idx": {
+          "name": "ticket_resolutions_resolved_by_idx",
+          "columns": [
+            {
+              "expression": "resolved_by",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "ticket_resolutions_ticket_id_fkey": {
+          "name": "ticket_resolutions_ticket_id_fkey",
+          "tableFrom": "ticket_resolutions",
+          "tableTo": "tickets",
+          "columnsFrom": ["ticket_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "ticket_resolutions_resolved_by_fkey": {
+          "name": "ticket_resolutions_resolved_by_fkey",
+          "tableFrom": "ticket_resolutions",
+          "tableTo": "users",
+          "columnsFrom": ["resolved_by"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ticket_resolutions_ticket_id_key": {
+          "name": "ticket_resolutions_ticket_id_key",
+          "nullsNotDistinct": false,
+          "columns": ["ticket_id"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.tickets": {
       "name": "tickets",
       "schema": "",
@@ -11237,7 +11636,7 @@
           "name": "holder_id",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "subject": {
           "name": "subject",
