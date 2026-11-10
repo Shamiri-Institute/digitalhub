@@ -224,12 +224,9 @@ export function LayoutClient({
     <div className="flex min-h-screen flex-col">
       <header className="bg-primary text-white [&_:focus-visible]:outline-lime">
         <div className="container flex items-center justify-between gap-4 px-4 pt-3 lg:px-8">
-          <Link
-            href={homeHref}
-            className="flex items-center gap-3 rounded-sm"
-            aria-label="Shamiri Digital Hub home"
-          >
+          <Link href={homeHref} className="flex items-center gap-3 rounded-sm">
             <Icons.logo className="h-7 w-auto text-white" />
+            <span className="sr-only">Shamiri home</span>
             <span className="hidden border-l border-white/30 pl-3 text-sm font-semibold uppercase tracking-wider text-white/80 sm:block">
               Digital Hub
             </span>

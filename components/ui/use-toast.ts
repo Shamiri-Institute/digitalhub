@@ -17,7 +17,6 @@ function toast({ title, description, variant = "default", action }: ToastOptions
     title,
     description,
     type: variant,
-    priority: variant === "destructive" ? "high" : "low",
     actionProps: action && { children: action.label, onClick: action.onClick },
   });
   return { id, dismiss: () => toastManager.close(id) };

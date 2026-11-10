@@ -110,7 +110,7 @@ function SelectContent({
           )}
           {...props}
         >
-          <SelectPrimitive.List>{children}</SelectPrimitive.List>
+          {children}
         </SelectPrimitive.Popup>
       </SelectPrimitive.Positioner>
     </SelectPrimitive.Portal>

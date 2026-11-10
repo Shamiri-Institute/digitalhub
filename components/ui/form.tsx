@@ -105,12 +105,12 @@ function FormControl({
   return useRender({
     render: children,
     props: {
+      ...props,
       "data-slot": "form-control",
       id: formItemId,
       "aria-describedby": !error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`,
       "aria-invalid": !!error,
       "aria-required": required || undefined,
-      ...props,
     },
   });
 }
