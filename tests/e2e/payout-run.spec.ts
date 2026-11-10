@@ -1,11 +1,12 @@
-import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { format } from "date-fns";
 import { eq, gte, sql } from "drizzle-orm";
 
-import { db } from "#/db/client";
+import { db, pool } from "#/db/client";
 import { fellowAttendance, hub, payoutStatements } from "#/db/schema";
-import { raceOnRow, signableMember, signInWithEmail, required } from "#/tests/helpers";
-import { getUrl } from "#/tests/pages/helpers";
+import { expect, test } from "#/tests/fixtures";
+import { raceOnRow, required, signableMember, signInWithEmail } from "#/tests/helpers";
+import { getUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
  * A run executes every eligible statement of the admin's implementer in their project, so
@@ -17,7 +18,11 @@ import { getUrl } from "#/tests/pages/helpers";
 test.describe.configure({ mode: "serial" });
 
 type Fixture = { attendanceId: number; sessionAmount: number };
-type OtherImplementerFixture = Fixture & { hubId: string; originalProjectId: string };
+type OtherImplementerFixture = Fixture & {
+  hubId: string;
+  originalProjectId: string;
+  fellowName: string;
+};
 let operationsAdmin: { email: string; userId: string; implementerId: string; projectId: string };
 let fixture: Fixture;
 let otherImplementer: OtherImplementerFixture;
@@ -43,7 +48,7 @@ test.beforeAll(async () => {
 
   const eligibleAttendance = sql`
     select fa.id as "attendanceId", sn.amount as "sessionAmount",
-      h.id as "hubId", h.project_id as "originalProjectId"
+      h.id as "hubId", h.project_id as "originalProjectId", f.fellow_name as "fellowName"
     from fellow_attendances fa
     join intervention_sessions i on i.id = fa.session_id and i.occurred
     join session_names sn on sn.id = i.session_id and sn.amount > 0
@@ -64,6 +69,7 @@ test.beforeAll(async () => {
     rows: [otherRow],
   } = await db.execute<OtherImplementerFixture>(sql`${eligibleAttendance}
     and h.implementer_id <> ${operationsAdmin.implementerId}
+    and (select count(*) from fellows o where o.fellow_name = f.fellow_name) = 1
     order by fa.id limit 1`);
   required(otherRow, "no attendance of another implementer");
   otherImplementer = otherRow;
@@ -116,18 +122,30 @@ test.afterAll(async () => {
   }
 });
 
-test("an Operations admin triggers a payout run", async ({ page, context }) => {
+async function openTriggerDialog(tab: Page) {
+  await tab.goto(getUrl("/admin/reporting/expenses/payout-history"));
+  await tab.getByRole("button", { name: "Manually Trigger Payout" }).click();
+  return tab.getByRole("dialog", { name: "Confirm Payout Trigger" });
+}
+
+test("R-pay-implementer: the fellow expenses report lists only the admin's implementer's fellows", async ({
+  page,
+}) => {
+  await signInWithEmail(page.context(), operationsAdmin.email);
+  await page.goto(getUrl("/admin/reporting/expenses/fellows"));
+  // The other implementer's hub is in the admin's project, so only the implementer keeps it out.
+  await expect(await searchRows(page, otherImplementer.fellowName)).toHaveCount(0);
+});
+
+test("R-pay-no-double-stamp, R-pay-implementer: two runs confirmed at once pay each statement once, and only the admin's implementer's", async ({
+  page,
+  context,
+}) => {
   await signInWithEmail(context, operationsAdmin.email);
-  await page.goto(getUrl("/admin/reporting/expenses/payout-history"));
 
   // Two tabs confirm a run at once, as a double submission would. The second run must neither
   // execute the statements again nor re-stamp the attendances the first one processed.
-  const tabs = [page, await context.newPage()];
-  for (const tab of tabs) {
-    await tab.goto(getUrl("/ops/reporting/expenses/payout-history"));
-    await tab.getByRole("button", { name: "Manually Trigger Payout" }).click();
-  }
-  const dialogs = tabs.map((tab) => tab.getByRole("dialog", { name: "Confirm Payout Trigger" }));
+  const dialogs = [await openTriggerDialog(page), await openTriggerDialog(await context.newPage())];
   await raceOnRow("fellow_attendances", fixture.attendanceId, async (waitForWaiting) => {
     for (const [index, dialog] of dialogs.entries()) {
       await dialog.getByRole("button", { name: "Confirm Trigger" }).click();
@@ -170,7 +188,7 @@ test("an Operations admin triggers a payout run", async ({ page, context }) => {
   await expect(runRow).toContainText(String(run?.expectedPayoutAmount));
 });
 
-test("an Operations admin confirms the payout run", async ({ page, context }) => {
+test("R-pay-who: an Operations admin confirms the payout run", async ({ page, context }) => {
   await signInWithEmail(context, operationsAdmin.email);
   await page.goto(getUrl("/admin/reporting/expenses/payout-history"));
 
@@ -197,4 +215,89 @@ test("an Operations admin confirms the payout run", async ({ page, context }) =>
       confirmedBy: operationsAdmin.userId,
     });
   }
+});
+
+test("R-pay-no-double-stamp: an attendance unmarked while a run is in flight is not paid", async ({
+  page,
+  undo,
+}) => {
+  // A new attended attendance with an unexecuted statement: the runs above processed the others.
+  const {
+    rows: [pair],
+  } = await db.execute<{ fellowId: string; sessionId: string; sessionAmount: number }>(sql`
+    select f.id as "fellowId", i.id as "sessionId", sn.amount as "sessionAmount"
+    from fellows f
+    join hubs h on h.id = f.hub_id
+    join intervention_sessions i on i.hub_id = h.id and i.occurred
+    join session_names sn on sn.id = i.session_id and sn.amount > 0
+    where h.implementer_id = ${operationsAdmin.implementerId}
+      and h.project_id = ${operationsAdmin.projectId}
+      and coalesce(f.dropped_out, false) = false
+      and not exists (select 1 from fellow_attendances fa
+        where fa.fellow_id = f.id and fa.session_id = i.id)
+    order by f.id, i.id
+    limit 1`);
+  required(pair, "a fellow and an occurred session of their hub with no attendance");
+  const [attendance] = await db
+    .insert(fellowAttendance)
+    .values({ fellowId: pair.fellowId, sessionId: pair.sessionId, attended: true })
+    .returning({ id: fellowAttendance.id });
+  required(attendance, "the inserted attendance");
+  undo(() => db.delete(fellowAttendance).where(eq(fellowAttendance.id, attendance.id)));
+  const [statement] = await db
+    .insert(payoutStatements)
+    .values({
+      fellowAttendanceId: attendance.id,
+      amount: pair.sessionAmount,
+      reason: "MARK_SESSION_ATTENDANCE",
+      createdBy: operationsAdmin.userId,
+    })
+    .returning({ id: payoutStatements.id });
+  required(statement, "the inserted statement");
+  undo(() => db.delete(payoutStatements).where(eq(payoutStatements.id, statement.id)));
+
+  await signInWithEmail(page.context(), operationsAdmin.email);
+  const dialog = await openTriggerDialog(page);
+
+  // The run reads the attendance as eligible, then waits on its row while a supervisor's unmark
+  // commits. The unmark is written straight to the row the run is waiting for.
+  const unmarker = await pool.connect();
+  try {
+    await unmarker.query("begin");
+    const {
+      rows: [unmarkerBackend],
+    } = await unmarker.query<{ pid: number }>("select pg_backend_pid() as pid");
+    await unmarker.query("select 1 from fellow_attendances where id = $1 for update", [
+      attendance.id,
+    ]);
+    await dialog.getByRole("button", { name: "Confirm Trigger" }).click();
+    await expect
+      .poll(async () => {
+        const { rows } = await pool.query<{ waiting: number }>(
+          "select count(*)::int as waiting from pg_stat_activity where $1 = any(pg_blocking_pids(pid))",
+          [unmarkerBackend?.pid],
+        );
+        return rows[0]?.waiting;
+      })
+      .toBe(1);
+    await unmarker.query("update fellow_attendances set attended = false where id = $1", [
+      attendance.id,
+    ]);
+    await unmarker.query("commit");
+  } finally {
+    unmarker.release();
+  }
+  await expect(dialog).toBeHidden();
+
+  // Must not write: the unmarked attendance and its statement stay unprocessed.
+  const [unmarked] = await db
+    .select({ processedAt: fellowAttendance.processedAt })
+    .from(fellowAttendance)
+    .where(eq(fellowAttendance.id, attendance.id));
+  const [unpaid] = await db
+    .select({ executedAt: payoutStatements.executedAt })
+    .from(payoutStatements)
+    .where(eq(payoutStatements.id, statement.id));
+  expect(unmarked?.processedAt).toBeNull();
+  expect(unpaid?.executedAt).toBeNull();
 });

@@ -4,7 +4,7 @@ import { signInWithEmail } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 import { removeScanUploads, uniqueScanPdf } from "#/tests/survey-fixtures";
 
-test("a Research admin uploads a scan for a hub they choose, and sees it under that hub", async ({
+test("R-SURV-UPLOAD: a Research admin uploads a scan for a hub they choose, and sees it under that hub", async ({
   page,
   context,
   undo,
