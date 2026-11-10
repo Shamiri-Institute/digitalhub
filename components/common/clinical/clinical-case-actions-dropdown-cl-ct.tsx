@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import type { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
 import CaseUnterminateDialog from "#/app/(platform)/cl/clinical/components/case-unterminate-dialog";
 import { ViewCaseNotes } from "#/components/common/clinical/view-case-notes";
@@ -9,12 +10,15 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { NestedDialogMenuItem, RowActionsTrigger } from "#/components/common/row-actions-menu";
+import { NestedDialogMenuItem } from "#/components/common/row-actions-menu";
 
 export default function ClinicalLeadCaseActionsDropdownMenu({
+  trigger,
   clinicalCase,
 }: {
+  trigger: ReactElement;
   clinicalCase: HubClinicalCases;
 }) {
   const isTerminated = clinicalCase.caseStatus === "Terminated";
@@ -23,7 +27,7 @@ export default function ClinicalLeadCaseActionsDropdownMenu({
 
   return (
     <DropdownMenu>
-      <RowActionsTrigger label={`Actions for ${clinicalCase.pseudonym}`} className="bg-white" />
+      <DropdownMenuTrigger render={trigger} />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
           <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>

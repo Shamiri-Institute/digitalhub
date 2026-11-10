@@ -18,6 +18,7 @@ import {
   Dialog,
   DialogContent,
   DialogFooter,
+  DialogTrigger,
   DialogHeader,
   DialogTitle,
   DialogClose,
@@ -125,13 +126,13 @@ const formSchema = z
 type FormValues = z.infer<typeof formSchema>;
 
 export function AddNewClinicalCaseForm({
-  children,
+  trigger,
   schools,
   fellowsInProject,
   supervisorsInHub,
   hubs,
 }: {
-  children?: React.ReactNode;
+  trigger: React.ReactElement;
   schools: SchoolsInHubData["schools"];
   fellowsInProject: SchoolsInHubData["fellowsInProject"];
   supervisorsInHub: SchoolsInHubData["supervisorsInHub"];
@@ -141,7 +142,7 @@ export function AddNewClinicalCaseForm({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {children}
+      <DialogTrigger render={trigger} />
       <DialogContent className="w-2/5 max-w-none">
         <AddClinicalCaseFields
           schools={schools}

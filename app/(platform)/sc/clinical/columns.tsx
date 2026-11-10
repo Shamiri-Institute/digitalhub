@@ -5,12 +5,19 @@ import { format } from "date-fns";
 import Image from "next/image";
 import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import type { ReferralOptions } from "#/app/(platform)/sc/clinical/components/refer-clinical-case";
-import ClinicalCaseActionsDropdownMenu from "#/components/common/clinical/clinical-case-actions-dropdown";
+import { rowActionsButton } from "#/components/common/row-actions-menu";
+import { deferred } from "#/components/deferred";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import { sortBy } from "#/lib/table-view";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
+
+// The row menu holds eight dialogs with their forms, so it loads after the page; its button is
+// drawn until then.
+const ClinicalCaseActionsDropdownMenu = deferred(() =>
+  import("#/components/common/clinical/clinical-case-actions-dropdown").then((mod) => mod.default),
+);
 
 export function clinicalCaseColumns(referralOptions?: ReferralOptions): ColumnDef<ClinicalCases>[] {
   return [
@@ -107,6 +114,7 @@ export function clinicalCaseColumns(referralOptions?: ReferralOptions): ColumnDe
       id: "button",
       cell: ({ row }) => (
         <ClinicalCaseActionsDropdownMenu
+          trigger={rowActionsButton(`Actions for ${row.original.pseudonym}`, "bg-white")}
           clinicalCase={row.original}
           role={row.original.role as "CLINICAL_LEAD" | "SUPERVISOR"}
           referralOptions={referralOptions}

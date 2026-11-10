@@ -7,10 +7,16 @@ import {
   presentingIssuesPhase,
 } from "#/app/(platform)/sc/clinical/components/clinical-diagnosing-board";
 import ViewMarkClinicalSessions from "#/app/(platform)/sc/clinical/components/view-mark-clinical-sessions";
-import { AddNewClinicalCaseForm } from "#/components/common/clinical/add-new-clinical-case-form";
 import DataTable from "#/components/data-table";
+import { deferred } from "#/components/deferred";
 import { Button } from "#/components/ui/button";
-import { DialogTrigger } from "#/components/ui/dialog";
+
+// The new-case form loads after the page; its button is drawn until then.
+const AddNewClinicalCaseForm = deferred(() =>
+  import("#/components/common/clinical/add-new-clinical-case-form").then(
+    (mod) => mod.AddNewClinicalCaseForm,
+  ),
+);
 
 export default function ClinicalCasesTable({
   cases,
@@ -41,16 +47,13 @@ export default function ClinicalCasesTable({
       fellowsInProject={fellowsInProject}
       supervisorsInHub={supervisorsInHub}
       hubs={hubs}
-    >
-      <DialogTrigger
-        render={
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            New case
-          </Button>
-        }
-      />
-    </AddNewClinicalCaseForm>
+      trigger={
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          New case
+        </Button>
+      }
+    />
   );
 
   return (

@@ -4,12 +4,20 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import Image from "next/image";
 import type { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
-import ClinicalLeadCaseActionsDropdownMenu from "#/components/common/clinical/clinical-case-actions-dropdown-cl-ct";
+import { rowActionsButton } from "#/components/common/row-actions-menu";
+import { deferred } from "#/components/deferred";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import { sortBy } from "#/lib/table-view";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
+
+// The row menu holds the case dialogs, so it loads after the page; its button is drawn until then.
+const ClinicalLeadCaseActionsDropdownMenu = deferred(() =>
+  import("#/components/common/clinical/clinical-case-actions-dropdown-cl-ct").then(
+    (mod) => mod.default,
+  ),
+);
 
 export const columns: ColumnDef<HubClinicalCases>[] = [
   {
@@ -114,7 +122,12 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
   {
     id: "button",
     cell: ({ row }) => {
-      return <ClinicalLeadCaseActionsDropdownMenu clinicalCase={row.original} />;
+      return (
+        <ClinicalLeadCaseActionsDropdownMenu
+          trigger={rowActionsButton(`Actions for ${row.original.pseudonym}`, "bg-white")}
+          clinicalCase={row.original}
+        />
+      );
     },
     enableHiding: false,
   },
