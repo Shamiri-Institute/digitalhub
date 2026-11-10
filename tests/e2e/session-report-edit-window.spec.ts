@@ -3,8 +3,9 @@ import { format } from "date-fns";
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { interventionSession, interventionSessionRating } from "#/db/schema";
+import { interventionSession, interventionSessionRating, supervisor } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
+import { createSupervisedSession, otherHubOf } from "#/tests/delivery-helpers";
 import { expect, test, type Undo } from "#/tests/fixtures";
 import { required, signableMember, signInWithEmail } from "#/tests/helpers";
 import { chooseRowAction, getUrl } from "#/tests/pages/helpers";
@@ -114,4 +115,45 @@ test("saving a session report past its 14 days is refused", async ({ page, conte
   const reopened = await openSessionReport(page, rated.visibleId, rated.sessionDate);
   await expect(reopened.getByRole("spinbutton")).toHaveValue("10");
   await expect(reopened.getByRole("button", { name: "Update & save" })).toBeDisabled();
+});
+
+test("a supervisor moved to another hub cannot save a report for their old school's session", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const held = await createSupervisedSession(undo);
+  const ratingId = objectId("isr");
+  await db.insert(interventionSessionRating).values({
+    id: ratingId,
+    sessionId: held.sessionId,
+    supervisorId: held.supervisorId,
+    studentBehaviorRating: 3,
+    adminSupportRating: 3,
+    workloadRating: 3,
+    headcount: 10,
+  });
+  undo(() =>
+    db.delete(interventionSessionRating).where(eq(interventionSessionRating.id, ratingId)),
+  );
+  await signInWithEmail(context, held.supervisorEmail);
+
+  const dialog = await openSessionReport(page, held.schoolVisibleId, held.sessionDate);
+  await dialog.getByRole("spinbutton").fill("25");
+  // The supervisor stays the school's point supervisor. Moving them behind the open dialog leaves
+  // the browser believing it may save, so only the server can refuse.
+  await db
+    .update(supervisor)
+    .set({ hubId: await otherHubOf(held.hubId) })
+    .where(eq(supervisor.id, held.supervisorId));
+  await dialog.getByRole("button", { name: "Update & save" }).click();
+  await expect(page.getByText("Session not found").first()).toBeVisible();
+
+  // The old school is on no page the moved supervisor can open, so only the database shows the
+  // report was left unchanged.
+  const [savedRating] = await db
+    .select({ headcount: interventionSessionRating.headcount })
+    .from(interventionSessionRating)
+    .where(eq(interventionSessionRating.id, ratingId));
+  expect(savedRating?.headcount).toBe(10);
 });
