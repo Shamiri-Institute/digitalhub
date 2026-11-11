@@ -11,6 +11,10 @@ import CreateTicketDialog from "#/components/common/ticket/create-ticket-dialog"
 import { EscalateTicketDialog } from "#/components/common/ticket/escalate-ticket-dialog";
 import { ReassignTicketDialog } from "#/components/common/ticket/reassign-ticket-dialog";
 import { ResolveTicketDialog } from "#/components/common/ticket/resolve-ticket-dialog";
+import {
+  TicketReasonDialog,
+  type TicketReasonDialogKind,
+} from "#/components/common/ticket/ticket-reason-dialog";
 import { ViewReassignmentDialog } from "#/components/common/ticket/view-reassignment-dialog";
 import { ViewResolutionDialog } from "#/components/common/ticket/view-resolution-dialog";
 import { ViewTicketDialog } from "#/components/common/ticket/view-ticket-dialog";
@@ -33,7 +37,8 @@ type OpenTicketDialog =
       ticketId: string;
       reassignments: ReturnType<typeof getTicketReassignments>;
     }
-  | { kind: "resolve" | "escalate" | "reassign"; ticketId: string };
+  | { kind: "resolve" | "escalate" | "reassign"; ticketId: string }
+  | { kind: TicketReasonDialogKind; ticketId: string };
 
 export default function TicketsDatatable({
   tickets,
@@ -105,6 +110,12 @@ export default function TicketsDatatable({
           onOpenChange={closeDialog}
         />
       )}
+      {ticket &&
+        (dialog.kind === "changePriority" ||
+          dialog.kind === "reopen" ||
+          dialog.kind === "cancel") && (
+          <TicketReasonDialog ticket={ticket} kind={dialog.kind} onOpenChange={closeDialog} />
+        )}
       {ticket && dialog.kind === "viewReassignment" && (
         <ViewReassignmentDialog reassignments={dialog.reassignments} onOpenChange={closeDialog} />
       )}

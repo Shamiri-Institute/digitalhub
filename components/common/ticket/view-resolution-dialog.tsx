@@ -25,7 +25,7 @@ export function ViewResolutionDialog({
   resolution: ReturnType<typeof getTicketResolution>;
   onOpenChange: (open: boolean) => void;
 }) {
-  const isResolved = ticket.status === "RESOLVED";
+  const isResolved = ticket.status === "RESOLVED" || ticket.status === "CLOSED";
 
   return (
     <Dialog open onOpenChange={onOpenChange}>

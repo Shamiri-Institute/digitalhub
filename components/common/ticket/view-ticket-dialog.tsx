@@ -68,7 +68,9 @@ export function ViewTicketDialog({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <div className="text-sm font-medium text-shamiri-text-grey uppercase">Status</div>
-              <div className="text-base capitalize">{ticket.status.toLowerCase()}</div>
+              <div className="text-base capitalize">
+                {ticket.status.toLowerCase().replace("_", " ")}
+              </div>
             </div>
             <div>
               <div className="text-sm font-medium text-shamiri-text-grey uppercase">

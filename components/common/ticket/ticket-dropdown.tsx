@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,7 +8,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "#/components/ui/dropdown-menu";
-import { getTicketEscalationStatus } from "#/lib/actions/ticket";
+import { toast } from "#/components/ui/use-toast";
+import { getTicketEscalationStatus, startTicket } from "#/lib/actions/ticket";
 import {
   ESCALATION_RECIPIENT_ROLES,
   REASSIGNMENT_INITIATOR_ROLES,
@@ -34,6 +35,13 @@ export function TicketDropdown({ ticket, state }: { ticket: TicketData; state: T
   const showReassign = status?.canReassign ?? false;
   const hasReassignment = status?.hasReassignment ?? false;
   const hasResolution = status?.hasResolution ?? false;
+
+  const [isStarting, startTransition] = useTransition();
+  const start = () =>
+    startTransition(async () => {
+      const result = await startTicket(ticket.id);
+      toast({ variant: result.success ? "default" : "destructive", description: result.message });
+    });
   const isEscalationRecipient = ESCALATION_RECIPIENT_ROLES.includes(
     state.role as (typeof ESCALATION_RECIPIENT_ROLES)[number],
   );
@@ -59,6 +67,16 @@ export function TicketDropdown({ ticket, state }: { ticket: TicketData; state: T
         <DropdownMenuItem onClick={() => state.openDialog("view", ticket)}>
           View ticket
         </DropdownMenuItem>
+        {status?.canStart && (
+          <DropdownMenuItem disabled={isStarting} onClick={start}>
+            Start ticket
+          </DropdownMenuItem>
+        )}
+        {status?.canChangePriority && (
+          <DropdownMenuItem onClick={() => state.openDialog("changePriority", ticket)}>
+            Change priority
+          </DropdownMenuItem>
+        )}
         {(showResolve || hasResolution) && (
           <DropdownMenuItem
             onClick={() => state.openDialog(showResolve ? "resolve" : "viewResolution", ticket)}
@@ -79,6 +97,16 @@ export function TicketDropdown({ ticket, state }: { ticket: TicketData; state: T
         {showEscalate && (
           <DropdownMenuItem onClick={() => state.openDialog("escalate", ticket)}>
             Escalate ticket
+          </DropdownMenuItem>
+        )}
+        {status?.canReopen && (
+          <DropdownMenuItem onClick={() => state.openDialog("reopen", ticket)}>
+            Reopen ticket
+          </DropdownMenuItem>
+        )}
+        {status?.canCancel && (
+          <DropdownMenuItem onClick={() => state.openDialog("cancel", ticket)}>
+            Cancel ticket
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

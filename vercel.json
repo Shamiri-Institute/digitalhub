@@ -2,6 +2,7 @@
   "buildCommand": "pnpm run build:deploy",
   "crons": [
     { "path": "/api/cron/transcriptions", "schedule": "* * * * *" },
-    { "path": "/api/cron/survey-print-files", "schedule": "* * * * *" }
+    { "path": "/api/cron/survey-print-files", "schedule": "* * * * *" },
+    { "path": "/api/cron/close-tickets", "schedule": "0 * * * *" }
   ]
 }

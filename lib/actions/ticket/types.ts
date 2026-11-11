@@ -18,6 +18,16 @@ export const CreateTicketSchema = z.object({
   priority: TicketPriorityLevelEnum.default("MEDIUM"),
 });
 
+export const ACTIVE_TICKET_STATUSES: TicketStatus[] = ["OPEN", "IN_PROGRESS", "ESCALATED"];
+
+export const TicketReasonSchema = stringValidation("A reason is required");
+
+export const ChangeTicketPrioritySchema = z.object({
+  priority: TicketPriorityLevelEnum,
+  reason: TicketReasonSchema,
+});
+export type ChangeTicketPriorityInput = z.infer<typeof ChangeTicketPrioritySchema>;
+
 export type TicketCategory = z.infer<typeof TicketCategoryEnum>;
 export type TicketStatus = z.infer<typeof TicketStatusEnum>;
 export type TicketPriorityLevel = z.infer<typeof TicketPriorityLevelEnum>;
@@ -123,9 +133,13 @@ export interface TicketEscalation {
 }
 
 export interface TicketEscalationStatus {
+  canStart: boolean;
+  canChangePriority: boolean;
   canEscalate: boolean;
   canReassign: boolean;
   canResolve: boolean;
+  canReopen: boolean;
+  canCancel: boolean;
   hasReassignment: boolean;
   hasResolution: boolean;
 }

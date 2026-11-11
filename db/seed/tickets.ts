@@ -53,7 +53,7 @@ const TICKET_GROUPS: SeedTicketGroup[] = [
       },
       {
         category: "CARE",
-        priority: "MEDIUM",
+        priority: "URGENT",
         subject: "Student distress signal",
         description: "A student showed clear signs of distress during yesterday's session",
       },
@@ -210,7 +210,6 @@ export async function createTickets() {
             category: ticket.category,
             priority: ticket.priority,
             holderId: supervisor.id,
-            status: "ESCALATED",
           })
           .returning({ id: tickets.id });
         if (!created) throw new Error(`Ticket "${ticket.subject}" was not created`);

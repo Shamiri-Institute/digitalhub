@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, desc, eq, exists, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, exists, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { refresh } from "next/cache";
 
 import { db, type Transaction } from "#/db/client";
@@ -10,12 +10,17 @@ import {
   clinicalLead,
   hubCoordinator,
   implementerMember,
+  supervisor,
   ticketEvents,
   tickets,
 } from "#/db/schema";
 import { requireAuthRole } from "#/lib/auth/require-auth-role";
+import { mayReopenTicket } from "#/lib/ticket-reopen-window";
 import type { ActionResponse } from "#/types/actions.types";
 import {
+  ACTIVE_TICKET_STATUSES,
+  ChangeTicketPrioritySchema,
+  type ChangeTicketPriorityInput,
   type CreateTicketInput,
   type CreateTicketPayload,
   type CreateTicketReassignmentInput,
@@ -37,6 +42,7 @@ import {
   type TicketEscalationStatus,
   type TicketFilters,
   type TicketResolution,
+  TicketReasonSchema,
   type UserRoleNameMap,
 } from "./types";
 
@@ -63,7 +69,7 @@ export async function createTicket(payload: CreateTicketInput): Promise<ActionRe
     await db.transaction(async (tx) => {
       const [ticket] = await tx
         .insert(tickets)
-        .values({ ...ticketPayload, holderId: escalationRecipientId, status: "ESCALATED" })
+        .values({ ...ticketPayload, holderId: escalationRecipientId })
         .returning({ id: tickets.id });
       if (!ticket) throw new Error("Ticket insert returned no row");
 
@@ -122,7 +128,12 @@ function canViewTicket(userId: string) {
 
 async function findViewableTicket(ticketId: string, userId: string) {
   const [ticket] = await db
-    .select({ status: tickets.status, holderId: tickets.holderId })
+    .select({
+      status: tickets.status,
+      holderId: tickets.holderId,
+      createdById: tickets.createdById,
+      resolvedAt: tickets.resolvedAt,
+    })
     .from(tickets)
     .where(and(eq(tickets.id, ticketId), canViewTicket(userId)));
   return ticket;
@@ -183,15 +194,23 @@ async function readHandovers(
     where: (e, { and, eq, inArray }) => and(eq(e.ticketId, ticketId), inArray(e.kind, kinds)),
     orderBy: (e, { asc }) => [asc(e.createdAt), asc(e.id)],
   });
-  return events.map(({ assigneeId, reason, ...event }) => {
-    if (!assigneeId || reason === null) throw new Error("A handover event lacks its assignee");
-    return { ...event, assigneeId, reason };
+  return events.map(({ actorId, assigneeId, reason, ...event }) => {
+    if (!actorId || !assigneeId || reason === null) {
+      throw new Error("A handover event lacks its actor or assignee");
+    }
+    return { ...event, actorId, assigneeId, reason };
   });
 }
 
 async function lockTicket(tx: Transaction, ticketId: string) {
   const [ticket] = await tx
-    .select({ status: tickets.status, holderId: tickets.holderId })
+    .select({
+      status: tickets.status,
+      holderId: tickets.holderId,
+      priority: tickets.priority,
+      createdById: tickets.createdById,
+      resolvedAt: tickets.resolvedAt,
+    })
     .from(tickets)
     .where(eq(tickets.id, ticketId))
     .for("update");
@@ -202,13 +221,67 @@ async function lockTicket(tx: Transaction, ticketId: string) {
 async function recordTicketEvent(
   tx: Transaction,
   event: typeof ticketEvents.$inferInsert,
-  status: TicketStatus,
+  changes: Pick<typeof tickets.$inferInsert, "status" | "priority" | "resolvedAt">,
 ) {
   await tx.insert(ticketEvents).values(event);
   await tx
     .update(tickets)
-    .set({ status, ...(event.assigneeId ? { holderId: event.assigneeId } : {}) })
+    .set({ ...changes, ...(event.assigneeId ? { holderId: event.assigneeId } : {}) })
     .where(eq(tickets.id, event.ticketId));
+}
+
+// Mirrors the active filters fetchEscalationRecipientHandlers apply when routing a ticket.
+async function isActiveRecipient(tx: Transaction, recipientUserId: string, implementerId: string) {
+  const [membership] = await tx
+    .select({ userId: implementerMember.userId })
+    .from(implementerMember)
+    .leftJoin(
+      supervisor,
+      and(
+        eq(implementerMember.role, "SUPERVISOR"),
+        eq(supervisor.id, implementerMember.identifier),
+      ),
+    )
+    .leftJoin(
+      hubCoordinator,
+      and(
+        eq(implementerMember.role, "HUB_COORDINATOR"),
+        eq(hubCoordinator.id, implementerMember.identifier),
+      ),
+    )
+    .leftJoin(
+      clinicalLead,
+      and(
+        eq(implementerMember.role, "CLINICAL_LEAD"),
+        eq(clinicalLead.id, implementerMember.identifier),
+      ),
+    )
+    .where(
+      and(
+        eq(implementerMember.userId, recipientUserId),
+        eq(implementerMember.implementerId, implementerId),
+        or(
+          and(
+            isNotNull(supervisor.id),
+            isNull(supervisor.archivedAt),
+            sql`${supervisor.droppedOut} is not true`,
+          ),
+          and(
+            isNotNull(hubCoordinator.id),
+            isNull(hubCoordinator.archivedAt),
+            sql`${hubCoordinator.droppedOut} is not true`,
+          ),
+          and(isNotNull(clinicalLead.id), sql`${clinicalLead.droppedOut} is not true`),
+          eq(implementerMember.role, "ADMIN"),
+        ),
+      ),
+    )
+    .limit(1);
+  return Boolean(membership);
+}
+
+function isActiveTicketStatus(status: TicketStatus) {
+  return ACTIVE_TICKET_STATUSES.includes(status);
 }
 
 export async function createEscalation(
@@ -239,8 +312,8 @@ export async function createEscalation(
     await db.transaction(async (tx) => {
       const lockedTicket = await lockTicket(tx, ticketId);
 
-      if (lockedTicket.status === "RESOLVED") {
-        throw new Error("Cannot escalate a resolved ticket");
+      if (!isActiveTicketStatus(lockedTicket.status)) {
+        throw new Error("Only an open, in-progress or escalated ticket can be escalated");
       }
 
       if (lockedTicket.holderId !== callerUserId) {
@@ -256,7 +329,7 @@ export async function createEscalation(
           assigneeId: escalationRecipientId,
           reason: escalationReason,
         },
-        "ESCALATED",
+        { status: "ESCALATED" },
       );
     });
 
@@ -277,8 +350,8 @@ export async function resolveTicket(
     await db.transaction(async (tx) => {
       const lockedTicket = await lockTicket(tx, ticketId);
 
-      if (lockedTicket.status === "RESOLVED") {
-        throw new Error("Ticket is already resolved");
+      if (!isActiveTicketStatus(lockedTicket.status)) {
+        throw new Error("Only an open, in-progress or escalated ticket can be resolved");
       }
 
       if (lockedTicket.holderId !== callerUserId) {
@@ -288,12 +361,159 @@ export async function resolveTicket(
       await recordTicketEvent(
         tx,
         { ticketId, kind: "RESOLVED", actorId: callerUserId, reason: resolutionReason },
-        "RESOLVED",
+        { status: "RESOLVED", resolvedAt: new Date() },
       );
     });
 
     refresh();
     return { success: true, message: "Ticket resolved successfully" };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function startTicket(ticketId: string): Promise<ActionResponse> {
+  try {
+    const { userId: callerUserId } = await requireAuthRole(...ESCALATION_RECIPIENT_ROLES);
+
+    await db.transaction(async (tx) => {
+      const { status, holderId } = await lockTicket(tx, ticketId);
+      if (status !== "OPEN" && status !== "ESCALATED") {
+        throw new Error("Only an open or escalated ticket can be started");
+      }
+      if (holderId !== callerUserId) {
+        throw new Error("Only the current escalation recipient can start this ticket");
+      }
+
+      await recordTicketEvent(
+        tx,
+        {
+          ticketId,
+          kind: "STARTED",
+          actorId: callerUserId,
+          fromValue: status,
+          toValue: "IN_PROGRESS",
+        },
+        { status: "IN_PROGRESS" },
+      );
+    });
+
+    refresh();
+    return { success: true, message: "Ticket started" };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function changeTicketPriority(
+  ticketId: string,
+  input: ChangeTicketPriorityInput,
+): Promise<ActionResponse> {
+  try {
+    const { userId: callerUserId } = await requireAuthRole(...ESCALATION_RECIPIENT_ROLES);
+    const { priority, reason } = ChangeTicketPrioritySchema.parse(input);
+
+    await db.transaction(async (tx) => {
+      const { status, holderId, priority: currentPriority } = await lockTicket(tx, ticketId);
+      if (!isActiveTicketStatus(status)) {
+        throw new Error("Only an open, in-progress or escalated ticket's priority can be changed");
+      }
+      if (holderId !== callerUserId) {
+        throw new Error("Only the current escalation recipient can change this ticket's priority");
+      }
+      if (currentPriority === priority) throw new Error("The ticket already has this priority");
+
+      await recordTicketEvent(
+        tx,
+        {
+          ticketId,
+          kind: "PRIORITY_CHANGED",
+          actorId: callerUserId,
+          fromValue: currentPriority,
+          toValue: priority,
+          reason,
+        },
+        { status, priority },
+      );
+    });
+
+    refresh();
+    return { success: true, message: "Ticket priority changed" };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function reopenTicket(ticketId: string, reason: string): Promise<ActionResponse> {
+  try {
+    const { userId: callerUserId, implementerId } = await requireAuthRole(
+      ...ESCALATION_INITIATOR_ROLES,
+    );
+    const reopenReason = TicketReasonSchema.parse(reason);
+
+    await db.transaction(async (tx) => {
+      // The ticket returns to its holder, who resolved it.
+      const { status, holderId, createdById, resolvedAt } = await lockTicket(tx, ticketId);
+      if (createdById !== callerUserId) throw new Error("Only the ticket's creator can reopen it");
+      if (status !== "RESOLVED") throw new Error("Only a resolved ticket can be reopened");
+      if (!mayReopenTicket(resolvedAt, new Date())) {
+        throw new Error("Tickets can only be reopened within 7 days of being resolved");
+      }
+      if (!(await isActiveRecipient(tx, holderId, implementerId))) {
+        throw new Error(
+          "The person who resolved this ticket is no longer active. Please open a new ticket.",
+        );
+      }
+
+      await recordTicketEvent(
+        tx,
+        {
+          ticketId,
+          kind: "REOPENED",
+          actorId: callerUserId,
+          fromValue: status,
+          toValue: "IN_PROGRESS",
+          reason: reopenReason,
+        },
+        { status: "IN_PROGRESS", resolvedAt: null },
+      );
+    });
+
+    refresh();
+    return { success: true, message: "Ticket reopened" };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function cancelTicket(ticketId: string, reason: string): Promise<ActionResponse> {
+  try {
+    const { userId: callerUserId } = await requireAuthRole(...ESCALATION_INITIATOR_ROLES);
+    const cancelReason = TicketReasonSchema.parse(reason);
+
+    await db.transaction(async (tx) => {
+      const { status, createdById } = await lockTicket(tx, ticketId);
+      if (createdById !== callerUserId) throw new Error("Only the ticket's creator can cancel it");
+      if (!isActiveTicketStatus(status)) {
+        throw new Error("Only an open, in-progress or escalated ticket can be cancelled");
+      }
+
+      await recordTicketEvent(
+        tx,
+        {
+          ticketId,
+          kind: "CANCELLED",
+          actorId: callerUserId,
+          fromValue: status,
+          toValue: "CANCELLED",
+          reason: cancelReason,
+        },
+        { status: "CANCELLED" },
+      );
+    });
+
+    refresh();
+    return { success: true, message: "Ticket cancelled" };
   } catch (error) {
     return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
   }
@@ -320,8 +540,8 @@ export async function reassignTicket(
     await db.transaction(async (tx) => {
       const lockedTicket = await lockTicket(tx, ticketId);
 
-      if (lockedTicket.status !== "ESCALATED") {
-        throw new Error("This ticket is not escalated and cannot be reassigned");
+      if (!isActiveTicketStatus(lockedTicket.status)) {
+        throw new Error("Only an open, in-progress or escalated ticket can be reassigned");
       }
 
       if (lockedTicket.holderId !== callerUserId) {
@@ -339,7 +559,8 @@ export async function reassignTicket(
           assigneeId: reassignedTo,
           reason: reassignmentReason,
         },
-        "ESCALATED",
+        // The new holder has not picked the ticket up, so it must be startable again.
+        { status: "ESCALATED" },
       );
     });
 
@@ -434,18 +655,29 @@ export async function getTicketEscalationStatus(
         ),
       );
     const hasReassignment = pastKinds.some((e) => e.kind === "REASSIGNED");
-    const hasResolution = pastKinds.some((e) => e.kind === "RESOLVED");
-    const isHolder = ticket.status !== "RESOLVED" && ticket.holderId === callerUserId;
+    const isActive = isActiveTicketStatus(ticket.status);
+    const isHolder = isActive && ticket.holderId === callerUserId;
+    // Reopen and cancel run under an initiator role, so another membership must not offer them.
+    const isCreator = ticket.createdById === callerUserId && isEscalationInitiatorRole(role);
+    const isResolved = ticket.status === "RESOLVED" || ticket.status === "CLOSED";
 
     return {
       success: true,
       message: "Ticket escalation status retrieved",
       data: {
+        canStart: isHolder && ticket.status !== "IN_PROGRESS",
+        canChangePriority: isHolder,
+        // Admins are the last tier, so there is no one above them to escalate to.
         canEscalate: isHolder && role !== ImplementerRole.ADMIN,
         canReassign: isHolder,
         canResolve: isHolder,
+        canReopen:
+          isCreator &&
+          ticket.status === "RESOLVED" &&
+          mayReopenTicket(ticket.resolvedAt, new Date()),
+        canCancel: isCreator && isActive,
         hasReassignment,
-        hasResolution,
+        hasResolution: isResolved && pastKinds.some((e) => e.kind === "RESOLVED"),
       },
     };
   } catch (error) {
@@ -488,7 +720,7 @@ export async function getTicketResolution(
       message: "Resolution retrieved successfully",
       data: {
         id: resolution.id,
-        resolvedByRole: resolution.actor.memberships[0]?.role ?? null,
+        resolvedByRole: resolution.actor?.memberships[0]?.role ?? null,
         resolutionReason: resolution.reason ?? "",
         createdAt: resolution.createdAt,
       },
@@ -595,6 +827,9 @@ const fetchEscalationRecipientHandlers: Record<
       WHERE im1.user_id = ${userId}
         AND im1.role = 'FELLOW'
         AND im2.role = 'SUPERVISOR'
+        AND s.archived_at IS NULL
+        AND s.dropped_out IS NOT TRUE
+      ORDER BY im2.created_at, im2.id
       LIMIT 1;
     `);
 
@@ -616,6 +851,9 @@ const fetchEscalationRecipientHandlers: Record<
       WHERE sup_member.user_id = ${userId}
         AND sup_member.role = 'SUPERVISOR'
         AND sup_member.implementer_id = ${implementerId}
+        AND hc.archived_at IS NULL
+        AND hc.dropped_out IS NOT TRUE
+      ORDER BY hc.created_at, hc.id
       LIMIT 1
     `);
 
@@ -637,6 +875,8 @@ const fetchEscalationRecipientHandlers: Record<
       WHERE sup_member.user_id = ${userId}
         AND sup_member.role = 'SUPERVISOR'::implementer_roles
         AND sup_member.implementer_id = ${implementerId}
+        AND cl.dropped_out IS NOT TRUE
+      ORDER BY cl.created_at, cl.id
       LIMIT 1
     `);
 
