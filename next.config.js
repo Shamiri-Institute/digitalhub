@@ -42,11 +42,6 @@ const PRINT_FONTS = ["./public/fonts/figtree/*.ttf"];
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    // The stylesheet is render-blocking, and on staff's mobile connections it took 16 s (p75 of
-    // the slow sessions Sentry saw) to arrive. Tailwind's CSS is small, so it rides in the HTML.
-    inlineCss: true,
-  },
   // ffmpeg-static locates its binary beside its own files, so it is loaded at runtime, and the
   // binary and the transcription prompts are traced into the route that runs them.
   serverExternalPackages: ["ffmpeg-static"],
