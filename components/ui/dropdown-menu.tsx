@@ -4,7 +4,15 @@ import type { Menu as MenuParts } from "@base-ui/react/menu";
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { Check } from "lucide-react";
-import { type ComponentProps, createContext, type ReactElement, type ReactNode, use } from "react";
+import {
+  type ComponentProps,
+  createContext,
+  type ReactElement,
+  type ReactNode,
+  type RefObject,
+  use,
+  useRef,
+} from "react";
 
 import { afterPage, type StandIn, useStandIn } from "#/components/deferred";
 import { cn } from "#/lib/utils";
@@ -31,12 +39,48 @@ function useLoadedMenu() {
   return Menu;
 }
 
-function DropdownMenu(props: Omit<MenuParts.Root.Props, "children"> & { children?: ReactNode }) {
+// A dialog opened from a menu item renders inside the menu, so it unmounts if the menu closes.
+// While one is on screen the menu stays open: Escape, a click outside and focus leaving belong to
+// the dialog, whose own guard keeps it open while it saves.
+const OpenDialogs = createContext<RefObject<number> | null>(null);
+
+/** A ref for a dialog's popup that holds the menu it was opened from open while it is mounted. */
+function useHoldMenuOpen() {
+  const openDialogs = use(OpenDialogs);
+  return (node: HTMLElement | null) => {
+    if (!node || !openDialogs) return;
+    openDialogs.current += 1;
+    return () => {
+      openDialogs.current -= 1;
+    };
+  };
+}
+
+function DropdownMenu({
+  onOpenChange,
+  ...props
+}: Omit<MenuParts.Root.Props, "children"> & { children?: ReactNode }) {
   const Menu = useMenuCode();
   const standIn = useStandIn(loadMenuCode);
+  const openDialogs = useRef(0);
   return (
     <MenuCode value={{ Menu, ...standIn }}>
-      {Menu ? <Menu.Root {...props} /> : props.children}
+      <OpenDialogs value={openDialogs}>
+        {Menu ? (
+          <Menu.Root
+            {...props}
+            onOpenChange={(open, details) => {
+              if (!open && openDialogs.current > 0) {
+                details.cancel();
+                return;
+              }
+              onOpenChange?.(open, details);
+            }}
+          />
+        ) : (
+          props.children
+        )}
+      </OpenDialogs>
     </MenuCode>
   );
 }
@@ -157,4 +201,5 @@ export {
   DropdownMenuLinkItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  useHoldMenuOpen,
 };

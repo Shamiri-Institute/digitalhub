@@ -165,6 +165,30 @@ test("the terminate dialog stays open until the termination is saved", async ({
   await expect(await searchRows(page, clinicalCase.pseudonym)).toContainText(/terminated/i);
 });
 
+test("Escape while a termination saves leaves the row menu, and so the dialog, open", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const clinicalCase = await createCaseWithSession(undo);
+  await signInWithEmail(context, clinicalCase.email);
+  const terminate = await openTerminationForm(page, clinicalCase.pseudonym);
+  const dialog = page.getByRole("dialog", { name: "Terminate Case" });
+  // The dialog renders inside the row menu, which is inert behind it, so the menu is found by
+  // its role attribute rather than through the accessibility tree.
+  const rowMenu = page.locator('[role="menu"]');
+  await raceOnRow("clinical_screening_info", clinicalCase.caseId, async (waitForWaiting) => {
+    await terminate.click();
+    await waitForWaiting(1);
+    // The pending save disables the button that was pressed, so focus is on the page, not in
+    // the dialog, when Escape arrives.
+    await page.keyboard.press("Escape");
+    await expect(rowMenu).toHaveAttribute("data-open");
+    await expect(dialog).toHaveAttribute("data-open");
+  });
+  await expect(dialog).toBeHidden();
+});
+
 test("the follow-up dialog stays open until the follow-up is saved", async ({
   page,
   context,

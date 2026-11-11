@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import type * as React from "react";
 import { createContext, use, useRef, useTransition } from "react";
 
+import { useHoldMenuOpen } from "#/components/ui/dropdown-menu";
 import { toastOnFailure } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 
@@ -81,6 +82,7 @@ function DialogContent({
 }: DialogPrimitive.Popup.Props) {
   const openerRef = useRef<() => HTMLElement | true>(() => true);
   const isSaving = use(DialogSaveContext)?.isSaving ?? false;
+  const holdMenuOpen = useHoldMenuOpen();
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Backdrop
@@ -89,6 +91,7 @@ function DialogContent({
       />
       <DialogPrimitive.Viewport className="fixed inset-0 z-50 grid place-items-center overflow-y-auto py-4">
         <DialogPrimitive.Popup
+          ref={holdMenuOpen}
           data-slot="dialog-content"
           className={cn(
             "relative grid w-full max-w-lg gap-4 bg-background p-6 shadow-xl transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 sm:rounded-xl",
