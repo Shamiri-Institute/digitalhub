@@ -19,6 +19,7 @@ import {
   pgEnum,
   pgSequence,
   pgTable,
+  primaryKey,
   real,
   serial,
   text,
@@ -42,9 +43,13 @@ import {
   SessionStatus,
   SupervisorHandoffStatus,
   SupportType,
+  SurveyAnswerReviewStatus,
+  SurveyAnswerSource,
   SurveyAuditActor,
+  SurveyFieldKind,
   SurveyPrintStatus,
   SurveyQuestionnaireStatus,
+  SurveyScanPageStatus,
   SurveyStatus,
   SurveyUploadStatus,
   SurveyVersionPrefill,
@@ -129,6 +134,19 @@ export const surveyUploadStatusEnum = pgEnum(
 export const surveyQuestionnaireStatusEnum = pgEnum(
   "survey_questionnaire_status",
   enumValues(SurveyQuestionnaireStatus),
+);
+export const surveyFieldKindEnum = pgEnum("survey_field_kind", enumValues(SurveyFieldKind));
+export const surveyScanPageStatusEnum = pgEnum(
+  "survey_scan_page_status",
+  enumValues(SurveyScanPageStatus),
+);
+export const surveyAnswerSourceEnum = pgEnum(
+  "survey_answer_source",
+  enumValues(SurveyAnswerSource),
+);
+export const surveyAnswerReviewStatusEnum = pgEnum(
+  "survey_answer_review_status",
+  enumValues(SurveyAnswerReviewStatus),
 );
 
 export const verification = pgTable(
@@ -3233,6 +3251,206 @@ export const surveyQuestionnairePage = pgTable(
     })
       .onUpdate("restrict")
       .onDelete("cascade"),
+  ],
+);
+
+// One answer field a published version prints: a question's key, or `key.row` for a grid row. The
+// database writes them from the stored layout when the version is published (0055).
+export const surveyVersionField = pgTable(
+  "survey_version_fields",
+  {
+    versionId: text("version_id").notNull(),
+    field: text().notNull(),
+    pageNumber: integer("page_number").notNull(),
+    kind: surveyFieldKindEnum().notNull(),
+  },
+  (table) => [
+    primaryKey({ name: "survey_version_fields_pkey", columns: [table.versionId, table.field] }),
+    check("survey_version_fields_page_number_check", sql`${table.pageNumber} >= 1`),
+    foreignKey({
+      columns: [table.versionId],
+      foreignColumns: [surveyVersion.id],
+      name: "survey_version_fields_version_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("cascade"),
+  ],
+);
+
+// One page image cut from an upload. A REJECTED scan may have no printed page: a cover sheet, a
+// blank, another form.
+export const surveyScanPage = pgTable(
+  "survey_scan_pages",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("surveyscanpage")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+    uploadId: text("upload_id").notNull(),
+    pageIndex: integer("page_index").notNull(),
+    imageS3Key: text("image_s3_key").notNull(),
+    questionnairePageId: text("questionnaire_page_id"),
+    status: surveyScanPageStatusEnum().notNull(),
+    duplicateOfId: text("duplicate_of_id"),
+  },
+  (table) => [
+    uniqueIndex("survey_scan_pages_upload_id_page_index_key").on(table.uploadId, table.pageIndex),
+    uniqueIndex("survey_scan_pages_one_match_per_page_key")
+      .on(table.questionnairePageId)
+      .where(sql`${table.status} = 'MATCHED'`),
+    // For the foreign key: a partial index doesn't serve it.
+    index("survey_scan_pages_questionnaire_page_id_idx").on(table.questionnairePageId),
+    // What a duplicate points at, so it can only be a scan of its own page.
+    unique("survey_scan_pages_id_questionnaire_page_id_key").on(
+      table.id,
+      table.questionnairePageId,
+    ),
+    index("survey_scan_pages_duplicate_of_id_questionnaire_page_id_idx").on(
+      table.duplicateOfId,
+      table.questionnairePageId,
+    ),
+    check("survey_scan_pages_page_index_check", sql`${table.pageIndex} >= 0`),
+    check(
+      "survey_scan_pages_duplicate_check",
+      sql`(${table.status} = 'DUPLICATE') = (${table.duplicateOfId} IS NOT NULL)`,
+    ),
+    check("survey_scan_pages_not_own_duplicate_check", sql`${table.duplicateOfId} <> ${table.id}`),
+    check(
+      "survey_scan_pages_identified_check",
+      sql`CASE ${table.status}
+        WHEN 'UNIDENTIFIED' THEN ${table.questionnairePageId} IS NULL
+        WHEN 'REJECTED' THEN TRUE
+        ELSE ${table.questionnairePageId} IS NOT NULL
+      END`,
+    ),
+    foreignKey({
+      columns: [table.uploadId],
+      foreignColumns: [surveyUpload.id],
+      name: "survey_scan_pages_upload_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("cascade"),
+    foreignKey({
+      columns: [table.questionnairePageId],
+      foreignColumns: [surveyQuestionnairePage.id],
+      name: "survey_scan_pages_questionnaire_page_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+    // An upload whose scan another upload's scan duplicates can't be deleted until that duplicate
+    // is resolved.
+    foreignKey({
+      columns: [table.duplicateOfId, table.questionnairePageId],
+      foreignColumns: [table.id, table.questionnairePageId],
+      name: "survey_scan_pages_duplicate_of_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+  ],
+);
+
+// The answer to one field of one copy. Restrict throughout: an answer is collected data, so what it
+// belongs to can't be deleted from under it.
+export const surveyAnswer = pgTable(
+  "survey_answers",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("surveyanswer")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+    questionnaireId: text("questionnaire_id").notNull(),
+    versionId: text("version_id").notNull(),
+    field: text().notNull(),
+    scanPageId: text("scan_page_id"),
+    // What the pipeline read, kept beside `value` so a reviewer sees both.
+    recognizedValue: jsonb("recognized_value").$type<JsonValue>(),
+    confidence: doublePrecision(),
+    cropS3Key: text("crop_s3_key"),
+    value: jsonb().$type<JsonValue>(),
+    source: surveyAnswerSourceEnum().notNull(),
+    reviewStatus: surveyAnswerReviewStatusEnum("review_status").notNull(),
+    flags: text()
+      .array()
+      .default(sql`'{}'::text[]`)
+      .notNull(),
+    reviewedBy: text("reviewed_by"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true, mode: "date" }),
+  },
+  (table) => [
+    // A copy has one version, so this is one answer per copy and field. Leading with
+    // (questionnaire_id, version_id), it is also the foreign key's index.
+    uniqueIndex("survey_answers_questionnaire_id_version_id_field_key").on(
+      table.questionnaireId,
+      table.versionId,
+      table.field,
+    ),
+    index("survey_answers_version_id_field_idx").on(table.versionId, table.field),
+    index("survey_answers_scan_page_id_idx").on(table.scanPageId),
+    index("survey_answers_reviewed_by_idx").on(table.reviewedBy),
+    // A blank answer is SQL null, never JSON null.
+    check(
+      "survey_answers_no_json_null_check",
+      sql`jsonb_typeof(${table.value}) IS DISTINCT FROM 'null' AND jsonb_typeof(${table.recognizedValue}) IS DISTINCT FROM 'null'`,
+    ),
+    check(
+      "survey_answers_confidence_check",
+      sql`${table.confidence} IS NULL OR ${table.confidence} BETWEEN 0 AND 1`,
+    ),
+    check(
+      "survey_answers_pipeline_check",
+      sql`${table.source} <> 'PIPELINE' OR (${table.scanPageId} IS NOT NULL AND ${table.confidence} IS NOT NULL)`,
+    ),
+    // A typed-in answer is a reviewer's, so it is reviewed by them.
+    check(
+      "survey_answers_manual_check",
+      sql`${table.source} <> 'MANUAL' OR (${table.recognizedValue} IS NULL AND ${table.confidence} IS NULL AND ${table.reviewStatus} IN ('VERIFIED', 'CORRECTED'))`,
+    ),
+    check(
+      "survey_answers_reviewed_check",
+      sql`(${table.reviewStatus} IN ('VERIFIED', 'CORRECTED')) = (${table.reviewedBy} IS NOT NULL) AND (${table.reviewedBy} IS NULL) = (${table.reviewedAt} IS NULL)`,
+    ),
+    foreignKey({
+      columns: [table.questionnaireId, table.versionId],
+      foreignColumns: [surveyQuestionnaire.id, surveyQuestionnaire.versionId],
+      name: "survey_answers_questionnaire_id_version_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.versionId, table.field],
+      foreignColumns: [surveyVersionField.versionId, surveyVersionField.field],
+      name: "survey_answers_version_id_field_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.scanPageId],
+      foreignColumns: [surveyScanPage.id],
+      name: "survey_answers_scan_page_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.reviewedBy],
+      foreignColumns: [user.id],
+      name: "survey_answers_reviewed_by_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
   ],
 );
 

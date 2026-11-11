@@ -308,6 +308,37 @@ export const SurveyQuestionnaireStatus = {
 export type SurveyQuestionnaireStatus =
   (typeof SurveyQuestionnaireStatus)[keyof typeof SurveyQuestionnaireStatus];
 
+/** How a printed answer field is read off the page. Each grid row is a SINGLE_CHOICE. */
+export const SurveyFieldKind = {
+  SINGLE_CHOICE: "SINGLE_CHOICE",
+  MULTIPLE_CHOICE: "MULTIPLE_CHOICE",
+  DIGITS: "DIGITS",
+  DATE: "DATE",
+  TEXT: "TEXT",
+  SIGNATURE: "SIGNATURE",
+} as const;
+export type SurveyFieldKind = (typeof SurveyFieldKind)[keyof typeof SurveyFieldKind];
+
+export const SurveyScanPageStatus = {
+  MATCHED: "MATCHED",
+  UNIDENTIFIED: "UNIDENTIFIED",
+  DUPLICATE: "DUPLICATE",
+  REJECTED: "REJECTED",
+} as const;
+export type SurveyScanPageStatus = (typeof SurveyScanPageStatus)[keyof typeof SurveyScanPageStatus];
+
+export const SurveyAnswerSource = { PIPELINE: "PIPELINE", MANUAL: "MANUAL" } as const;
+export type SurveyAnswerSource = (typeof SurveyAnswerSource)[keyof typeof SurveyAnswerSource];
+
+export const SurveyAnswerReviewStatus = {
+  AUTO_ACCEPTED: "AUTO_ACCEPTED",
+  NEEDS_REVIEW: "NEEDS_REVIEW",
+  VERIFIED: "VERIFIED",
+  CORRECTED: "CORRECTED",
+} as const;
+export type SurveyAnswerReviewStatus =
+  (typeof SurveyAnswerReviewStatus)[keyof typeof SurveyAnswerReviewStatus];
+
 export const SURVEY_QUESTIONNAIRE_STATUS_LABELS: Record<SurveyQuestionnaireStatus, string> = {
   ISSUED: "Issued",
   PARTIAL: "Partial",
