@@ -183,7 +183,8 @@ Surfaces are flat. Cards, tables and panels are defined by a 1px `border` with n
 things that float over the page have a shadow: menus and popovers (`shadow-md`, with a border) and
 dialogs (`shadow-xl`, no border, over a navy scrim at 40%).
 
-Menus, popovers and selects fade in over 100ms, dialogs over 150ms. They fade without scaling or
+Menus, popovers and selects fade in over 100ms, dialogs over 150ms, toasts over 200ms at the top
+centre, clear of the Save and Discard bars along the bottom of forms. They fade without scaling or
 sliding, and accordion sections open at once: an item that moves while it is being pressed loses
 the click.
 

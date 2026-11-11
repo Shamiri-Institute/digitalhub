@@ -17,8 +17,9 @@ function ToastList() {
         toast={toast}
         // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- overrides Base UI's role="dialog" on the toast; an <output> would get that role too
         role="status"
+        swipeDirection="up"
         className={cn(
-          "pointer-events-auto relative flex w-full items-start gap-3 rounded-lg border bg-white p-4 pr-10 text-foreground shadow-md transition-[opacity,translate] duration-200 data-ending-style:opacity-0 data-limited:hidden data-starting-style:translate-y-2 data-starting-style:opacity-0",
+          "pointer-events-auto relative flex w-full items-start gap-3 rounded-lg border bg-white p-4 pr-10 text-foreground shadow-md transition-opacity duration-200 data-ending-style:opacity-0 data-limited:hidden data-starting-style:opacity-0",
           destructive && "border-destructive-border bg-destructive-bg text-destructive",
         )}
       >
@@ -58,7 +59,9 @@ export function ToastViewport() {
   return (
     <Toast.Provider toastManager={toastManager} limit={1}>
       <Toast.Portal>
-        <Toast.Viewport className="fixed bottom-4 right-1/2 z-100 flex w-[calc(100%-2rem)] translate-x-1/2 flex-col gap-2 sm:right-4 sm:translate-x-0 md:max-w-[420px]">
+        {/* Top centre, over the header's empty middle: forms keep their Save and Discard in a bar
+            along the bottom, which a toast there would cover. */}
+        <Toast.Viewport className="fixed left-1/2 top-3 z-100 flex w-[calc(100%-2rem)] -translate-x-1/2 flex-col gap-2 md:max-w-[420px]">
           <ToastList />
         </Toast.Viewport>
       </Toast.Portal>
