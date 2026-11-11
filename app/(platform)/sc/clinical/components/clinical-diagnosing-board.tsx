@@ -16,6 +16,7 @@ import {
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
+import { type Phase, presentingIssuesPhase } from "./presenting-issues-phase";
 
 export const emergency_presenting_issues = [
   { id: 1, name: "Bullying" },
@@ -51,13 +52,6 @@ export const general_presenting_issues = [
 ];
 
 type Severity = "Low risk" | "Moderate risk" | "High risk" | "Severe risk";
-
-type Phase = "baseline" | "endpoint";
-
-/** Which presenting issues the board edits: an Active case's baseline, otherwise its endpoint. */
-export function presentingIssuesPhase(clinicalCase: Pick<ClinicalCases, "caseStatus">): Phase {
-  return clinicalCase.caseStatus === "Active" ? "baseline" : "endpoint";
-}
 
 function savedSelections(currentcase: ClinicalCases, phase: Phase) {
   const isBaseline = phase === "baseline";

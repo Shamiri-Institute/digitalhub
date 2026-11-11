@@ -2,12 +2,21 @@
 
 import type { ClinicalLeadCasesType } from "#/app/(platform)/cl/clinical/actions";
 import { clinicalCaseColumns } from "#/app/(platform)/sc/clinical/columns";
-import {
-  ClinicalDiagnosingBoard,
-  presentingIssuesPhase,
-} from "#/app/(platform)/sc/clinical/components/clinical-diagnosing-board";
-import ViewMarkClinicalSessions from "#/app/(platform)/sc/clinical/components/view-mark-clinical-sessions";
+import { presentingIssuesPhase } from "#/app/(platform)/sc/clinical/components/presenting-issues-phase";
 import DataTable from "#/components/data-table";
+import { deferredHidden } from "#/components/deferred";
+
+// A row's details draw only once it is expanded, so their code loads after the page.
+const ClinicalDiagnosingBoard = deferredHidden(() =>
+  import("#/app/(platform)/sc/clinical/components/clinical-diagnosing-board").then(
+    (mod) => mod.ClinicalDiagnosingBoard,
+  ),
+);
+const ViewMarkClinicalSessions = deferredHidden(() =>
+  import("#/app/(platform)/sc/clinical/components/view-mark-clinical-sessions").then(
+    (mod) => mod.default,
+  ),
+);
 
 export default function ClinicalLeadCases({
   clinicalLeadCases,
