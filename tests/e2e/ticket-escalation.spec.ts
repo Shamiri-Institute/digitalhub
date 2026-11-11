@@ -1,7 +1,7 @@
 import { eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { ticketEscalations, tickets } from "#/db/schema";
+import { ticketEvents, tickets } from "#/db/schema";
 import { expect, test } from "#/tests/fixtures";
 import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { chooseRowAction, getUrl, searchRows } from "#/tests/pages/helpers";
@@ -48,7 +48,7 @@ test("a supervisor escalates a fellow's clinical ticket to the hub's clinical le
   const subject = `E2E clinical escalation ${Date.now()}`;
   undo(async () => {
     const created = db.select({ id: tickets.id }).from(tickets).where(eq(tickets.subject, subject));
-    await db.delete(ticketEscalations).where(inArray(ticketEscalations.ticketId, created));
+    await db.delete(ticketEvents).where(inArray(ticketEvents.ticketId, created));
     await db.delete(tickets).where(eq(tickets.subject, subject));
   });
 

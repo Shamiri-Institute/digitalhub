@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "#/components/ui/button";
@@ -65,7 +64,6 @@ export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTic
 }
 
 function EscalateTicketForm({ ticketId, close }: { ticketId: string; close: () => void }) {
-  const router = useRouter();
   const { isSaving, save } = useDialogSave();
 
   const form = useForm<EscalateTicketFormData>({
@@ -95,7 +93,6 @@ function EscalateTicketForm({ ticketId, close }: { ticketId: string; close: () =
         });
       }
 
-      router.refresh();
       close();
     });
   };

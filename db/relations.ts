@@ -59,9 +59,7 @@ import {
   supervisor,
   supervisorAttendance,
   supervisorComplaints,
-  ticketEscalations,
-  ticketReassignments,
-  ticketResolutions,
+  ticketEvents,
   tickets,
   triageEvent,
   triageEventAudit,
@@ -1099,57 +1097,15 @@ export const supervisorComplaintsRelations = relations(supervisorComplaints, ({ 
   }),
 }));
 
-export const ticketEscalationsRelations = relations(ticketEscalations, ({ one }) => ({
+export const ticketEventsRelations = relations(ticketEvents, ({ one }) => ({
   ticket: one(tickets, {
-    fields: [ticketEscalations.ticketId],
+    fields: [ticketEvents.ticketId],
     references: [tickets.id],
-    relationName: "TicketEscalations_ticket",
+    relationName: "TicketEvents_ticket",
   }),
-  escalatedByUser: one(user, {
-    fields: [ticketEscalations.escalatedById],
+  actor: one(user, {
+    fields: [ticketEvents.actorId],
     references: [user.id],
-    relationName: "EscalatedByUser",
-  }),
-  escalatedToUser: one(user, {
-    fields: [ticketEscalations.escalatedToId],
-    references: [user.id],
-    relationName: "EscalatedToUser",
-  }),
-  reassignments: one(ticketReassignments),
-}));
-
-export const ticketReassignmentsRelations = relations(ticketReassignments, ({ one }) => ({
-  ticket: one(tickets, {
-    fields: [ticketReassignments.ticketId],
-    references: [tickets.id],
-    relationName: "TicketReassignments_ticket",
-  }),
-  escalation: one(ticketEscalations, {
-    fields: [ticketReassignments.escalationId],
-    references: [ticketEscalations.id],
-  }),
-  reassignedFromUser: one(user, {
-    fields: [ticketReassignments.reassignedFrom],
-    references: [user.id],
-    relationName: "reassignedFromUser",
-  }),
-  reassignedToUser: one(user, {
-    fields: [ticketReassignments.reassignedTo],
-    references: [user.id],
-    relationName: "reassignedToUser",
-  }),
-}));
-
-export const ticketResolutionsRelations = relations(ticketResolutions, ({ one }) => ({
-  ticket: one(tickets, {
-    fields: [ticketResolutions.ticketId],
-    references: [tickets.id],
-    relationName: "TicketResolutions_ticket",
-  }),
-  resolvedByUser: one(user, {
-    fields: [ticketResolutions.resolvedById],
-    references: [user.id],
-    relationName: "resolvedByUser",
   }),
 }));
 
@@ -1159,9 +1115,7 @@ export const ticketsRelations = relations(tickets, ({ one, many }) => ({
     references: [user.id],
     relationName: "Tickets_creator",
   }),
-  escalations: many(ticketEscalations, { relationName: "TicketEscalations_ticket" }),
-  resolutions: many(ticketResolutions, { relationName: "TicketResolutions_ticket" }),
-  reassignments: many(ticketReassignments, { relationName: "TicketReassignments_ticket" }),
+  events: many(ticketEvents, { relationName: "TicketEvents_ticket" }),
 }));
 
 export const triageEventRelations = relations(triageEvent, ({ one, many }) => ({
@@ -1249,11 +1203,6 @@ export const userRelations = relations(user, ({ one, many }) => ({
   sessionRecordings: many(sessionRecording, { relationName: "SessionRecording_uploader" }),
   attendanceDocuments: many(attendanceDocuments, { relationName: "AttendanceDocuments_user" }),
   tickets: many(tickets, { relationName: "Tickets_creator" }),
-  escalationsMade: many(ticketEscalations, { relationName: "EscalatedByUser" }),
-  escalationsReceived: many(ticketEscalations, { relationName: "EscalatedToUser" }),
-  resolvedTickets: many(ticketResolutions, { relationName: "resolvedByUser" }),
-  reassignmentsMade: many(ticketReassignments, { relationName: "reassignedFromUser" }),
-  reassignmentsReceived: many(ticketReassignments, { relationName: "reassignedToUser" }),
 }));
 
 export const weeklyFellowRatingsRelations = relations(weeklyFellowRatings, ({ one }) => ({

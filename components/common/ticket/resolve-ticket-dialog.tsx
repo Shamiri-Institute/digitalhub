@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "#/components/ui/button";
@@ -65,7 +64,6 @@ export function ResolveTicketDialog({ ticket, open, onOpenChange }: ResolveTicke
 }
 
 function ResolveTicketForm({ ticketId, close }: { ticketId: string; close: () => void }) {
-  const router = useRouter();
   const { isSaving, save } = useDialogSave();
 
   const form = useForm<ResolveTicketFormData>({
@@ -95,7 +93,6 @@ function ResolveTicketForm({ ticketId, close }: { ticketId: string; close: () =>
         });
       }
 
-      router.refresh();
       close();
     });
   };

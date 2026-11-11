@@ -55,6 +55,7 @@ import {
   SurveyVersionPrefill,
   SurveyVersionStatus,
   TicketCategory,
+  TicketEventKind,
   TicketPriorityLevel,
   TicketStatus,
   TranscriptionStatus,
@@ -115,6 +116,7 @@ export const ticketPriorityLevelEnum = pgEnum(
   enumValues(TicketPriorityLevel),
 );
 export const ticketStatusEnum = pgEnum("ticket_status", enumValues(TicketStatus));
+export const ticketEventKindEnum = pgEnum("ticket_event_kind", enumValues(TicketEventKind));
 export const triageActionTakenEnum = pgEnum("triage_action_taken", enumValues(TriageActionTaken));
 export const surveyStatusEnum = pgEnum("survey_status", enumValues(SurveyStatus));
 export const surveyVersionStatusEnum = pgEnum(
@@ -3501,6 +3503,7 @@ export const tickets = pgTable(
       .$defaultFn(() => objectId("ticket")),
     visibleId: serial("visible_id").notNull(),
     createdById: varchar("created_by", { length: 255 }).notNull(),
+    holderId: varchar("holder_id", { length: 255 }).notNull(),
     subject: varchar({ length: 100 }).notNull(),
     description: text().notNull(),
     priority: ticketPriorityLevelEnum().default("MEDIUM").notNull(),
@@ -3525,51 +3528,64 @@ export const tickets = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("tickets_holder_id_idx").on(table.holderId),
+    foreignKey({
+      columns: [table.holderId],
+      foreignColumns: [user.id],
+      name: "tickets_holder_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
   ],
 );
 
-export const ticketEscalations = pgTable(
-  "ticket_escalations",
+// Append-only history of a ticket. Each change is one row, so a reassign keeps the earlier holder.
+export const ticketEvents = pgTable(
+  "ticket_events",
   {
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => objectId("escalation")),
+      .$defaultFn(() => objectId("ticketevent")),
     ticketId: varchar("ticket_id", { length: 255 }).notNull(),
-    escalatedById: varchar("escalated_by", { length: 255 }).notNull(),
-    escalatedToId: varchar("escalated_to", { length: 255 }).notNull(),
-    escalationReason: text("escalation_reason").notNull(),
-    archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
+    kind: ticketEventKindEnum().notNull(),
+    actorId: varchar("actor_id", { length: 255 }).notNull(),
+    assigneeId: varchar("assignee_id", { length: 255 }),
+    reason: text(),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
-      .notNull()
-      .$defaultFn(() => new Date())
-      .$onUpdate(() => new Date()),
   },
   (table) => [
-    index("ticket_escalations_ticket_id_idx").on(table.ticketId),
+    index("ticket_events_ticket_id_created_at_idx").on(table.ticketId, table.createdAt),
+    index("ticket_events_actor_id_idx").on(table.actorId),
+    index("ticket_events_assignee_id_idx").on(table.assigneeId),
+    check(
+      "ticket_events_assignee_check",
+      sql`(${table.kind} in ('CREATED', 'ESCALATED', 'REASSIGNED')) = (${table.assigneeId} is not null)`,
+    ),
+    check(
+      "ticket_events_reason_check",
+      sql`${table.kind} = 'CREATED' or ${table.reason} is not null`,
+    ),
     foreignKey({
       columns: [table.ticketId],
       foreignColumns: [tickets.id],
-      name: "ticket_escalations_ticket_id_fkey",
+      name: "ticket_events_ticket_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
-    index("ticket_escalations_escalated_by_idx").on(table.escalatedById),
     foreignKey({
-      columns: [table.escalatedById],
+      columns: [table.actorId],
       foreignColumns: [user.id],
-      name: "ticket_escalations_escalated_by_fkey",
+      name: "ticket_events_actor_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
-    index("ticket_escalations_escalated_to_idx").on(table.escalatedToId),
     foreignKey({
-      columns: [table.escalatedToId],
+      columns: [table.assigneeId],
       foreignColumns: [user.id],
-      name: "ticket_escalations_escalated_to_fkey",
+      name: "ticket_events_assignee_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
@@ -3916,45 +3932,6 @@ export const attendanceDocuments = pgTable(
   ],
 );
 
-export const ticketResolutions = pgTable(
-  "ticket_resolutions",
-  {
-    id: text()
-      .primaryKey()
-      .notNull()
-      .$defaultFn(() => objectId("resolution")),
-    ticketId: varchar("ticket_id", { length: 255 }).notNull(),
-    resolvedById: varchar("resolved_by", { length: 255 }).notNull(),
-    resolutionReason: text("resolution_reason").notNull(),
-    archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
-      .notNull()
-      .$defaultFn(() => new Date())
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.ticketId],
-      foreignColumns: [tickets.id],
-      name: "ticket_resolutions_ticket_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    index("ticket_resolutions_resolved_by_idx").on(table.resolvedById),
-    foreignKey({
-      columns: [table.resolvedById],
-      foreignColumns: [user.id],
-      name: "ticket_resolutions_resolved_by_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    unique("ticket_resolutions_ticket_id_key").on(table.ticketId),
-  ],
-);
-
 export const fellowGroupReport = pgTable(
   "fellow_group_reports",
   {
@@ -4008,63 +3985,6 @@ export const fellowGroupReport = pgTable(
       columns: [table.groupId],
       foreignColumns: [interventionGroup.id],
       name: "fellow_group_reports_group_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-  ],
-);
-
-export const ticketReassignments = pgTable(
-  "ticket_reassignments",
-  {
-    id: text()
-      .primaryKey()
-      .notNull()
-      .$defaultFn(() => objectId("reassignment")),
-    ticketId: varchar("ticket_id", { length: 255 }).notNull(),
-    escalationId: varchar("escalation_id", { length: 255 }).notNull(),
-    reassignedFrom: varchar("reassigned_from", { length: 255 }).notNull(),
-    reassignedTo: varchar("reassigned_to", { length: 255 }).notNull(),
-    reassignmentReason: text("reassignment_reason").notNull(),
-    archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
-      .notNull()
-      .$defaultFn(() => new Date())
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    uniqueIndex("ticket_reassignments_escalation_id_key").using("btree", table.escalationId),
-    index("ticket_reassignments_ticket_id_idx").on(table.ticketId),
-    foreignKey({
-      columns: [table.ticketId],
-      foreignColumns: [tickets.id],
-      name: "ticket_reassignments_ticket_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({
-      columns: [table.escalationId],
-      foreignColumns: [ticketEscalations.id],
-      name: "ticket_reassignments_escalation_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    index("ticket_reassignments_reassigned_from_idx").on(table.reassignedFrom),
-    foreignKey({
-      columns: [table.reassignedFrom],
-      foreignColumns: [user.id],
-      name: "ticket_reassignments_reassigned_from_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    index("ticket_reassignments_reassigned_to_idx").on(table.reassignedTo),
-    foreignKey({
-      columns: [table.reassignedTo],
-      foreignColumns: [user.id],
-      name: "ticket_reassignments_reassigned_to_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),

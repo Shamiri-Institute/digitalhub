@@ -202,6 +202,14 @@ export const TicketStatus = {
 } as const;
 export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus];
 
+export const TicketEventKind = {
+  CREATED: "CREATED",
+  ESCALATED: "ESCALATED",
+  REASSIGNED: "REASSIGNED",
+  RESOLVED: "RESOLVED",
+} as const;
+export type TicketEventKind = (typeof TicketEventKind)[keyof typeof TicketEventKind];
+
 export const SurveyStatus = {
   DRAFT: "DRAFT",
   ACTIVE: "ACTIVE",
