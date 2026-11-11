@@ -43,11 +43,12 @@ const PRINT_FONTS = ["./public/fonts/figtree/*.ttf"];
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    // Menus, selects, dialogs and tooltips load after the page through separate imports that share
-    // Base UI's internals. With the default request cost Turbopack copies those internals into
-    // each one, so a table page downloaded 55-84 KB (gzipped) twice; a lower cost puts them in
-    // shared files instead.
-    turbopackChunking: { requestCost: 20000, minChunkSize: 20000 },
+    // Menus, selects, dialogs and tooltips load on the visitor's first interaction, through
+    // separate imports that share Base UI's internals. A request cost below the default puts those
+    // internals in shared files instead of copying them into each import. The minimum chunk size
+    // stays at its default: lowering it split the files a page loads before its first paint into
+    // 8-13 more, and on a slow connection the first paint waits on each request.
+    turbopackChunking: { requestCost: 20000 },
   },
   // ffmpeg-static locates its binary beside its own files, so it is loaded at runtime, and the
   // binary and the transcription prompts are traced into the route that runs them.
