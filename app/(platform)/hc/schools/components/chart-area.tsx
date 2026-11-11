@@ -1,22 +1,5 @@
-"use client";
-
-import { memo } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Label,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { categoryColor, sessionLabel } from "#/components/charts/constants";
+import { LineChart, RingChart, StackedColumnChart } from "#/components/charts/static-charts";
 import ChartCard from "#/components/ui/chart-card";
 import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
 import type {
@@ -26,7 +9,18 @@ import type {
   SessionRatingAverages,
 } from "../actions";
 
-const ChartArea = memo(function ChartArea({
+const ATTENDANCE_SERIES = [
+  { name: "Attendance marked", color: "var(--color-primary)" },
+  { name: "Attendance unmarked", color: "var(--color-info-border)" },
+];
+
+const RATING_SERIES = [
+  { name: "Student behaviour", color: "var(--color-chart-1)" },
+  { name: "Admin support", color: "var(--color-chart-2)" },
+  { name: "Workload", color: "var(--color-chart-3)" },
+];
+
+export default function ChartArea({
   dropoutData,
   schoolDataCompletenessData,
   sessionRatingsData,
@@ -37,114 +31,100 @@ const ChartArea = memo(function ChartArea({
   schoolAttendances: SchoolAttendances[];
   sessionRatingsData: SessionRatingAverages[];
 }) {
+  const dropoutSlices = dropoutData
+    .map(({ name, value }) => ({
+      name,
+      value,
+      color: categoryColor(name, SCHOOL_DROPOUT_REASONS),
+    }))
+    .toSorted((first, second) => second.value - first.value);
+  const droppedOutSchoolCount = dropoutSlices.reduce((sum, { value }) => sum + value, 0);
+  const completedPercentage = schoolDataCompletenessData.find(
+    ({ name }) => name === "actual",
+  )?.value;
+
   return (
     <div className="grid grid-cols-1 gap-5 py-5 sm:grid-cols-2 md:grid-cols-4">
       <ChartCard title="Session progress">
-        {schoolAttendances?.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              width={307}
-              height={307}
-              data={schoolAttendances}
-              aria-label="Session progress"
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="session_type" tickFormatter={sessionLabel} />
-              <Tooltip labelFormatter={(value) => sessionLabel(String(value))} />
-              <Legend iconType="square" iconSize={8} />
-              <Bar
-                dataKey="count_attendance_marked"
-                stackId="a"
-                fill="var(--color-primary)"
-                name="Attendance marked"
-              />
-              <Bar
-                dataKey="count_attendance_unmarked"
-                stackId="a"
-                fill="var(--color-info-border)"
-                name="Attendance unmarked"
-              />
-            </BarChart>
-          </ResponsiveContainer>
+        {schoolAttendances.length ? (
+          <StackedColumnChart
+            label="Schools with attendance marked, by session"
+            series={ATTENDANCE_SERIES}
+            categories={schoolAttendances.map((attendance) => ({
+              name: sessionLabel(attendance.session_type),
+              values: [attendance.count_attendance_marked, attendance.count_attendance_unmarked],
+            }))}
+          />
         ) : null}
       </ChartCard>
       <ChartCard title="Drop out reasons">
-        {dropoutData.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={307} height={307} aria-label="Drop out reasons">
-              <Pie
-                data={dropoutData.map((reason) => ({
-                  ...reason,
-                  fill: categoryColor(reason.name, SCHOOL_DROPOUT_REASONS),
-                }))}
-                dataKey="value"
-                nameKey="name"
-                startAngle={90}
-                endAngle={450}
-                outerRadius={100}
-                innerRadius={70}
-              >
-                <Label
-                  position="center"
-                  className="fill-foreground text-2xl font-semibold leading-8"
-                >
-                  {dropoutData.reduce((acc, val) => acc + val.value, 0)}
-                </Label>
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+        {droppedOutSchoolCount > 0 ? (
+          <div className="flex h-full flex-col items-center gap-3">
+            <RingChart
+              label={`${droppedOutSchoolCount} schools dropped out`}
+              slices={dropoutSlices}
+              sizeClassName="size-28"
+              middle={
+                <span className="text-2xl font-semibold leading-8">{droppedOutSchoolCount}</span>
+              }
+            />
+            <ul className="min-h-0 w-full space-y-1 overflow-y-auto text-xs text-muted-foreground">
+              {dropoutSlices.map(({ name, value, color }) => (
+                <li key={name} className="flex items-center gap-1.5">
+                  <svg aria-hidden className="size-2.5 shrink-0" viewBox="0 0 10 10">
+                    <rect width={10} height={10} rx={2} fill={color} />
+                  </svg>
+                  <span className="min-w-0 flex-1 truncate first-letter:uppercase" title={name}>
+                    {name}
+                  </span>
+                  <span className="font-medium text-foreground tabular-nums">{value}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         ) : null}
       </ChartCard>
       <ChartCard title="School information completion">
-        {schoolDataCompletenessData.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={250} height={250} aria-label="School information completion">
-              <Pie
-                data={schoolDataCompletenessData.map((entry) => ({
-                  ...entry,
-                  fill: entry.name === "actual" ? "var(--color-primary)" : "var(--color-info-bg)",
-                }))}
-                dataKey="value"
-                nameKey="name"
-                startAngle={90}
-                endAngle={450}
-                outerRadius={100}
-                innerRadius={70}
-              >
-                <Label
-                  position="center"
-                  className="fill-foreground text-2xl font-semibold leading-8"
-                >
-                  {`${schoolDataCompletenessData.find((d) => d.name === "actual")?.value}%`}
-                </Label>
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
+        {completedPercentage !== undefined ? (
+          <div className="flex h-full items-center justify-center">
+            <RingChart
+              label={`School information ${completedPercentage}% complete`}
+              sizeClassName="size-40"
+              slices={[
+                {
+                  name: "Complete",
+                  value: completedPercentage,
+                  color: "var(--color-primary)",
+                },
+                {
+                  name: "Missing",
+                  value: 100 - completedPercentage,
+                  color: "var(--color-info-bg)",
+                },
+              ]}
+              middle={
+                <span className="text-2xl font-semibold leading-8">{completedPercentage}%</span>
+              }
+            />
+          </div>
         ) : null}
       </ChartCard>
       <ChartCard title="Ratings">
-        {sessionRatingsData?.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart width={307} height={307} data={sessionRatingsData} aria-label="Ratings">
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="session_type" tickFormatter={sessionLabel} />
-              <YAxis allowDecimals={false} />
-              <Tooltip labelFormatter={(value) => sessionLabel(String(value))} />
-              <Legend />
-              <Line
-                dataKey="student_behavior"
-                stroke="var(--color-chart-1)"
-                name="Student behaviour"
-              />
-              <Line dataKey="admin_support" stroke="var(--color-chart-2)" name="Admin support" />
-              <Line dataKey="workload" stroke="var(--color-chart-3)" name="Workload" />
-            </LineChart>
-          </ResponsiveContainer>
+        {sessionRatingsData.length ? (
+          <LineChart
+            label="Average session ratings, by session"
+            series={RATING_SERIES}
+            categories={sessionRatingsData.map((rating) => ({
+              name: sessionLabel(rating.session_type),
+              values: [
+                Number(rating.student_behavior) || 0,
+                Number(rating.admin_support) || 0,
+                Number(rating.workload) || 0,
+              ],
+            }))}
+          />
         ) : null}
       </ChartCard>
     </div>
   );
-});
-
-export default ChartArea;
+}
