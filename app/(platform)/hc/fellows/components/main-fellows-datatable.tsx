@@ -1,6 +1,6 @@
 "use client";
 
-import { deferredDialog } from "#/components/deferred";
+import { deferredHidden } from "#/components/deferred";
 import type { fellow, supervisor, weeklyFellowRatings } from "#/db/schema";
 import {
   type FellowPersonalDetails,
@@ -23,16 +23,16 @@ import { DialogTrigger } from "#/components/ui/dialog";
 import { toastOnError } from "#/components/ui/use-toast";
 
 // These dialogs draw nothing until opened, so their code loads after the page.
-const FellowDetailsForm = deferredDialog(() =>
+const FellowDetailsForm = deferredHidden(() =>
   import("#/components/common/fellow/fellow-details-form").then((mod) => mod.default),
 );
-const FellowDropoutForm = deferredDialog(() =>
+const FellowDropoutForm = deferredHidden(() =>
   import("#/components/common/fellow/fellow-dropout-form").then((mod) => mod.default),
 );
-const WeeklyFellowEvaluation = deferredDialog(() =>
+const WeeklyFellowEvaluation = deferredHidden(() =>
   import("#/components/common/fellow/weekly-fellow-evaluation").then((mod) => mod.default),
 );
-const SubmitComplaint = deferredDialog(() =>
+const SubmitComplaint = deferredHidden(() =>
   import("#/components/common/submit-complaint").then((mod) => mod.default),
 );
 

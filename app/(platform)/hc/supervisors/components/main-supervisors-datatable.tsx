@@ -1,6 +1,6 @@
 "use client";
 
-import { deferredDialog } from "#/components/deferred";
+import { deferredHidden } from "#/components/deferred";
 import { ImplementerRole } from "#/db/enums";
 import type { project as projectTable } from "#/db/schema";
 import parsePhoneNumberFromString from "libphonenumber-js";
@@ -15,25 +15,25 @@ import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import DataTable from "#/components/data-table";
 
 // These dialogs draw nothing until opened, so their code loads after the page.
-const SupervisorDetailsForm = deferredDialog(() =>
+const SupervisorDetailsForm = deferredHidden(() =>
   import("#/app/(platform)/hc/supervisors/components/supervisor-details-form").then(
     (mod) => mod.default,
   ),
 );
-const DropoutSupervisor = deferredDialog(() =>
+const DropoutSupervisor = deferredHidden(() =>
   import("#/app/(platform)/hc/supervisors/components/dropout-supervisor-form").then(
     (mod) => mod.default,
   ),
 );
-const UndropSupervisor = deferredDialog(() =>
+const UndropSupervisor = deferredHidden(() =>
   import("#/app/(platform)/hc/supervisors/components/undrop-supervisor-form").then(
     (mod) => mod.default,
   ),
 );
-const SubmitComplaint = deferredDialog(() =>
+const SubmitComplaint = deferredHidden(() =>
   import("#/app/(platform)/hc/supervisors/components/submit-complaint").then((mod) => mod.default),
 );
-const MonthlySupervisorEvaluation = deferredDialog(() =>
+const MonthlySupervisorEvaluation = deferredHidden(() =>
   import("#/app/(platform)/hc/supervisors/components/monthly-supervisor-evaluation").then(
     (mod) => mod.default,
   ),

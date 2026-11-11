@@ -1,6 +1,6 @@
 "use client";
 
-import { deferredDialog } from "#/components/deferred";
+import { deferredHidden } from "#/components/deferred";
 import { ImplementerRole } from "#/db/enums";
 import type { VisibilityState } from "@tanstack/react-table";
 import { Plus } from "lucide-react";
@@ -16,16 +16,16 @@ import { cn } from "#/lib/utils";
 import type { supervisor } from "#/db/schema";
 
 // These dialogs draw nothing until opened, so their code loads after the page.
-const AssignPointSupervisor = deferredDialog(() =>
+const AssignPointSupervisor = deferredHidden(() =>
   import("#/components/common/schools/assign-point-supervisor").then((mod) => mod.default),
 );
-const DropoutSchool = deferredDialog(() =>
+const DropoutSchool = deferredHidden(() =>
   import("#/components/common/schools/dropout-school-form").then((mod) => mod.DropoutSchool),
 );
-const SchoolDetailsForm = deferredDialog(() =>
+const SchoolDetailsForm = deferredHidden(() =>
   import("#/components/common/schools/school-details-form").then((mod) => mod.default),
 );
-const UndoDropoutSchool = deferredDialog(() =>
+const UndoDropoutSchool = deferredHidden(() =>
   import("#/components/common/schools/undo-dropout-school-form").then(
     (mod) => mod.UndoDropoutSchool,
   ),

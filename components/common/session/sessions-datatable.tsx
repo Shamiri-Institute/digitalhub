@@ -1,6 +1,6 @@
 "use client";
 
-import { deferredDialog } from "#/components/deferred";
+import { deferredHidden } from "#/components/deferred";
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { ImplementerRole } from "#/db/enums";
 import { type SetStateAction, useState } from "react";
@@ -18,24 +18,24 @@ import StudentAttendance, {
 import DataTable from "#/components/data-table";
 
 // These dialogs draw nothing until opened, so their code loads after the page.
-const FellowAttendance = deferredDialog(() =>
+const FellowAttendance = deferredHidden(() =>
   import("#/components/common/fellow/fellow-attendance").then((mod) => mod.default),
 );
-const CancelSession = deferredDialog(() =>
+const CancelSession = deferredHidden(() =>
   import("#/components/common/session/cancel-session").then((mod) => mod.default),
 );
-const RescheduleSession = deferredDialog(() =>
+const RescheduleSession = deferredHidden(() =>
   import("#/components/common/session/reschedule-session").then((mod) => mod.default),
 );
-const SessionRatings = deferredDialog(() =>
+const SessionRatings = deferredHidden(() =>
   import("#/components/common/session/session-ratings").then((mod) => mod.default),
 );
-const AttendanceDocumentDialog = deferredDialog(() =>
+const AttendanceDocumentDialog = deferredHidden(() =>
   import("#/components/common/student/student-attendance-files/attendance-document-dialog").then(
     (mod) => mod.default,
   ),
 );
-const SupervisorAttendance = deferredDialog(() =>
+const SupervisorAttendance = deferredHidden(() =>
   import("#/components/common/supervisor/supervisor-attendance").then((mod) => mod.default),
 );
 

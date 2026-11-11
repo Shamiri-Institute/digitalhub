@@ -1,6 +1,6 @@
 "use client";
 
-import { deferredDialog } from "#/components/deferred";
+import { deferredHidden } from "#/components/deferred";
 import type { TransferSchool } from "#/components/common/schools/school-students-page";
 import { ImplementerRole } from "#/db/enums";
 import { type SetStateAction, useState } from "react";
@@ -14,28 +14,28 @@ import DataTable from "#/components/data-table";
 import { markStudentAttendance } from "#/lib/actions/student";
 
 // These dialogs draw nothing until opened, so their code loads after the page.
-const MarkAttendance = deferredDialog(() =>
+const MarkAttendance = deferredHidden(() =>
   import("#/components/common/mark-attendance").then((mod) => mod.MarkAttendance),
 );
-const AddReportingNote = deferredDialog(() =>
+const AddReportingNote = deferredHidden(() =>
   import("#/components/common/student/add-reporting-note").then((mod) => mod.AddReportingNote),
 );
-const AttendanceHistory = deferredDialog(() =>
+const AttendanceHistory = deferredHidden(() =>
   import("#/components/common/student/attendance-history").then((mod) => mod.default),
 );
-const GroupTransferHistory = deferredDialog(() =>
+const GroupTransferHistory = deferredHidden(() =>
   import("#/components/common/student/group-transfer-history").then((mod) => mod.default),
 );
-const StudentArchiveForm = deferredDialog(() =>
+const StudentArchiveForm = deferredHidden(() =>
   import("#/components/common/student/student-archive-form").then((mod) => mod.default),
 );
-const StudentDetailsForm = deferredDialog(() =>
+const StudentDetailsForm = deferredHidden(() =>
   import("#/components/common/student/student-details-form").then((mod) => mod.default),
 );
-const StudentDropoutForm = deferredDialog(() =>
+const StudentDropoutForm = deferredHidden(() =>
   import("#/components/common/student/student-dropout-form").then((mod) => mod.default),
 );
-const StudentMoveSchoolForm = deferredDialog(() =>
+const StudentMoveSchoolForm = deferredHidden(() =>
   import("#/components/common/student/student-move-school-form").then((mod) => mod.default),
 );
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { deferredDialog } from "#/components/deferred";
+import { deferredHidden } from "#/components/deferred";
 import type { fellow, supervisor } from "#/db/schema";
 import {
   type FellowPersonalDetails,
@@ -21,16 +21,16 @@ import DataTable from "#/components/data-table";
 import { toastOnError } from "#/components/ui/use-toast";
 
 // These dialogs draw nothing until opened, so their code loads after the page.
-const AssignFellowSupervisorDialog = deferredDialog(() =>
+const AssignFellowSupervisorDialog = deferredHidden(() =>
   import("#/components/common/fellow/assign-fellow-supervisor-dialog").then((mod) => mod.default),
 );
-const FellowDetailsForm = deferredDialog(() =>
+const FellowDetailsForm = deferredHidden(() =>
   import("#/components/common/fellow/fellow-details-form").then((mod) => mod.default),
 );
-const ReplaceFellow = deferredDialog(() =>
+const ReplaceFellow = deferredHidden(() =>
   import("#/components/common/fellow/replace-fellow").then((mod) => mod.default),
 );
-const StudentsInGroup = deferredDialog(() =>
+const StudentsInGroup = deferredHidden(() =>
   import("#/components/common/student/students-in-group").then((mod) => mod.default),
 );
 

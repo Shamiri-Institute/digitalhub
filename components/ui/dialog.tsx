@@ -1,10 +1,13 @@
 "use client";
 
-import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import type { Dialog as DialogParts } from "@base-ui/react/dialog";
+import { mergeProps } from "@base-ui/react/merge-props";
+import { useRender } from "@base-ui/react/use-render";
 import { X } from "lucide-react";
 import type * as React from "react";
-import { createContext, use, useRef, useTransition } from "react";
+import { createContext, use, useEffect, useRef, useTransition } from "react";
 
+import { afterPage, type StandIn, useStandIn } from "#/components/deferred";
 import { useHoldMenuOpen } from "#/components/ui/dropdown-menu";
 import { toastOnFailure } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
@@ -15,6 +18,28 @@ type DialogSave = {
 };
 
 const DialogSaveContext = createContext<DialogSave | null>(null);
+
+// Base UI's Dialog brings focus trapping and positioning code that a page needs only once a dialog
+// opens, so it loads on the first interaction like menus and selects. A dialog's own trigger is
+// drawn as a stand-in until then, and a press on it opens the dialog once the code arrives.
+const [useDialogCode, loadDialogCode] = afterPage(() =>
+  import("@base-ui/react/dialog").then((mod) => mod.Dialog),
+);
+
+const DialogCode = createContext<({ Parts: typeof DialogParts | null } & StandIn) | null>(null);
+
+function useDialogCodeContext() {
+  const context = use(DialogCode);
+  if (!context) throw new Error("Dialog parts must be inside <Dialog>");
+  return context;
+}
+
+// Inside an open popup, which only renders once the code has loaded.
+function useLoadedDialog() {
+  const { Parts } = useDialogCodeContext();
+  if (!Parts) throw new Error("A dialog part rendered before the dialog's code loaded");
+  return Parts;
+}
 
 /**
  * The save of a form inside the dialog. `save` runs the work in a transition and toasts a
@@ -33,30 +58,70 @@ function Dialog({
   onOpenChange,
   children,
   ...props
-}: Omit<DialogPrimitive.Root.Props, "children"> & { children?: React.ReactNode }) {
+}: Omit<DialogParts.Root.Props, "children"> & { children?: React.ReactNode }) {
+  const Parts = useDialogCode();
+  const standIn = useStandIn(loadDialogCode);
   const [isSaving, startSaving] = useTransition();
   const save = (work: () => Promise<unknown>) => startSaving(() => toastOnFailure(work));
+  const isOpen = Boolean(props.open);
+  // effect: a dialog opened before the visitor's first interaction fetches its code at once
+  useEffect(() => {
+    if (isOpen) void loadDialogCode();
+  }, [isOpen]);
+  const content = <DialogSaveContext value={{ isSaving, save }}>{children}</DialogSaveContext>;
   return (
-    <DialogPrimitive.Root
-      {...props}
-      onOpenChange={(open, details) => {
-        if (!open && isSaving) {
-          details.cancel();
-          return;
-        }
-        onOpenChange?.(open, details);
-      }}
-    >
-      <DialogSaveContext value={{ isSaving, save }}>{children}</DialogSaveContext>
-    </DialogPrimitive.Root>
+    <DialogCode value={{ Parts, ...standIn }}>
+      {Parts ? (
+        <Parts.Root
+          {...props}
+          onOpenChange={(open, details) => {
+            if (!open && isSaving) {
+              details.cancel();
+              return;
+            }
+            onOpenChange?.(open, details);
+          }}
+        >
+          {content}
+        </Parts.Root>
+      ) : (
+        content
+      )}
+    </DialogCode>
   );
 }
 
-const DialogTrigger = DialogPrimitive.Trigger;
+// Only what a plain button also takes, so the stand-in draws the same element.
+type TriggerProps = Omit<React.ComponentProps<"button">, "ref"> & {
+  render?: React.ReactElement;
+};
 
-function DialogClose({ disabled, ...props }: DialogPrimitive.Close.Props) {
+function DialogTrigger(props: TriggerProps) {
+  const { Parts, standInHandlers, takeOver } = useDialogCodeContext();
+  if (!Parts) return <StandInTrigger {...props} handlers={standInHandlers} />;
+  return <Parts.Trigger {...props} ref={takeOver} />;
+}
+
+function StandInTrigger({
+  render,
+  handlers,
+  ...props
+}: TriggerProps & { handlers: StandIn["standInHandlers"] }) {
+  return useRender({
+    defaultTagName: "button",
+    render,
+    props: mergeProps<"button">(
+      { type: "button", "aria-haspopup": "dialog", "aria-expanded": false },
+      props,
+      handlers,
+    ),
+  });
+}
+
+function DialogClose({ disabled, ...props }: DialogParts.Close.Props) {
+  const Parts = useLoadedDialog();
   const isSaving = use(DialogSaveContext)?.isSaving ?? false;
-  return <DialogPrimitive.Close disabled={disabled || isSaving} {...props} />;
+  return <Parts.Close disabled={disabled || isSaving} {...props} />;
 }
 
 // Where focus returns when the dialog closes: the element that opened it, or, when that was a menu
@@ -79,18 +144,20 @@ function DialogContent({
   initialFocus,
   finalFocus,
   ...props
-}: DialogPrimitive.Popup.Props) {
+}: DialogParts.Popup.Props) {
+  const { Parts } = useDialogCodeContext();
   const openerRef = useRef<() => HTMLElement | true>(() => true);
   const isSaving = use(DialogSaveContext)?.isSaving ?? false;
   const holdMenuOpen = useHoldMenuOpen();
+  if (!Parts) return null;
   return (
-    <DialogPrimitive.Portal>
-      <DialogPrimitive.Backdrop
+    <Parts.Portal>
+      <Parts.Backdrop
         data-slot="dialog-overlay"
         className="fixed inset-0 z-50 bg-navy/40 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0"
       />
-      <DialogPrimitive.Viewport className="fixed inset-0 z-50 grid place-items-center overflow-y-auto py-4">
-        <DialogPrimitive.Popup
+      <Parts.Viewport className="fixed inset-0 z-50 grid place-items-center overflow-y-auto py-4">
+        <Parts.Popup
           ref={holdMenuOpen}
           data-slot="dialog-content"
           className={cn(
@@ -107,16 +174,16 @@ function DialogContent({
           {...props}
         >
           {children}
-          <DialogPrimitive.Close
+          <Parts.Close
             disabled={isSaving}
             className="absolute right-2 top-2 rounded-sm p-2 opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none disabled:opacity-30"
           >
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
-          </DialogPrimitive.Close>
-        </DialogPrimitive.Popup>
-      </DialogPrimitive.Viewport>
-    </DialogPrimitive.Portal>
+          </Parts.Close>
+        </Parts.Popup>
+      </Parts.Viewport>
+    </Parts.Portal>
   );
 }
 
@@ -135,9 +202,10 @@ function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
   );
 }
 
-function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
+function DialogTitle({ className, ...props }: DialogParts.Title.Props) {
+  const Parts = useLoadedDialog();
   return (
-    <DialogPrimitive.Title
+    <Parts.Title
       data-slot="dialog-title"
       className={cn("text-lg font-bold leading-tight text-primary", className)}
       {...props}
@@ -145,9 +213,10 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   );
 }
 
-function DialogDescription({ className, ...props }: DialogPrimitive.Description.Props) {
+function DialogDescription({ className, ...props }: DialogParts.Description.Props) {
+  const Parts = useLoadedDialog();
   return (
-    <DialogPrimitive.Description
+    <Parts.Description
       data-slot="dialog-description"
       className={cn("text-sm text-muted-foreground", className)}
       {...props}

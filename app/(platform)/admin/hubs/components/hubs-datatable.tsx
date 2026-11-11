@@ -4,13 +4,13 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 
 import DataTable from "#/components/data-table";
-import { deferredDialog } from "#/components/deferred";
+import { deferredHidden } from "#/components/deferred";
 import { Button } from "#/components/ui/button";
 import type { AdminHub } from "../queries";
 import { columns } from "./columns";
 
 // The add-hub form draws nothing until opened, so its code loads after the page.
-const HubDialog = deferredDialog(() => import("./hub-dialog").then((mod) => mod.default));
+const HubDialog = deferredHidden(() => import("./hub-dialog").then((mod) => mod.default));
 
 export default function HubsDataTable({
   hubs,

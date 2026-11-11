@@ -8,9 +8,17 @@ export type ToastOptions = {
   action?: { label: string; onClick: () => void };
 };
 
-// The toast UI is loaded after the page, so toasts raised before it is mounted wait here.
+// The toast UI is loaded after the page, so toasts raised before it is mounted wait here, and the
+// first one to wait asks for the UI's code.
 let showToast: ((options: ToastOptions) => void) | null = null;
 const waitingToasts: ToastOptions[] = [];
+let loadToastViewport: (() => void) | null = null;
+
+/** Called by the toaster with a function that fetches the toast UI. */
+function whenToastWaits(load: () => void) {
+  loadToastViewport = load;
+  if (waitingToasts.length > 0) load();
+}
 
 /** Called by the toast viewport once mounted; shows the toasts raised before it was. */
 function attachToastViewport(show: (options: ToastOptions) => void) {
@@ -22,8 +30,12 @@ function attachToastViewport(show: (options: ToastOptions) => void) {
 }
 
 function toast(options: ToastOptions) {
-  if (showToast) showToast(options);
-  else waitingToasts.push(options);
+  if (showToast) {
+    showToast(options);
+    return;
+  }
+  waitingToasts.push(options);
+  loadToastViewport?.();
 }
 
 function useToast() {
@@ -58,4 +70,4 @@ async function toastOnFailure(work: () => Promise<unknown>) {
   }
 }
 
-export { attachToastViewport, toast, toastOnError, toastOnFailure, useToast };
+export { attachToastViewport, toast, toastOnError, toastOnFailure, useToast, whenToastWaits };

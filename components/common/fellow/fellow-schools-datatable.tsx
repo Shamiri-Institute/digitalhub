@@ -1,5 +1,5 @@
 "use client";
-import { deferredDialog } from "#/components/deferred";
+import { deferredHidden } from "#/components/deferred";
 import {
   type FellowPersonalDetails,
   loadFellowPersonalDetails,
@@ -27,25 +27,25 @@ import {
 import type { project as projectTable } from "#/db/schema";
 
 // These dialogs draw nothing until opened, so their code loads after the page.
-const AttendanceHistory = deferredDialog(() =>
+const AttendanceHistory = deferredHidden(() =>
   import("#/components/common/fellow/attendance-history").then((mod) => mod.default),
 );
-const FellowDetailsForm = deferredDialog(() =>
+const FellowDetailsForm = deferredHidden(() =>
   import("#/components/common/fellow/fellow-details-form").then((mod) => mod.default),
 );
-const WeeklyFellowEvaluation = deferredDialog(() =>
+const WeeklyFellowEvaluation = deferredHidden(() =>
   import("#/components/common/fellow/weekly-fellow-evaluation").then((mod) => mod.default),
 );
-const StudentGroupEvaluation = deferredDialog(() =>
+const StudentGroupEvaluation = deferredHidden(() =>
   import("#/components/common/group/student-group-evaluation").then((mod) => mod.default),
 );
-const StudentsInGroup = deferredDialog(() =>
+const StudentsInGroup = deferredHidden(() =>
   import("#/components/common/student/students-in-group").then((mod) => mod.default),
 );
-const SubmitComplaint = deferredDialog(() =>
+const SubmitComplaint = deferredHidden(() =>
   import("#/components/common/submit-complaint").then((mod) => mod.default),
 );
-const MarkAttendance = deferredDialog(() =>
+const MarkAttendance = deferredHidden(() =>
   import("#/components/common/mark-attendance").then((mod) => mod.MarkAttendance),
 );
 

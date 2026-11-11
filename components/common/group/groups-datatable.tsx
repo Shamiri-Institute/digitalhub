@@ -1,6 +1,6 @@
 "use client";
 
-import { deferredDialog } from "#/components/deferred";
+import { deferredHidden } from "#/components/deferred";
 import type {
   fellow,
   interventionSession,
@@ -20,19 +20,19 @@ import CreateGroup from "#/components/common/group/create-group";
 import DataTable from "#/components/data-table";
 
 // These dialogs draw nothing until opened, so their code loads after the page.
-const ReplaceFellow = deferredDialog(() =>
+const ReplaceFellow = deferredHidden(() =>
   import("#/components/common/fellow/replace-fellow").then((mod) => mod.default),
 );
-const ArchiveGroup = deferredDialog(() =>
+const ArchiveGroup = deferredHidden(() =>
   import("#/components/common/group/archive-group").then((mod) => mod.default),
 );
-const StudentGroupEvaluation = deferredDialog(() =>
+const StudentGroupEvaluation = deferredHidden(() =>
   import("#/components/common/group/student-group-evaluation").then((mod) => mod.default),
 );
-const UnarchiveGroup = deferredDialog(() =>
+const UnarchiveGroup = deferredHidden(() =>
   import("#/components/common/group/unarchive-group").then((mod) => mod.default),
 );
-const StudentsInGroup = deferredDialog(() =>
+const StudentsInGroup = deferredHidden(() =>
   import("#/components/common/student/students-in-group").then((mod) => mod.default),
 );
 

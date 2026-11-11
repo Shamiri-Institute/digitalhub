@@ -11,10 +11,42 @@ import {
   useSyncExternalStore,
 } from "react";
 
+// The events that show a person is at the page. Focus and scroll also fire on their own while a
+// page loads (autofocus, scroll restoration), so they do not count.
+const INTERACTIONS = ["pointermove", "pointerdown", "touchstart", "keydown", "wheel"] as const;
+let interacted = false;
+const waitingForInteraction = new Set<() => void>();
+
+function onInteraction() {
+  interacted = true;
+  for (const type of INTERACTIONS) window.removeEventListener(type, onInteraction, true);
+  for (const start of waitingForInteraction) start();
+  waitingForInteraction.clear();
+}
+
+/** Runs `start` once the visitor first interacts with the page, or now if they already have. */
+function afterFirstInteraction(start: () => void) {
+  if (interacted) {
+    start();
+    return () => {};
+  }
+  if (waitingForInteraction.size === 0) {
+    for (const type of INTERACTIONS) {
+      window.addEventListener(type, onInteraction, { capture: true, passive: true });
+    }
+  }
+  waitingForInteraction.add(start);
+  return () => {
+    waitingForInteraction.delete(start);
+  };
+}
+
 /**
- * Code that loads after the page instead of with it. `useLoaded()` gives null until the code has
- * arrived and starts fetching it once a component that needs it has mounted; `load()` fetches it
- * now, and tries again after a failed fetch.
+ * Code a page needs only once someone uses it: menus, selects, tooltips, dialogs. It is fetched
+ * when the visitor first moves the pointer, touches, presses a key or scrolls with a wheel, not
+ * while the page itself loads, so a visit that opens none of them never downloads it.
+ * `useLoaded()` gives null until the code has arrived; `load()` fetches it now, and tries again
+ * after a failed fetch.
  */
 export function afterPage<T>(fetchCode: () => Promise<T>) {
   let loaded: T | null = null;
@@ -39,10 +71,8 @@ export function afterPage<T>(fetchCode: () => Promise<T>) {
     return loading;
   };
   function useLoaded() {
-    // effect: fetches the code once the page is interactive, off its critical path
-    useEffect(() => {
-      void load();
-    }, []);
+    // effect: subscribes to the visitor's first interaction, a window event, to fetch the code
+    useEffect(() => afterFirstInteraction(() => void load()), []);
     return useSyncExternalStore(
       subscribe,
       () => loaded,
@@ -104,14 +134,15 @@ export function useStandIn(load: () => Promise<unknown>) {
 export type StandIn = ReturnType<typeof useStandIn>;
 
 /**
- * A dialog whose code loads after the page. Closed, a dialog draws nothing, so until the code
- * arrives this renders nothing; one opened before then shows once it does.
+ * A part that draws nothing until it is opened, such as a closed dialog or a collapsed row's
+ * details, with code that loads after the page. Until the code arrives it renders nothing; one
+ * opened before then shows once it does.
  */
-export function deferredDialog<P extends object>(fetchDialog: () => Promise<ComponentType<P>>) {
-  const [useDialog] = afterPage(fetchDialog);
-  return function DeferredDialog(props: P) {
-    const Dialog = useDialog();
-    return Dialog ? <Dialog {...props} /> : null;
+export function deferredHidden<P extends object>(fetchPart: () => Promise<ComponentType<P>>) {
+  const [usePart] = afterPage(fetchPart);
+  return function DeferredHidden(props: P) {
+    const Part = usePart();
+    return Part ? <Part {...props} /> : null;
   };
 }
 
