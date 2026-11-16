@@ -379,6 +379,48 @@
       "when": 1794300001000,
       "tag": "0053_move_ops_users_to_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1794376166909,
+      "tag": "0054_survey_scan_pages_and_answers",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1794376167623,
+      "tag": "0055_survey_version_fields_from_layout",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1794376168337,
+      "tag": "0056_backfill_survey_version_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1794382510204,
+      "tag": "0057_ticket_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1794382521685,
+      "tag": "0058_copy_ticket_history",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1794382522235,
+      "tag": "0059_drop_ticket_history_tables",
+      "breakpoints": true
     }
   ]
 }

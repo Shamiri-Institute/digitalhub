@@ -14,6 +14,7 @@ const editedComplaint = `Edited complaint ${Date.now()}`;
 let supervisorEmail: string;
 let targetFellow: { fellowId: string; fellowName: string };
 let otherSupervisorEmail: string;
+let hubCoordinatorEmail: string;
 
 // Same hub as the fellow, so the only reason the complaint is hidden is who supervises the fellow:
 // supervisors only see their own hub too.
@@ -70,6 +71,20 @@ test.beforeAll(async () => {
 
   targetFellow = supervisedFellow;
   otherSupervisorEmail = otherSupervisor.email;
+
+  const {
+    rows: [coordinator],
+  } = await db.execute<{ email: string }>(sql`
+    select u.email
+    from hub_coordinators hc
+    join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
+    join users u on u.id = m.user_id
+    where hc.assigned_hub_id = (select hub_id from fellows where id = ${supervisedFellow.fellowId})
+      and hc.archived_at is null and ${signableMember()}
+    order by u.email
+    limit 1`);
+  required(coordinator, "a hub coordinator of the fellow's hub");
+  hubCoordinatorEmail = coordinator.email;
 });
 
 test.afterAll(async () => {
@@ -125,4 +140,18 @@ test("a supervisor who does not supervise the fellow does not see the complaint"
   await signInWithEmail(context, otherSupervisorEmail);
   await page.goto(getUrl("/sc/reporting/fellow-reports/complaints"));
   await expect(await searchRows(page, targetFellow.fellowName)).toHaveCount(0);
+});
+
+test("the fellow's hub coordinator edits the complaint", async ({ context, page }) => {
+  const coordinatorEdit = `Coordinator edit ${Date.now()}`;
+  await signInWithEmail(context, hubCoordinatorEmail);
+  await page.goto(getUrl("/hc/reporting/fellow-reports/complaints"));
+  await chooseRowAction(page, await expandedComplaintRow(page), "Edit fellow complaint");
+  const editDialog = page.getByRole("dialog", { name: "Edit Fellow Complaint" });
+  await editDialog.getByRole("textbox").fill(coordinatorEdit);
+  await editDialog.getByRole("button", { name: "Save Changes" }).click();
+  await expect(page.getByText("Complaint updated successfully").first()).toBeVisible();
+
+  await page.reload();
+  await expect(await expandedComplaintRow(page)).toContainText(coordinatorEdit);
 });

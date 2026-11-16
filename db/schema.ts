@@ -19,6 +19,7 @@ import {
   pgEnum,
   pgSequence,
   pgTable,
+  primaryKey,
   real,
   serial,
   text,
@@ -42,14 +43,19 @@ import {
   SessionStatus,
   SupervisorHandoffStatus,
   SupportType,
+  SurveyAnswerReviewStatus,
+  SurveyAnswerSource,
   SurveyAuditActor,
+  SurveyFieldKind,
   SurveyPrintStatus,
   SurveyQuestionnaireStatus,
+  SurveyScanPageStatus,
   SurveyStatus,
   SurveyUploadStatus,
   SurveyVersionPrefill,
   SurveyVersionStatus,
   TicketCategory,
+  TicketEventKind,
   TicketPriorityLevel,
   TicketStatus,
   TranscriptionStatus,
@@ -110,6 +116,7 @@ export const ticketPriorityLevelEnum = pgEnum(
   enumValues(TicketPriorityLevel),
 );
 export const ticketStatusEnum = pgEnum("ticket_status", enumValues(TicketStatus));
+export const ticketEventKindEnum = pgEnum("ticket_event_kind", enumValues(TicketEventKind));
 export const triageActionTakenEnum = pgEnum("triage_action_taken", enumValues(TriageActionTaken));
 export const surveyStatusEnum = pgEnum("survey_status", enumValues(SurveyStatus));
 export const surveyVersionStatusEnum = pgEnum(
@@ -129,6 +136,19 @@ export const surveyUploadStatusEnum = pgEnum(
 export const surveyQuestionnaireStatusEnum = pgEnum(
   "survey_questionnaire_status",
   enumValues(SurveyQuestionnaireStatus),
+);
+export const surveyFieldKindEnum = pgEnum("survey_field_kind", enumValues(SurveyFieldKind));
+export const surveyScanPageStatusEnum = pgEnum(
+  "survey_scan_page_status",
+  enumValues(SurveyScanPageStatus),
+);
+export const surveyAnswerSourceEnum = pgEnum(
+  "survey_answer_source",
+  enumValues(SurveyAnswerSource),
+);
+export const surveyAnswerReviewStatusEnum = pgEnum(
+  "survey_answer_review_status",
+  enumValues(SurveyAnswerReviewStatus),
 );
 
 export const verification = pgTable(
@@ -3236,6 +3256,206 @@ export const surveyQuestionnairePage = pgTable(
   ],
 );
 
+// One answer field a published version prints: a question's key, or `key.row` for a grid row. The
+// database writes them from the stored layout when the version is published (0055).
+export const surveyVersionField = pgTable(
+  "survey_version_fields",
+  {
+    versionId: text("version_id").notNull(),
+    field: text().notNull(),
+    pageNumber: integer("page_number").notNull(),
+    kind: surveyFieldKindEnum().notNull(),
+  },
+  (table) => [
+    primaryKey({ name: "survey_version_fields_pkey", columns: [table.versionId, table.field] }),
+    check("survey_version_fields_page_number_check", sql`${table.pageNumber} >= 1`),
+    foreignKey({
+      columns: [table.versionId],
+      foreignColumns: [surveyVersion.id],
+      name: "survey_version_fields_version_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("cascade"),
+  ],
+);
+
+// One page image cut from an upload. A REJECTED scan may have no printed page: a cover sheet, a
+// blank, another form.
+export const surveyScanPage = pgTable(
+  "survey_scan_pages",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("surveyscanpage")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+    uploadId: text("upload_id").notNull(),
+    pageIndex: integer("page_index").notNull(),
+    imageS3Key: text("image_s3_key").notNull(),
+    questionnairePageId: text("questionnaire_page_id"),
+    status: surveyScanPageStatusEnum().notNull(),
+    duplicateOfId: text("duplicate_of_id"),
+  },
+  (table) => [
+    uniqueIndex("survey_scan_pages_upload_id_page_index_key").on(table.uploadId, table.pageIndex),
+    uniqueIndex("survey_scan_pages_one_match_per_page_key")
+      .on(table.questionnairePageId)
+      .where(sql`${table.status} = 'MATCHED'`),
+    // For the foreign key: a partial index doesn't serve it.
+    index("survey_scan_pages_questionnaire_page_id_idx").on(table.questionnairePageId),
+    // What a duplicate points at, so it can only be a scan of its own page.
+    unique("survey_scan_pages_id_questionnaire_page_id_key").on(
+      table.id,
+      table.questionnairePageId,
+    ),
+    index("survey_scan_pages_duplicate_of_id_questionnaire_page_id_idx").on(
+      table.duplicateOfId,
+      table.questionnairePageId,
+    ),
+    check("survey_scan_pages_page_index_check", sql`${table.pageIndex} >= 0`),
+    check(
+      "survey_scan_pages_duplicate_check",
+      sql`(${table.status} = 'DUPLICATE') = (${table.duplicateOfId} IS NOT NULL)`,
+    ),
+    check("survey_scan_pages_not_own_duplicate_check", sql`${table.duplicateOfId} <> ${table.id}`),
+    check(
+      "survey_scan_pages_identified_check",
+      sql`CASE ${table.status}
+        WHEN 'UNIDENTIFIED' THEN ${table.questionnairePageId} IS NULL
+        WHEN 'REJECTED' THEN TRUE
+        ELSE ${table.questionnairePageId} IS NOT NULL
+      END`,
+    ),
+    foreignKey({
+      columns: [table.uploadId],
+      foreignColumns: [surveyUpload.id],
+      name: "survey_scan_pages_upload_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("cascade"),
+    foreignKey({
+      columns: [table.questionnairePageId],
+      foreignColumns: [surveyQuestionnairePage.id],
+      name: "survey_scan_pages_questionnaire_page_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+    // An upload whose scan another upload's scan duplicates can't be deleted until that duplicate
+    // is resolved.
+    foreignKey({
+      columns: [table.duplicateOfId, table.questionnairePageId],
+      foreignColumns: [table.id, table.questionnairePageId],
+      name: "survey_scan_pages_duplicate_of_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+  ],
+);
+
+// The answer to one field of one copy. Restrict throughout: an answer is collected data, so what it
+// belongs to can't be deleted from under it.
+export const surveyAnswer = pgTable(
+  "survey_answers",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("surveyanswer")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+    questionnaireId: text("questionnaire_id").notNull(),
+    versionId: text("version_id").notNull(),
+    field: text().notNull(),
+    scanPageId: text("scan_page_id"),
+    // What the pipeline read, kept beside `value` so a reviewer sees both.
+    recognizedValue: jsonb("recognized_value").$type<JsonValue>(),
+    confidence: doublePrecision(),
+    cropS3Key: text("crop_s3_key"),
+    value: jsonb().$type<JsonValue>(),
+    source: surveyAnswerSourceEnum().notNull(),
+    reviewStatus: surveyAnswerReviewStatusEnum("review_status").notNull(),
+    flags: text()
+      .array()
+      .default(sql`'{}'::text[]`)
+      .notNull(),
+    reviewedBy: text("reviewed_by"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true, mode: "date" }),
+  },
+  (table) => [
+    // A copy has one version, so this is one answer per copy and field. Leading with
+    // (questionnaire_id, version_id), it is also the foreign key's index.
+    uniqueIndex("survey_answers_questionnaire_id_version_id_field_key").on(
+      table.questionnaireId,
+      table.versionId,
+      table.field,
+    ),
+    index("survey_answers_version_id_field_idx").on(table.versionId, table.field),
+    index("survey_answers_scan_page_id_idx").on(table.scanPageId),
+    index("survey_answers_reviewed_by_idx").on(table.reviewedBy),
+    // A blank answer is SQL null, never JSON null.
+    check(
+      "survey_answers_no_json_null_check",
+      sql`jsonb_typeof(${table.value}) IS DISTINCT FROM 'null' AND jsonb_typeof(${table.recognizedValue}) IS DISTINCT FROM 'null'`,
+    ),
+    check(
+      "survey_answers_confidence_check",
+      sql`${table.confidence} IS NULL OR ${table.confidence} BETWEEN 0 AND 1`,
+    ),
+    check(
+      "survey_answers_pipeline_check",
+      sql`${table.source} <> 'PIPELINE' OR (${table.scanPageId} IS NOT NULL AND ${table.confidence} IS NOT NULL)`,
+    ),
+    // A typed-in answer is a reviewer's, so it is reviewed by them.
+    check(
+      "survey_answers_manual_check",
+      sql`${table.source} <> 'MANUAL' OR (${table.recognizedValue} IS NULL AND ${table.confidence} IS NULL AND ${table.reviewStatus} IN ('VERIFIED', 'CORRECTED'))`,
+    ),
+    check(
+      "survey_answers_reviewed_check",
+      sql`(${table.reviewStatus} IN ('VERIFIED', 'CORRECTED')) = (${table.reviewedBy} IS NOT NULL) AND (${table.reviewedBy} IS NULL) = (${table.reviewedAt} IS NULL)`,
+    ),
+    foreignKey({
+      columns: [table.questionnaireId, table.versionId],
+      foreignColumns: [surveyQuestionnaire.id, surveyQuestionnaire.versionId],
+      name: "survey_answers_questionnaire_id_version_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.versionId, table.field],
+      foreignColumns: [surveyVersionField.versionId, surveyVersionField.field],
+      name: "survey_answers_version_id_field_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.scanPageId],
+      foreignColumns: [surveyScanPage.id],
+      name: "survey_answers_scan_page_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.reviewedBy],
+      foreignColumns: [user.id],
+      name: "survey_answers_reviewed_by_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("restrict"),
+  ],
+);
+
 // Append-only history of every change to survey data; a trigger rejects UPDATE and DELETE. No
 // foreign keys to the surveys tables, so the history outlives what it records.
 export const surveyAuditEvent = pgTable(
@@ -3283,6 +3503,7 @@ export const tickets = pgTable(
       .$defaultFn(() => objectId("ticket")),
     visibleId: serial("visible_id").notNull(),
     createdById: varchar("created_by", { length: 255 }).notNull(),
+    holderId: varchar("holder_id", { length: 255 }).notNull(),
     subject: varchar({ length: 100 }).notNull(),
     description: text().notNull(),
     priority: ticketPriorityLevelEnum().default("MEDIUM").notNull(),
@@ -3307,51 +3528,64 @@ export const tickets = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    index("tickets_holder_id_idx").on(table.holderId),
+    foreignKey({
+      columns: [table.holderId],
+      foreignColumns: [user.id],
+      name: "tickets_holder_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
   ],
 );
 
-export const ticketEscalations = pgTable(
-  "ticket_escalations",
+// Append-only history of a ticket. Each change is one row, so a reassign keeps the earlier holder.
+export const ticketEvents = pgTable(
+  "ticket_events",
   {
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => objectId("escalation")),
+      .$defaultFn(() => objectId("ticketevent")),
     ticketId: varchar("ticket_id", { length: 255 }).notNull(),
-    escalatedById: varchar("escalated_by", { length: 255 }).notNull(),
-    escalatedToId: varchar("escalated_to", { length: 255 }).notNull(),
-    escalationReason: text("escalation_reason").notNull(),
-    archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
+    kind: ticketEventKindEnum().notNull(),
+    actorId: varchar("actor_id", { length: 255 }).notNull(),
+    assigneeId: varchar("assignee_id", { length: 255 }),
+    reason: text(),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
-      .notNull()
-      .$defaultFn(() => new Date())
-      .$onUpdate(() => new Date()),
   },
   (table) => [
-    index("ticket_escalations_ticket_id_idx").on(table.ticketId),
+    index("ticket_events_ticket_id_created_at_idx").on(table.ticketId, table.createdAt),
+    index("ticket_events_actor_id_idx").on(table.actorId),
+    index("ticket_events_assignee_id_idx").on(table.assigneeId),
+    check(
+      "ticket_events_assignee_check",
+      sql`(${table.kind} in ('CREATED', 'ESCALATED', 'REASSIGNED')) = (${table.assigneeId} is not null)`,
+    ),
+    check(
+      "ticket_events_reason_check",
+      sql`${table.kind} = 'CREATED' or ${table.reason} is not null`,
+    ),
     foreignKey({
       columns: [table.ticketId],
       foreignColumns: [tickets.id],
-      name: "ticket_escalations_ticket_id_fkey",
+      name: "ticket_events_ticket_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
-    index("ticket_escalations_escalated_by_idx").on(table.escalatedById),
     foreignKey({
-      columns: [table.escalatedById],
+      columns: [table.actorId],
       foreignColumns: [user.id],
-      name: "ticket_escalations_escalated_by_fkey",
+      name: "ticket_events_actor_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
-    index("ticket_escalations_escalated_to_idx").on(table.escalatedToId),
     foreignKey({
-      columns: [table.escalatedToId],
+      columns: [table.assigneeId],
       foreignColumns: [user.id],
-      name: "ticket_escalations_escalated_to_fkey",
+      name: "ticket_events_assignee_id_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
@@ -3698,45 +3932,6 @@ export const attendanceDocuments = pgTable(
   ],
 );
 
-export const ticketResolutions = pgTable(
-  "ticket_resolutions",
-  {
-    id: text()
-      .primaryKey()
-      .notNull()
-      .$defaultFn(() => objectId("resolution")),
-    ticketId: varchar("ticket_id", { length: 255 }).notNull(),
-    resolvedById: varchar("resolved_by", { length: 255 }).notNull(),
-    resolutionReason: text("resolution_reason").notNull(),
-    archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
-      .notNull()
-      .$defaultFn(() => new Date())
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.ticketId],
-      foreignColumns: [tickets.id],
-      name: "ticket_resolutions_ticket_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    index("ticket_resolutions_resolved_by_idx").on(table.resolvedById),
-    foreignKey({
-      columns: [table.resolvedById],
-      foreignColumns: [user.id],
-      name: "ticket_resolutions_resolved_by_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    unique("ticket_resolutions_ticket_id_key").on(table.ticketId),
-  ],
-);
-
 export const fellowGroupReport = pgTable(
   "fellow_group_reports",
   {
@@ -3790,63 +3985,6 @@ export const fellowGroupReport = pgTable(
       columns: [table.groupId],
       foreignColumns: [interventionGroup.id],
       name: "fellow_group_reports_group_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-  ],
-);
-
-export const ticketReassignments = pgTable(
-  "ticket_reassignments",
-  {
-    id: text()
-      .primaryKey()
-      .notNull()
-      .$defaultFn(() => objectId("reassignment")),
-    ticketId: varchar("ticket_id", { length: 255 }).notNull(),
-    escalationId: varchar("escalation_id", { length: 255 }).notNull(),
-    reassignedFrom: varchar("reassigned_from", { length: 255 }).notNull(),
-    reassignedTo: varchar("reassigned_to", { length: 255 }).notNull(),
-    reassignmentReason: text("reassignment_reason").notNull(),
-    archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
-    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
-      .notNull()
-      .$defaultFn(() => new Date())
-      .$onUpdate(() => new Date()),
-  },
-  (table) => [
-    uniqueIndex("ticket_reassignments_escalation_id_key").using("btree", table.escalationId),
-    index("ticket_reassignments_ticket_id_idx").on(table.ticketId),
-    foreignKey({
-      columns: [table.ticketId],
-      foreignColumns: [tickets.id],
-      name: "ticket_reassignments_ticket_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    foreignKey({
-      columns: [table.escalationId],
-      foreignColumns: [ticketEscalations.id],
-      name: "ticket_reassignments_escalation_id_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    index("ticket_reassignments_reassigned_from_idx").on(table.reassignedFrom),
-    foreignKey({
-      columns: [table.reassignedFrom],
-      foreignColumns: [user.id],
-      name: "ticket_reassignments_reassigned_from_fkey",
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-    index("ticket_reassignments_reassigned_to_idx").on(table.reassignedTo),
-    foreignKey({
-      columns: [table.reassignedTo],
-      foreignColumns: [user.id],
-      name: "ticket_reassignments_reassigned_to_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),

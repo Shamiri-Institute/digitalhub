@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, isNull, or } from "drizzle-orm";
+import { and, eq, isNull, or, inArray } from "drizzle-orm";
 
 import { currentSupervisor } from "#/app/auth";
 import { db } from "#/db/client";
@@ -20,6 +20,7 @@ import {
   type UploadTarget,
 } from "#/lib/s3/s3.types";
 import { normalizeContentType } from "#/lib/s3/utils/normalize-content-type";
+import { supervisedFellowIds } from "#/lib/auth/require-hub-role";
 
 export async function authorizeRecordingUpload(
   params: S3AuthParams,
@@ -44,7 +45,7 @@ export async function authorizeRecordingUpload(
     .from(fellowTable)
     .where(
       and(
-        eq(fellowTable.supervisorId, supervisorId),
+        inArray(fellowTable.id, supervisedFellowIds(supervisorId)),
         or(eq(fellowTable.droppedOut, false), isNull(fellowTable.droppedOut)),
       ),
     );

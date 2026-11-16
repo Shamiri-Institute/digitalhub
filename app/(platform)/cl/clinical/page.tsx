@@ -63,6 +63,7 @@ export default async function ClinicalPage() {
       <AllHubClinicalCasesTable
         cases={cases}
         title="All Supervisor Cases In This Hub"
+        mayReopen
         emptyStateMessage="No clinical cases created by supervisors in this hub yet"
       />
 

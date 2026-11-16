@@ -19,7 +19,8 @@ const ClinicalLeadCaseActionsDropdownMenu = deferred(() =>
   ),
 );
 
-export const columns: ColumnDef<HubClinicalCases>[] = [
+/** `mayReopen` offers "Un-terminate case": clinical leads reopen cases, the clinical team only reads. */
+export const columns = ({ mayReopen }: { mayReopen: boolean }): ColumnDef<HubClinicalCases>[] => [
   {
     id: "expand",
     cell: ({ row }) => {
@@ -126,6 +127,7 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
         <ClinicalLeadCaseActionsDropdownMenu
           trigger={rowActionsButton(`Actions for ${row.original.pseudonym}`, "bg-white")}
           clinicalCase={row.original}
+          mayReopen={mayReopen}
         />
       );
     },

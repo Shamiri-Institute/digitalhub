@@ -1,7 +1,6 @@
 "use client";
 
 import { TicketCategory, TicketPriorityLevel } from "#/db/enums";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -60,7 +59,6 @@ export default function CreateTicketDialog({ disabled }: { disabled?: boolean })
 }
 
 function CreateTicketForm({ close }: { close: () => void }) {
-  const router = useRouter();
   const { isSaving, save } = useDialogSave();
 
   const form = useForm<z.infer<typeof CreateTicketSchema>>({
@@ -88,7 +86,6 @@ function CreateTicketForm({ close }: { close: () => void }) {
       toast({
         description: response.message,
       });
-      router.refresh();
       close();
     });
   };

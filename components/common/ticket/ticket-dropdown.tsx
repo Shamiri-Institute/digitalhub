@@ -71,7 +71,7 @@ export function TicketDropdown({ ticket, state }: { ticket: TicketData; state: T
             Reassign ticket
           </DropdownMenuItem>
         )}
-        {!showReassign && hasReassignment && (
+        {hasReassignment && (
           <DropdownMenuItem onClick={() => state.openDialog("viewReassignment", ticket)}>
             View reassignment
           </DropdownMenuItem>

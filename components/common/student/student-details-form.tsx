@@ -287,7 +287,8 @@ function StudentDetailsFormContent({
                         <Input
                           {...field}
                           disabled={
-                            mode === "view" || (mode === "edit" && role === ImplementerRole.FELLOW)
+                            mode === "view" ||
+                            (mode === "edit" && role !== ImplementerRole.HUB_COORDINATOR)
                           }
                         />
                       </FormControl>

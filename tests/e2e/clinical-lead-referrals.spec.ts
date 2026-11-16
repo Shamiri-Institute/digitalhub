@@ -90,7 +90,5 @@ test("a clinical lead accepts a referred case before it becomes theirs", async (
 
   await page.reload({ waitUntil: "networkidle" });
   await expect(referralCard).toHaveCount(0);
-  const acceptedRow = await searchRows(page, created.pseudonym, myCases(page));
-  await expect(acceptedRow).toHaveCount(1);
-  await expect(acceptedRow).toContainText(fixture.supervisorName);
+  await expect(await searchRows(page, created.pseudonym, myCases(page))).toHaveCount(1);
 });

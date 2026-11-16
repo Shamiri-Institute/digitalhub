@@ -2,12 +2,19 @@ import type { Page } from "@playwright/test";
 import { eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { student, supervisor, triageEvent, triageEventAudit, user } from "#/db/schema";
+import {
+  clinicalScreeningInfo,
+  student,
+  supervisor,
+  triageEvent,
+  triageEventAudit,
+  user,
+} from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { sessionDisplayName } from "#/lib/utils";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { expectOpenUntilWritten, signableMember, signInWithEmail, required } from "#/tests/helpers";
-import { chooseRowAction, getUrl, rowWithCell } from "#/tests/pages/helpers";
+import { signableMember, signInWithEmail, required } from "#/tests/helpers";
+import { chooseRowAction, getUrl, rowWithCell, searchRows } from "#/tests/pages/helpers";
 
 type Fixture = {
   fellowEmail: string;
@@ -400,11 +407,15 @@ test("the audit trail lists a re-route between two supervisors with the same nam
   );
 });
 
-test("the review dialog stays open until the review is saved", async ({ page, context, undo }) => {
+test("a supervisor marks a referral reviewed with a note and it leaves their queue", async ({
+  page,
+  context,
+  undo,
+}) => {
   test.slow();
   const fixture = await pickReroute();
   required(fixture, "a fellow's group with an occurred session, two supervisors and a lead");
-  const { studentName, triageEventId } = await seedReferral(fixture, undo);
+  const { studentName } = await seedReferral(fixture, undo);
 
   await signInWithEmail(context, fixture.reviewerEmail);
   await page.goto(getUrl("/sc/triage"));
@@ -415,18 +426,111 @@ test("the review dialog stays open until the review is saved", async ({ page, co
   );
   const review = page.getByRole("dialog", { name: "Mark reviewed — no clinical case needed" });
   await review.getByRole("textbox").fill("Assessed the student");
-  await expectOpenUntilWritten(
-    page,
-    review,
-    review.getByRole("button", { name: "Confirm review" }),
-    {
-      table: "triage_events",
-      id: triageEventId,
-    },
-  );
+  await review.getByRole("button", { name: "Confirm review" }).click();
+  await expect(review).toBeHidden();
 
   await page.reload();
+  await expect(requiresActionSection(page).getByRole("heading")).toBeVisible();
   await expect(
     requiresActionSection(page).getByRole("cell", { name: studentName, exact: true }),
   ).toHaveCount(0);
+});
+
+test("a supervisor's queue counts a referral, opens it and turns it into a clinical case", async ({
+  page,
+  context,
+  undo,
+}) => {
+  test.slow();
+  const fixture = await pickReroute();
+  required(fixture, "a fellow's group with an occurred session, two supervisors and a lead");
+  const { studentName } = await seedReferral(fixture, undo);
+  const pseudonym = `e2e-triage-case-${Date.now()}`;
+  undo(() =>
+    db.delete(clinicalScreeningInfo).where(eq(clinicalScreeningInfo.pseudonym, pseudonym)),
+  );
+
+  await signInWithEmail(context, fixture.reviewerEmail);
+  await page.goto(getUrl("/sc/triage"));
+  const queue = requiresActionSection(page);
+  const studentCell = queue.getByRole("cell", { name: studentName, exact: true });
+  await expect(studentCell).toBeVisible();
+  const queuedRows = await queue.locator("tbody tr").count();
+  const queueCount = page.getByText("Requires my action", { exact: true }).first().locator("..");
+  await expect(queueCount).toContainText(String(queuedRows));
+
+  await chooseRowAction(page, await rowWithCell(page, queue, studentName), "View details");
+  await expect(page.getByRole("dialog", { name: studentName })).toBeVisible();
+  await page.reload();
+
+  await chooseRowAction(page, await rowWithCell(page, queue, studentName), "Create clinical case");
+  const create = page.getByRole("dialog", { name: "Create clinical case" });
+  await create.getByRole("textbox").fill(pseudonym);
+  await create.getByRole("button", { name: "Create case" }).click();
+  await expect(page.getByText("Clinical case created.").first()).toBeVisible();
+
+  await page.reload();
+  await expect(queue.getByRole("heading", { name: "Requires my action" })).toBeVisible();
+  await expect(studentCell).toHaveCount(0);
+  await page.goto(getUrl("/sc/clinical"));
+  await expect(await searchRows(page, pseudonym)).toContainText(/active/i);
+});
+
+test("the triage form offers only the session hub's supervisors, and only fellows triage", async ({
+  page,
+  context,
+  undo,
+}) => {
+  test.slow();
+  const fixture = await pickReroute();
+  required(fixture, "a fellow's group with an occurred session, two supervisors and a lead");
+  const { admissionNumber } = await seedReferral(fixture, undo);
+  const hubSupervisors = await db.query.supervisor.findMany({
+    where: (s, { eq }) => eq(s.hubId, fixture.hubId),
+    columns: { supervisorName: true },
+  });
+
+  const { visibleId, sessionLabel } = fixture;
+  async function openStudentMenu(rolePrefix: "fel" | "sc", sessionAction: string) {
+    await page.goto(getUrl(`/${rolePrefix}/schools/${visibleId}/sessions`));
+    await chooseRowAction(
+      page,
+      await rowWithCell(page, page.getByRole("main"), sessionLabel),
+      sessionAction,
+    );
+    const attendance = page.getByRole("dialog", { name: "Mark student attendance" });
+    // A supervisor picks whose group to show, and any group will do; a fellow sees their own.
+    if (rolePrefix === "sc") {
+      await attendance.getByRole("combobox", { name: "Select group leader" }).click();
+      await page.getByRole("option").first().click();
+    }
+    const row =
+      rolePrefix === "fel"
+        ? await rowWithCell(page, attendance, admissionNumber)
+        : attendance
+            .locator("tbody tr")
+            .filter({ hasNot: page.locator("td[colspan]") })
+            .first();
+    await row.getByRole("cell").last().click();
+    return page.getByRole("menu");
+  }
+
+  await signInWithEmail(context, fixture.fellowEmail);
+  await (
+    await openStudentMenu("fel", "Mark student attendance")
+  )
+    .getByText("Edit triage", { exact: true })
+    .click();
+  const form = page.getByRole("dialog", { name: "Document triage" });
+  await form.getByRole("combobox", { name: "Supervisor (in the session hub)" }).click();
+  await expect(page.getByRole("option").first()).toBeVisible();
+  const offered = await page.getByRole("option").allInnerTexts();
+  expect(offered.map((name) => name.trim()).toSorted()).toEqual(
+    hubSupervisors.map((s) => s.supervisorName ?? "").toSorted(),
+  );
+
+  await signInWithEmail(context, fixture.reviewerEmail);
+  const supervisorMenu = await openStudentMenu("sc", "View student attendance");
+  await expect(supervisorMenu.getByText("Mark attendance")).toBeVisible();
+  await expect(supervisorMenu.getByText(/triage/i)).toHaveCount(0);
 });

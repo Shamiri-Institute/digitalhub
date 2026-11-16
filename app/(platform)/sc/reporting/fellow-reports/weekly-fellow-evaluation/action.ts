@@ -3,6 +3,7 @@
 import { currentSupervisor } from "#/app/auth";
 import type { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
 import { db } from "#/db/client";
+import { supervisedFellowIds } from "#/lib/auth/require-hub-role";
 
 export async function loadWeeklyFellowEvaluation(): Promise<WeeklyFellowEvaluation[]> {
   const supervisor = await currentSupervisor();
@@ -12,7 +13,7 @@ export async function loadWeeklyFellowEvaluation(): Promise<WeeklyFellowEvaluati
 
   const supervisorId = supervisor.profile.id;
   const fellows = await db.query.fellow.findMany({
-    where: (f, { eq }) => eq(f.supervisorId, supervisorId),
+    where: (f, { inArray }) => inArray(f.id, supervisedFellowIds(supervisorId)),
     with: { weeklyFellowRatings: { orderBy: (r, { asc }) => [asc(r.createdAt), asc(r.id)] } },
     orderBy: (f, { asc }) => [asc(f.createdAt), asc(f.id)],
   });

@@ -3,7 +3,7 @@ import { cache } from "react";
 
 import { db, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
-import { fellow, hub, interventionGroup, school } from "#/db/schema";
+import { fellow, hub, interventionGroup, school, supervisor } from "#/db/schema";
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { ForbiddenRoleError, NotFoundError, requireAuthRole } from "#/lib/auth/require-auth-role";
 
@@ -101,6 +101,18 @@ export function implementerHubsInProject(implementerId: string, projectId: strin
     .select({ id: hub.id })
     .from(hub)
     .where(and(eq(hub.implementerId, implementerId), eq(hub.projectId, projectId)));
+}
+
+/** The ids of the fellows a supervisor supervises in the supervisor's own hub. */
+export function supervisedFellowIds(supervisorId: string) {
+  return db
+    .select({ id: fellow.id })
+    .from(fellow)
+    .innerJoin(
+      supervisor,
+      and(eq(supervisor.id, fellow.supervisorId), eq(supervisor.hubId, fellow.hubId)),
+    )
+    .where(eq(fellow.supervisorId, supervisorId));
 }
 
 /**

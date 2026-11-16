@@ -1,10 +1,11 @@
 "use server";
-import { eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
 import { currentSupervisor } from "#/app/auth";
 import { db } from "#/db/client";
-import { fellow, interventionGroup } from "#/db/schema";
+import { supervisedFellowIds } from "#/lib/auth/require-hub-role";
+import { interventionGroup } from "#/db/schema";
 
 export type FellowsData = Awaited<ReturnType<typeof loadFellowsData>>[number];
 
@@ -23,7 +24,7 @@ export async function loadFellowsData() {
 
   const [fellows, schools, fellowAverageRatings, supervisors] = await Promise.all([
     db.query.fellow.findMany({
-      where: (f, { eq }) => eq(f.supervisorId, supervisorId),
+      where: (f, { inArray }) => inArray(f.id, supervisedFellowIds(supervisorId)),
       orderBy: (f, { asc }) => asc(f.id),
       with: {
         fellowAttendances: {
@@ -65,15 +66,7 @@ export async function loadFellowsData() {
           db
             .select({ id: interventionGroup.schoolId })
             .from(interventionGroup)
-            .where(
-              inArray(
-                interventionGroup.leaderId,
-                db
-                  .select({ id: fellow.id })
-                  .from(fellow)
-                  .where(eq(fellow.supervisorId, supervisorId)),
-              ),
-            ),
+            .where(inArray(interventionGroup.leaderId, supervisedFellowIds(supervisorId))),
         ),
       with: {
         interventionSessions: {

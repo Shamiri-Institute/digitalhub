@@ -1,8 +1,10 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { interventionSessionRating, sessionComment } from "#/db/schema";
+import { interventionSessionRating, sessionComment, supervisor } from "#/db/schema";
+import { createSupervisedSession, otherHubOf } from "#/tests/delivery-helpers";
+import { expect, test } from "#/tests/fixtures";
 import { signableMember, signInAs, signInWithEmail, required } from "#/tests/helpers";
 import { expandRow, getUrl } from "#/tests/pages/helpers";
 
@@ -103,4 +105,50 @@ test("a hub coordinator reads session feedback but cannot add notes", async ({ c
   await expect(dialog.getByText("Workload (1 unacceptable to 5 outstanding)")).toBeVisible();
   await expect(dialog.getByLabel("Add your notes")).toHaveCount(0);
   await expect(dialog.getByRole("button", { name: "Add notes" })).toHaveCount(0);
+});
+
+test("session feedback is refused once the session is outside the supervisor's hub", async ({
+  context,
+  page,
+  undo,
+}) => {
+  const supervised = await createSupervisedSession(undo);
+  const otherHubId = await otherHubOf(supervised.hubId);
+  const refusedNotes = `Refused feedback ${Date.now()}`;
+  const supervisorRatingId = `isr_e2e_${Date.now()}`;
+  await db.insert(interventionSessionRating).values({
+    id: supervisorRatingId,
+    sessionId: supervised.sessionId,
+    supervisorId: supervised.supervisorId,
+    studentBehaviorRating: 4,
+    adminSupportRating: 3,
+    workloadRating: 2,
+  });
+  undo(async () => {
+    await db.delete(sessionComment).where(eq(sessionComment.content, refusedNotes));
+    await db
+      .delete(interventionSessionRating)
+      .where(eq(interventionSessionRating.id, supervisorRatingId));
+  });
+  await signInWithEmail(context, supervised.supervisorEmail);
+
+  await page.goto(getUrl("/sc/reporting/school-reports/session"));
+  const editDialog = await openFeedbackDialog(page, "Edit school report", supervised.schoolName);
+  await editDialog.getByLabel("Add your notes").fill(refusedNotes);
+  // The supervisor moves to another hub behind the open dialog.
+  await db
+    .update(supervisor)
+    .set({ hubId: otherHubId })
+    .where(eq(supervisor.id, supervised.supervisorId));
+  await editDialog.getByRole("button", { name: "Add notes" }).click();
+  await expect(page.getByText("Something went wrong").first()).toBeVisible();
+
+  await page.reload();
+  const viewDialog = await openFeedbackDialog(
+    page,
+    "View qualitative feedback",
+    supervised.schoolName,
+  );
+  await expect(viewDialog).toBeVisible();
+  await expect(viewDialog.getByText(refusedNotes)).toHaveCount(0);
 });

@@ -6,13 +6,14 @@ import { refresh, revalidatePath } from "next/cache";
 import { currentSupervisor } from "#/app/auth";
 import { db, isUniqueViolation } from "#/db/client";
 import { RecordingProcessingStatus, TranscriptionStatus } from "#/db/enums";
-import { fellow, sessionRecording, transcription } from "#/db/schema";
+import { sessionRecording, transcription } from "#/db/schema";
 import { isSupervisorInFidelityAbTest } from "#/lib/fidelity-ab-test";
 import {
   discardOrphanedUpload,
   verifyUploadClaim,
   verifyUploadedObject,
 } from "#/lib/s3/utils/verify-upload";
+import { supervisedFellowIds } from "#/lib/auth/require-hub-role";
 
 export type FellowGroup = Awaited<ReturnType<typeof loadFellowGroups>>[number];
 export type GroupSession = Awaited<ReturnType<typeof loadGroupSessions>>[number];
@@ -27,7 +28,8 @@ export async function loadFellowGroups(fellowId: string) {
   }
 
   const supervisedFellow = await db.query.fellow.findFirst({
-    where: (f, { and, eq }) => and(eq(f.id, fellowId), eq(f.supervisorId, supervisor.profile.id)),
+    where: (f, { and, eq, inArray }) =>
+      and(eq(f.id, fellowId), inArray(f.id, supervisedFellowIds(supervisor.profile.id))),
     columns: { id: true },
   });
   if (!supervisedFellow) {
@@ -54,13 +56,7 @@ export async function loadGroupSessions(groupId: string) {
   const supervisorId = supervisor.profile.id;
   const group = await db.query.interventionGroup.findFirst({
     where: (g, { and, eq, inArray }) =>
-      and(
-        eq(g.id, groupId),
-        inArray(
-          g.leaderId,
-          db.select({ id: fellow.id }).from(fellow).where(eq(fellow.supervisorId, supervisorId)),
-        ),
-      ),
+      and(eq(g.id, groupId), inArray(g.leaderId, supervisedFellowIds(supervisorId))),
     with: { school: true },
   });
 
@@ -102,10 +98,7 @@ export async function checkRecordingExists(params: {
     where: (r, { and, eq, inArray }) =>
       and(
         eq(r.fellowId, params.fellowId),
-        inArray(
-          r.fellowId,
-          db.select({ id: fellow.id }).from(fellow).where(eq(fellow.supervisorId, supervisorId)),
-        ),
+        inArray(r.fellowId, supervisedFellowIds(supervisorId)),
         eq(r.schoolId, params.schoolId),
         eq(r.groupId, params.groupId),
         eq(r.sessionId, params.sessionId),
@@ -394,7 +387,8 @@ export async function updateSessionRecording(input: {
       where: (r, { and, eq }) => and(eq(r.id, input.recordingId), eq(r.supervisorId, supervisorId)),
     }),
     db.query.fellow.findFirst({
-      where: (f, { and, eq }) => and(eq(f.id, input.fellowId), eq(f.supervisorId, supervisorId)),
+      where: (f, { and, eq, inArray }) =>
+        and(eq(f.id, input.fellowId), inArray(f.id, supervisedFellowIds(supervisorId))),
       columns: { id: true },
     }),
     db.query.interventionGroup.findFirst({

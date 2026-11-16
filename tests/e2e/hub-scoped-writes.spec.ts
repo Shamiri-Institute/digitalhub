@@ -5,12 +5,17 @@ import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import {
+  fellow,
+  implementerMember,
   interventionSession,
   student,
   studentAttendance,
   triageEvent,
   triageEventAudit,
+  user,
 } from "#/db/schema";
+import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
+import { objectId } from "#/lib/crypto";
 import { signableMember, signInWithEmail, required } from "#/tests/helpers";
 import { chooseRowAction, getUrl, rowWithCell } from "#/tests/pages/helpers";
 import { sessionDisplayName } from "#/lib/utils";
@@ -468,4 +473,81 @@ test("a fellow documents a triage event; another fellow at the school does not s
   await documentTriage(triage.otherAdmissionNumber);
   const otherAttendance = await openAttendance();
   await expect(otherAttendance.getByText("1 student triaged", { exact: true })).toBeVisible();
+});
+
+test("a hub coordinator edits a fellow of their hub, and cannot once the fellow moves to another hub", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const otherHub = await db.query.hub.findFirst({
+    where: (h, { ne }) => ne(h.id, coordinator.hubId),
+    columns: { id: true },
+  });
+  required(otherHub, "a second hub");
+  const [county] = KENYAN_COUNTIES;
+  required(county, "a county");
+  const label = `E2E Scoped Fellow ${Date.now()}`;
+  const fellowEmail = `e2e-scoped-fellow-${Date.now()}@example.com`;
+  const fellowId = objectId("fellow");
+  // Fellows are added through a form another spec covers; this one needs a fellow it can move.
+  await db.insert(fellow).values({
+    id: fellowId,
+    fellowName: label,
+    fellowEmail,
+    hubId: coordinator.hubId,
+    implementerId: coordinator.implementerId,
+    cellNumber: "0712345678",
+    mpesaName: label,
+    mpesaNumber: "0712345678",
+    idNumber: "12345678",
+    gender: "Female",
+    county: county.name,
+    subCounty: county.sub_counties[0],
+    dateOfBirth: new Date("2000-01-01"),
+  });
+  const [fellowUser] = await db
+    .insert(user)
+    .values({ email: fellowEmail, name: label })
+    .returning({ id: user.id });
+  required(fellowUser, "the fellow's user");
+  await db.insert(implementerMember).values({
+    implementerId: coordinator.implementerId,
+    userId: fellowUser.id,
+    role: "FELLOW",
+    identifier: fellowId,
+  });
+  undo(async () => {
+    await db.delete(implementerMember).where(eq(implementerMember.userId, fellowUser.id));
+    await db.delete(user).where(eq(user.id, fellowUser.id));
+    await db.delete(fellow).where(eq(fellow.id, fellowId));
+  });
+
+  await signInWithEmail(context, coordinator.email);
+  await page.goto(getUrl("/hc/fellows"));
+  const main = page.getByRole("main");
+  const editDialog = page.getByRole("dialog", { name: "Edit fellow information" });
+  await chooseRowAction(page, await rowWithCell(page, main, label), "Edit fellow information");
+  await editDialog.getByLabel("Full name").first().fill(`${label} renamed`);
+  await editDialog.getByRole("button", { name: "Update & Save" }).click();
+  await expect(editDialog).toBeHidden();
+  await page.reload();
+  await expect(await rowWithCell(page, main, `${label} renamed`)).toHaveCount(1);
+
+  await chooseRowAction(
+    page,
+    await rowWithCell(page, main, `${label} renamed`),
+    "Edit fellow information",
+  );
+  await editDialog.getByLabel("M-Pesa number").fill("0711111111");
+  await db.update(fellow).set({ hubId: otherHub.id }).where(eq(fellow.id, fellowId));
+  await editDialog.getByRole("button", { name: "Update & Save" }).click();
+  await expect(page.getByText("Fellow not found").first()).toBeVisible();
+
+  // A write that must not happen; the coordinator no longer sees the fellow.
+  const storedFellow = await db.query.fellow.findFirst({
+    where: (f, { eq }) => eq(f.id, fellowId),
+    columns: { mpesaNumber: true },
+  });
+  expect(storedFellow?.mpesaNumber).toBe("0712345678");
 });

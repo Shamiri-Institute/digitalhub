@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray, isNull, ne, or, type SQL } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, ne, or, type SQL } from "drizzle-orm";
 import { refresh, revalidatePath } from "next/cache";
 import type { z } from "zod";
 
@@ -13,7 +13,6 @@ import {
 import { db } from "#/db/client";
 import { ImplementerRole, SessionStatus } from "#/db/enums";
 import {
-  fellow,
   interventionGroup,
   interventionSession,
   interventionSessionRating,
@@ -24,7 +23,11 @@ import {
 import { getActiveProjectId } from "#/lib/active-project-id";
 import { clinicalCasesCountExtras, fetchScheduleSupervisors } from "#/lib/actions/schedule-data";
 import { NotFoundError, requireAuthRole } from "#/lib/auth/require-auth-role";
-import { requireHubRole, requireSchoolInHub } from "#/lib/auth/require-hub-role";
+import {
+  requireHubRole,
+  requireSchoolInHub,
+  supervisedFellowIds,
+} from "#/lib/auth/require-hub-role";
 import { objectId } from "#/lib/crypto";
 import { requireEvaluationEditable } from "#/lib/evaluation-edit-window";
 
@@ -250,10 +253,9 @@ export async function submitQualitativeFeedback({
 
 export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSchema>) {
   try {
-    const { identifier: supervisorId } = await requireAuthRole(ImplementerRole.SUPERVISOR);
-    if (!supervisorId) {
-      return { success: false, message: "Supervisor not found" };
-    }
+    const { profileId: supervisorId, hubId: supervisorHubId } = await requireHubRole(
+      ImplementerRole.SUPERVISOR,
+    );
 
     const {
       studentBehaviorRating,
@@ -267,6 +269,7 @@ export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSc
     } = SessionRatingsSchema.parse(data);
 
     const session = await findSessionWithSchoolOrThrow(sessionId);
+    requireSessionInCallerHub(session, supervisorHubId);
 
     if (session.school?.assignedSupervisorId !== supervisorId) {
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
@@ -427,10 +430,7 @@ async function requireSessionVisibleToCaller(sessionId: string) {
   requireSessionInCallerHub(session, hubId);
   const callerGroups =
     role === ImplementerRole.SUPERVISOR
-      ? inArray(
-          interventionGroup.leaderId,
-          db.select({ id: fellow.id }).from(fellow).where(eq(fellow.supervisorId, profileId)),
-        )
+      ? inArray(interventionGroup.leaderId, supervisedFellowIds(profileId))
       : undefined;
   return { membership, callerGroups, sessionHubId };
 }
@@ -509,6 +509,10 @@ export async function countSessionGroupAttendance(sessionId: string, fellowId: s
   }
   return db.$count(
     studentAttendance,
-    and(eq(studentAttendance.sessionId, sessionId), eq(studentAttendance.fellowId, fellowId)),
+    and(
+      eq(studentAttendance.sessionId, sessionId),
+      eq(studentAttendance.fellowId, fellowId),
+      isNotNull(studentAttendance.attended),
+    ),
   );
 }

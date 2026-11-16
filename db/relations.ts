@@ -18,10 +18,13 @@ import {
   survey,
   surveyPrintFile,
   surveyPrintRun,
+  surveyAnswer,
   surveyQuestionnaire,
   surveyQuestionnairePage,
+  surveyScanPage,
   surveyUpload,
   surveyVersion,
+  surveyVersionField,
   fellow,
   fellowAttendance,
   fellowComplaints,
@@ -56,9 +59,7 @@ import {
   supervisor,
   supervisorAttendance,
   supervisorComplaints,
-  ticketEscalations,
-  ticketReassignments,
-  ticketResolutions,
+  ticketEvents,
   tickets,
   triageEvent,
   triageEventAudit,
@@ -304,6 +305,16 @@ export const surveyVersionRelations = relations(surveyVersion, ({ one, many }) =
     relationName: "SurveyVersion_basedOnVersion",
   }),
   printRuns: many(surveyPrintRun, { relationName: "SurveyPrintRun_version" }),
+  fields: many(surveyVersionField, { relationName: "SurveyVersionField_version" }),
+}));
+
+export const surveyVersionFieldRelations = relations(surveyVersionField, ({ one, many }) => ({
+  version: one(surveyVersion, {
+    fields: [surveyVersionField.versionId],
+    references: [surveyVersion.id],
+    relationName: "SurveyVersionField_version",
+  }),
+  answers: many(surveyAnswer, { relationName: "SurveyAnswer_versionField" }),
 }));
 
 export const surveyPrintRunRelations = relations(surveyPrintRun, ({ one, many }) => ({
@@ -339,7 +350,7 @@ export const surveyPrintFileRelations = relations(surveyPrintFile, ({ one }) => 
   }),
 }));
 
-export const surveyUploadRelations = relations(surveyUpload, ({ one }) => ({
+export const surveyUploadRelations = relations(surveyUpload, ({ one, many }) => ({
   hub: one(hub, {
     fields: [surveyUpload.hubId],
     references: [hub.id],
@@ -349,6 +360,50 @@ export const surveyUploadRelations = relations(surveyUpload, ({ one }) => ({
     fields: [surveyUpload.uploadedBy],
     references: [user.id],
     relationName: "SurveyUpload_uploadedByUser",
+  }),
+  scanPages: many(surveyScanPage, { relationName: "SurveyScanPage_upload" }),
+}));
+
+export const surveyScanPageRelations = relations(surveyScanPage, ({ one, many }) => ({
+  upload: one(surveyUpload, {
+    fields: [surveyScanPage.uploadId],
+    references: [surveyUpload.id],
+    relationName: "SurveyScanPage_upload",
+  }),
+  questionnairePage: one(surveyQuestionnairePage, {
+    fields: [surveyScanPage.questionnairePageId],
+    references: [surveyQuestionnairePage.id],
+    relationName: "SurveyScanPage_questionnairePage",
+  }),
+  duplicateOf: one(surveyScanPage, {
+    fields: [surveyScanPage.duplicateOfId],
+    references: [surveyScanPage.id],
+    relationName: "SurveyScanPage_duplicateOf",
+  }),
+  duplicates: many(surveyScanPage, { relationName: "SurveyScanPage_duplicateOf" }),
+  answers: many(surveyAnswer, { relationName: "SurveyAnswer_scanPage" }),
+}));
+
+export const surveyAnswerRelations = relations(surveyAnswer, ({ one }) => ({
+  questionnaire: one(surveyQuestionnaire, {
+    fields: [surveyAnswer.questionnaireId],
+    references: [surveyQuestionnaire.id],
+    relationName: "SurveyAnswer_questionnaire",
+  }),
+  versionField: one(surveyVersionField, {
+    fields: [surveyAnswer.versionId, surveyAnswer.field],
+    references: [surveyVersionField.versionId, surveyVersionField.field],
+    relationName: "SurveyAnswer_versionField",
+  }),
+  scanPage: one(surveyScanPage, {
+    fields: [surveyAnswer.scanPageId],
+    references: [surveyScanPage.id],
+    relationName: "SurveyAnswer_scanPage",
+  }),
+  reviewedByUser: one(user, {
+    fields: [surveyAnswer.reviewedBy],
+    references: [user.id],
+    relationName: "SurveyAnswer_reviewedByUser",
   }),
 }));
 
@@ -374,15 +429,20 @@ export const surveyQuestionnaireRelations = relations(surveyQuestionnaire, ({ on
     relationName: "SurveyQuestionnaire_student",
   }),
   pages: many(surveyQuestionnairePage, { relationName: "SurveyQuestionnairePage_questionnaire" }),
+  answers: many(surveyAnswer, { relationName: "SurveyAnswer_questionnaire" }),
 }));
 
-export const surveyQuestionnairePageRelations = relations(surveyQuestionnairePage, ({ one }) => ({
-  questionnaire: one(surveyQuestionnaire, {
-    fields: [surveyQuestionnairePage.questionnaireId],
-    references: [surveyQuestionnaire.id],
-    relationName: "SurveyQuestionnairePage_questionnaire",
+export const surveyQuestionnairePageRelations = relations(
+  surveyQuestionnairePage,
+  ({ one, many }) => ({
+    questionnaire: one(surveyQuestionnaire, {
+      fields: [surveyQuestionnairePage.questionnaireId],
+      references: [surveyQuestionnaire.id],
+      relationName: "SurveyQuestionnairePage_questionnaire",
+    }),
+    scans: many(surveyScanPage, { relationName: "SurveyScanPage_questionnairePage" }),
   }),
-}));
+);
 
 export const fellowRelations = relations(fellow, ({ one, many }) => ({
   studentAttendances: many(studentAttendance, { relationName: "StudentAttendance_fellow" }),
@@ -1037,57 +1097,15 @@ export const supervisorComplaintsRelations = relations(supervisorComplaints, ({ 
   }),
 }));
 
-export const ticketEscalationsRelations = relations(ticketEscalations, ({ one }) => ({
+export const ticketEventsRelations = relations(ticketEvents, ({ one }) => ({
   ticket: one(tickets, {
-    fields: [ticketEscalations.ticketId],
+    fields: [ticketEvents.ticketId],
     references: [tickets.id],
-    relationName: "TicketEscalations_ticket",
+    relationName: "TicketEvents_ticket",
   }),
-  escalatedByUser: one(user, {
-    fields: [ticketEscalations.escalatedById],
+  actor: one(user, {
+    fields: [ticketEvents.actorId],
     references: [user.id],
-    relationName: "EscalatedByUser",
-  }),
-  escalatedToUser: one(user, {
-    fields: [ticketEscalations.escalatedToId],
-    references: [user.id],
-    relationName: "EscalatedToUser",
-  }),
-  reassignments: one(ticketReassignments),
-}));
-
-export const ticketReassignmentsRelations = relations(ticketReassignments, ({ one }) => ({
-  ticket: one(tickets, {
-    fields: [ticketReassignments.ticketId],
-    references: [tickets.id],
-    relationName: "TicketReassignments_ticket",
-  }),
-  escalation: one(ticketEscalations, {
-    fields: [ticketReassignments.escalationId],
-    references: [ticketEscalations.id],
-  }),
-  reassignedFromUser: one(user, {
-    fields: [ticketReassignments.reassignedFrom],
-    references: [user.id],
-    relationName: "reassignedFromUser",
-  }),
-  reassignedToUser: one(user, {
-    fields: [ticketReassignments.reassignedTo],
-    references: [user.id],
-    relationName: "reassignedToUser",
-  }),
-}));
-
-export const ticketResolutionsRelations = relations(ticketResolutions, ({ one }) => ({
-  ticket: one(tickets, {
-    fields: [ticketResolutions.ticketId],
-    references: [tickets.id],
-    relationName: "TicketResolutions_ticket",
-  }),
-  resolvedByUser: one(user, {
-    fields: [ticketResolutions.resolvedById],
-    references: [user.id],
-    relationName: "resolvedByUser",
   }),
 }));
 
@@ -1097,9 +1115,7 @@ export const ticketsRelations = relations(tickets, ({ one, many }) => ({
     references: [user.id],
     relationName: "Tickets_creator",
   }),
-  escalations: many(ticketEscalations, { relationName: "TicketEscalations_ticket" }),
-  resolutions: many(ticketResolutions, { relationName: "TicketResolutions_ticket" }),
-  reassignments: many(ticketReassignments, { relationName: "TicketReassignments_ticket" }),
+  events: many(ticketEvents, { relationName: "TicketEvents_ticket" }),
 }));
 
 export const triageEventRelations = relations(triageEvent, ({ one, many }) => ({
@@ -1187,11 +1203,6 @@ export const userRelations = relations(user, ({ one, many }) => ({
   sessionRecordings: many(sessionRecording, { relationName: "SessionRecording_uploader" }),
   attendanceDocuments: many(attendanceDocuments, { relationName: "AttendanceDocuments_user" }),
   tickets: many(tickets, { relationName: "Tickets_creator" }),
-  escalationsMade: many(ticketEscalations, { relationName: "EscalatedByUser" }),
-  escalationsReceived: many(ticketEscalations, { relationName: "EscalatedToUser" }),
-  resolvedTickets: many(ticketResolutions, { relationName: "resolvedByUser" }),
-  reassignmentsMade: many(ticketReassignments, { relationName: "reassignedFromUser" }),
-  reassignmentsReceived: many(ticketReassignments, { relationName: "reassignedToUser" }),
 }));
 
 export const weeklyFellowRatingsRelations = relations(weeklyFellowRatings, ({ one }) => ({

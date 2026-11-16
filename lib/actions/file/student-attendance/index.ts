@@ -1,13 +1,12 @@
 "use server";
 
-import { and, eq, inArray, isNull, or, type SQL } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, or, type SQL } from "drizzle-orm";
 
 import { getCurrentUserSession } from "#/app/auth";
 import { db, isSerializationFailure } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import {
   attendanceDocuments,
-  fellow,
   hub,
   hubCoordinator,
   interventionGroup,
@@ -28,6 +27,7 @@ import {
   NO_ATTENDANCE_DOCUMENT_MESSAGE,
   type StudentAttendanceDocsFilters,
 } from "./types";
+import { supervisedFellowIds } from "#/lib/auth/require-hub-role";
 
 export type { AttendanceS3KeyParams } from "#/lib/s3/s3.types";
 export type {
@@ -69,10 +69,7 @@ function buildAttendanceScopeFilter(
     case ImplementerRole.SUPERVISOR:
       return (
         or(
-          inArray(
-            interventionGroup.leaderId,
-            db.select({ id: fellow.id }).from(fellow).where(eq(fellow.supervisorId, identifier)),
-          ),
+          inArray(interventionGroup.leaderId, supervisedFellowIds(identifier)),
           inArray(
             interventionGroup.schoolId,
             db
@@ -210,6 +207,7 @@ export async function createAttendanceDocument(
         and(
           eq(studentAttendance.sessionId, payload.sessionId),
           eq(studentAttendance.groupId, payload.groupId),
+          isNotNull(studentAttendance.attended),
         ),
       ),
       verifyUploadedObject(payload.link, "student-attendance"),

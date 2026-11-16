@@ -38,7 +38,9 @@ async function pickLoneOccurredSessionWithUnmarkedSupervisor() {
     join implementer_members m on m.identifier = hc.id and m.role = 'HUB_COORDINATOR'
     join users u on u.id = m.user_id
     join schools s on s.hub_id = hc.assigned_hub_id and s.archived_at is null
+    -- Other specs add and remove their own schools and sessions of yesterday while this one runs.
     join intervention_sessions i on i.school_id = s.id and i.occurred
+      and i.session_date < now() - interval '2 days'
       and coalesce(i.status::text, '') <> 'Cancelled'
     join supervisors sv on sv.hub_id = hc.assigned_hub_id and sv.supervisor_name is not null
       and coalesce(sv.dropped_out, false) = false

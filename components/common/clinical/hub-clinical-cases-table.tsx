@@ -10,10 +10,12 @@ export default function AllHubClinicalCasesTable({
   cases,
   title,
   emptyStateMessage,
+  mayReopen,
 }: {
   cases: HubClinicalCases[];
   title: string;
   emptyStateMessage: string;
+  mayReopen: boolean;
 }) {
   return (
     <>
@@ -23,7 +25,7 @@ export default function AllHubClinicalCasesTable({
       <DataTable
         urlState
         data={cases}
-        columns={columns}
+        columns={columns({ mayReopen })}
         className="data-table data-table-action bg-white lg:mt-4"
         renderSubComponent={({ row }) => (
           <div className="space-y-6 p-4">

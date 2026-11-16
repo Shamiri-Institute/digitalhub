@@ -3,10 +3,16 @@ import { eq } from "drizzle-orm";
 import { db } from "#/db/client";
 import { clinicalScreeningInfo } from "#/db/schema";
 import { expect, test } from "#/tests/fixtures";
-import { createClinicalCase, emailForProfile, required, signInWithEmail } from "#/tests/helpers";
+import {
+  createClinicalCase,
+  emailForProfile,
+  required,
+  signInAs,
+  signInWithEmail,
+} from "#/tests/helpers";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
 
-test("the clinical lead sees which students have more than one open case", async ({
+test("the clinical lead and the clinical team see which students have more than one open case", async ({
   page,
   context,
   undo,
@@ -80,4 +86,13 @@ test("the clinical lead sees which students have more than one open case", async
   const singleRow = await searchRows(page, studentWithOneCase.pseudonym);
   await expect(singleRow).toHaveCount(1);
   await expect(singleRow.getByText("Multiple open cases")).toHaveCount(0);
+
+  await context.clearCookies();
+  await signInAs(context, "CLINICAL_TEAM");
+  await page.goto(getUrl("/ct/clinical"));
+  const teamRows = await searchRows(page, studentWithTwoCases.pseudonym);
+  await expect(teamRows).toHaveCount(2);
+  for (const row of await teamRows.all()) {
+    await expect(row.getByText("Multiple open cases")).toBeVisible();
+  }
 });

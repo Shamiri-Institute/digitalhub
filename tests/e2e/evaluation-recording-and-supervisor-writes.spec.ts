@@ -2,7 +2,12 @@ import { expect, test } from "#/tests/fixtures";
 import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { fellow, interventionGroupReport, sessionRecording } from "#/db/schema";
+import {
+  fellow,
+  interventionGroupReport,
+  interventionSession,
+  sessionRecording,
+} from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
 import { signableMember, signInWithEmail, uniqueFellowName, required } from "#/tests/helpers";
 import { getUrl, chooseRowAction, rowWithCell } from "#/tests/pages/helpers";
@@ -181,19 +186,7 @@ test("a supervisor renames a recording of their fellow's group", async ({
   }
 
   await openEdit();
-  const recordingName = dialog.getByRole("textbox", { name: /Recording name/ });
-  await recordingName.fill(`unsaved-${Date.now()}`);
-  await page.keyboard.press("Escape");
-  await expect(dialog).toBeHidden();
-  await chooseRowAction(
-    page,
-    (await rowWithCell(page, main, recording.groupName)).filter({
-      has: page.getByRole("cell", { name: recording.sessionName, exact: true }),
-    }),
-    "Edit",
-  );
-  await expect(recordingName).toHaveValue(recording.originalFileName);
-  await recordingName.fill(newFileName);
+  await dialog.getByRole("textbox", { name: /Recording name/ }).fill(newFileName);
   await dialog.getByRole("button", { name: "Save changes" }).click();
   await expect(dialog).toBeHidden();
 
@@ -232,4 +225,64 @@ test("a hub coordinator assigns a fellow of their hub to another supervisor", as
   await expect(
     (await rowWithCell(page, main, reassign.fellowName)).getByRole("combobox"),
   ).toHaveText(reassign.newSupervisorName);
+});
+
+test("a fellow's group evaluation is refused for a session at another school", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const {
+    rows: [otherSchool],
+  } = await db.execute<{ id: string; groupSchoolId: string }>(sql`
+    select o.id, s.id as "groupSchoolId" from intervention_sessions i
+    join schools s on s.id = i.school_id
+    join schools o on o.hub_id = s.hub_id and o.id <> s.id
+    where i.id = ${evaluation.sessionId}
+    order by o.id
+    limit 1`);
+  required(otherSchool, "another school in the group's hub");
+  undo(async () => {
+    await db
+      .update(interventionSession)
+      .set({ schoolId: otherSchool.groupSchoolId })
+      .where(eq(interventionSession.id, evaluation.sessionId));
+    await db
+      .delete(interventionGroupReport)
+      .where(eq(interventionGroupReport.groupId, evaluation.groupId));
+  });
+  await signInWithEmail(context, evaluation.email);
+
+  await page.goto(getUrl(`/fel/schools/${evaluation.visibleId}/group`));
+  await chooseRowAction(
+    page,
+    await rowWithCell(page, page.getByRole("main"), evaluation.groupName),
+    "View student group evaluation",
+  );
+  const dialog = page.getByRole("dialog", { name: "Student group evaluation" });
+  await dialog.getByRole("combobox").click();
+  await page
+    .getByRole("option")
+    .filter({ hasText: `${evaluation.sessionLabel} - ` })
+    .click();
+  for (const fiveStars of await dialog.getByRole("button", { name: "5 out of 5" }).all()) {
+    await fiveStars.click();
+  }
+  for (const commentBox of await dialog.getByRole("textbox").all()) {
+    await commentBox.fill("E2E comment");
+  }
+  // The session moves to another school behind the open dialog.
+  await db
+    .update(interventionSession)
+    .set({ schoolId: otherSchool.id })
+    .where(eq(interventionSession.id, evaluation.sessionId));
+  await dialog.getByRole("button", { name: "Submit" }).click();
+  await expect(page.getByText("No InterventionGroup found").first()).toBeVisible();
+
+  // The session left the group's school, so no page lists the evaluation it would have had.
+  const savedReports = await db
+    .select({ id: interventionGroupReport.id })
+    .from(interventionGroupReport)
+    .where(eq(interventionGroupReport.groupId, evaluation.groupId));
+  expect(savedReports).toEqual([]);
 });

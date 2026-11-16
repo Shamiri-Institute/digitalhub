@@ -4,7 +4,8 @@ import { and, eq } from "drizzle-orm";
 import { refresh, revalidatePath } from "next/cache";
 import { currentSupervisor } from "#/app/auth";
 import { db } from "#/db/client";
-import { clinicalScreeningInfo, fellow, triageEvent } from "#/db/schema";
+import { clinicalScreeningInfo, triageEvent } from "#/db/schema";
+import { supervisedFellowIds } from "#/lib/auth/require-hub-role";
 
 export type TriageEventForSupervisor = Awaited<
   ReturnType<typeof getTriageEventsForSupervisor>
@@ -12,17 +13,13 @@ export type TriageEventForSupervisor = Awaited<
 
 export type FellowForSupervisor = { id: string; fellowName: string | null };
 
-function supervisedFellowIds(supervisorId: string) {
-  return db.select({ id: fellow.id }).from(fellow).where(eq(fellow.supervisorId, supervisorId));
-}
-
 export async function getFellowsForSupervisor(): Promise<FellowForSupervisor[]> {
   const supervisor = await currentSupervisor();
   if (!supervisor?.profile) throw new Error("Unauthorised");
   const supervisorId = supervisor.profile.id;
 
   return db.query.fellow.findMany({
-    where: (f, { eq }) => eq(f.supervisorId, supervisorId),
+    where: (f, { inArray }) => inArray(f.id, supervisedFellowIds(supervisorId)),
     columns: { id: true, fellowName: true },
     orderBy: (f, { asc }) => asc(f.fellowName),
   });
