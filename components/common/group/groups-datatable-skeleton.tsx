@@ -1,41 +1,17 @@
-"use client";
+import TableSkeleton from "#/components/common/table-skeleton";
 
-import { ImplementerRole } from "#/db/enums";
-import { DatatableSkeleton } from "#/components/common/build-skeleton-columns";
-import { columns } from "#/components/common/group/columns";
-import CreateGroup from "#/components/common/group/create-group";
-import type { school } from "#/db/schema";
-
-export default function GroupsDatatableSkeleton({
-  role,
-  rows = 10,
-}: {
-  role: ImplementerRole;
-  rows?: number;
-}) {
-  const renderTableActions =
-    role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR ? (
-      <CreateGroup
-        supervisors={[]}
-        school={
-          {
-            schoolName: "",
-          } as typeof school.$inferSelect
-        }
-        groupCount={0}
-        disabled={true}
-      />
-    ) : null;
-
+export default function GroupsDatatableSkeleton({ rows }: { rows?: number }) {
   return (
-    <DatatableSkeleton
+    <TableSkeleton
       rows={rows}
-      columns={columns({
-        openDialog: () => {},
-        role,
-      })}
-      columnVisibilityState={{ "Active Status": false }}
-      renderTableActions={renderTableActions}
+      columnNames={[
+        "Group",
+        "Group Rating",
+        "Supervisor",
+        "Fellow",
+        "No. of students",
+        "Group Type",
+      ]}
     />
   );
 }

@@ -1,25 +1,10 @@
-"use client";
+import TableSkeleton from "#/components/common/table-skeleton";
 
-import { ImplementerRole } from "#/db/enums";
-import { DatatableSkeleton } from "#/components/common/build-skeleton-columns";
-import { isEscalationInitiatorRole } from "#/lib/actions/ticket/types";
-import { columns } from "./columns";
-import CreateTicketDialog from "./create-ticket-dialog";
-
-export default function TicketsLoading({
-  userRole = ImplementerRole.FELLOW,
-  rows = 5,
-}: {
-  userRole?: ImplementerRole;
-  rows?: number;
-}) {
+export default function TicketsLoading() {
   return (
-    <DatatableSkeleton
-      rows={rows}
-      columns={columns({ openDialog: () => {}, role: userRole })}
-      renderTableActions={
-        isEscalationInitiatorRole(userRole) ? <CreateTicketDialog disabled /> : null
-      }
+    <TableSkeleton
+      rows={5}
+      columnNames={["Created Date", "Subject", "Category", "Priority", "Current Tier", "Status"]}
     />
   );
 }

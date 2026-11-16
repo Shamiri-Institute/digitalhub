@@ -1,28 +1,5 @@
-"use client";
+import TableSkeleton from "#/components/common/table-skeleton";
 
-import type { ImplementerRole } from "#/db/enums";
-import { DatatableSkeleton } from "#/components/common/build-skeleton-columns";
-import { fellowSchoolsColumns } from "#/components/common/fellow/fellow-schools-columns";
-
-export default function FellowSchoolsDatatableSkeleton({ role }: { role: ImplementerRole }) {
-  return (
-    <DatatableSkeleton
-      columns={fellowSchoolsColumns({
-        state: {
-          openDialog: () => {},
-          openEditDialog: () => {},
-          role,
-        },
-      })}
-      columnVisibilityState={{
-        "Average Rating": false,
-        "Active Status": false,
-        County: false,
-        "Fellow Email": false,
-        "Phone Number": false,
-        Gender: false,
-        "Sub-county": false,
-      }}
-    />
-  );
+export default function FellowSchoolsDatatableSkeleton() {
+  return <TableSkeleton columnNames={["Name", "Sessions Attended", "MPESA Number"]} />;
 }

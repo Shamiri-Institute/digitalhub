@@ -1,22 +1,9 @@
-"use client";
-
-import { DatatableSkeleton } from "#/components/common/build-skeleton-columns";
-import { columns } from "#/components/common/supervisor/columns";
+import TableSkeleton from "#/components/common/table-skeleton";
 
 export default function SupervisorsDatatableSkeleton() {
   return (
-    <DatatableSkeleton
-      columns={columns({
-        openMarkAttendance: () => {},
-        sessions: [],
-      })}
-      columnVisibilityState={{
-        Gender: false,
-        "Phone number": false,
-        Status: false,
-        checkbox: false,
-        button: false,
-      }}
+    <TableSkeleton
+      columnNames={["Name", "Assigned school", "Attendance history", "No. of fellows"]}
     />
   );
 }
