@@ -71,7 +71,6 @@ export default function GroupTransferHistory({
         />
         <DialogFooter className="flex justify-end gap-2">
           <Button
-            variant="brand"
             onClick={() => {
               onOpenChange(false);
             }}

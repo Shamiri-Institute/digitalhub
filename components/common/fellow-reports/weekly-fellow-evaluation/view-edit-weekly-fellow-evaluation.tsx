@@ -44,7 +44,7 @@ export default function ViewEditWeeklyFellowEvaluation({
   weeklyFellowEvaluation,
   action,
 }: {
-  children: React.ReactNode;
+  children: React.ReactElement;
   weeklyFellowEvaluation: WeeklyFellowEvaluation["week"][number];
   action: "view" | "edit";
 }) {
@@ -95,7 +95,7 @@ export default function ViewEditWeeklyFellowEvaluation({
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} />
       <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
         <DialogHeader className="bg-white">
           <DialogTitle>{`${action === "view" ? "View" : "Edit"} Weekly fellow evaluation`}</DialogTitle>
@@ -239,7 +239,6 @@ export default function ViewEditWeeklyFellowEvaluation({
                     Cancel
                   </Button>
                   <Button
-                    variant="brand"
                     type="submit"
                     loading={form.formState.isSubmitting}
                     disabled={form.formState.isSubmitting}

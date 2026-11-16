@@ -42,6 +42,14 @@ const PRINT_FONTS = ["./public/fonts/figtree/*.ttf"];
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    // Menus, selects, dialogs and tooltips load on the visitor's first interaction, through
+    // separate imports that share Base UI's internals. A request cost below the default puts those
+    // internals in shared files instead of copying them into each import. The minimum chunk size
+    // stays at its default: lowering it split the files a page loads before its first paint into
+    // 8-13 more, and on a slow connection the first paint waits on each request.
+    turbopackChunking: { requestCost: 20000 },
+  },
   // CI's E2E build skips the type check its typecheck job runs on the same commit.
   typescript: { ignoreBuildErrors: process.env.CI_TYPES_CHECKED_ELSEWHERE === "1" },
   // ffmpeg-static locates its binary beside its own files, so it is loaded at runtime, and the

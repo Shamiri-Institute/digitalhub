@@ -12,33 +12,33 @@ async function GapStats() {
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
       <div className="rounded-lg border p-4">
-        <p className="text-xs text-shamiri-text-grey">Total escalations</p>
+        <p className="text-xs text-muted-foreground">Total escalations</p>
         <p className="mt-1 text-2xl font-bold">{stats.totalEscalations}</p>
       </div>
       <div
         className={cn(
           "rounded-lg border p-4",
-          stats.totalGaps > 0 && "border-red-border bg-red-bg",
+          stats.totalGaps > 0 && "border-destructive-border bg-destructive-bg",
         )}
       >
-        <p className="text-xs text-shamiri-text-grey">No case opened</p>
-        <p className={cn("mt-1 text-2xl font-bold", stats.totalGaps > 0 && "text-red-base")}>
+        <p className="text-xs text-muted-foreground">No case opened</p>
+        <p className={cn("mt-1 text-2xl font-bold", stats.totalGaps > 0 && "text-destructive")}>
           {stats.totalGaps}
         </p>
       </div>
       <div
         className={cn(
           "rounded-lg border p-4",
-          stats.overdueCount > 0 && "border-red-border bg-red-bg",
+          stats.overdueCount > 0 && "border-destructive-border bg-destructive-bg",
         )}
       >
-        <p className="text-xs text-shamiri-text-grey">Overdue (&gt;3 days)</p>
-        <p className={cn("mt-1 text-2xl font-bold", stats.overdueCount > 0 && "text-red-base")}>
+        <p className="text-xs text-muted-foreground">Overdue (&gt;3 days)</p>
+        <p className={cn("mt-1 text-2xl font-bold", stats.overdueCount > 0 && "text-destructive")}>
           {stats.overdueCount}
         </p>
       </div>
       <div className="rounded-lg border p-4">
-        <p className="text-xs text-shamiri-text-grey">Case conversion rate</p>
+        <p className="text-xs text-muted-foreground">Case conversion rate</p>
         <p className="mt-1 text-2xl font-bold">{stats.conversionRate}%</p>
       </div>
     </div>
@@ -89,12 +89,12 @@ export default function EscalationGapsPage() {
         <div className="flex items-start justify-between">
           <div>
             <PageHeading title="Escalation gap report" />
-            <p className="mt-1 text-sm text-shamiri-text-grey">
+            <p className="mt-1 text-sm text-muted-foreground">
               Risk-positive triage events with no open clinical case. Any non-zero list requires
               immediate attention.
             </p>
           </div>
-          <div className="flex items-center gap-1.5 rounded-md bg-red-bg px-3 py-1.5 text-xs font-medium text-red-base">
+          <div className="flex items-center gap-1.5 rounded-md bg-destructive-bg px-3 py-1.5 text-xs font-medium text-destructive">
             <AlertTriangle className="h-3.5 w-3.5" />
             Safety-critical view
           </div>
@@ -105,7 +105,7 @@ export default function EscalationGapsPage() {
         <Separator />
         <div className="space-y-2">
           <h2 className="text-sm font-semibold">Unmatched escalations — sorted oldest first</h2>
-          <p className="text-xs text-shamiri-text-grey">
+          <p className="text-xs text-muted-foreground">
             Days elapsed is shown in red when &gt;3 days and dark red when &gt;7 days.
           </p>
         </div>

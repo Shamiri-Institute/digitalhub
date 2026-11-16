@@ -4,12 +4,20 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import Image from "next/image";
 import type { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
-import ClinicalLeadCaseActionsDropdownMenu from "#/components/common/clinical/clinical-case-actions-dropdown-cl-ct";
+import { rowActionsButton } from "#/components/common/row-actions-menu";
+import { deferred } from "#/components/deferred";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import { sortBy } from "#/lib/table-view";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
+
+// The row menu holds the case dialogs, so it loads after the page; its button is drawn until then.
+const ClinicalLeadCaseActionsDropdownMenu = deferred(() =>
+  import("#/components/common/clinical/clinical-case-actions-dropdown-cl-ct").then(
+    (mod) => mod.default,
+  ),
+);
 
 /** `mayReopen` offers "Un-terminate case": clinical leads reopen cases, the clinical team only reads. */
 export const columns = ({ mayReopen }: { mayReopen: boolean }): ColumnDef<HubClinicalCases>[] => [
@@ -51,7 +59,7 @@ export const columns = ({ mayReopen }: { mayReopen: boolean }): ColumnDef<HubCli
       return (
         <div className="flex items-center gap-1">
           <span>{row.original.pseudonym}</span>
-          {flagged ? <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" /> : null}
+          {flagged ? <Icons.flagTriangleRight className="h-4 w-4 text-destructive" /> : null}
           {row.original.studentHasMultipleOpenCases ? (
             <Badge variant="warning">Multiple open cases</Badge>
           ) : null}
@@ -70,7 +78,7 @@ export const columns = ({ mayReopen }: { mayReopen: boolean }): ColumnDef<HubCli
       const riskLevel = row.original.riskStatus || "N/A";
       return (
         <div className="flex flex-col items-start gap-1">
-          <Badge variant={colors[riskLevel || "shamiri-green"]} className="uppercase">
+          <Badge variant={colors[riskLevel || "success"]} className="uppercase">
             {riskLevel}
           </Badge>
           <span className="text-xs text-muted-foreground">
@@ -89,7 +97,7 @@ export const columns = ({ mayReopen }: { mayReopen: boolean }): ColumnDef<HubCli
       return (
         <div>
           {row.original.hasNotes ? (
-            <Badge variant="shamiri-green">Uploaded</Badge>
+            <Badge variant="success">Uploaded</Badge>
           ) : (
             <Badge variant="destructive">Unavailable</Badge>
           )}
@@ -104,7 +112,7 @@ export const columns = ({ mayReopen }: { mayReopen: boolean }): ColumnDef<HubCli
       return (
         <div>
           {row.original.treatmentPlan ? (
-            <Badge variant="shamiri-green">Uploaded</Badge>
+            <Badge variant="success">Uploaded</Badge>
           ) : (
             <Badge variant="destructive">Unavailable</Badge>
           )}
@@ -116,30 +124,28 @@ export const columns = ({ mayReopen }: { mayReopen: boolean }): ColumnDef<HubCli
     id: "button",
     cell: ({ row }) => {
       return (
-        <ClinicalLeadCaseActionsDropdownMenu clinicalCase={row.original} mayReopen={mayReopen} />
+        <ClinicalLeadCaseActionsDropdownMenu
+          trigger={rowActionsButton(`Actions for ${row.original.pseudonym}`, "bg-white")}
+          clinicalCase={row.original}
+          mayReopen={mayReopen}
+        />
       );
     },
     enableHiding: false,
   },
 ];
 
-type BadgeVariant =
-  | "destructive"
-  | "warning"
-  | "shamiri-green"
-  | "default"
-  | "secondary"
-  | "outline-solid";
+type BadgeVariant = "destructive" | "warning" | "success" | "default" | "secondary" | "outline";
 
 const colors: Record<string, BadgeVariant> = {
-  Active: "shamiri-green",
+  Active: "success",
   FollowUp: "warning",
   Referred: "destructive",
   Terminated: "destructive",
-  Low: "shamiri-green",
+  Low: "success",
   Mid: "warning",
   High: "destructive",
   Severe: "destructive",
-  No: "shamiri-green",
+  No: "success",
   Medium: "warning",
 };

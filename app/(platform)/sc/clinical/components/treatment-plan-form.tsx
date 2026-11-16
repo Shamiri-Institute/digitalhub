@@ -34,7 +34,7 @@ import {
 } from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
-import { stringValidation } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 import { zodResolver } from "#/lib/zod-resolver";
 
 const treatmentInterventions = [
@@ -72,7 +72,7 @@ export default function TreatmentPlanForm({
   clinicalCase,
   role,
 }: {
-  children: React.ReactNode;
+  children: React.ReactElement;
   clinicalCase: ClinicalCases;
   role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
@@ -80,7 +80,7 @@ export default function TreatmentPlanForm({
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} />
       <DialogContent className="z-10 max-h-[90%] max-w-[60vw] overflow-x-auto bg-white p-5">
         <TreatmentPlanFields
           clinicalCase={clinicalCase}
@@ -271,12 +271,14 @@ function TreatmentPlanFields({
           />
 
           <div className="flex justify-end space-x-4">
-            <DialogClose asChild>
-              <Button variant="ghost" type="button">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button variant="brand" type="submit" loading={isSaving} disabled={isSaving}>
+            <DialogClose
+              render={
+                <Button variant="ghost" type="button">
+                  Cancel
+                </Button>
+              }
+            />
+            <Button type="submit" loading={isSaving} disabled={isSaving}>
               Submit
             </Button>
           </div>

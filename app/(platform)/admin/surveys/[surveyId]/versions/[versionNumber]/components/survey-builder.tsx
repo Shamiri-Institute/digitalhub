@@ -149,20 +149,19 @@ export default function SurveyBuilder({
           unprintablePages={unprintablePages}
         />
         <div className="flex shrink-0 items-center justify-end gap-4 sm:pb-2">
-          <p className="text-sm text-shamiri-text-grey" aria-live="polite">
+          <p className="text-sm text-muted-foreground" aria-live="polite">
             {!editable
               ? `${SURVEY_VERSION_STATUS_LABELS[version.status]} versions can't be edited. Start a new draft from the survey page.`
               : unsaved
                 ? "Unsaved changes"
                 : "All changes saved"}
             {itemsWithIssues.size > 0 && (
-              <span className="font-medium text-red-base"> · {itemsWithIssues.size} to fix</span>
+              <span className="font-medium text-destructive"> · {itemsWithIssues.size} to fix</span>
             )}
           </p>
           {editable && (
             <Button
               type="button"
-              variant="brand"
               className="gap-2"
               disabled={!unsaved || saving || stale}
               loading={saving}
@@ -244,7 +243,7 @@ export default function SurveyBuilder({
       ) : (
         <div className="mx-auto max-w-md rounded-xl border border-dashed px-6 py-16 text-center">
           <p className="font-medium">This form has no pages yet</p>
-          <p className="mt-1 text-sm text-shamiri-text-grey">
+          <p className="mt-1 text-sm text-muted-foreground">
             {editable
               ? "Each page here prints as one A4 sheet. Add a page, then add questions to it."
               : "Nothing was added to this version."}
@@ -252,7 +251,6 @@ export default function SurveyBuilder({
           {editable && (
             <Button
               type="button"
-              variant="brand"
               className="mt-6 gap-2"
               onClick={() => dispatchAndShowPage({ type: "addPage" })}
             >

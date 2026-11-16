@@ -1,29 +1,9 @@
-"use client";
+import TableSkeleton from "#/components/common/table-skeleton";
 
-import type { ImplementerRole } from "#/db/enums";
-import { DatatableSkeleton } from "#/components/common/build-skeleton-columns";
-import { columns } from "#/components/common/student/columns";
-
-export default function StudentsDatatableSkeleton({ role }: { role: ImplementerRole }) {
+export default function StudentsDatatableSkeleton() {
   return (
-    <DatatableSkeleton
-      columns={columns({
-        openDialog: () => {},
-        role,
-        sessions: [],
-      })}
-      columnVisibilityState={{
-        Gender: false,
-        "Contact no.": false,
-        "Shamiri ID": false,
-        "Admission number": false,
-        Stream: false,
-        "Grade/Form": false,
-        "Date added": false,
-        Age: false,
-        "Clinical Sessions": false,
-        checkbox: false,
-      }}
+    <TableSkeleton
+      columnNames={["Student Name", "Group Name", "Attendance history", "Questionnaire", "Status"]}
     />
   );
 }

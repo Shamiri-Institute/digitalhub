@@ -52,7 +52,6 @@ export default function HubTabs({ hub }: { hub: AdminHubDetail }) {
               key={segment}
               href={`/admin/hubs/${hub.id}/${segment}`}
               aria-current={active ? "page" : undefined}
-              data-state={active ? "on" : "off"}
               ref={active ? centreInRow : undefined}
               className={cn(toggleVariants(), "form-toggle-button gap-2")}
             >
@@ -62,9 +61,7 @@ export default function HubTabs({ hub }: { hub: AdminHubDetail }) {
                 <span
                   className={cn(
                     "rounded-md px-1.5 text-sm font-semibold tabular-nums",
-                    active
-                      ? "bg-blue-bg text-shamiri-new-blue"
-                      : "bg-shamiri-light-grey text-shamiri-text-dark-grey",
+                    active ? "bg-info-bg text-primary" : "bg-muted text-muted-foreground",
                   )}
                 >
                   {count.toLocaleString("en-US")}

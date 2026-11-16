@@ -1,132 +1,228 @@
 "use client";
 
-import * as SelectPrimitive from "@radix-ui/react-select";
+import { mergeProps } from "@base-ui/react/merge-props";
+import type { Select as SelectParts } from "@base-ui/react/select";
 import { Check } from "lucide-react";
-import type * as React from "react";
+import * as React from "react";
 
+import { afterPage, type StandIn, useStandIn } from "#/components/deferred";
+import { Icons } from "#/components/icons";
 import { cn } from "#/lib/utils";
-import { Icons } from "../icons";
 
-const Select = SelectPrimitive.Root;
+// Base UI's Select is about 45 KB gzipped, and every table page draws one (rows per page) that
+// most visits never open. A select draws its closed trigger, with the chosen label, until the code
+// has loaded after the page, then hands over to Base UI.
+const [useSelectCode, loadSelectCode] = afterPage(() =>
+  import("@base-ui/react/select").then((mod) => mod.Select),
+);
 
-const SelectGroup = SelectPrimitive.Group;
+type SelectState = {
+  Parts: typeof SelectParts | null;
+  chosenLabel: React.ReactNode;
+  disabled: boolean;
+} & StandIn;
 
-const SelectValue = SelectPrimitive.Value;
+const SelectCode = React.createContext<SelectState | null>(null);
 
-function SelectTrigger({
-  className,
+function useSelectState() {
+  const state = React.use(SelectCode);
+  if (!state) throw new Error("Select parts must be inside <Select>");
+  return state;
+}
+
+// Items render only inside an open popup, and a popup opens only once the code has loaded.
+function useLoadedSelect() {
+  const { Parts } = useSelectState();
+  if (!Parts) throw new Error("A select item rendered before the select's code loaded");
+  return Parts;
+}
+
+// Base UI's trigger shows the raw value unless it is given each value's label. Every caller writes
+// its items inline, so the labels are read from the <SelectItem> elements in the children.
+function itemLabels(children: React.ReactNode, labels: Record<string, React.ReactNode> = {}) {
+  React.Children.forEach(children, (child) => {
+    if (!React.isValidElement<{ value?: unknown; children?: React.ReactNode }>(child)) return;
+    if (child.type === SelectItem) {
+      labels[String(child.props.value)] = child.props.children;
+    } else {
+      itemLabels(child.props.children, labels);
+    }
+  });
+  return labels;
+}
+
+// A caller that passes `value` controls the select even while the value is still undefined or "",
+// which both mean nothing is chosen. No select here offers an empty choice, so a change is always
+// a picked value.
+function Select({
   children,
-  hideIcon,
+  onValueChange,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
-  hideIcon?: true;
+}: Omit<SelectParts.Root.Props<string>, "value" | "onValueChange"> & {
+  value?: string | null;
+  onValueChange?: (value: string) => void;
 }) {
+  const Parts = useSelectCode();
+  const standIn = useStandIn(loadSelectCode);
+  const labels = itemLabels(children);
+  const { value, ...rest } = props;
+  const controlled = "value" in props ? { value: value || null } : {};
+  const chosen = "value" in props ? value : props.defaultValue;
+  const state: SelectState = {
+    Parts,
+    chosenLabel: chosen ? (labels[chosen] ?? chosen) : null,
+    disabled: Boolean(props.disabled),
+    ...standIn,
+  };
   return (
-    <SelectPrimitive.Trigger
-      data-slot="select-trigger"
-      className={cn(
-        "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue focus-visible:ring-offset-2 aria-invalid:border-destructive disabled:cursor-not-allowed disabled:opacity-50",
-        className,
+    <SelectCode value={state}>
+      {Parts ? (
+        <Parts.Root<string>
+          items={labels}
+          onValueChange={(picked) => {
+            if (picked !== null) onValueChange?.(picked);
+          }}
+          {...controlled}
+          {...rest}
+        >
+          {children}
+        </Parts.Root>
+      ) : (
+        children
       )}
+    </SelectCode>
+  );
+}
+
+const valueClass = "data-placeholder:text-muted-foreground";
+
+function SelectValue({ placeholder, children, ...props }: SelectParts.Value.Props) {
+  const { Parts, chosenLabel } = useSelectState();
+  if (!Parts) {
+    const shown = typeof children === "function" ? null : (children ?? chosenLabel);
+    return (
+      <span
+        data-slot="select-value"
+        className={valueClass}
+        data-placeholder={shown == null ? "" : undefined}
+      >
+        {shown ?? placeholder}
+      </span>
+    );
+  }
+  return (
+    <Parts.Value
+      data-slot="select-value"
+      className={valueClass}
+      placeholder={placeholder}
       {...props}
     >
-      <span className="overflow-hidden text-ellipsis whitespace-nowrap">{children}</span>
-      {!hideIcon && (
-        <SelectPrimitive.Icon asChild>
-          <Icons.chevronDown className="h-4 w-4 opacity-50" />
-        </SelectPrimitive.Icon>
-      )}
-    </SelectPrimitive.Trigger>
+      {children}
+    </Parts.Value>
+  );
+}
+
+const triggerClass =
+  "flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-white px-3 py-2 text-left text-sm aria-invalid:border-destructive data-disabled:cursor-not-allowed data-disabled:opacity-50";
+
+// Only what a plain button also takes, so the stand-in draws the same element.
+type TriggerProps = Omit<React.ComponentProps<"button">, "ref"> & { hideIcon?: true };
+
+function SelectTrigger({ className, children, hideIcon, ...props }: TriggerProps) {
+  const { Parts, chosenLabel, disabled, standInHandlers, takeOver } = useSelectState();
+  const face = <span className="overflow-hidden text-ellipsis whitespace-nowrap">{children}</span>;
+  const chevron = <Icons.chevronDown className="h-4 w-4 opacity-50" />;
+  if (!Parts) {
+    const isDisabled = disabled || Boolean(props.disabled);
+    return (
+      <button
+        type="button"
+        data-slot="select-trigger"
+        {...mergeProps<"button">(
+          { role: "combobox", "aria-haspopup": "listbox", "aria-expanded": false },
+          props,
+          standInHandlers,
+        )}
+        disabled={isDisabled}
+        data-disabled={isDisabled ? "" : undefined}
+        data-placeholder={chosenLabel == null ? "" : undefined}
+        className={cn(triggerClass, className)}
+      >
+        {face}
+        {!hideIcon && (
+          <span className="shrink-0" aria-hidden>
+            {chevron}
+          </span>
+        )}
+      </button>
+    );
+  }
+  return (
+    <Parts.Trigger
+      data-slot="select-trigger"
+      className={cn(triggerClass, className)}
+      {...props}
+      ref={takeOver}
+    >
+      {face}
+      {!hideIcon && <Parts.Icon className="shrink-0">{chevron}</Parts.Icon>}
+    </Parts.Trigger>
   );
 }
 
 function SelectContent({
   className,
   children,
-  position = "popper",
+  side,
+  align = "start",
+  sideOffset = 4,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Content>) {
+}: SelectParts.Popup.Props & Pick<SelectParts.Positioner.Props, "side" | "align" | "sideOffset">) {
+  const { Parts } = useSelectState();
+  if (!Parts) return null;
   return (
-    <SelectPrimitive.Portal>
-      <SelectPrimitive.Content
-        data-slot="select-content"
-        className={cn(
-          "relative z-50 min-w-32 overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:motion-safe:zoom-out-95 data-[state=open]:motion-safe:zoom-in-95 data-[side=bottom]:motion-safe:slide-in-from-top-2 data-[side=left]:motion-safe:slide-in-from-right-2 data-[side=right]:motion-safe:slide-in-from-left-2 data-[side=top]:motion-safe:slide-in-from-bottom-2",
-          position === "popper" &&
-            "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
-          className,
-        )}
-        position={position}
-        {...props}
+    <Parts.Portal>
+      <Parts.Positioner
+        side={side}
+        align={align}
+        sideOffset={sideOffset}
+        alignItemWithTrigger={false}
+        className="z-50"
       >
-        <SelectPrimitive.Viewport
+        <Parts.Popup
+          data-slot="select-content"
           className={cn(
-            "p-1",
-            position === "popper" &&
-              "h-(--radix-select-trigger-height) w-full min-w-(--radix-select-trigger-width)",
+            "max-h-(--available-height) min-w-(--anchor-width) overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-hidden transition-opacity duration-100 data-ending-style:opacity-0 data-starting-style:opacity-0",
+            className,
           )}
+          {...props}
         >
           {children}
-        </SelectPrimitive.Viewport>
-      </SelectPrimitive.Content>
-    </SelectPrimitive.Portal>
+        </Parts.Popup>
+      </Parts.Positioner>
+    </Parts.Portal>
   );
 }
 
-function SelectLabel({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.Label>) {
+function SelectItem({ className, children, ...props }: SelectParts.Item.Props) {
+  const Parts = useLoadedSelect();
   return (
-    <SelectPrimitive.Label
-      data-slot="select-label"
-      className={cn("px-2 py-1.5 text-base font-semibold", className)}
-      {...props}
-    />
-  );
-}
-
-function SelectItem({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<typeof SelectPrimitive.Item>) {
-  return (
-    <SelectPrimitive.Item
+    <Parts.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-hidden focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
+        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-hidden data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
         className,
       )}
       {...props}
     >
       <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
-        <SelectPrimitive.ItemIndicator>
+        <Parts.ItemIndicator>
           <Check className="h-4 w-4" />
-        </SelectPrimitive.ItemIndicator>
+        </Parts.ItemIndicator>
       </span>
-      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-    </SelectPrimitive.Item>
+      <Parts.ItemText>{children}</Parts.ItemText>
+    </Parts.Item>
   );
 }
 
-function SelectSeparator({
-  className,
-  ...props
-}: React.ComponentProps<typeof SelectPrimitive.Separator>) {
-  return (
-    <SelectPrimitive.Separator
-      data-slot="select-separator"
-      className={cn("-mx-1 my-1 h-px bg-muted", className)}
-      {...props}
-    />
-  );
-}
-
-export {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
-};
+export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue };

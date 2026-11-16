@@ -429,7 +429,7 @@ function PrintRunForm({
         )}
         <div className="min-h-0 divide-y overflow-y-auto rounded-md border">
           {fields.length === 0 && (
-            <p className="px-3 py-4 text-sm text-shamiri-text-grey">This hub has no schools.</p>
+            <p className="px-3 py-4 text-sm text-muted-foreground">This hub has no schools.</p>
           )}
           {fields.map((field, index) =>
             printsStudents ? (
@@ -449,13 +449,13 @@ function PrintRunForm({
           )}
         </div>
         {form.formState.errors.root && (
-          <p className="text-sm font-medium text-shamiri-light-red">
+          <p className="text-sm font-medium text-destructive">
             {form.formState.errors.root.message}
           </p>
         )}
         <Separator />
         <DialogFooter className="flex items-center justify-between gap-2 sm:justify-between">
-          <span className="text-sm text-shamiri-text-grey">
+          <span className="text-sm text-muted-foreground">
             {copyCount(total)}, serials assigned on create
           </span>
           <div className="flex gap-2">
@@ -555,7 +555,7 @@ function SchoolStudentsRow({
               </FormControl>
               <FormLabel className="font-normal">
                 {schoolName}{" "}
-                <span className="text-shamiri-text-grey">({activeStudents} active students)</span>
+                <span className="text-muted-foreground">({activeStudents} active students)</span>
               </FormLabel>
             </FormItem>
           )}
@@ -597,7 +597,7 @@ function SchoolStudentsRow({
                     <FormLabel className="text-sm font-normal">
                       {s.studentName ?? "Unnamed student"}
                       {s.admissionNumber && (
-                        <span className="text-shamiri-text-grey"> · {s.admissionNumber}</span>
+                        <span className="text-muted-foreground"> · {s.admissionNumber}</span>
                       )}
                     </FormLabel>
                   </FormItem>

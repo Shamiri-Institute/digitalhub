@@ -39,7 +39,7 @@ export default function ViewEditFellowComplaints({
   fellowComplaints,
   action,
 }: {
-  children: React.ReactNode;
+  children: React.ReactElement;
   fellowComplaints: FellowComplaintsType["complaints"][number];
   action: "view" | "edit";
 }) {
@@ -83,7 +83,7 @@ export default function ViewEditFellowComplaints({
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} />
       <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
         <DialogHeader className="bg-white">
           <DialogTitle>{`${action === "view" ? "View" : "Edit"} Fellow Complaint`}</DialogTitle>
@@ -95,7 +95,7 @@ export default function ViewEditFellowComplaints({
               <label htmlFor="date" className="text-sm font-medium">
                 Date of Complaint
               </label>
-              <p className="text-gray-600">{fellowComplaints.date}</p>
+              <p className="text-muted-foreground">{fellowComplaints.date}</p>
             </div>
           </div>
 
@@ -129,7 +129,6 @@ export default function ViewEditFellowComplaints({
                     Cancel
                   </Button>
                   <Button
-                    variant="brand"
                     type="submit"
                     loading={form.formState.isSubmitting}
                     disabled={form.formState.isSubmitting}

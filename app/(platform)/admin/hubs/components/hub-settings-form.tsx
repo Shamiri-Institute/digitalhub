@@ -84,8 +84,8 @@ export default function HubSettingsForm({
           </div>
         </SettingsSection>
         <SettingsSection title="Session types" description={SESSION_TYPES_DESCRIPTION}>
-          <p className="flex items-start gap-2 rounded-lg border border-blue-border bg-blue-bg px-4 py-3 text-sm text-foreground">
-            <Info aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-shamiri-new-blue" />
+          <p className="flex items-start gap-2 rounded-lg border border-info-border bg-info-bg px-4 py-3 text-sm text-foreground">
+            <Info aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             Attendance marked after you save is paid at the new amount. Payouts already recorded
             keep their amount, including when attendance is unmarked.
           </p>
@@ -143,7 +143,7 @@ function SessionTypeGroups({ storedById }: { storedById: ReadonlyMap<string, Hub
       <Button
         type="button"
         variant="ghost"
-        className="gap-1.5 px-2 text-shamiri-new-blue hover:bg-blue-bg hover:text-shamiri-new-blue"
+        className="gap-1.5 px-2 text-primary hover:bg-info-bg hover:text-primary"
         onClick={() => addRow(category)}
       >
         <Plus aria-hidden className="h-4 w-4" />
@@ -156,7 +156,7 @@ function SessionTypeGroups({ storedById }: { storedById: ReadonlyMap<string, Hub
           <>
             <SessionGroupHeading label={group.label} count={0} />
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed px-4 py-2">
-              <p className="text-sm text-shamiri-text-dark-grey">No {group.noun}s at this hub.</p>
+              <p className="text-sm text-muted-foreground">No {group.noun}s at this hub.</p>
               {addButton}
             </div>
           </>

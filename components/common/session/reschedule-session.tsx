@@ -1,4 +1,3 @@
-import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { ChevronsUpDown } from "lucide-react";
 import { type Dispatch, type SetStateAction, useState } from "react";
@@ -13,13 +12,12 @@ import {
   DialogClose,
   DialogContent,
   DialogHeader,
-  DialogPortal,
   DialogTitle,
   useDialogSave,
 } from "#/components/ui/dialog";
 import { Form, FormControl, FormField, FormLabel, FormMessage } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import { Popover, PopoverContent } from "#/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -49,15 +47,13 @@ export default function RescheduleSession({
   return (
     <div>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogPortal>
-          <DialogContent className="flex w-1/3 max-w-none flex-col gap-4">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold">Reschedule session</DialogTitle>
-            </DialogHeader>
-            {children}
-            <RescheduleSessionForm key={session.id} session={session} onOpenChange={onOpenChange} />
-          </DialogContent>
-        </DialogPortal>
+        <DialogContent className="flex w-1/3 max-w-none flex-col gap-4">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Reschedule session</DialogTitle>
+          </DialogHeader>
+          {children}
+          <RescheduleSessionForm key={session.id} session={session} onOpenChange={onOpenChange} />
+        </DialogContent>
       </Dialog>
     </div>
   );
@@ -120,18 +116,20 @@ export function RescheduleSessionForm({
               <div>
                 <FormLabel required>Date</FormLabel>
                 <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "mt-1.5 w-full justify-start px-3 text-left font-normal",
-                        !field.value && "text-muted-foreground",
-                      )}
-                    >
-                      <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {field.value ? format(field.value, DISPLAY_DATE) : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                          !field.value && "text-muted-foreground",
+                        )}
+                      >
+                        <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                        {field.value ? format(field.value, DISPLAY_DATE) : <span>Pick a date</span>}
+                      </Button>
+                    }
+                  />
                   <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
@@ -152,18 +150,20 @@ export function RescheduleSessionForm({
               <div>
                 <FormLabel>Start time</FormLabel>
                 <Popover open={timePicker} onOpenChange={setTimePicker}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "mt-1.5 w-full justify-start px-3 text-left font-normal active:scale-100",
-                        !field.value && "text-muted-foreground",
-                      )}
-                    >
-                      <Icons.clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {field.value ? field.value : <span>Pick a time</span>}
-                    </Button>
-                  </PopoverTrigger>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "mt-1.5 w-full justify-start px-3 text-left font-normal active:scale-100",
+                          !field.value && "text-muted-foreground",
+                        )}
+                      >
+                        <Icons.clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                        {field.value ? field.value : <span>Pick a time</span>}
+                      </Button>
+                    }
+                  />
                   <PopoverContent className="w-auto px-4 py-3" align="start">
                     <div className="flex flex-col gap-2">
                       <span className="text-sm">Pick a start time</span>
@@ -227,7 +227,7 @@ export function RescheduleSessionForm({
                           variant="ghost"
                           type="button"
                           size="sm"
-                          className="text-sm font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+                          className="text-sm font-semibold leading-6 text-primary hover:text-primary"
                           onClick={() => {
                             setTimePicker(false);
                           }}
@@ -235,7 +235,7 @@ export function RescheduleSessionForm({
                           Cancel
                         </Button>
                         <Button
-                          className="flex items-center gap-2 bg-shamiri-new-blue text-sm font-semibold leading-6 text-white"
+                          className="flex items-center gap-2 bg-primary text-sm font-semibold leading-6 text-white"
                           type="button"
                           size="sm"
                           onClick={() => {
@@ -259,16 +259,14 @@ export function RescheduleSessionForm({
         <Separator />
 
         <div className="flex justify-end gap-6">
-          <DialogClose asChild>
-            <Button
-              variant="ghost"
-              type="button"
-              className="text-shamiri-new-blue hover:text-shamiri-blue"
-            >
-              Cancel
-            </Button>
-          </DialogClose>
-          <Button variant="brand" loading={isSaving} disabled={isSaving}>
+          <DialogClose
+            render={
+              <Button variant="ghost" type="button" className="text-primary hover:text-primary">
+                Cancel
+              </Button>
+            }
+          />
+          <Button loading={isSaving} disabled={isSaving}>
             Save Changes
           </Button>
         </div>

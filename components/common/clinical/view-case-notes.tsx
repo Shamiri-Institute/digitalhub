@@ -32,7 +32,7 @@ interface CaseNote {
 }
 
 interface ViewCaseNotesProps {
-  children: React.ReactNode;
+  children: React.ReactElement;
   caseNotes: CaseNote[];
   pseudonym: string;
 }
@@ -42,7 +42,7 @@ export function ViewCaseNotes({ children, caseNotes, pseudonym }: ViewCaseNotesP
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} />
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Case Notes - {pseudonym}</DialogTitle>

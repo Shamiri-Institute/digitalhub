@@ -131,7 +131,7 @@ export default function SubmitComplaint({
             <Separator />
             <DialogFooter className="flex justify-end">
               <Button
-                className="text-shamiri-new-blue"
+                className="text-primary"
                 variant="ghost"
                 type="button"
                 onClick={() => {
@@ -141,7 +141,6 @@ export default function SubmitComplaint({
                 Cancel
               </Button>
               <Button
-                variant="brand"
                 type="submit"
                 disabled={form.formState.isSubmitting}
                 loading={form.formState.isSubmitting}
@@ -163,7 +162,7 @@ export default function SubmitComplaint({
                       </Avatar>
                       <span>{complaint.createdBy?.name}</span>
                     </div>
-                    <span className="text-sm text-shamiri-text-grey">
+                    <span className="text-sm text-muted-foreground">
                       {format(complaint.createdAt, "dd MMM yyyy | hh:mm a")}
                     </span>
                   </div>

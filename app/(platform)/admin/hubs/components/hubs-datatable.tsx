@@ -4,10 +4,13 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 
 import DataTable from "#/components/data-table";
+import { deferredHidden } from "#/components/deferred";
 import { Button } from "#/components/ui/button";
 import type { AdminHub } from "../queries";
 import { columns } from "./columns";
-import HubDialog from "./hub-dialog";
+
+// The add-hub form draws nothing until opened, so its code loads after the page.
+const HubDialog = deferredHidden(() => import("./hub-dialog").then((mod) => mod.default));
 
 export default function HubsDataTable({
   hubs,
@@ -28,7 +31,7 @@ export default function HubsDataTable({
         emptyStateMessage="No hubs found"
         renderTableActions={
           canManageHubs ? (
-            <Button variant="brand" className="flex gap-2" onClick={() => setShowAdd(true)}>
+            <Button className="flex gap-2" onClick={() => setShowAdd(true)}>
               <Plus className="h-4 w-4" />
               Add hub
             </Button>

@@ -78,12 +78,12 @@ export function MonitoringFilterBar({
     <div className="flex flex-wrap items-end gap-4">
       <p className="flex flex-col gap-1 text-sm font-medium">
         Hub
-        <span className="font-normal text-shamiri-text-dark-grey">{hubName}</span>
+        <span className="font-normal text-muted-foreground">{hubName}</span>
       </p>
       {ownSupervisorName ? (
         <p className="flex flex-col gap-1 text-sm font-medium">
           You
-          <span className="font-normal text-shamiri-text-dark-grey">{ownSupervisorName}</span>
+          <span className="font-normal text-muted-foreground">{ownSupervisorName}</span>
         </p>
       ) : (
         <FilterSelect

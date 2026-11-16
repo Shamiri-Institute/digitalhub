@@ -71,8 +71,8 @@ export default function ViewFeedbackDialog({
 
         <div className="mt-4 space-y-6">
           {process.env.NODE_ENV === "development" && !feedback && (
-            <div className="flex items-center justify-between rounded-lg bg-blue-bg p-3">
-              <span className="text-sm font-medium text-shamiri-new-blue">
+            <div className="flex items-center justify-between rounded-lg bg-info-bg p-3">
+              <span className="text-sm font-medium text-primary">
                 {showSamplePreview ? "Showing sample preview" : "No feedback data available"}
               </span>
               <Button

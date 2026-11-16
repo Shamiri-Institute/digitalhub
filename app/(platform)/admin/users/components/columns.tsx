@@ -30,9 +30,9 @@ export const columns: ColumnDef<ImplementerAdmin>[] = [
     id: "Role",
     cell: ({ row }) =>
       row.original.isSuperAdmin ? (
-        <Badge variant="shamiri-green">Super admin</Badge>
+        <Badge variant="success">Super admin</Badge>
       ) : (
-        <Badge variant="outline-solid">Admin</Badge>
+        <Badge variant="outline">Admin</Badge>
       ),
   },
   {

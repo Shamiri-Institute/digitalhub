@@ -400,7 +400,7 @@ function MonthlySupervisorEvaluationForm({
                           <FormLabel>
                             <span>{inputField.label}</span>
                           </FormLabel>
-                          <span className="text-shamiri-text-grey">{inputField.description}</span>
+                          <span className="text-muted-foreground">{inputField.description}</span>
                           <RatingStarsInput
                             value={field.value}
                             onChange={field.onChange}
@@ -451,7 +451,6 @@ function MonthlySupervisorEvaluationForm({
                 Cancel
               </Button>
               <Button
-                variant="brand"
                 type="submit"
                 disabled={form.formState.isSubmitting || editWindowClosed}
                 loading={form.formState.isSubmitting}
@@ -466,7 +465,6 @@ function MonthlySupervisorEvaluationForm({
             <Separator />
             <DialogFooter className="flex justify-end">
               <Button
-                variant="brand"
                 type="button"
                 onClick={() => {
                   setIsOpen(false);
@@ -505,9 +503,7 @@ function RatingStarsInput({
               key={index.toString()}
               className={cn(
                 "peer relative h-5 w-5 shrink transition ease-in",
-                value && value >= 5 - index
-                  ? "text-shamiri-light-orange"
-                  : "text-shamiri-light-grey",
+                value && value >= 5 - index ? "text-rating" : "text-navy-5",
               )}
             >
               <Icons.starRating className="h-full w-full" />
@@ -517,10 +513,8 @@ function RatingStarsInput({
               key={index.toString()}
               type="button"
               className={cn(
-                "peer relative h-5 w-5 shrink cursor-pointer transition ease-in hover:text-shamiri-light-orange active:scale-[1.25] peer-hover:text-shamiri-light-orange",
-                value && value >= 5 - index
-                  ? "text-shamiri-light-orange"
-                  : "text-shamiri-light-grey",
+                "peer relative h-5 w-5 shrink cursor-pointer transition ease-in hover:text-rating active:scale-[1.25] peer-hover:text-rating",
+                value && value >= 5 - index ? "text-rating" : "text-navy-5",
               )}
               onClick={() => {
                 onChange(5 - index);

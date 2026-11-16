@@ -63,22 +63,22 @@ export const columns = (state: {
             className={cn(
               "select-none rounded-lg border px-1.5 py-0.5",
               {
-                "border-green-border": completed,
-                "border-blue-border": !completed,
-                "border-red-border": cancelled,
+                "border-success-border": completed,
+                "border-info-border": !completed,
+                "border-destructive-border": cancelled,
               },
               {
-                "bg-green-bg": completed,
-                "bg-blue-bg": !completed,
-                "bg-red-bg": cancelled,
+                "bg-success-bg": completed,
+                "bg-info-bg": !completed,
+                "bg-destructive-bg": cancelled,
               },
             )}
           >
             <div
               className={cn("text-[0.825rem] font-semibold", {
-                "text-green-base": completed,
-                "text-blue-base": !completed,
-                "text-red-base": cancelled,
+                "text-success": completed,
+                "text-info": !completed,
+                "text-destructive": cancelled,
               })}
             >
               <div className="flex items-center gap-1">

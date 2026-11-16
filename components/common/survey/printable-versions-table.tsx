@@ -32,7 +32,7 @@ const PRINTABLE_VERSION_COLUMNS: ColumnDef<PrintableVersionRow>[] = [
     cell: ({ row }) => (
       <>
         {row.original.survey.title}{" "}
-        <span className="text-shamiri-text-grey">{row.original.survey.code}</span>
+        <span className="text-muted-foreground">{row.original.survey.code}</span>
       </>
     ),
   },

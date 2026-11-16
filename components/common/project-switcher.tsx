@@ -1,10 +1,10 @@
 "use client";
 
-import { Check, ChevronsUpDown } from "lucide-react";
+import type * as React from "react";
+import { Check } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import type { AdminProject } from "#/app/(platform)/layout";
-import { Button } from "#/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -20,13 +20,13 @@ import type { SessionUser } from "#/lib/auth/session-user";
 import { cn } from "#/lib/utils";
 
 export function ProjectSwitcher({
-  loading,
+  trigger,
   setLoading,
   user,
   projects,
   className,
 }: {
-  loading: boolean;
+  trigger: React.ReactElement;
   setLoading: (loading: boolean) => void;
   user: SessionUser | null;
   projects: AdminProject[];
@@ -36,8 +36,6 @@ export function ProjectSwitcher({
   const pathname = usePathname();
   const router = useRouter();
   const activeProjectId = user?.activeProjectId ?? null;
-
-  const activeProject = projects.find((p) => p.id === activeProjectId);
 
   const handleProjectChange = toastOnError(async (project: AdminProject) => {
     if (activeProjectId === project.id) return;
@@ -60,21 +58,7 @@ export function ProjectSwitcher({
   return (
     <div className={className}>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            aria-expanded={open}
-            className="-mt-1 w-full min-w-[200px] justify-between bg-white px-2 text-left filter disabled:pointer-events-none disabled:grayscale"
-            disabled={loading}
-          >
-            <div className="flex flex-col items-start">
-              <span className="text-base font-medium">
-                {loading ? "Loading..." : (activeProject?.name ?? "Select project...")}
-              </span>
-            </div>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
+        <PopoverTrigger render={trigger} />
         <PopoverContent className="w-full p-0" align="start">
           <Command>
             <span className="px-4 pb-1 pt-2 text-xs uppercase tracking-widest text-muted-foreground">
@@ -92,13 +76,13 @@ export function ProjectSwitcher({
                     handleProjectChange(project);
                     setOpen(false);
                   }}
-                  className="flex items-center justify-between gap-3 rounded-none border-b border-grey-border px-3 last:border-b-0"
+                  className="flex items-center justify-between gap-3 rounded-none border-b border-border px-3 last:border-b-0"
                 >
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{project.name}</span>
                     </div>
-                    <span className="text-xs uppercase tracking-widest pt-0.5 text-shamiri-new-blue">
+                    <span className="text-xs uppercase tracking-widest pt-0.5 text-primary">
                       {project.visibleId}
                     </span>
                   </div>

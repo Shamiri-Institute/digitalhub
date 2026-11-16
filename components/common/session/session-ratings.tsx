@@ -144,14 +144,13 @@ function SessionRatingsForm({
       {children}
       {mode === "view" && sessionRatings.length === 0 ? (
         <div className="space-y-3">
-          <div className="item-center flex justify-center text-shamiri-text-dark-grey">
+          <div className="item-center flex justify-center text-muted-foreground">
             No reports found.
           </div>
           <Separator />
           <DialogFooter className="flex justify-end">
             <Button
               className=""
-              variant="brand"
               type="button"
               onClick={() => {
                 onOpenChange(false);
@@ -399,7 +398,6 @@ function SessionRatingsForm({
                     Cancel
                   </Button>
                   <Button
-                    variant="brand"
                     type="submit"
                     disabled={form.formState.isSubmitting || editWindowClosed}
                     loading={form.formState.isSubmitting}
@@ -412,7 +410,6 @@ function SessionRatingsForm({
               <DialogFooter className="flex justify-end">
                 <Button
                   className=""
-                  variant="brand"
                   type="button"
                   onClick={() => {
                     onOpenChange(false);

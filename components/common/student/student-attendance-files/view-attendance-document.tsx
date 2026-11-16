@@ -86,7 +86,7 @@ export default function ViewAttendanceDocument({
 
   if (state.archived) {
     return (
-      <div className="flex items-center justify-center p-4 text-sm text-shamiri-text-grey">
+      <div className="flex items-center justify-center p-4 text-sm text-muted-foreground">
         Document has been deleted.
       </div>
     );
@@ -95,7 +95,7 @@ export default function ViewAttendanceDocument({
   if (state.error === NO_ATTENDANCE_DOCUMENT_MESSAGE) {
     return (
       <div className="flex items-center justify-center p-4">
-        <Alert variant="primary">
+        <Alert variant="info">
           <AlertDescription>
             {role === "FELLOW"
               ? "Upload is not available. Please use the upload section below to take a picture."
@@ -108,7 +108,7 @@ export default function ViewAttendanceDocument({
 
   if (state.error) {
     return (
-      <div className="flex items-center justify-center p-4 text-sm text-shamiri-text-grey">
+      <div className="flex items-center justify-center p-4 text-sm text-muted-foreground">
         {state.error}
       </div>
     );
@@ -122,16 +122,13 @@ export default function ViewAttendanceDocument({
         <button
           type="button"
           onClick={() => setPdfModalOpen(true)}
-          className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-shamiri-light-grey p-4 transition-colors hover:border-shamiri-new-blue hover:bg-blue-bg"
+          className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border p-4 transition-colors hover:border-primary hover:bg-info-bg"
         >
-          <Icons.paperFileText className="h-10 w-10 text-shamiri-new-blue" />
-          <span className="mt-2 text-xs text-shamiri-text-grey">Click to view</span>
+          <Icons.paperFileText className="h-10 w-10 text-primary" />
+          <span className="mt-2 text-xs text-muted-foreground">Click to view</span>
         </button>
         <div className="min-w-0">
-          <p
-            className="truncate text-sm font-medium text-shamiri-text-dark-grey"
-            title={state.fileName}
-          >
+          <p className="truncate text-sm font-medium text-muted-foreground" title={state.fileName}>
             {state.fileName ?? "document.pdf"}
           </p>
           {role === "FELLOW" && (
@@ -140,7 +137,7 @@ export default function ViewAttendanceDocument({
               size="sm"
               onClick={handleDelete}
               loading={isDeleting}
-              className="mt-2 w-fit hover:bg-shamiri-light-red/90"
+              className="mt-2 w-fit hover:bg-destructive/90"
             >
               {isDeleting ? "Deleting..." : "Delete"}
             </Button>

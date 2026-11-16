@@ -15,7 +15,7 @@ function FlagCell({
   suffix?: string;
 }) {
   return (
-    <span className={cn(flag && "font-semibold text-shamiri-light-red")}>
+    <span className={cn(flag && "font-semibold text-destructive")}>
       {value}
       {suffix}
       {flag && " ⚠"}
@@ -33,15 +33,13 @@ const columns: ColumnDef<FidelityRow>[] = [
     id: "Supervisor",
     accessorKey: "supervisorName",
     header: "Supervisor",
-    cell: ({ row }) => (
-      <span className="text-shamiri-text-grey">{row.original.supervisorName}</span>
-    ),
+    cell: ({ row }) => <span className="text-muted-foreground">{row.original.supervisorName}</span>,
   },
   {
     id: "Schools",
     accessorKey: "schools",
     header: "Schools",
-    cell: ({ row }) => <span className="text-shamiri-text-grey">{row.original.schools}</span>,
+    cell: ({ row }) => <span className="text-muted-foreground">{row.original.schools}</span>,
   },
   {
     id: "Sessions",

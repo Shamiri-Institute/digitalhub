@@ -1,31 +1,19 @@
 "use client";
 
-import {
-  Toast,
-  ToastClose,
-  ToastDescription,
-  ToastProvider,
-  ToastTitle,
-  ToastViewport,
-} from "#/components/ui/toast";
-import { useToast } from "#/components/ui/use-toast";
+import { createElement } from "react";
+
+import { afterPage } from "#/components/deferred";
+import { whenToastWaits } from "#/components/ui/use-toast";
+
+// Base UI's toast code is not needed until a toast is shown, so it loads on the first toast or the
+// first interaction, whichever comes first.
+const [useToastViewport, loadToastViewport] = afterPage(() =>
+  import("#/components/ui/toast-viewport").then((mod) => mod.ToastViewport),
+);
+whenToastWaits(() => void loadToastViewport());
 
 export function Toaster() {
-  const { toasts } = useToast();
-
-  return (
-    <ToastProvider>
-      {toasts.map(({ id, title, description, action, ...props }) => (
-        <Toast key={id} duration={5000} {...props}>
-          <div className="grid gap-1">
-            {title && <ToastTitle>{title}</ToastTitle>}
-            {description && <ToastDescription>{description}</ToastDescription>}
-          </div>
-          {action}
-          <ToastClose />
-        </Toast>
-      ))}
-      <ToastViewport />
-    </ToastProvider>
-  );
+  // The same module-level component on every render once loaded, not one made here.
+  const toastViewport = useToastViewport();
+  return toastViewport ? createElement(toastViewport) : null;
 }

@@ -33,14 +33,14 @@ export default async function SurveyVersionPage(props: {
       <div className="container w-full grow space-y-3 py-10">
         <Link
           href={`/admin/surveys/${survey.id}`}
-          className="flex items-center gap-1 text-sm font-medium text-shamiri-new-blue hover:underline"
+          className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
         >
           <ChevronLeft className="h-4 w-4" />
           {survey.title}
         </Link>
         <PageHeading title={`Version ${version.versionNumber}`}>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-shamiri-text-grey">{survey.code}</span>
+            <span className="text-sm text-muted-foreground">{survey.code}</span>
             <SurveyVersionStatusBadge status={version.status} />
           </div>
         </PageHeading>

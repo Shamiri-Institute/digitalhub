@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
+import SupervisorChartsSkeleton from "#/app/(platform)/hc/supervisors/components/supervisor-charts-skeleton";
 import SupervisorsTable from "#/app/(platform)/hc/supervisors/components/supervisors-table";
 import SupervisorChartsWrapper from "#/app/(platform)/hc/supervisors/components/supervisor-charts-container";
 import WeeklyHubTeamMeetingForm from "#/app/(platform)/hc/supervisors/components/weekly-hub-team-meeting";
@@ -34,7 +34,7 @@ export default async function SupervisorsPage() {
           </div>
         </div>
 
-        <Suspense fallback={<GraphLoadingIndicator />}>
+        <Suspense fallback={<SupervisorChartsSkeleton />}>
           <SupervisorChartsWrapper coordinator={{ assignedHubId: hubId }} />
         </Suspense>
 

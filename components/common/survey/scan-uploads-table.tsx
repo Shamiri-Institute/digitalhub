@@ -10,11 +10,11 @@ import type { ScanUploads } from "#/lib/survey/scan-upload-queries";
 import { formatBytes } from "#/lib/utils";
 
 const UPLOAD_STATUS_VARIANT: Record<SurveyUploadStatus, BadgeProps["variant"]> = {
-  PENDING: "outline-solid",
-  UPLOADED: "outline-solid",
-  QUEUED: "outline-solid",
+  PENDING: "outline",
+  UPLOADED: "outline",
+  QUEUED: "outline",
   PROCESSING: "warning",
-  PROCESSED: "shamiri-green",
+  PROCESSED: "success",
   FAILED: "destructive",
 };
 

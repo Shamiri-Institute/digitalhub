@@ -1,21 +1,10 @@
-"use client";
-
+import { sessionLabel, seriesColor } from "#/components/charts/constants";
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Label,
-  Legend,
-  Line,
+  ColumnChart,
+  CompletionRing,
   LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import { SERIES_COLORS } from "#/components/charts/constants";
+  RingBreakdown,
+} from "#/components/charts/static-charts";
 import ChartCard from "#/components/ui/chart-card";
 
 export default function StudentsDataBreakdown({
@@ -32,94 +21,54 @@ export default function StudentsDataBreakdown({
     value: number;
   }[];
 }) {
-  const dropoutColors = dropoutData.map((_, index) => SERIES_COLORS[index % SERIES_COLORS.length]);
-
   return (
     <div className="grid grid-cols-1 gap-5 py-2 sm:grid-cols-2 xl:grid-cols-4">
-      <ChartCard title="Attendance" showCardFooter={false}>
+      <ChartCard title="Attendance">
         {attendanceData.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart width={307} height={307} data={attendanceData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill={SERIES_COLORS[0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <ColumnChart
+            label="Attendance, by session"
+            series={[{ name: "Attendance", color: seriesColor(0) }]}
+            categories={attendanceData.map(({ name, value }) => ({
+              name: sessionLabel(name),
+              values: [value],
+            }))}
+          />
         ) : null}
       </ChartCard>
 
-      <ChartCard title="Drop-out reasons" showCardFooter={false}>
-        {dropoutData.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={307} height={307}>
-              <Pie
-                data={dropoutData.map((entry, index) => ({ ...entry, fill: dropoutColors[index] }))}
-                dataKey="value"
-                nameKey="name"
-                startAngle={90}
-                endAngle={450}
-                outerRadius={100}
-                innerRadius={70}
-              >
-                <Label
-                  position="center"
-                  className="text-2xl font-semibold leading-8 text-shamiri-black"
-                >
-                  {dropoutData.reduce((acc, curr) => acc + curr.value, 0)}
-                </Label>
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+      <ChartCard title="Drop-out reasons">
+        {dropoutData.some(({ value }) => value > 0) ? (
+          <RingBreakdown
+            label="Students dropped out"
+            slices={dropoutData.map(({ name, value }, index) => ({
+              name,
+              value,
+              color: seriesColor(index),
+            }))}
+          />
         ) : null}
       </ChartCard>
 
-      <ChartCard title="Student information completion" showCardFooter={false}>
+      <ChartCard title="Student information completion">
         {completionData.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={307} height={307}>
-              <Pie
-                data={completionData.map((entry) => ({
-                  ...entry,
-                  fill:
-                    entry.name === "actual"
-                      ? SERIES_COLORS[0]
-                      : "var(--color-shamiri-new-light-blue)",
-                }))}
-                dataKey="value"
-                nameKey="name"
-                startAngle={90}
-                endAngle={450}
-                outerRadius={100}
-                innerRadius={70}
-              >
-                <Label
-                  position="center"
-                  className="text-2xl font-semibold leading-8 text-shamiri-black"
-                >
-                  {`${completionData.find((d) => d.name === "actual")?.value ?? 0}%`}
-                </Label>
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+          <CompletionRing
+            label="Student information complete"
+            percentage={completionData.find(({ name }) => name === "actual")?.value ?? 0}
+          />
         ) : null}
       </ChartCard>
 
-      <ChartCard title="Student group ratings" showCardFooter={false}>
+      <ChartCard title="Student group ratings">
         {ratingsData.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart width={307} height={307} data={ratingsData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="session" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="value" stroke={SERIES_COLORS[0]} />
-            </LineChart>
-          </ResponsiveContainer>
+          <LineChart
+            label="Average student group rating, by session"
+            series={[{ name: "Average rating", color: seriesColor(0) }]}
+            minimumTop={5}
+            categories={ratingsData.map(({ session, value }) => ({
+              name: sessionLabel(session),
+              values: [value],
+            }))}
+          />
         ) : null}
       </ChartCard>
     </div>

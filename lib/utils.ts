@@ -1,7 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { createElement } from "react";
 import { twMerge } from "tailwind-merge";
-import { z } from "zod";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -23,10 +22,6 @@ export function getSchoolInitials(name: string): string {
       .map((i) => i[0]?.toUpperCase())
       .join("") ?? "N/A"
   );
-}
-
-export function stringValidation(message: string | undefined = "Required*") {
-  return z.string({ error: message }).trim().min(1, { error: message });
 }
 
 export function sessionDisplayName(sessionType?: string) {

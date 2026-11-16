@@ -36,7 +36,7 @@ export function QuestionnaireVoidDialog({ copy }: { copy: Copy }) {
       <Button
         variant="ghost"
         size="sm"
-        className="text-shamiri-light-red"
+        className="text-destructive"
         aria-label={`Void ${copy.serial}`}
         onClick={() => setOpen(true)}
       >

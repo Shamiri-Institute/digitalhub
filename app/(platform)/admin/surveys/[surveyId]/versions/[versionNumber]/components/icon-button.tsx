@@ -16,7 +16,7 @@ export default function IconButton({
       size="icon"
       aria-label={label}
       title={label}
-      className={cn("h-8 w-8 shrink-0 text-shamiri-text-grey", className)}
+      className={cn("h-8 w-8 shrink-0 text-muted-foreground", className)}
       {...props}
     />
   );

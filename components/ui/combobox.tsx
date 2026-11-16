@@ -36,20 +36,22 @@ export function Combobox({
   return (
     <div className={cn("rounded-md border border-input bg-white px-1.5 py-0", className)}>
       <Popover open={open} onOpenChange={(o) => !disabled && setOpen(o)}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="base"
-            aria-expanded={open}
-            className="w-full justify-between px-1.5"
-            disabled={disabled}
-          >
-            <span className="text-left text-sm">
-              {activeItemId
-                ? items.find((item) => item.id === activeItemId)?.label
-                : placeholder || "Select item..."}
-            </span>
-            <ChevronsUpDown className="ml-1.5 size-4 shrink-0 opacity-50" />
-          </Button>
+        <PopoverTrigger
+          render={
+            <Button
+              variant="base"
+              aria-expanded={open}
+              className="w-full justify-between px-1.5"
+              disabled={disabled}
+            />
+          }
+        >
+          <span className="text-left text-sm">
+            {activeItemId
+              ? items.find((item) => item.id === activeItemId)?.label
+              : placeholder || "Select item..."}
+          </span>
+          <ChevronsUpDown className="ml-1.5 size-4 shrink-0 opacity-50" />
         </PopoverTrigger>
         <PopoverContent className="w-[360px] p-0" align="start">
           <Command

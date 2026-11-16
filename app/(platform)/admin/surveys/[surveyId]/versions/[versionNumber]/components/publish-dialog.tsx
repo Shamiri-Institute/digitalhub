@@ -45,11 +45,7 @@ export default function PublishDialog(props: PublishDialogProps) {
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button type="button" variant="brand">
-          Publish
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger render={<Button type="button">Publish</Button>} />
       <DialogContent className="max-w-lg">
         <PublishSteps {...props} close={() => setOpen(false)} />
       </DialogContent>
@@ -129,7 +125,6 @@ function PublishSteps({
           </Button>
           <Button
             type="button"
-            variant="brand"
             loading={publishing}
             disabled={publishing || refusal !== undefined}
             onClick={handlePublish}
@@ -160,14 +155,14 @@ function PublishSteps({
           <Label
             key={option}
             htmlFor={`prefill-${option}`}
-            className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 has-[[data-state=checked]]:border-shamiri-new-blue has-[[data-state=checked]]:bg-blue-bg"
+            className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 has-data-checked:border-primary has-data-checked:bg-info-bg"
           >
             <RadioGroupItem id={`prefill-${option}`} value={option} className="mt-0.5" />
             <span className="space-y-1">
               <span className="block text-sm font-semibold">
                 {SURVEY_VERSION_PREFILL_LABELS[option]}
               </span>
-              <span className="block text-sm font-normal text-shamiri-text-grey">
+              <span className="block text-sm font-normal text-muted-foreground">
                 {PREFILL_DESCRIPTIONS[option]}
               </span>
             </span>
@@ -200,7 +195,6 @@ function PublishSteps({
         </Button>
         <Button
           type="button"
-          variant="brand"
           disabled={unsaved || reasons.length > 0}
           onClick={() => setStep("confirm")}
         >

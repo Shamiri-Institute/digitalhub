@@ -1,7 +1,6 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import dynamic from "next/dynamic";
 import type { ReactNode } from "react";
 import {
   formatCell,
@@ -9,21 +8,9 @@ import {
   type SupervisorEmphasis,
   YOU_SUFFIX,
 } from "#/components/common/monitoring/card-cells";
+import { CartesianChart, PieCard } from "#/components/common/monitoring/monitoring-charts";
 import DataTable from "#/components/data-table";
-import { Skeleton } from "#/components/ui/skeleton";
 import type { CardCell, CardRow, CardView, TableColumn } from "#/lib/monitoring/types";
-
-// Recharts draws nothing until the browser measures its container, so the charts load after
-// the page and keep recharts out of the JS before `load`; tables still render on the server.
-const chartSkeleton = () => <Skeleton className="h-80 w-full" />;
-const CartesianChart = dynamic(
-  () => import("#/components/common/monitoring/monitoring-charts").then((m) => m.CartesianChart),
-  { ssr: false, loading: chartSkeleton },
-);
-const PieCard = dynamic(
-  () => import("#/components/common/monitoring/monitoring-charts").then((m) => m.PieCard),
-  { ssr: false, loading: chartSkeleton },
-);
 
 type CellRenderer = NonNullable<ColumnDef<CardRow, CardCell>["cell"]>;
 const textCell: CellRenderer = ({ getValue }) => formatCell(getValue());
@@ -89,15 +76,15 @@ function ScopedFigures({
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <div>
-        <p className="text-center text-sm font-semibold text-shamiri-new-blue">You</p>
+        <p className="text-center text-sm font-semibold text-primary">You</p>
         {ownRows.length > 0 ? (
           renderFigure(ownRows, "You")
         ) : (
-          <p className="py-10 text-center text-shamiri-text-grey">No data available</p>
+          <p className="py-10 text-center text-muted-foreground">No data available</p>
         )}
       </div>
       <div>
-        <p className="text-center text-sm font-semibold text-shamiri-text-dark-grey">Hub</p>
+        <p className="text-center text-sm font-semibold text-muted-foreground">Hub</p>
         {renderFigure(hubRows, "Hub")}
       </div>
     </div>
@@ -110,7 +97,7 @@ function ProgressFigure({ current, goal }: { current: number; goal: number }) {
       <p className="text-center text-2xl font-semibold">
         {formatCell(current)} / {formatCell(goal)}
       </p>
-      <progress className="h-2 w-full accent-shamiri-new-blue" value={current} max={goal} />
+      <progress className="h-2 w-full accent-primary" value={current} max={goal} />
     </div>
   );
 }
@@ -127,7 +114,7 @@ export function MonitoringCardView({
   emphasis?: SupervisorEmphasis;
 }) {
   if (rows.length === 0) {
-    return <p className="py-10 text-center text-shamiri-text-grey">No data available</p>;
+    return <p className="py-10 text-center text-muted-foreground">No data available</p>;
   }
   const markedRows = emphasis
     ? rows.map((row) =>

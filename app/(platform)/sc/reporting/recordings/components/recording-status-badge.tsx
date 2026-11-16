@@ -16,7 +16,7 @@ const statusConfig: Record<
 > = {
   PENDING: { label: "Pending", variant: "warning" },
   PROCESSING: { label: "Processing", variant: "default" },
-  COMPLETED: { label: "Completed", variant: "shamiri-green" },
+  COMPLETED: { label: "Completed", variant: "success" },
   FAILED: { label: "Failed", variant: "destructive" },
 };
 

@@ -27,7 +27,7 @@ export default function StudentsDataTableMenu({
       <RowActionsTrigger label={`Actions for ${student.studentName}`} />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
+          <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => state.openDialog("edit", student)}>
@@ -52,18 +52,18 @@ export default function StudentsDataTableMenu({
             {state.role === ImplementerRole.HUB_COORDINATOR && (
               <>
                 <DropdownMenuItem onClick={() => state.openDialog("moveSchool", student)}>
-                  <div className="text-shamiri-red">Move to another school</div>
+                  <div className="text-destructive">Move to another school</div>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => state.openDialog("archive", student)}>
-                  <div className="text-shamiri-red">Archive student</div>
+                  <div className="text-destructive">Archive student</div>
                 </DropdownMenuItem>
               </>
             )}
             <DropdownMenuItem onClick={() => state.openDialog("dropout", student)}>
               {student.droppedOut ? (
-                <div className="text-shamiri-red">Undo drop out</div>
+                <div className="text-destructive">Undo drop out</div>
               ) : (
-                <div className="text-shamiri-red">Drop-out student</div>
+                <div className="text-destructive">Drop-out student</div>
               )}
             </DropdownMenuItem>
           </>

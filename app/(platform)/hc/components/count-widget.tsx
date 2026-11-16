@@ -11,7 +11,7 @@ export default function CountWidget({
   loading?: boolean;
 }) {
   return (
-    <div className="relative flex items-center divide-x divide-grey-border rounded-lg border border-grey-border bg-background-secondary font-normal">
+    <div className="relative flex items-center divide-x divide-border rounded-lg border border-border bg-muted font-normal">
       {stats.map((stat) => {
         return (
           <div

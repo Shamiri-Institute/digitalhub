@@ -1,5 +1,6 @@
 "use client";
 
+import { deferredHidden } from "#/components/deferred";
 import type { fellow, supervisor, weeklyFellowRatings } from "#/db/schema";
 import {
   type FellowPersonalDetails,
@@ -16,14 +17,24 @@ import {
   type MainFellowTableData,
 } from "#/app/(platform)/hc/fellows/components/columns";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
-import FellowDropoutForm from "#/components/common/fellow/fellow-dropout-form";
-import WeeklyFellowEvaluation from "#/components/common/fellow/weekly-fellow-evaluation";
-import SubmitComplaint from "#/components/common/submit-complaint";
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
 import { toastOnError } from "#/components/ui/use-toast";
+
+// These dialogs draw nothing until opened, so their code loads after the page.
+const FellowDetailsForm = deferredHidden(() =>
+  import("#/components/common/fellow/fellow-details-form").then((mod) => mod.default),
+);
+const FellowDropoutForm = deferredHidden(() =>
+  import("#/components/common/fellow/fellow-dropout-form").then((mod) => mod.default),
+);
+const WeeklyFellowEvaluation = deferredHidden(() =>
+  import("#/components/common/fellow/weekly-fellow-evaluation").then((mod) => mod.default),
+);
+const SubmitComplaint = deferredHidden(() =>
+  import("#/components/common/submit-complaint").then((mod) => mod.default),
+);
 
 type OpenMainFellowDialog =
   | { kind: "add" }
@@ -78,12 +89,14 @@ export default function MainFellowsDatatable({
           onOpenChange={(open) => setDialog(open ? { kind: "add" } : null)}
           mode={"add"}
         >
-          <DialogTrigger asChild={true}>
-            <Button variant="outline" className="bg-white">
-              <Plus className="h-4 w-4" />
-              Add new fellow
-            </Button>
-          </DialogTrigger>
+          <DialogTrigger
+            render={
+              <Button variant="outline" className="bg-white">
+                <Plus className="h-4 w-4" />
+                Add new fellow
+              </Button>
+            }
+          />
         </FellowDetailsForm>
       </div>
     );
@@ -125,7 +138,7 @@ export default function MainFellowsDatatable({
             <DialogAlertWidget>
               <div className="flex items-center gap-2">
                 <span>{fellow.fellowName}</span>
-                <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+                <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
                 <span>
                   {fellow.cellNumber &&
                     parsePhoneNumberFromString(fellow.cellNumber, "KE")?.formatNational()}

@@ -21,7 +21,7 @@ export function GroupsDatatableMenu({
       <RowActionsTrigger label={`Actions for ${group.groupName}`} />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-shamiri-text-grey text-xs font-medium uppercase">Actions</span>
+          <span className="text-muted-foreground text-xs font-medium uppercase">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {(state.role === ImplementerRole.HUB_COORDINATOR ||
@@ -40,7 +40,7 @@ export function GroupsDatatableMenu({
           state.role === ImplementerRole.SUPERVISOR) &&
           !group.archivedAt && (
             <DropdownMenuItem
-              className="text-shamiri-red"
+              className="text-destructive"
               onClick={() => state.openDialog("archive", group)}
             >
               Archive group
@@ -48,7 +48,7 @@ export function GroupsDatatableMenu({
           )}
         {state.role === ImplementerRole.HUB_COORDINATOR && group.archivedAt && (
           <DropdownMenuItem
-            className="text-shamiri-red"
+            className="text-destructive"
             onClick={() => state.openDialog("unarchive", group)}
           >
             Unarchive group

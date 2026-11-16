@@ -63,19 +63,21 @@ export default function WeeklyHubReportButtonAndForm() {
   const [open, setDialogOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        <Button className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white">
-          <Image
-            unoptimized
-            priority
-            src={AddCircleOutlined}
-            alt="Add icon circle outlined"
-            width={20}
-            height={20}
-          />
-          Weekly Hub Report
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button className="flex items-center gap-2 bg-primary text-base font-semibold leading-6 text-white">
+            <Image
+              unoptimized
+              priority
+              src={AddCircleOutlined}
+              alt="Add icon circle outlined"
+              width={20}
+              height={20}
+            />
+            Weekly Hub Report
+          </Button>
+        }
+      />
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <WeeklyHubReportButtonAndFormForm close={() => setDialogOpen(false)} />
       </DialogContent>
@@ -298,12 +300,12 @@ function WeeklyHubReportButtonAndFormForm({ close }: { close: () => void }) {
           <DialogFooter>
             <Button
               variant="ghost"
-              className="text-base font-semibold leading-6 text-shamiri-red"
+              className="text-base font-semibold leading-6 text-destructive"
               onClick={close}
             >
               Cancel
             </Button>
-            <Button className="bg-shamiri-new-blue text-base font-semibold leading-6 text-white">
+            <Button className="bg-primary text-base font-semibold leading-6 text-white">
               {form.formState.isSubmitting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}

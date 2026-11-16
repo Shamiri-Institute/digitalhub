@@ -110,7 +110,7 @@ function SortToggle<TData>({ column, children }: { column: Column<TData>; childr
       size="base"
       onClick={() => column.toggleSorting()}
       className={cn(
-        "min-h-6 max-w-full gap-1 text-left font-semibold hover:text-shamiri-text-dark-grey",
+        "min-h-6 max-w-full gap-1 text-left font-semibold hover:text-muted-foreground",
         // The label's right edge lines up with the numbers under it.
         column.columnDef.meta?.numeric && "flex-row-reverse text-right",
       )}
@@ -315,13 +315,13 @@ function DataTableContent<TData, TValue>({
           title
             ? "flex-col gap-2 px-0 pb-4 lg:items-center lg:gap-6"
             : "flex-col-reverse lg:items-end",
-          isSubComponent ? "bg-background-secondary/50 p-2 shadow-inner" : "",
+          isSubComponent ? "bg-muted/50 p-2 shadow-inner" : "",
         )}
       >
         <div className={title ? "min-w-0 flex-1" : "shrink-0"}>
           {title && (
             <div className="min-w-0">
-              <h3 className="truncate text-xl font-semibold">{title}</h3>
+              <h3 className="truncate text-lg font-bold text-primary">{title}</h3>
               {description && (
                 <p className="truncate text-sm text-muted-foreground" title={description}>
                   {description}
@@ -371,12 +371,14 @@ function DataTableContent<TData, TValue>({
           {renderTableActions}
           {editColumns && (
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex gap-1 bg-white">
-                  <Icons.settings className="h-4 w-4 text-shamiri-text-grey" />
-                  <span>Edit columns</span>
-                </Button>
-              </DropdownMenuTrigger>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="outline" className="flex gap-1 bg-white">
+                    <Icons.settings className="h-4 w-4 text-muted-foreground" />
+                    <span>Edit columns</span>
+                  </Button>
+                }
+              />
               <DropdownMenuContent align={"end"}>
                 {table
                   .getAllColumns()
@@ -385,10 +387,7 @@ function DataTableContent<TData, TValue>({
                     <DropdownMenuCheckboxItem
                       key={col.id}
                       checked={col.getIsVisible()}
-                      onCheckedChange={(val) => col.toggleVisibility(!!val)}
-                      onSelect={(e) => {
-                        e.preventDefault();
-                      }}
+                      onCheckedChange={(visible) => col.toggleVisibility(visible)}
                     >
                       {typeof col.columnDef.header === "string" ? col.columnDef.header : col.id}
                     </DropdownMenuCheckboxItem>
@@ -436,7 +435,7 @@ function DataTableContent<TData, TValue>({
                       id={header.id}
                       aria-sort={columnSorts ? ariaSort(header.column.getIsSorted()) : undefined}
                       className={cn(
-                        "min-w-20 bg-background-secondary/50 px-4! py-2 text-sm font-semibold leading-5 text-shamiri-text-grey",
+                        "min-w-20 bg-muted px-4! py-2.5 text-[13px] font-semibold leading-5 text-muted-foreground",
                         actionColumnLabel && "action-cell",
                         header.column.columnDef.meta?.numeric && "text-right",
                         header.column.columnDef.meta?.headerClassName,
@@ -461,8 +460,8 @@ function DataTableContent<TData, TValue>({
                   <TableRow
                     id={row.id}
                     className={cn(
-                      "text-sm font-medium leading-5 text-shamiri-text-dark-grey transition ease-in-out hover:bg-shamiri-new-blue/5 data-[state=Selected]:bg-shamiri-new-blue/5",
-                      isSubComponent ? "bg-background-secondary/50" : "",
+                      "text-sm leading-5 text-foreground transition-colors hover:bg-muted/60 data-[state=Selected]:bg-info-bg",
+                      isSubComponent ? "bg-muted/50" : "",
                     )}
                     data-state={row.getIsSelected() && "Selected"}
                   >
@@ -477,10 +476,8 @@ function DataTableContent<TData, TValue>({
                             !cellIsAction && typeof cellValue === "string" ? cellValue : undefined
                           }
                           className={cn(
-                            "truncate border-y border-l first:border-l-0",
-                            cellIsAction
-                              ? "relative cursor-pointer border-l-0 p-0!"
-                              : "max-w-64 px-4! py-2",
+                            "truncate border-t",
+                            cellIsAction ? "relative cursor-pointer p-0!" : "max-w-64 px-4! py-2.5",
                             cell.column.columnDef.meta?.numeric && "text-right tabular-nums",
                           )}
                         >
@@ -500,10 +497,7 @@ function DataTableContent<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="text-center text-shamiri-text-dark-grey"
-                >
+                <TableCell colSpan={columns.length} className="text-center text-muted-foreground">
                   {emptyStateMessage}
                 </TableCell>
               </TableRow>
@@ -550,14 +544,14 @@ function DataTableContent<TData, TValue>({
               </nav>
             )}
             <div className="flex w-full items-center justify-between gap-2">
-              <span className="flex items-center gap-1 text-sm text-shamiri-text-dark-grey">
+              <span className="flex items-center gap-1 text-sm text-muted-foreground">
                 <div>Page</div>
                 <strong>
                   {pageIndex + 1} of {pageCount.toLocaleString()}
                 </strong>
               </span>
               {pageCount > 1 && (
-                <span className="flex items-center gap-1 pl-4 text-sm text-shamiri-text-dark-grey">
+                <span className="flex items-center gap-1 pl-4 text-sm text-muted-foreground">
                   Go to page:
                   <input
                     aria-label="Page number"
@@ -577,7 +571,7 @@ function DataTableContent<TData, TValue>({
                       }
                     }}
                     onBlur={() => setTypedPageNumber(null)}
-                    className="w-16 rounded border p-1"
+                    className="h-8 w-16 rounded-md border border-input bg-white px-2 text-sm text-foreground"
                   />
                 </span>
               )}

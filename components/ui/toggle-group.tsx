@@ -1,60 +1,35 @@
 "use client";
 
-import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
-import type { VariantProps } from "class-variance-authority";
-import * as React from "react";
+import { Radio } from "@base-ui/react/radio";
+import { RadioGroup } from "@base-ui/react/radio-group";
+import type * as React from "react";
 
-import { toggleVariants } from "#/components/ui/toggle";
+import { type ToggleVariants, toggleVariants } from "#/components/ui/toggle";
 import { cn } from "#/lib/utils";
 
-const ToggleGroupContext = React.createContext<VariantProps<typeof toggleVariants>>({
-  size: "default",
-  variant: "default",
-});
-
-function ToggleGroup({
-  className,
-  variant,
-  size,
-  children,
-  ...props
-}: React.ComponentProps<typeof ToggleGroupPrimitive.Root> & VariantProps<typeof toggleVariants>) {
+/** A segmented control: one choice at a time, announced as a radio group. */
+function ToggleGroup({ className, ...props }: React.ComponentProps<typeof RadioGroup<string>>) {
   return (
-    <ToggleGroupPrimitive.Root
+    <RadioGroup<string>
       data-slot="toggle-group"
       className={cn("flex items-center justify-center gap-1", className)}
       {...props}
-    >
-      <ToggleGroupContext.Provider value={{ variant, size }}>
-        {children}
-      </ToggleGroupContext.Provider>
-    </ToggleGroupPrimitive.Root>
+    />
   );
 }
 
 function ToggleGroupItem({
   className,
-  children,
   variant,
   size,
   ...props
-}: React.ComponentProps<typeof ToggleGroupPrimitive.Item> & VariantProps<typeof toggleVariants>) {
-  const context = React.useContext(ToggleGroupContext);
-
+}: React.ComponentProps<typeof Radio.Root<string>> & ToggleVariants) {
   return (
-    <ToggleGroupPrimitive.Item
+    <Radio.Root<string>
       data-slot="toggle-group-item"
-      className={cn(
-        toggleVariants({
-          variant: context.variant || variant,
-          size: context.size || size,
-        }),
-        className,
-      )}
+      className={cn(toggleVariants({ variant, size }), "cursor-pointer", className)}
       {...props}
-    >
-      {children}
-    </ToggleGroupPrimitive.Item>
+    />
   );
 }
 

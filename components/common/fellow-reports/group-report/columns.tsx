@@ -26,9 +26,7 @@ export const groupReportColumns = (
         <span
           className={cn(
             "inline-flex w-fit rounded-full px-3 py-1 text-xs font-medium",
-            submitted
-              ? "bg-green-bg text-green-base"
-              : "bg-shamiri-light-grey text-shamiri-text-grey",
+            submitted ? "bg-success-bg text-success" : "bg-muted text-muted-foreground",
           )}
         >
           {row.original.status}

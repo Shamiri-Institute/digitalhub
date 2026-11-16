@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { enumValues, sessionTypes } from "#/db/enums";
 import { hubSessionCategories } from "#/lib/app-constants/hub-session-types";
-import { stringValidation } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 
 const hubFields = {
   hubName: stringValidation("Please enter the hub's name").max(255, {

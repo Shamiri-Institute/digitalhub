@@ -146,14 +146,13 @@ function WeeklyFellowEvaluationForm({
       {children}
       {mode === "view" && evaluations.length === 0 ? (
         <div className="space-y-3">
-          <div className="item-center flex justify-center text-shamiri-text-dark-grey">
+          <div className="item-center flex justify-center text-muted-foreground">
             No evaluations found.
           </div>
           <Separator />
           <DialogFooter className="flex justify-end">
             <Button
               className=""
-              variant="brand"
               type="button"
               onClick={() => {
                 onOpenChange(false);
@@ -266,7 +265,7 @@ function WeeklyFellowEvaluationForm({
                 )}
               />
             ) : (
-              <div className="rounded border bg-background-secondary px-4 py-2">
+              <div className="rounded border bg-muted px-4 py-2">
                 {existingEvaluation?.behaviourNotes}
               </div>
             )}
@@ -310,7 +309,7 @@ function WeeklyFellowEvaluationForm({
                 )}
               />
             ) : (
-              <div className="rounded border bg-background-secondary px-4 py-2">
+              <div className="rounded border bg-muted px-4 py-2">
                 {existingEvaluation?.programDeliveryNotes}
               </div>
             )}
@@ -354,7 +353,7 @@ function WeeklyFellowEvaluationForm({
                 )}
               />
             ) : (
-              <div className="rounded border bg-background-secondary px-4 py-2">
+              <div className="rounded border bg-muted px-4 py-2">
                 {existingEvaluation?.dressingAndGroomingNotes}
               </div>
             )}
@@ -398,7 +397,7 @@ function WeeklyFellowEvaluationForm({
                 )}
               />
             ) : (
-              <div className="rounded border bg-background-secondary px-4 py-2">
+              <div className="rounded border bg-muted px-4 py-2">
                 {existingEvaluation?.punctualityNotes}
               </div>
             )}
@@ -418,7 +417,6 @@ function WeeklyFellowEvaluationForm({
                   Cancel
                 </Button>
                 <Button
-                  variant="brand"
                   type="submit"
                   disabled={form.formState.isSubmitting || editWindowClosed}
                   loading={form.formState.isSubmitting}
@@ -431,7 +429,6 @@ function WeeklyFellowEvaluationForm({
             <DialogFooter className="flex justify-end">
               <Button
                 className=""
-                variant="brand"
                 type="button"
                 onClick={() => {
                   onOpenChange(false);

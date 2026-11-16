@@ -15,7 +15,7 @@ function CountPctCell({
   flag?: boolean;
 }) {
   return (
-    <span className={cn(flag && "font-semibold text-shamiri-light-red")}>
+    <span className={cn(flag && "font-semibold text-destructive")}>
       {count} ({pct}%){flag && " ⚠"}
     </span>
   );

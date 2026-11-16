@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,14 +16,14 @@ export default function ViewEditReportDropdown({
   triggerLabel: string;
   viewLabel: string;
   editLabel: string;
-  renderDialog: (action: "view" | "edit", children: ReactNode) => ReactNode;
+  renderDialog: (action: "view" | "edit", trigger: ReactElement) => ReactNode;
 }) {
   return (
     <DropdownMenu>
       <RowActionsTrigger label={triggerLabel} className="bg-white" />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
+          <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {renderDialog("view", <NestedDialogMenuItem>{viewLabel}</NestedDialogMenuItem>)}

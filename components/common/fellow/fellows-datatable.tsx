@@ -1,5 +1,6 @@
 "use client";
 
+import { deferredHidden } from "#/components/deferred";
 import type { fellow, supervisor } from "#/db/schema";
 import {
   type FellowPersonalDetails,
@@ -8,7 +9,6 @@ import {
 import { ImplementerRole } from "#/db/enums";
 import { type SetStateAction, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
 import AttendanceHistory, {
   type FellowAttendanceHistoryRow,
 } from "#/components/common/fellow/attendance-history";
@@ -17,11 +17,22 @@ import {
   type SchoolFellowDialogKind,
   type SchoolFellowTableData,
 } from "#/components/common/fellow/columns";
-import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
-import ReplaceFellow from "#/components/common/fellow/replace-fellow";
-import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
 import { toastOnError } from "#/components/ui/use-toast";
+
+// These dialogs draw nothing until opened, so their code loads after the page.
+const AssignFellowSupervisorDialog = deferredHidden(() =>
+  import("#/components/common/fellow/assign-fellow-supervisor-dialog").then((mod) => mod.default),
+);
+const FellowDetailsForm = deferredHidden(() =>
+  import("#/components/common/fellow/fellow-details-form").then((mod) => mod.default),
+);
+const ReplaceFellow = deferredHidden(() =>
+  import("#/components/common/fellow/replace-fellow").then((mod) => mod.default),
+);
+const StudentsInGroup = deferredHidden(() =>
+  import("#/components/common/student/students-in-group").then((mod) => mod.default),
+);
 
 type OpenSchoolFellowDialog =
   | { kind: "details"; fellowId: string; personalDetails: FellowPersonalDetails }
@@ -109,7 +120,7 @@ export default function FellowsDatatable({
                 <DialogAlertWidget>
                   <div className="flex items-center gap-2">
                     <span>{fellow.fellowName}</span>
-                    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+                    <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
                     <span>{fellow.groupName}</span>
                   </div>
                 </DialogAlertWidget>
@@ -126,7 +137,7 @@ export default function FellowsDatatable({
                 <DialogAlertWidget separator={false}>
                   <div className="flex items-center gap-2">
                     <span>{fellow.fellowName}</span>
-                    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+                    <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
                     <span>{fellow.groupName}</span>
                   </div>
                 </DialogAlertWidget>

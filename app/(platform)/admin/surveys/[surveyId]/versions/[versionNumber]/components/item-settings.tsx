@@ -67,9 +67,6 @@ export default function ItemSettings({
           <div className="flex items-center gap-3">
             <Label id={fieldId("align")}>Align</Label>
             <ToggleGroup
-              type="single"
-              variant="outline"
-              size="sm"
               aria-labelledby={fieldId("align")}
               value={item.align ?? "left"}
               // Left is the default, so it is stored as no value; an empty value is a click on the
@@ -78,10 +75,10 @@ export default function ItemSettings({
                 value && replace({ ...item, align: value === "center" ? "center" : undefined })
               }
             >
-              <ToggleGroupItem value="left" aria-label="Align left">
+              <ToggleGroupItem variant="outline" size="sm" value="left" aria-label="Align left">
                 <AlignLeft className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="center" aria-label="Align centre">
+              <ToggleGroupItem variant="outline" size="sm" value="center" aria-label="Align centre">
                 <AlignCenter className="h-4 w-4" />
               </ToggleGroupItem>
             </ToggleGroup>
@@ -180,7 +177,7 @@ function QuestionSettings({
               )}
             />
             {lockedBy && (
-              <Lock className="absolute right-2.5 top-2.5 h-4 w-4 text-shamiri-text-grey" />
+              <Lock className="absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             )}
           </div>
         </Field>
@@ -213,16 +210,14 @@ function QuestionSettings({
       />
 
       <Accordion
-        type="single"
-        collapsible
-        value={reviewOpenNow ? "review" : ""}
-        onValueChange={(value) => setReviewOpen(value === "review")}
+        value={reviewOpenNow ? ["review"] : []}
+        onValueChange={(value) => setReviewOpen(value.includes("review"))}
         className="rounded-lg border bg-muted/40 px-4"
       >
         <AccordionItem value="review">
           <AccordionTrigger className="gap-2 py-3 hover:no-underline">
             <span className="font-semibold">Scan review</span>
-            <span className="font-normal text-shamiri-text-grey">{reviewSummary(review)}</span>
+            <span className="font-normal text-muted-foreground">{reviewSummary(review)}</span>
           </AccordionTrigger>
           <AccordionContent className="space-y-4 pb-4">
             <p className="text-xs text-muted-foreground">

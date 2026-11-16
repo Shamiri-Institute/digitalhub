@@ -11,19 +11,12 @@ import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogPortal,
-  DialogTitle,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuPortal,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
@@ -70,31 +63,29 @@ export default function SupervisorAttendance({
   return (
     <div>
       <Dialog open={isOpen} onOpenChange={setIsOpen} modal={true}>
-        <DialogPortal>
-          <DialogContent className="w-5/6 max-w-none lg:w-4/5">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold">
-                {role === ImplementerRole.ADMIN
-                  ? "View supervisor attendance"
-                  : "Mark supervisor attendance"}
-              </DialogTitle>
-            </DialogHeader>
-            {session && (
-              <SessionDetail
-                state={{ session }}
-                layout={"compact"}
-                withDropdown={false}
-                role={role}
-              />
-            )}
-            <SupervisorAttendanceDataTable
-              data={attendances}
-              toggleBulkMode={true}
-              session={session}
+        <DialogContent className="w-5/6 max-w-none lg:w-4/5">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
+              {role === ImplementerRole.ADMIN
+                ? "View supervisor attendance"
+                : "Mark supervisor attendance"}
+            </DialogTitle>
+          </DialogHeader>
+          {session && (
+            <SessionDetail
+              state={{ session }}
+              layout={"compact"}
+              withDropdown={false}
               role={role}
             />
-          </DialogContent>
-        </DialogPortal>
+          )}
+          <SupervisorAttendanceDataTable
+            data={attendances}
+            toggleBulkMode={true}
+            session={session}
+            role={role}
+          />
+        </DialogContent>
       </Dialog>
     </div>
   );
@@ -140,7 +131,7 @@ export function SupervisorAttendanceDataTable({
               setMarkAttendanceDialog(true);
             }}
           >
-            <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
+            <Icons.fileDown className="h-4 w-4 text-muted-foreground" />
             <span>Mark supervisor attendance</span>
           </Button>
         </div>
@@ -215,11 +206,11 @@ export function SupervisorAttendanceDataTable({
             ) : (
               <span>{attendance?.supervisorName}</span>
             )}
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+            <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
             <span>
               {sessionDisplayName(attendance?.sessionType ?? session?.session?.sessionName ?? "")}
             </span>
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+            <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
             <span>{attendance?.schoolName ?? session?.school?.schoolName ?? session?.venue}</span>
           </div>
         </DialogAlertWidget>
@@ -258,14 +249,11 @@ const columns = (state: {
   {
     header: ({ table }) => (
       <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
+        checked={table.getIsAllPageRowsSelected()}
+        indeterminate={table.getIsSomePageRowsSelected()}
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
-        className={
-          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-        }
+        className={"h-5 w-5"}
       />
     ),
     cell: ({ row }) => {
@@ -277,9 +265,7 @@ const columns = (state: {
             onCheckedChange={(val) => row.toggleSelected(!!val)}
             disabled={sessionOccurredStatus}
             aria-label="Select row"
-            className={
-              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-            }
+            className={"h-5 w-5"}
           />
         </div>
       );
@@ -301,29 +287,29 @@ const columns = (state: {
             className={cn(
               "flex items-center rounded-lg border px-1.5 py-0.5",
               {
-                "border-green-border": attended,
-                "border-red-border": !attended,
-                "border-blue-border": attended === undefined || attended === null,
+                "border-success-border": attended,
+                "border-destructive-border": !attended,
+                "border-info-border": attended === undefined || attended === null,
               },
               {
-                "bg-green-bg": attended,
-                "bg-red-bg": !attended,
-                "bg-blue-bg": attended === undefined || attended === null,
+                "bg-success-bg": attended,
+                "bg-destructive-bg": !attended,
+                "bg-info-bg": attended === undefined || attended === null,
               },
             )}
           >
             {attended === null || attended === undefined ? (
-              <div className="flex items-center gap-1 text-blue-base">
+              <div className="flex items-center gap-1 text-info">
                 <Icons.helpCircle className="h-3 w-3" strokeWidth={2.5} />
                 <span>Not marked</span>
               </div>
             ) : attended ? (
-              <div className="flex items-center gap-1 text-green-base">
+              <div className="flex items-center gap-1 text-success">
                 <Icons.checkCircle className="h-3 w-3" strokeWidth={2.5} />
                 <span>Attended</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1 text-red-base">
+              <div className="flex items-center gap-1 text-destructive">
                 <Icons.crossCircleFilled className="h-3 w-3" strokeWidth={2.5} />
                 <span>Missed</span>
               </div>
@@ -347,20 +333,18 @@ const columns = (state: {
           <div className="relative flex items-center">
             <span>{schools[0]},</span>
             <DropdownMenu>
-              <DropdownMenuTrigger className="ml-2 cursor-pointer select-none text-shamiri-new-blue">
+              <DropdownMenuTrigger className="ml-2 cursor-pointer select-none text-primary">
                 +{schools.length - 1}
                 <span className="sr-only"> more schools</span>
               </DropdownMenuTrigger>
-              <DropdownMenuPortal>
-                <DropdownMenuContent>
-                  <div className="flex flex-col gap-y-2 px-2 py-1 text-sm">
-                    {schools.slice(1).map((school, index) => {
-                      // oxlint-disable-next-line react/no-array-index-key -- static display list
-                      return <span key={index.toString()}>{school}</span>;
-                    })}
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenuPortal>
+              <DropdownMenuContent>
+                <div className="flex flex-col gap-y-2 px-2 py-1 text-sm">
+                  {schools.slice(1).map((school, index) => {
+                    // oxlint-disable-next-line react/no-array-index-key -- static display list
+                    return <span key={index.toString()}>{school}</span>;
+                  })}
+                </div>
+              </DropdownMenuContent>
             </DropdownMenu>
           </div>
         );
@@ -386,7 +370,7 @@ const columns = (state: {
               <Tooltip>
                 <TooltipTrigger>
                   <div className="flex gap-1">
-                    <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
+                    <Icons.flagTriangleRight className="h-4 w-4 text-destructive" />
                     <span>{row.original.phoneNumber}</span>
                   </div>
                 </TooltipTrigger>
@@ -435,23 +419,21 @@ export function SupervisorAttendanceDataTableMenu({
   return (
     <DropdownMenu>
       <RowActionsTrigger label={`Actions for ${attendance?.supervisorName}`} />
-      <DropdownMenuPortal>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>
-            <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => {
-              state.setAttendance(attendance);
-              state.setMarkAttendanceDialog(true);
-            }}
-            disabled={attendance?.sessionStatus === SessionStatus.Cancelled}
-          >
-            Mark attendance
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenuPortal>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>
+          <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => {
+            state.setAttendance(attendance);
+            state.setMarkAttendanceDialog(true);
+          }}
+          disabled={attendance?.sessionStatus === SessionStatus.Cancelled}
+        >
+          Mark attendance
+        </DropdownMenuItem>
+      </DropdownMenuContent>
     </DropdownMenu>
   );
 }

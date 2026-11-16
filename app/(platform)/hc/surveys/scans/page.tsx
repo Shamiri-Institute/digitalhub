@@ -27,7 +27,7 @@ export default async function HubSurveyScansPage() {
         <Separator />
         <ScanUploader />
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Uploaded scans</h2>
+          <h2 className="text-lg font-bold text-primary">Uploaded scans</h2>
           <ScanUploadsTable uploads={uploads} showHub={false} timeZone={timeZone} />
         </section>
         <ViewerTimeZoneCookie serverTimeZone={timeZone} />

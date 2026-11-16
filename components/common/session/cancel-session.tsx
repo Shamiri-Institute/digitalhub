@@ -8,7 +8,6 @@ import {
   DialogClose,
   DialogContent,
   DialogHeader,
-  DialogPortal,
   DialogTitle,
   useDialogSave,
 } from "#/components/ui/dialog";
@@ -30,13 +29,11 @@ export default function CancelSession({
   return (
     <div>
       <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
-        <DialogPortal>
-          <DialogContent className="lg:w-1/3 lg:max-w-none">
-            <CancelSessionConfirm sessionId={sessionId} close={() => onOpenChange(false)}>
-              {children}
-            </CancelSessionConfirm>
-          </DialogContent>
-        </DialogPortal>
+        <DialogContent className="lg:w-1/3 lg:max-w-none">
+          <CancelSessionConfirm sessionId={sessionId} close={() => onOpenChange(false)}>
+            {children}
+          </CancelSessionConfirm>
+        </DialogContent>
       </Dialog>
     </div>
   );
@@ -81,7 +78,7 @@ function CancelSessionConfirm({
       {children}
       <div className="flex flex-col gap-y-4 pt-4">
         <span>Are you sure?</span>
-        <div className="flex items-start gap-2 rounded-lg border border-shamiri-red/30 bg-red-bg px-4 py-2 text-red-base">
+        <div className="flex items-start gap-2 rounded-lg border border-destructive-border bg-destructive-bg px-4 py-2 text-destructive">
           <Icons.info className="h-4 w-4 shrink-0 stroke-2" />
           <div>
             Once this change has been made it is irreversible and will need you to contact support
@@ -91,14 +88,16 @@ function CancelSessionConfirm({
       </div>
       <Separator />
       <div className="flex justify-end gap-4">
-        <DialogClose asChild>
-          <Button
-            className="text-shamiri-light-red hover:bg-red-bg hover:text-shamiri-light-red"
-            variant="ghost"
-          >
-            Cancel
-          </Button>
-        </DialogClose>
+        <DialogClose
+          render={
+            <Button
+              className="text-destructive hover:bg-destructive-bg hover:text-destructive"
+              variant="ghost"
+            >
+              Cancel
+            </Button>
+          }
+        />
         <Button
           variant="destructive"
           loading={isSaving}

@@ -63,7 +63,7 @@ export function DropoutConfirmStep({
       <Separator />
       <DialogFooter className="flex justify-end">
         <Button
-          className="text-shamiri-light-red hover:bg-red-bg"
+          className="text-destructive hover:bg-destructive-bg"
           variant="ghost"
           disabled={isSaving}
           onClick={onCancel}

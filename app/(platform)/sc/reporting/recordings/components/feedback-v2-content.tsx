@@ -112,7 +112,7 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
             })}
 
             {feedback.fidelity_scores.overall_fidelity_summary && (
-              <div className="rounded-md border border-blue-border bg-blue-bg p-4">
+              <div className="rounded-md border border-info-border bg-info-bg p-4">
                 <h5 className="font-medium mb-2">Overall Assessment</h5>
                 <p className="text-sm">
                   <MarkdownText>{feedback.fidelity_scores.overall_fidelity_summary}</MarkdownText>
@@ -165,16 +165,16 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
                 className={cn(
                   "rounded-md border p-4",
                   feedback.competency_profile.red_flag_check.any_critical_L1
-                    ? "border-red-border bg-red-bg"
-                    : "border-green-border bg-green-bg",
+                    ? "border-destructive-border bg-destructive-bg"
+                    : "border-success-border bg-success-bg",
                 )}
               >
                 <h5
                   className={cn(
                     "font-medium mb-2",
                     feedback.competency_profile.red_flag_check.any_critical_L1
-                      ? "text-shamiri-light-red"
-                      : "text-shamiri-green",
+                      ? "text-destructive"
+                      : "text-success",
                   )}
                 >
                   Red Flag Check
@@ -202,7 +202,7 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
           <div className="space-y-4">
             {supervisionBrief.strengths_to_acknowledge?.length > 0 && (
               <div>
-                <h5 className="font-medium text-shamiri-green mb-2">Strengths to Acknowledge</h5>
+                <h5 className="font-medium text-success mb-2">Strengths to Acknowledge</h5>
                 <div className="space-y-3">
                   {supervisionBrief.strengths_to_acknowledge.map((item) => (
                     <div key={item.strength} className="rounded-md border p-4">
@@ -221,7 +221,7 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
 
             {supervisionBrief.areas_for_growth?.length > 0 && (
               <div>
-                <h5 className="font-medium text-shamiri-dark-orange mb-2">Areas for Growth</h5>
+                <h5 className="font-medium text-warning mb-2">Areas for Growth</h5>
                 <div className="space-y-3">
                   {supervisionBrief.areas_for_growth.map((item, idx) => (
                     // oxlint-disable-next-line react/no-array-index-key -- read-only server feedback list; composite key disambiguates potential duplicate text
@@ -258,7 +258,7 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
                   {supervisionBrief.reflective_questions_for_supervision.map((question, idx) => (
                     // oxlint-disable-next-line react/no-array-index-key -- read-only server feedback list; composite key disambiguates potential duplicate text
                     <li key={`${idx}-${question.slice(0, 40)}`} className="flex gap-2 text-sm">
-                      <span className="font-semibold text-shamiri-new-blue mt-0.5">{idx + 1}.</span>
+                      <span className="font-semibold text-primary mt-0.5">{idx + 1}.</span>
                       <span className="text-muted-foreground">
                         <MarkdownText>{question}</MarkdownText>
                       </span>
@@ -273,14 +273,14 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
 
       {wellnessFlag?.flagged && (
         <FeedbackSection title="Fellow Wellness Flag">
-          <div className="rounded-md border border-shamiri-light-orange/30 bg-shamiri-light-orange/10 p-4">
+          <div className="rounded-md border border-warning-border bg-warning-bg p-4">
             {wellnessFlag.observation && (
               <p className="text-sm">
                 <MarkdownText>{wellnessFlag.observation}</MarkdownText>
               </p>
             )}
             {wellnessFlag.suggested_check_in && (
-              <div className="mt-2 pt-2 border-t border-shamiri-light-orange/30">
+              <div className="mt-2 pt-2 border-t border-warning-border">
                 <p className="text-xs font-medium text-muted-foreground">Suggested Check-in:</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   <MarkdownText>{wellnessFlag.suggested_check_in}</MarkdownText>

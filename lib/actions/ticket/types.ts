@@ -5,7 +5,7 @@ import {
   TicketStatus as TicketStatusValues,
 } from "#/db/enums";
 import { z } from "zod";
-import { stringValidation } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 
 export const TicketCategoryEnum = z.enum(TicketCategoryValues);
 export const TicketStatusEnum = z.enum(TicketStatusValues);

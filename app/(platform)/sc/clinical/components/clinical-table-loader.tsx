@@ -19,11 +19,7 @@ export default function ClinicalTableLoader() {
   }));
 
   function renderTableActions() {
-    return (
-      <Button variant="brand" disabled>
-        New Case
-      </Button>
-    );
+    return <Button disabled>New Case</Button>;
   }
 
   return (

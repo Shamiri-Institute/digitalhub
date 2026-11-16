@@ -1,6 +1,5 @@
 "use client";
 
-import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { Plus } from "lucide-react";
@@ -28,7 +27,7 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import { Popover, PopoverContent } from "#/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -49,12 +48,14 @@ export default function AddNewSupervisor() {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="brand" className="flex gap-2">
-          <Plus className="h-4 w-4" />
-          Add supervisor
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button className="flex gap-2">
+            <Plus className="h-4 w-4" />
+            Add supervisor
+          </Button>
+        }
+      />
       <DialogContent className="w-2/5 max-w-none">
         <AddNewSupervisorForm close={() => setIsOpen(false)} />
       </DialogContent>
@@ -106,7 +107,7 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
         <div className="space-y-6">
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+              <span className="pb-2 text-xs uppercase text-muted-foreground">
                 Personal Information
               </span>
               <Separator />
@@ -208,22 +209,24 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
                   <FormItem required>
                     <FormLabel>Date of birth</FormLabel>
                     <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "mt-1.5 w-full justify-start px-3 text-left font-normal",
-                            !field.value && "text-muted-foreground",
-                          )}
-                        >
-                          <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                          {field.value ? (
-                            format(field.value, DISPLAY_DATE)
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
+                      <PopoverTrigger
+                        render={
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                              !field.value && "text-muted-foreground",
+                            )}
+                          >
+                            <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                            {field.value ? (
+                              format(field.value, DISPLAY_DATE)
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                          </Button>
+                        }
+                      />
                       <PopoverContent className="w-auto p-0">
                         <Calendar
                           mode="single"
@@ -313,7 +316,7 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
           </div>
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+              <span className="pb-2 text-xs uppercase text-muted-foreground">
                 M-PESA Information
               </span>
               <Separator />
@@ -362,7 +365,7 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
           <Button
             variant="ghost"
             type="button"
-            className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+            className="text-base font-semibold leading-6 text-primary hover:text-primary"
             onClick={() => {
               close();
             }}
@@ -370,7 +373,7 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
             Cancel
           </Button>
           <Button
-            className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white"
+            className="flex items-center gap-2 bg-primary text-base font-semibold leading-6 text-white"
             type="submit"
             disabled={form.formState.isSubmitting}
             loading={form.formState.isSubmitting}

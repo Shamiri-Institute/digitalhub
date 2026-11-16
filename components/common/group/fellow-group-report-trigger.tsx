@@ -27,12 +27,12 @@ export default function FellowGroupReportTrigger({
 
   if (report) {
     return (
-      <div className="flex flex-col gap-3 rounded-2xl border border-green-border bg-green-bg p-4">
-        <div className="flex items-center gap-2 text-green-base">
+      <div className="flex flex-col gap-3 rounded-2xl border border-success-border bg-success-bg p-4">
+        <div className="flex items-center gap-2 text-success">
           <CheckCircle2 className="h-5 w-5 shrink-0" />
           <span className="font-semibold">Group Report submitted</span>
         </div>
-        <span className="text-sm text-shamiri-text-grey">
+        <span className="text-sm text-muted-foreground">
           Submitted on {format(report.submittedAt, "dd MMM yyyy")}. This report is final and can no
           longer be edited.
         </span>
@@ -60,11 +60,11 @@ export default function FellowGroupReportTrigger({
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-blue-border bg-blue-bg p-4">
-      <Button type="button" variant="brand" className="w-fit" onClick={() => setFormOpen(true)}>
+    <div className="flex flex-col gap-2 rounded-2xl border border-info-border bg-info-bg p-4">
+      <Button type="button" className="w-fit" onClick={() => setFormOpen(true)}>
         Complete Group Report
       </Button>
-      <span className="text-sm text-shamiri-text-grey">
+      <span className="text-sm text-muted-foreground">
         Your group has reached its fourth session. Please complete the Group Report when you are
         done with your final session.
       </span>

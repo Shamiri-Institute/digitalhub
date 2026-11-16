@@ -153,8 +153,8 @@ function StudentDropoutSteps({
           <Button
             className={cn(
               student.droppedOut
-                ? "text-shamiri-new-blue hover:bg-blue-bg"
-                : "text-shamiri-light-red hover:bg-red-bg",
+                ? "text-primary hover:bg-info-bg"
+                : "text-destructive hover:bg-destructive-bg",
             )}
             variant="ghost"
             type="button"
@@ -164,7 +164,7 @@ function StudentDropoutSteps({
             Cancel
           </Button>
           <Button
-            variant={student.droppedOut ? "brand" : "destructive"}
+            variant={student.droppedOut ? "default" : "destructive"}
             type="submit"
             disabled={isSaving}
             loading={isSaving}

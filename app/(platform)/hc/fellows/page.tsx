@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
-import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
+import FellowChartsSkeleton from "#/app/(platform)/hc/fellows/components/fellow-charts-skeleton";
 import FellowsChartsWrapper from "#/app/(platform)/hc/fellows/components/fellows-charts-wrapper";
 import FellowsTable from "#/app/(platform)/hc/fellows/components/fellows-table";
 import { currentHubCoordinator } from "#/app/auth";
@@ -27,7 +27,7 @@ export default async function FellowPage() {
         <PageHeading title="Fellows" />
         <Separator />
 
-        <Suspense fallback={<GraphLoadingIndicator />}>
+        <Suspense fallback={<FellowChartsSkeleton />}>
           <FellowsChartsWrapper coordinator={{ assignedHubId: hubId }} />
         </Suspense>
         <FellowsTable

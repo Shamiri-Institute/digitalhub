@@ -32,11 +32,11 @@ export default async function HubSurveysPage() {
         <TabToggleNavigation options={HUB_SURVEY_TABS} className="px-0" />
         <Separator />
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Ready to print</h2>
+          <h2 className="text-lg font-bold text-primary">Ready to print</h2>
           <PrintableVersionsTable versions={versions} runsPath={RUNS_PATH} />
         </section>
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Print runs</h2>
+          <h2 className="text-lg font-bold text-primary">Print runs</h2>
           <PrintRunsTable runs={runs} runsPath={RUNS_PATH} showHub={false} timeZone={timeZone} />
         </section>
         <ViewerTimeZoneCookie serverTimeZone={timeZone} />

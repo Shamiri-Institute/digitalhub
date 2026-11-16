@@ -18,6 +18,7 @@ import {
   Dialog,
   DialogContent,
   DialogFooter,
+  DialogTrigger,
   DialogHeader,
   DialogTitle,
   DialogClose,
@@ -43,7 +44,8 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { GENDER_OPTIONS } from "#/lib/constants";
-import { cn, stringValidation } from "#/lib/utils";
+import { cn } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 import { zodResolver } from "#/lib/zod-resolver";
 import { DISPLAY_DATE } from "#/lib/date-utils";
 
@@ -125,13 +127,13 @@ const formSchema = z
 type FormValues = z.infer<typeof formSchema>;
 
 export function AddNewClinicalCaseForm({
-  children,
+  trigger,
   schools,
   fellowsInProject,
   supervisorsInHub,
   hubs,
 }: {
-  children?: React.ReactNode;
+  trigger: React.ReactElement;
   schools: SchoolsInHubData["schools"];
   fellowsInProject: SchoolsInHubData["fellowsInProject"];
   supervisorsInHub: SchoolsInHubData["supervisorsInHub"];
@@ -141,7 +143,7 @@ export function AddNewClinicalCaseForm({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {children}
+      <DialogTrigger render={trigger} />
       <DialogContent className="w-2/5 max-w-none">
         <AddClinicalCaseFields
           schools={schools}
@@ -310,7 +312,7 @@ function AddClinicalCaseFields({
         <div className="space-y-6 pt-4">
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+              <span className="pb-2 text-xs uppercase text-muted-foreground">
                 Student Information
               </span>
               <Separator />
@@ -336,7 +338,7 @@ function AddClinicalCaseFields({
                   <Button
                     type="button"
                     variant="link"
-                    className="h-auto p-0 text-sm text-shamiri-new-blue"
+                    className="h-auto p-0 text-sm text-primary"
                     onClick={toggleNewStudent}
                   >
                     {isNewStudent ? "Select existing student" : "Add new student"}
@@ -415,22 +417,24 @@ function AddClinicalCaseFields({
                         <FormItem required className="flex-1">
                           <FormLabel>Year of Birth</FormLabel>
                           <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "mt-1.5 w-full justify-start px-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground",
-                                )}
-                              >
-                                <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                                {field.value ? (
-                                  format(field.value, DISPLAY_DATE)
-                                ) : (
-                                  <span>Pick a date</span>
-                                )}
-                              </Button>
-                            </PopoverTrigger>
+                            <PopoverTrigger
+                              render={
+                                <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                    "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground",
+                                  )}
+                                >
+                                  <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                                  {field.value ? (
+                                    format(field.value, DISPLAY_DATE)
+                                  ) : (
+                                    <span>Pick a date</span>
+                                  )}
+                                </Button>
+                              }
+                            />
                             <PopoverContent className="w-auto p-0">
                               <Calendar
                                 mode="single"
@@ -510,7 +514,7 @@ function AddClinicalCaseFields({
 
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">Case Details</span>
+              <span className="pb-2 text-xs uppercase text-muted-foreground">Case Details</span>
               <Separator />
             </div>
             <div className="space-y-4">
@@ -645,16 +649,18 @@ function AddClinicalCaseFields({
 
         <Separator className="my-6" />
         <DialogFooter className="flex justify-end gap-2">
-          <DialogClose asChild>
-            <Button
-              variant="ghost"
-              type="button"
-              className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
-            >
-              Cancel
-            </Button>
-          </DialogClose>
-          <Button variant="brand" type="submit" disabled={isSaving} loading={isSaving}>
+          <DialogClose
+            render={
+              <Button
+                variant="ghost"
+                type="button"
+                className="text-base font-semibold leading-6 text-primary hover:text-primary"
+              >
+                Cancel
+              </Button>
+            }
+          />
+          <Button type="submit" disabled={isSaving} loading={isSaving}>
             Save
           </Button>
         </DialogFooter>

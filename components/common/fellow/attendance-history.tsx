@@ -76,7 +76,6 @@ export default function AttendanceHistory({
         />
         <DialogFooter className="flex justify-end gap-2">
           <Button
-            variant="brand"
             onClick={() => {
               onOpenChange(false);
             }}
@@ -148,7 +147,7 @@ const columns: ColumnDef<FellowAttendanceHistoryRow>[] = [
       return row.original.attended && payouts.length > 0 ? (
         <div className="flex">
           {payouts[0]?.executedAt !== null ? (
-            <Badge variant="shamiri-green">Payment initiated</Badge>
+            <Badge variant="success">Payment initiated</Badge>
           ) : (
             <Badge variant="warning">Payment pending</Badge>
           )}

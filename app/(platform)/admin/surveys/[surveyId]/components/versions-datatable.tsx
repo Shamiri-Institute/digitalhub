@@ -28,7 +28,7 @@ const VERSION_COLUMNS: ColumnDef<VersionTableRow>[] = [
     cell: ({ row }) => (
       <Link
         href={`/admin/surveys/${row.original.surveyId}/versions/${row.original.versionNumber}`}
-        className="font-medium text-shamiri-new-blue hover:underline"
+        className="font-medium text-primary hover:underline"
       >
         v{row.original.versionNumber}
       </Link>

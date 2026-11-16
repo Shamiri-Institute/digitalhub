@@ -15,7 +15,7 @@ interface PdfViewerProps {
 const PdfViewerInner = dynamic(() => import("./pdf-viewer-inner"), {
   ssr: false,
   loading: () => (
-    <div className="flex flex-col items-center justify-center py-16 text-shamiri-text-grey">
+    <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
       <Icons.loaderCircle className="h-10 w-10 mb-4 animate-spin" />
       <p>Loading PDF viewer...</p>
     </div>

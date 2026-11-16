@@ -32,10 +32,10 @@ function TranscriptLines({
 }) {
   const loaded = use(transcript);
   if (loaded === "failed") {
-    return <p className="text-sm text-shamiri-light-red">The transcript could not be loaded.</p>;
+    return <p className="text-sm text-destructive">The transcript could not be loaded.</p>;
   }
   if (!loaded?.segments || !loaded.gaps) {
-    return <p className="text-sm text-shamiri-text-grey">No transcript is available.</p>;
+    return <p className="text-sm text-muted-foreground">No transcript is available.</p>;
   }
 
   // Segments are stored in the order of the audio cuts; Gemini's times are estimates and can
@@ -56,21 +56,21 @@ function TranscriptLines({
   ].toSorted((a, b) => a.order - b.order);
 
   return (
-    <ol className="divide-y divide-grey-border rounded-md border border-grey-border">
+    <ol className="divide-y divide-border rounded-md border border-border">
       {lines.map((line) => (
         <li
           key={`${line.gap ? "gap" : "segment"}-${line.start}-${line.end}-${line.text}`}
           className="flex gap-3 px-3 py-2 text-sm"
         >
-          <span className="w-16 shrink-0 font-mono text-shamiri-text-grey tabular-nums">
+          <span className="w-16 shrink-0 font-mono text-muted-foreground tabular-nums">
             {clockTime(line.start)}
           </span>
           {line.gap ? (
-            <span className="text-shamiri-light-red italic">
+            <span className="text-destructive italic">
               {clockTime(line.start)} to {clockTime(line.end)} not transcribed
             </span>
           ) : (
-            <span className="text-shamiri-black">{line.text}</span>
+            <span className="text-foreground">{line.text}</span>
           )}
         </li>
       ))}
@@ -93,7 +93,7 @@ export default function ViewTranscriptDialog({
             {recording.fellowName}, {recording.sessionName} ({recording.groupName})
           </DialogDescription>
         </DialogHeader>
-        <Suspense fallback={<p className="text-sm text-shamiri-text-grey">Loading transcript…</p>}>
+        <Suspense fallback={<p className="text-sm text-muted-foreground">Loading transcript…</p>}>
           <TranscriptLines transcript={transcript} />
         </Suspense>
       </DialogContent>

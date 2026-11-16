@@ -30,37 +30,37 @@ export default function MainFellowsDatatableMenu({
       <RowActionsTrigger label={`Actions for ${fellow.fellowName}`} className="bg-white" />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
+          <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {role === ImplementerRole.ADMIN ? (
           <>
-            <DropdownMenuItem onSelect={() => openEditDialog(fellow)}>
+            <DropdownMenuItem onClick={() => openEditDialog(fellow)}>
               View fellow information
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => openWeeklyEvaluationDialog(fellow)}>
+            <DropdownMenuItem onClick={() => openWeeklyEvaluationDialog(fellow)}>
               View weekly fellow evaluation
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => openDialog("complaints", fellow)} disabled={true}>
+            <DropdownMenuItem onClick={() => openDialog("complaints", fellow)} disabled={true}>
               View complaints
             </DropdownMenuItem>
           </>
         ) : (
           <>
-            <DropdownMenuItem onSelect={() => openEditDialog(fellow)}>
+            <DropdownMenuItem onClick={() => openEditDialog(fellow)}>
               Edit fellow information
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => openDialog("complaints", fellow)}>
+            <DropdownMenuItem onClick={() => openDialog("complaints", fellow)}>
               Submit complaint
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => openWeeklyEvaluationDialog(fellow)}>
+            <DropdownMenuItem onClick={() => openWeeklyEvaluationDialog(fellow)}>
               View weekly fellow evaluation
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => openDialog("dropout", fellow)}>
               {fellow.droppedOut ? (
-                <div className="text-shamiri-red">Undo drop out</div>
+                <div className="text-destructive">Undo drop out</div>
               ) : (
-                <div className="text-shamiri-red">Drop-out fellow</div>
+                <div className="text-destructive">Drop-out fellow</div>
               )}
             </DropdownMenuItem>
           </>

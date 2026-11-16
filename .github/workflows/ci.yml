@@ -92,6 +92,23 @@ jobs:
           filter: blob:none
       - run: shellcheck scripts/*.sh scripts/*/*.sh .githooks/*
 
+  design_audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    # Impeccable's detector checks the UI against DESIGN.md and its anti-pattern rules. It annotates
+    # findings without failing the build until the first baseline has been reviewed.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          filter: blob:none
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - name: Impeccable design audit
+        run: pnpm dlx impeccable@4.8.2 detect --github app components
+
   migrations:
     runs-on: ubuntu-24.04
     timeout-minutes: 2

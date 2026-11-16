@@ -1,23 +1,9 @@
-"use client";
+import TableSkeleton from "#/components/common/table-skeleton";
 
-import { ImplementerRole } from "#/db/enums";
-import { DatatableSkeleton } from "#/components/common/build-skeleton-columns";
-import { columns } from "#/components/common/fellow/columns";
-
-export default function FellowsDatatableSkeleton({ role }: { role: ImplementerRole }) {
+export default function FellowsDatatableSkeleton() {
   return (
-    <DatatableSkeleton
-      columns={columns({
-        state: {
-          openDialog: () => {},
-          openDetailsDialog: () => {},
-        },
-        role,
-      })}
-      columnVisibilityState={{
-        checkbox: role === ImplementerRole.HUB_COORDINATOR,
-        Supervisor: false,
-      }}
+    <TableSkeleton
+      columnNames={["Name", "Average Rating", "Active Status", "Group Name", "Phone Number"]}
     />
   );
 }

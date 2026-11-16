@@ -1,5 +1,6 @@
 "use client";
 
+import { deferredHidden } from "#/components/deferred";
 import {
   type CalendarDate,
   createCalendar,
@@ -9,6 +10,7 @@ import {
 } from "@internationalized/date";
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { ImplementerRole } from "#/db/enums";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import {
@@ -32,26 +34,18 @@ import {
 } from "react-aria";
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
 import { type CalendarState, useCalendarState } from "react-stately";
-import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
-import FellowAttendance from "#/components/common/fellow/fellow-attendance";
-import CancelSession from "#/components/common/session/cancel-session";
-import RescheduleSession from "#/components/common/session/reschedule-session";
-import { ScheduleNewSession } from "#/components/common/session/schedule-new-session-form";
 import {
   SessionDetail,
   type SessionDialogKind,
   type SessionDialogOpener,
 } from "#/components/common/session/session-list";
-import SessionRatings from "#/components/common/session/session-ratings";
-import AttendanceDocumentDialog from "#/components/common/student/student-attendance-files/attendance-document-dialog";
-import StudentAttendance, {
+import {
   startStudentAttendanceOpening,
   type StudentAttendanceOpening,
-} from "#/components/common/student/student-attendance";
-import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
+} from "#/components/common/student/student-attendance-opening";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogPortal, DialogTrigger } from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "#/components/ui/dialog";
 import { toast } from "#/components/ui/use-toast";
 import type { Session } from "#/lib/actions/fetch-sessions";
 import { fetchSessionSupervisors } from "#/lib/actions/session/session";
@@ -69,9 +63,47 @@ import { DayView } from "./day-view";
 import { ListView } from "./list-view";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
-import { TableView } from "./table-view";
 import { WeekView } from "./week-view";
 import type { school, sessionName } from "#/db/schema";
+
+// Only hub coordinators have the table view, and it brings in two data tables, their attendance
+// forms and phone number parsing, so its code loads only when the table is shown.
+const TableView = dynamic(() => import("./table-view").then((mod) => mod.TableView));
+
+// These dialogs draw nothing until opened, so their code loads after the page.
+const MarkSessionOccurrence = deferredHidden(() =>
+  import("#/app/(platform)/sc/schedule/components/mark-session-occurrence").then(
+    (mod) => mod.MarkSessionOccurrence,
+  ),
+);
+const StudentAttendance = deferredHidden(() =>
+  import("#/components/common/student/student-attendance").then((mod) => mod.default),
+);
+const FellowAttendance = deferredHidden(() =>
+  import("#/components/common/fellow/fellow-attendance").then((mod) => mod.default),
+);
+const CancelSession = deferredHidden(() =>
+  import("#/components/common/session/cancel-session").then((mod) => mod.default),
+);
+const RescheduleSession = deferredHidden(() =>
+  import("#/components/common/session/reschedule-session").then((mod) => mod.default),
+);
+const ScheduleNewSession = deferredHidden(() =>
+  import("#/components/common/session/schedule-new-session-form").then(
+    (mod) => mod.ScheduleNewSession,
+  ),
+);
+const SessionRatings = deferredHidden(() =>
+  import("#/components/common/session/session-ratings").then((mod) => mod.default),
+);
+const AttendanceDocumentDialog = deferredHidden(() =>
+  import("#/components/common/student/student-attendance-files/attendance-document-dialog").then(
+    (mod) => mod.default,
+  ),
+);
+const SupervisorAttendance = deferredHidden(() =>
+  import("#/components/common/supervisor/supervisor-attendance").then((mod) => mod.default),
+);
 
 type School = Pick<typeof school.$inferSelect, "id" | "schoolName">;
 type SessionName = Pick<typeof sessionName.$inferSelect, "id" | "sessionType" | "sessionLabel">;
@@ -233,7 +265,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
           <div className="flex items-start justify-between gap-6 lg:items-center">
-            <h2 className="text-2xl font-semibold leading-8">{title}</h2>
+            <h2 className="text-2xl font-bold leading-8 text-primary">{title}</h2>
             <NavigationButtons prevProps={prevButtonProps} nextProps={nextButtonProps} />
           </div>
           <div className="flex lg:mx-2">
@@ -290,22 +322,22 @@ function CreateSessionButton({
 }) {
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        <Button variant="brand" disabled={loading} className="flex items-center gap-2 text-base">
-          <Icons.plusCircle className="h-4 w-4" />
-          <span>Schedule a session</span>
-        </Button>
-      </DialogTrigger>
-      <DialogPortal>
-        <DialogContent>
-          <ScheduleNewSession
-            toggleDialog={setDialogOpen}
-            role={role}
-            schools={schools}
-            hubSessionTypes={hubSessionTypes ?? []}
-          />
-        </DialogContent>
-      </DialogPortal>
+      <DialogTrigger
+        render={
+          <Button disabled={loading} className="flex items-center gap-2 text-base">
+            <Icons.plusCircle className="h-4 w-4" />
+            <span>Schedule a session</span>
+          </Button>
+        }
+      />
+      <DialogContent>
+        <ScheduleNewSession
+          toggleDialog={setDialogOpen}
+          role={role}
+          schools={schools}
+          hubSessionTypes={hubSessionTypes ?? []}
+        />
+      </DialogContent>
     </Dialog>
   );
 }
@@ -313,7 +345,7 @@ function CreateSessionButton({
 function SessionsLoader({ loading }: { loading: boolean }) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 px-4 text-shamiri-new-blue">
+      <div className="flex items-center justify-center gap-2 px-4 text-primary">
         <svg
           className="-ml-1 h-4 w-4 animate-spin"
           xmlns="http://www.w3.org/2000/svg"
@@ -630,7 +662,7 @@ function NavigationButtons({
   nextProps: AriaButtonProps;
 }) {
   return (
-    <div className="inline-flex shrink-0 divide-x divide-gray-300 overflow-auto rounded-lg border border-gray-300 shadow-xs">
+    <div className="inline-flex shrink-0 divide-x divide-input overflow-auto rounded-lg border border-input shadow-xs">
       <NavigationButton aria-label="Previous Month" {...prevProps}>
         <Icons.chevronLeft className="h-5 w-5" />
       </NavigationButton>
@@ -652,8 +684,8 @@ function NavigationButton({ children, ...props }: { children: React.ReactNode })
     <button
       {...mergeProps(buttonProps, focusProps)}
       ref={ref}
-      className={`inline-flex h-9 items-center bg-white px-2 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-0 ${
-        isFocusVisible ? "ring-2 ring-blue-base ring-offset-2" : ""
+      className={`inline-flex h-9 items-center bg-white px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted ${
+        isFocusVisible ? "ring-2 ring-info ring-offset-2" : ""
       }`}
     >
       {children}

@@ -53,7 +53,7 @@ export function TicketDropdown({ ticket, state }: { ticket: TicketData; state: T
       <RowActionsTrigger label={`Actions for ${ticket.subject}`} />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-shamiri-text-grey text-xs font-medium uppercase">Actions</span>
+          <span className="text-muted-foreground text-xs font-medium uppercase">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => state.openDialog("view", ticket)}>

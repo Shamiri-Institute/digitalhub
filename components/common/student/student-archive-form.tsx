@@ -61,13 +61,13 @@ export default function StudentArchiveForm({
             onSubmit={toastOnError(form.handleSubmit(() => onSubmit()))}
             className="space-y-5"
           >
-            <p className="text-sm text-shamiri-text-grey">
+            <p className="text-sm text-muted-foreground">
               This student will be deactivated and removed from active lists, but their records will
               remain in the system. Only an administrator or support team member can restore them.
             </p>
             <DialogFooter className="flex justify-end">
               <Button
-                className="text-shamiri-light-red hover:bg-red-bg"
+                className="text-destructive hover:bg-destructive-bg"
                 variant="ghost"
                 type="button"
                 onClick={() => setIsOpen(false)}

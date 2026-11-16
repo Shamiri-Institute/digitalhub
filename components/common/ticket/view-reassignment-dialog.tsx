@@ -69,16 +69,16 @@ function ReassignmentHistory({
   if (result.success && reassignments.length > 0) {
     return (
       <div className="relative">
-        <div className="absolute left-[18px] top-3 h-[calc(100%-24px)] w-1 bg-shamiri-new-blue/30 rounded-full" />
+        <div className="absolute left-[18px] top-3 h-[calc(100%-24px)] w-1 bg-primary/30 rounded-full" />
         <div className="space-y-4">
           {[...reassignments].reverse().map((reassignment, index) => {
             const stepNumber = reassignments.length - index;
             return (
               <div key={reassignment.id} className="relative flex gap-3 pl-10">
-                <div className="absolute left-2 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-shamiri-new-blue text-white text-xs font-bold z-10">
+                <div className="absolute left-2 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white text-xs font-bold z-10">
                   {stepNumber}
                 </div>
-                <div className="flex-1 rounded-md border border-shamiri-light-grey bg-background p-3">
+                <div className="flex-1 rounded-md border border-border bg-background p-3">
                   <div className="flex flex-col gap-3">
                     <div className="flex flex-row items-center justify-center gap-2 sm:gap-3">
                       <div className="flex flex-col items-center gap-1">
@@ -89,7 +89,7 @@ function ReassignmentHistory({
                           {reassignment.reassignedFromName || "Unknown"}
                         </span>
                       </div>
-                      <Icons.chevronRight className="h-4 w-4 text-shamiri-new-blue shrink-0" />
+                      <Icons.chevronRight className="h-4 w-4 text-primary shrink-0" />
                       <div className="flex flex-col items-center gap-1">
                         <Badge variant="outline" className="text-xs">
                           {formatRole(reassignment.reassignedToRole)}
@@ -101,13 +101,13 @@ function ReassignmentHistory({
                     </div>
                     <Separator className="my-1" />
                     <div className="flex flex-col gap-1">
-                      <span className="text-xs text-shamiri-text-grey uppercase">Reason</span>
-                      <span className="text-sm text-shamiri-text-dark-grey">
+                      <span className="text-xs text-muted-foreground uppercase">Reason</span>
+                      <span className="text-sm text-muted-foreground">
                         {reassignment.reassignmentReason}
                       </span>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <span className="text-xs text-shamiri-text-grey uppercase">Date</span>
+                      <span className="text-xs text-muted-foreground uppercase">Date</span>
                       <span className="text-sm">{formatSafeDate(reassignment.createdAt)}</span>
                     </div>
                   </div>
@@ -121,16 +121,16 @@ function ReassignmentHistory({
   }
   if (result.message.toLowerCase().includes("authorized")) {
     return (
-      <div className="rounded-md bg-red-bg border border-red-border p-4">
-        <p className="text-sm text-red-base font-medium">
+      <div className="rounded-md bg-destructive-bg border border-destructive-border p-4">
+        <p className="text-sm text-destructive font-medium">
           You are not authorized to view this ticket&apos;s reassignment history.
         </p>
       </div>
     );
   }
   return (
-    <div className="rounded-md bg-blue-bg border border-blue-border p-4">
-      <p className="text-sm text-blue-base font-medium">This ticket has not been reassigned yet.</p>
+    <div className="rounded-md bg-info-bg border border-info-border p-4">
+      <p className="text-sm text-info font-medium">This ticket has not been reassigned yet.</p>
     </div>
   );
 }

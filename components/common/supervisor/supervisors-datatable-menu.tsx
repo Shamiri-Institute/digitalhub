@@ -22,7 +22,7 @@ export function SupervisorsDataTableMenu({
       <RowActionsTrigger label={`Actions for ${supervisor.supervisorName}`} className="bg-white" />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
+          <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem

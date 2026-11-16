@@ -39,23 +39,23 @@ export function PrintRunDetailView({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <h2 className="text-lg font-semibold">Print run</h2>
+        <h2 className="text-lg font-bold text-primary">Print run</h2>
         <PrintStatusBadge status={run.status} />
       </div>
       <dl className="grid grid-cols-1 gap-x-8 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">
         {facts.map(([label, value]) => (
           <div key={label} className="contents">
-            <dt className="text-shamiri-text-grey">{label}</dt>
+            <dt className="text-muted-foreground">{label}</dt>
             <dd>{value}</dd>
           </div>
         ))}
       </dl>
       <section className="space-y-3">
-        <h3 className="text-base font-semibold">Files to print</h3>
+        <h3 className="text-base font-bold text-primary">Files to print</h3>
         <PrintFilesTable printRunId={run.id} files={run.files} runStatus={run.status} />
       </section>
       <section className="space-y-3">
-        <h3 className="text-base font-semibold">Copies</h3>
+        <h3 className="text-base font-bold text-primary">Copies</h3>
         <QuestionnairesTable {...copies} prefill={run.version.prefill} runPath={runPath} />
       </section>
     </div>

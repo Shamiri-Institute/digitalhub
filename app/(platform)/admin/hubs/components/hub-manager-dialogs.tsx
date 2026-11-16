@@ -212,7 +212,7 @@ function AddHubManagerForm({ hubId, onDone }: { hubId: string; onDone: () => voi
             )}
           />
           <div className="col-span-2 pt-2">
-            <span className="text-xs uppercase text-shamiri-text-grey">
+            <span className="text-xs uppercase text-muted-foreground">
               Bank and tax details (optional)
             </span>
             <Separator />
@@ -240,7 +240,6 @@ function AddHubManagerForm({ hubId, onDone }: { hubId: string; onDone: () => voi
             Cancel
           </Button>
           <Button
-            variant="brand"
             type="submit"
             disabled={form.formState.isSubmitting}
             loading={form.formState.isSubmitting}

@@ -6,6 +6,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLinkItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "#/components/ui/dropdown-menu";
@@ -24,26 +25,28 @@ export default function SchoolTableDropdown({
       <RowActionsTrigger label={`Actions for ${schoolRow.schoolName}`} />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
+          <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link
-            href={
-              role === "HUB_COORDINATOR"
-                ? `/hc/schools/${schoolRow.visibleId}/supervisors`
-                : role === "SUPERVISOR"
-                  ? `/sc/schools/${schoolRow.visibleId}/fellows`
-                  : role === "FELLOW"
-                    ? `/fel/schools/${schoolRow.visibleId}/group`
-                    : role === "ADMIN"
-                      ? `/admin/schools/${schoolRow.visibleId}/supervisors`
-                      : "#"
-            }
-          >
-            View school
-          </Link>
-        </DropdownMenuItem>
+        <DropdownMenuLinkItem
+          render={
+            <Link
+              href={
+                role === "HUB_COORDINATOR"
+                  ? `/hc/schools/${schoolRow.visibleId}/supervisors`
+                  : role === "SUPERVISOR"
+                    ? `/sc/schools/${schoolRow.visibleId}/fellows`
+                    : role === "FELLOW"
+                      ? `/fel/schools/${schoolRow.visibleId}/group`
+                      : role === "ADMIN"
+                        ? `/admin/schools/${schoolRow.visibleId}/supervisors`
+                        : "#"
+              }
+            >
+              View school
+            </Link>
+          }
+        />
         {role === "HUB_COORDINATOR" &&
           (!schoolRow.droppedOut ? (
             <div>
@@ -56,7 +59,7 @@ export default function SchoolTableDropdown({
                   : "Assign point supervisor"}
               </DropdownMenuItem>
               <DropdownMenuItem
-                className="text-shamiri-red"
+                className="text-destructive"
                 onClick={() => state.openDialog("dropout", schoolRow)}
               >
                 Dropout school
@@ -64,7 +67,7 @@ export default function SchoolTableDropdown({
             </div>
           ) : (
             <DropdownMenuItem
-              className="text-shamiri-red"
+              className="text-destructive"
               onClick={() => state.openDialog("undoDropout", schoolRow)}
             >
               Undo dropout

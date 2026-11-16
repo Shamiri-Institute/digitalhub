@@ -6,8 +6,8 @@ export default function PageHeading({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col justify-between lg:flex-row">
-      <h1 className="text-4xl font-semibold leading-[48px] text-black">{title}</h1>
+    <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-center">
+      <h1 className="text-3xl font-bold leading-tight text-primary lg:text-4xl">{title}</h1>
       {children}
     </div>
   );

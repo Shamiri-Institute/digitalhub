@@ -118,11 +118,7 @@ export const payoutRunColumns: ColumnDef<ImplementerPayoutHistoryType>[] = [
       };
 
       return (
-        <button
-          type="button"
-          onClick={downloadCSV}
-          className="text-shamiri-new-blue hover:underline"
-        >
+        <button type="button" onClick={downloadCSV} className="text-primary hover:underline">
           Download .csv
         </button>
       );

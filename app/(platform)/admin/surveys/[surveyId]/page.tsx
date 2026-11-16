@@ -38,19 +38,19 @@ export default async function AdminSurveyPage(props: { params: Promise<{ surveyI
       <div className="container w-full grow space-y-3 py-10">
         <Link
           href="/admin/surveys"
-          className="flex items-center gap-1 text-sm font-medium text-shamiri-new-blue hover:underline"
+          className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
         >
           <ChevronLeft className="h-4 w-4" />
           Surveys
         </Link>
         <PageHeading title={survey.title}>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-shamiri-text-grey">{survey.code}</span>
+            <span className="text-sm text-muted-foreground">{survey.code}</span>
             <SurveyStatusBadge status={survey.status} />
           </div>
         </PageHeading>
         {survey.description && (
-          <p className="text-sm text-shamiri-text-grey">{survey.description}</p>
+          <p className="text-sm text-muted-foreground">{survey.description}</p>
         )}
         <Separator />
         <VersionsDataTable
@@ -61,7 +61,7 @@ export default async function AdminSurveyPage(props: { params: Promise<{ surveyI
           timeZone={timeZone}
         />
         <section className="space-y-3 pt-6">
-          <h2 className="text-lg font-semibold">Print runs</h2>
+          <h2 className="text-lg font-bold text-primary">Print runs</h2>
           <PrintRunsTable runs={runs} runsPath={runsPath} showHub timeZone={timeZone} />
         </section>
         <ViewerTimeZoneCookie serverTimeZone={timeZone} />

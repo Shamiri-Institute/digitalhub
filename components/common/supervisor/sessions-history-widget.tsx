@@ -18,27 +18,27 @@ const CHIP_STATUS = {
   attended: {
     label: "Attended",
     Icon: Icons.checkCircle,
-    tone: "border-green-border bg-green-bg text-green-base",
+    tone: "border-success-border bg-success-bg text-success",
   },
   missed: {
     label: "Missed",
     Icon: Icons.crossCircleFilled,
-    tone: "border-red-border bg-red-bg text-red-base",
+    tone: "border-destructive-border bg-destructive-bg text-destructive",
   },
   unmarked: {
     label: "Not marked",
     Icon: Icons.helpCircle,
-    tone: "border-blue-border bg-blue-bg text-blue-base",
+    tone: "border-info-border bg-info-bg text-info",
   },
   notYetOccurred: {
     label: "Not yet occurred",
     Icon: Icons.helpCircle,
-    tone: "border-blue-border bg-blue-bg text-blue-base",
+    tone: "border-info-border bg-info-bg text-info",
   },
   notScheduled: {
     label: "Not scheduled",
     Icon: Icons.minusCircle,
-    tone: "border-shamiri-text-dark-grey/30 bg-white text-shamiri-text-dark-grey",
+    tone: "border-muted-foreground/30 bg-white text-muted-foreground",
   },
 };
 
@@ -68,35 +68,32 @@ export default function SessionHistoryWidget({
             <PopoverTrigger
               aria-label={`${sessionLabel}: ${label}`}
               className={cn(
-                "flex select-none items-center gap-1 rounded-lg border px-1.5 py-0.5 text-[0.825rem] font-semibold focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue focus-visible:ring-offset-2",
+                "flex select-none items-center gap-1 rounded-lg border px-1.5 py-0.5 text-[0.825rem] font-semibold",
                 tone,
               )}
             >
               <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} aria-hidden={true} />
               {sessionLabel}
             </PopoverTrigger>
-            <PopoverContent
-              align="start"
-              className="w-auto max-w-64 p-3 text-sm text-shamiri-black"
-            >
+            <PopoverContent align="start" className="w-auto max-w-64 p-3 text-sm text-foreground">
               <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-                <dt className="text-shamiri-text-grey">Status</dt>
+                <dt className="text-muted-foreground">Status</dt>
                 <dd>{label}</dd>
                 {attendance && (
                   <>
-                    <dt className="text-shamiri-text-grey">Date</dt>
+                    <dt className="text-muted-foreground">Date</dt>
                     <dd>{format(attendance.sessionDate, DISPLAY_DATE)}</dd>
                   </>
                 )}
                 {attendance?.attended === false && attendance.absenceReason && (
                   <>
-                    <dt className="text-shamiri-text-grey">Reason</dt>
+                    <dt className="text-muted-foreground">Reason</dt>
                     <dd>{attendance.absenceReason}</dd>
                   </>
                 )}
               </dl>
               {attendance?.attended === false && attendance.absenceComments && (
-                <p className="mt-2 whitespace-pre-wrap rounded border bg-background-secondary px-2 py-1 text-shamiri-text-grey">
+                <p className="mt-2 whitespace-pre-wrap rounded border bg-muted px-2 py-1 text-muted-foreground">
                   {attendance.absenceComments}
                 </p>
               )}

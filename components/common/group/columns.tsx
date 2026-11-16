@@ -62,7 +62,7 @@ export const columns = (state: GroupTableState): ColumnDef<SchoolGroupDataTableD
         row.original.archivedAt ? (
           <Badge variant="destructive">Inactive</Badge>
         ) : (
-          <Badge variant="shamiri-green">Active</Badge>
+          <Badge variant="success">Active</Badge>
         ),
       header: "Active Status",
       id: "Active Status",
@@ -79,10 +79,7 @@ export const columns = (state: GroupTableState): ColumnDef<SchoolGroupDataTableD
       cell: ({ row }) => {
         const type = row.original.groupType;
         return (
-          <Badge
-            variant={type === "TREATMENT" ? "default" : "outline-solid"}
-            className="capitalize"
-          >
+          <Badge variant={type === "TREATMENT" ? "default" : "outline"} className="capitalize">
             {type.toLowerCase()}
           </Badge>
         );

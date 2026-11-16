@@ -1,5 +1,6 @@
 "use client";
 
+import { deferredHidden } from "#/components/deferred";
 import type {
   fellow,
   interventionSession,
@@ -10,18 +11,30 @@ import type {
 import { ImplementerRole } from "#/db/enums";
 import { type SetStateAction, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import ReplaceFellow from "#/components/common/fellow/replace-fellow";
-import ArchiveGroup from "#/components/common/group/archive-group";
 import {
   columns,
   type GroupDialogKind,
   type SchoolGroupDataTableData,
 } from "#/components/common/group/columns";
 import CreateGroup from "#/components/common/group/create-group";
-import StudentGroupEvaluation from "#/components/common/group/student-group-evaluation";
-import UnarchiveGroup from "#/components/common/group/unarchive-group";
-import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
+
+// These dialogs draw nothing until opened, so their code loads after the page.
+const ReplaceFellow = deferredHidden(() =>
+  import("#/components/common/fellow/replace-fellow").then((mod) => mod.default),
+);
+const ArchiveGroup = deferredHidden(() =>
+  import("#/components/common/group/archive-group").then((mod) => mod.default),
+);
+const StudentGroupEvaluation = deferredHidden(() =>
+  import("#/components/common/group/student-group-evaluation").then((mod) => mod.default),
+);
+const UnarchiveGroup = deferredHidden(() =>
+  import("#/components/common/group/unarchive-group").then((mod) => mod.default),
+);
+const StudentsInGroup = deferredHidden(() =>
+  import("#/components/common/student/students-in-group").then((mod) => mod.default),
+);
 
 type OpenGroupDialog = { kind: GroupDialogKind; groupId: string };
 
@@ -114,7 +127,7 @@ export default function GroupsDataTable({
               <DialogAlertWidget>
                 <div className="flex items-center gap-2">
                   <span>{group.fellowName}</span>
-                  <span className="bg-shamiri-new-blue h-1 w-1 rounded-full">{""}</span>
+                  <span className="bg-primary h-1 w-1 rounded-full">{""}</span>
                   <span>{group.groupName}</span>
                 </div>
               </DialogAlertWidget>

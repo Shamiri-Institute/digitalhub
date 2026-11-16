@@ -33,7 +33,7 @@ import {
 } from "#/components/ui/select";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { GENDER_OPTIONS } from "#/lib/constants";
-import { stringValidation } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 import { zodResolver } from "#/lib/zod-resolver";
 
 const EditStudentSchema = z.object({
@@ -59,14 +59,14 @@ export default function ViewEditClinicalCaseStudentInfo({
   children,
   clinicalCase,
 }: {
-  children: React.ReactNode;
+  children: React.ReactElement;
   clinicalCase: ClinicalCases;
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} />
       <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
         <EditStudentInfoFields clinicalCase={clinicalCase} close={() => setDialogOpen(false)} />
       </DialogContent>
@@ -177,7 +177,7 @@ function EditStudentInfoFields({
                   <FormItem>
                     <FormLabel>School</FormLabel>
                     <FormControl>
-                      <Input {...field} disabled className="bg-gray-100" />
+                      <Input {...field} disabled className="bg-muted" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -218,7 +218,7 @@ function EditStudentInfoFields({
                   <FormItem className="flex-1">
                     <FormLabel>Shamiri ID</FormLabel>
                     <FormControl>
-                      <Input {...field} disabled className="bg-gray-100" />
+                      <Input {...field} disabled className="bg-muted" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -275,7 +275,7 @@ function EditStudentInfoFields({
                 <FormItem>
                   <FormLabel>Group</FormLabel>
                   <FormControl>
-                    <Input {...field} disabled className="bg-gray-100" />
+                    <Input {...field} disabled className="bg-muted" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -283,12 +283,14 @@ function EditStudentInfoFields({
             />
 
             <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="ghost" type="button">
-                  Cancel
-                </Button>
-              </DialogClose>
-              <Button variant="brand" type="submit" loading={isSaving} disabled={isSaving}>
+              <DialogClose
+                render={
+                  <Button variant="ghost" type="button">
+                    Cancel
+                  </Button>
+                }
+              />
+              <Button type="submit" loading={isSaving} disabled={isSaving}>
                 Save Changes
               </Button>
             </DialogFooter>

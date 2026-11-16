@@ -32,7 +32,6 @@ export default function TabToggleNavigation({
   return (
     <div className={cn("container flex", className)}>
       <ToggleGroup
-        type="single"
         className="form-toggle"
         defaultValue={currentTab?.name ?? ""}
         onValueChange={(value) => {

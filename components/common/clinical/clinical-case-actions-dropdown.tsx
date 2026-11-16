@@ -10,19 +10,23 @@ import ReferClinicalCase, {
 import TreatmentPlanForm from "#/app/(platform)/sc/clinical/components/treatment-plan-form";
 import TriggerFollowupDialog from "#/app/(platform)/sc/clinical/components/trigger-followup-dialog";
 import ViewEditClinicalCaseStudentInfo from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
+import type { ReactElement } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { NestedDialogMenuItem, RowActionsTrigger } from "#/components/common/row-actions-menu";
+import { NestedDialogMenuItem } from "#/components/common/row-actions-menu";
 
 export default function ClinicalCaseActionsDropdownMenu({
+  trigger,
   clinicalCase,
   role = "CLINICAL_LEAD",
   referralOptions,
 }: {
+  trigger: ReactElement;
   clinicalCase: ClinicalCases;
   role?: "CLINICAL_LEAD" | "SUPERVISOR";
   referralOptions?: ReferralOptions;
@@ -31,10 +35,10 @@ export default function ClinicalCaseActionsDropdownMenu({
 
   return (
     <DropdownMenu>
-      <RowActionsTrigger label={`Actions for ${clinicalCase.pseudonym}`} className="bg-white" />
+      <DropdownMenuTrigger render={trigger} />
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
+          <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <ViewEditClinicalCaseStudentInfo clinicalCase={clinicalCase}>

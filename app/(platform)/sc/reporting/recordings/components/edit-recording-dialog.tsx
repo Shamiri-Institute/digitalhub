@@ -331,7 +331,7 @@ function EditRecordingForm({ recording, fellows, onOpenChange }: EditRecordingDi
             >
               Cancel
             </Button>
-            <Button type="submit" variant="brand" disabled={isSubmitting} loading={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} loading={isSubmitting}>
               {isSubmitting ? "Saving..." : "Save changes"}
             </Button>
           </DialogFooter>

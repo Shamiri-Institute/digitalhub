@@ -1,6 +1,5 @@
 "use client";
 
-import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import parsePhoneNumberFromString, { isValidPhoneNumber } from "libphonenumber-js";
 import { useForm } from "react-hook-form";
@@ -27,7 +26,7 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import { Popover, PopoverContent } from "#/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -131,7 +130,7 @@ function SupervisorDetailsFormForm({
           <DialogAlertWidget separator={true}>
             <div className="flex items-center gap-2">
               <span>{supervisor?.supervisorName}</span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+              <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
               <span>
                 {supervisor?.cellNumber &&
                   parsePhoneNumberFromString(supervisor?.cellNumber, "KE")?.formatNational()}
@@ -142,7 +141,7 @@ function SupervisorDetailsFormForm({
         <div className="space-y-6">
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+              <span className="pb-2 text-xs uppercase text-muted-foreground">
                 Personal Information
               </span>
               <Separator />
@@ -251,23 +250,25 @@ function SupervisorDetailsFormForm({
                   <FormItem required={!isViewMode}>
                     <FormLabel>Date of birth</FormLabel>
                     <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          disabled={isViewMode}
-                          className={cn(
-                            "mt-1.5 w-full justify-start px-3 text-left font-normal",
-                            !field.value && "text-muted-foreground",
-                          )}
-                        >
-                          <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                          {field.value ? (
-                            format(field.value, DISPLAY_DATE)
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
+                      <PopoverTrigger
+                        render={
+                          <Button
+                            variant={"outline"}
+                            disabled={isViewMode}
+                            className={cn(
+                              "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                              !field.value && "text-muted-foreground",
+                            )}
+                          >
+                            <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                            {field.value ? (
+                              format(field.value, DISPLAY_DATE)
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                          </Button>
+                        }
+                      />
                       {!isViewMode && (
                         <PopoverContent className="w-auto p-0">
                           <Calendar
@@ -361,7 +362,7 @@ function SupervisorDetailsFormForm({
           </div>
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+              <span className="pb-2 text-xs uppercase text-muted-foreground">
                 M-PESA Information
               </span>
               <Separator />
@@ -429,7 +430,7 @@ function SupervisorDetailsFormForm({
         <Separator className="my-6" />
         <DialogFooter className="flex justify-end gap-2">
           <Button
-            variant={isViewMode ? "brand" : "ghost"}
+            variant={isViewMode ? "default" : "ghost"}
             type="button"
             className="text-base font-semibold leading-6"
             onClick={() => {
@@ -440,7 +441,7 @@ function SupervisorDetailsFormForm({
           </Button>
           {!isViewMode && (
             <Button
-              className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white"
+              className="flex items-center gap-2 bg-primary text-base font-semibold leading-6 text-white"
               type="submit"
               disabled={form.formState.isSubmitting}
               loading={form.formState.isSubmitting}

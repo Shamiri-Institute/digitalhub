@@ -1,4 +1,5 @@
 "use client";
+import { deferredHidden } from "#/components/deferred";
 import {
   type FellowPersonalDetails,
   loadFellowPersonalDetails,
@@ -8,14 +9,7 @@ import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
 import { type SetStateAction, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import AttendanceHistory from "#/components/common/fellow/attendance-history";
-import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import type { FellowGroupData } from "#/components/common/fellow/fellow-school-datatable-dropdown-menu";
-import WeeklyFellowEvaluation from "#/components/common/fellow/weekly-fellow-evaluation";
-import StudentGroupEvaluation from "#/components/common/group/student-group-evaluation";
-import { MarkAttendance } from "#/components/common/mark-attendance";
-import StudentsInGroup from "#/components/common/student/students-in-group";
-import SubmitComplaint from "#/components/common/submit-complaint";
 import DataTable from "#/components/data-table";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
@@ -31,6 +25,29 @@ import {
   subColumns,
 } from "./fellow-schools-columns";
 import type { project as projectTable } from "#/db/schema";
+
+// These dialogs draw nothing until opened, so their code loads after the page.
+const AttendanceHistory = deferredHidden(() =>
+  import("#/components/common/fellow/attendance-history").then((mod) => mod.default),
+);
+const FellowDetailsForm = deferredHidden(() =>
+  import("#/components/common/fellow/fellow-details-form").then((mod) => mod.default),
+);
+const WeeklyFellowEvaluation = deferredHidden(() =>
+  import("#/components/common/fellow/weekly-fellow-evaluation").then((mod) => mod.default),
+);
+const StudentGroupEvaluation = deferredHidden(() =>
+  import("#/components/common/group/student-group-evaluation").then((mod) => mod.default),
+);
+const StudentsInGroup = deferredHidden(() =>
+  import("#/components/common/student/students-in-group").then((mod) => mod.default),
+);
+const SubmitComplaint = deferredHidden(() =>
+  import("#/components/common/submit-complaint").then((mod) => mod.default),
+);
+const MarkAttendance = deferredHidden(() =>
+  import("#/components/common/mark-attendance").then((mod) => mod.MarkAttendance),
+);
 
 type OpenFellowDialog =
   | { kind: "add" }
@@ -87,9 +104,7 @@ export default function FellowSchoolsDatatable({
           onOpenChange={(open) => setDialog(open ? { kind: "add" } : null)}
           mode={"add"}
         >
-          <DialogTrigger asChild={true}>
-            <Button variant="brand">Add new fellow</Button>
-          </DialogTrigger>
+          <DialogTrigger render={<Button>Add new fellow</Button>} />
         </FellowDetailsForm>
       </div>
     ) : null;
@@ -100,7 +115,7 @@ export default function FellowSchoolsDatatable({
       <DialogAlertWidget>
         <div className="flex items-center gap-2">
           <span>{fellow.fellowName}</span>
-          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+          <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
           <span>
             {fellow.cellNumber &&
               parsePhoneNumberFromString(fellow.cellNumber, "KE")?.formatNational()}
@@ -115,7 +130,7 @@ export default function FellowSchoolsDatatable({
       <DialogAlertWidget>
         <div className="flex flex-wrap items-center gap-2 whitespace-nowrap">
           <span>Group {fellowGroup.groupName}</span>
-          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+          <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
           <span>{fellowGroup.school.schoolName}</span>
         </div>
       </DialogAlertWidget>

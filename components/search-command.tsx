@@ -67,7 +67,7 @@ export function SearchCommand({ data }: { data: { id: string; schoolName: string
           </CommandGroup>
           <CommandSeparator />
           <CommandGroup heading="Options">
-            <CommandItem onSelect={handleReset} className="text-shamiri-light-red">
+            <CommandItem onSelect={handleReset} className="text-destructive">
               <Undo2 className="mr-2 h-4 w-4" />
               Reset Selection
             </CommandItem>

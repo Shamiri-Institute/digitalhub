@@ -13,7 +13,6 @@ import { AddNewClinicalCaseForm } from "#/components/common/clinical/add-new-cli
 import CasesBreakdown from "#/components/common/clinical/cases-breakdown";
 import AllHubClinicalCasesTable from "#/components/common/clinical/hub-clinical-cases-table";
 import { Button } from "#/components/ui/button";
-import { DialogTrigger } from "#/components/ui/dialog";
 import PageHeading from "#/components/ui/page-heading";
 
 export default async function ClinicalPage() {
@@ -45,14 +44,13 @@ export default async function ClinicalPage() {
           fellowsInProject={fellowsInProject}
           supervisorsInHub={supervisorsInHub}
           hubs={hubs}
-        >
-          <DialogTrigger asChild={true}>
-            <Button variant="brand">
+          trigger={
+            <Button>
               <Plus className="mr-2 h-4 w-4" />
               New case
             </Button>
-          </DialogTrigger>
-        </AddNewClinicalCaseForm>
+          }
+        />
       </PageHeading>
       <CasesReferredToMe cases={referredCases} />
       <CasesToReview reviews={casesToReview} />

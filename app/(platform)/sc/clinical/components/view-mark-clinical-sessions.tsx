@@ -110,7 +110,7 @@ export default function ViewMarkClinicalSessions({ currentcase }: { currentcase:
     <div className="w-full space-y-4">
       <Table>
         <TableHeader>
-          <TableRow className="bg-background-secondary">
+          <TableRow className="bg-muted">
             <TableHead className="border">Session</TableHead>
             <TableHead className="border">Date</TableHead>
             <TableHead className="w-[140px] border">Attendance</TableHead>
@@ -125,25 +125,27 @@ export default function ViewMarkClinicalSessions({ currentcase }: { currentcase:
               return currentcase.caseStatus === "FollowUp";
             },
           ).map((sessionType) => (
-            <TableRow key={sessionType.key} className="hover:bg-background-secondary">
+            <TableRow key={sessionType.key} className="hover:bg-muted">
               <TableCell className="border font-medium">{sessionType.value}</TableCell>
               <TableCell className="border">
                 <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !dates[sessionType.key] && "text-muted-foreground",
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {(() => {
-                        const date = dates[sessionType.key];
-                        return date ? format(date, "dd MMM yyyy") : <span>Pick a date</span>;
-                      })()}
-                    </Button>
-                  </PopoverTrigger>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !dates[sessionType.key] && "text-muted-foreground",
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {(() => {
+                          const date = dates[sessionType.key];
+                          return date ? format(date, "dd MMM yyyy") : <span>Pick a date</span>;
+                        })()}
+                      </Button>
+                    }
+                  />
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
@@ -158,7 +160,7 @@ export default function ViewMarkClinicalSessions({ currentcase }: { currentcase:
               <TableCell className="w-[140px] border p-0">
                 {attendance[sessionType.key] === true ? (
                   <div className="p-2">
-                    <Badge variant="shamiri-green" className="w-20 justify-center">
+                    <Badge variant="success" className="w-20 justify-center">
                       <Check className="mr-1 h-3 w-3" /> Attended
                     </Badge>
                   </div>
@@ -175,14 +177,14 @@ export default function ViewMarkClinicalSessions({ currentcase }: { currentcase:
                       <button
                         type="button"
                         onClick={toastOnError(() => handleAttendance(sessionType.key, true))}
-                        className="flex items-center justify-center border-r p-3 text-shamiri-green transition-colors hover:bg-green-bg"
+                        className="flex items-center justify-center border-r p-3 text-success transition-colors hover:bg-success-bg"
                       >
                         <Check className="h-4 w-4" />
                       </button>
                       <button
                         type="button"
                         onClick={toastOnError(() => handleAttendance(sessionType.key, false))}
-                        className="flex items-center justify-center p-3 text-shamiri-light-red transition-colors hover:bg-red-bg"
+                        className="flex items-center justify-center p-3 text-destructive transition-colors hover:bg-destructive-bg"
                       >
                         <X className="h-4 w-4" />
                       </button>

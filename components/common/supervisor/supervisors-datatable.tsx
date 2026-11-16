@@ -5,12 +5,17 @@ import type { interventionSession, school as schoolTable, sessionName } from "#/
 import type { Row, RowSelectionState } from "@tanstack/react-table";
 import { type SetStateAction, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import { MarkAttendance } from "#/components/common/mark-attendance";
 import { columns, type SupervisorsData } from "#/components/common/supervisor/columns";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { markManySupervisorAttendance, markSupervisorAttendance } from "#/lib/actions/supervisor";
+import { deferredHidden } from "#/components/deferred";
+
+// The attendance dialog draws nothing until opened, so its form code loads after the page.
+const MarkAttendance = deferredHidden(() =>
+  import("#/components/common/mark-attendance").then((mod) => mod.MarkAttendance),
+);
 
 // Marking the selected supervisors reads them from the table's row selection.
 type OpenSupervisorDialog =
@@ -58,7 +63,7 @@ export default function SupervisorsDataTable({
             }
             onClick={() => setDialog({ kind: "markSelectedAttendance" })}
           >
-            <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
+            <Icons.fileDown className="h-4 w-4 text-muted-foreground" />
             <span>Mark supervisor attendance</span>
           </Button>
         )}
@@ -135,7 +140,7 @@ export default function SupervisorsDataTable({
             ) : (
               <span>{supervisor?.supervisorName}</span>
             )}
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+            <span className="h-1 w-1 rounded-full bg-primary">{""}</span>
             <span>{school?.schoolName}</span>
           </div>
         </DialogAlertWidget>

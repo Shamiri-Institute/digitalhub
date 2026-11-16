@@ -35,7 +35,8 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
-import { cn, sessionDisplayName } from "#/lib/utils";
+import { sessionDisplayName } from "#/lib/utils";
+import { CustomIndicator } from "#/components/common/custom-indicator";
 import { zodResolver } from "#/lib/zod-resolver";
 
 type Attendance = {
@@ -255,7 +256,7 @@ function MarkAttendanceContent({
                     aria-label="Attended"
                     value="attended"
                     id="mark_attended"
-                    className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
+                    className="custom-radio border-input data-checked:border-success"
                   />
                 </div>
                 <div className="relative">
@@ -264,7 +265,7 @@ function MarkAttendanceContent({
                     aria-label="Missed"
                     value="missed"
                     id="mark_missed"
-                    className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-red"
+                    className="custom-radio border-input data-checked:border-destructive"
                   />
                 </div>
                 <div className="relative">
@@ -273,7 +274,7 @@ function MarkAttendanceContent({
                     aria-label="Unmarked"
                     value="unmarked"
                     id="Unmarked_"
-                    className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-new-blue"
+                    className="custom-radio border-input data-checked:border-primary"
                   />
                 </div>
               </RadioGroup>
@@ -351,7 +352,7 @@ function MarkAttendanceContent({
         <Separator />
         <DialogFooter className="flex justify-end">
           <Button
-            className="text-shamiri-new-blue hover:bg-blue-bg"
+            className="text-primary hover:bg-info-bg"
             variant="ghost"
             onClick={() => {
               close();
@@ -370,21 +371,5 @@ function MarkAttendanceContent({
         </DialogFooter>
       </form>
     </Form>
-  );
-}
-
-export function CustomIndicator({ className, label }: { className: string; label: string }) {
-  return (
-    <div className="custom-indicator pointer-events-none absolute inset-0 flex h-20 items-center pl-6">
-      <div className="flex items-center gap-3">
-        <div
-          className={cn(
-            "indicator h-4 w-4 rounded-full border border-gray-300 bg-white shadow-sm",
-            className,
-          )}
-        />
-        <span>{label}</span>
-      </div>
-    </div>
   );
 }

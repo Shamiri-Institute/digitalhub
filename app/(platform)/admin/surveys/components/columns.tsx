@@ -21,7 +21,7 @@ export const columns: ColumnDef<SurveyListItem>[] = [
     cell: ({ row }) => (
       <Link
         href={`/admin/surveys/${row.original.id}`}
-        className="font-medium text-shamiri-new-blue hover:underline"
+        className="font-medium text-primary hover:underline"
       >
         {row.original.title}
       </Link>

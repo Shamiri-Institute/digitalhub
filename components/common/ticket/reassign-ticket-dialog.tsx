@@ -134,8 +134,8 @@ function ReassignTicketForm({
   const renderSearcher = (invalid: boolean) => {
     if (hubMissing) {
       return (
-        <div className="rounded-md border bg-red-bg border-red-border p-3">
-          <p className="text-sm text-red-base">
+        <div className="rounded-md border bg-destructive-bg border-destructive-border p-3">
+          <p className="text-sm text-destructive">
             Unable to reassign: no hub is assigned to your account. Please contact an administrator.
           </p>
         </div>
@@ -200,17 +200,14 @@ function ReassignTicketForm({
         <Separator />
 
         <DialogFooter className="flex justify-end gap-2">
-          <DialogClose asChild>
-            <Button variant="ghost" type="button">
-              Cancel
-            </Button>
-          </DialogClose>
-          <Button
-            variant="brand"
-            type="submit"
-            disabled={hubMissing || isSaving}
-            loading={isSaving}
-          >
+          <DialogClose
+            render={
+              <Button variant="ghost" type="button">
+                Cancel
+              </Button>
+            }
+          />
+          <Button type="submit" disabled={hubMissing || isSaving} loading={isSaving}>
             Reassign Ticket
           </Button>
         </DialogFooter>

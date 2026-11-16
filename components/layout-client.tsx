@@ -8,42 +8,35 @@ import {
   CircleUser,
   ClipboardList,
   GraduationCap,
-  LogOut,
   type LucideIcon,
   Menu,
   School,
   ShieldAlert,
   Stethoscope,
   Ticket,
-  UserRound,
   Users,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { SessionUser } from "#/lib/auth/session-user";
-import { signOut } from "#/lib/auth-client";
 import { useState } from "react";
 import type { AdminProject } from "#/app/(platform)/layout";
 import type { CurrentPersonnel } from "#/app/auth";
-import { MembershipSwitcher } from "#/components/common/membership-switcher";
-import { ProjectSwitcher } from "#/components/common/project-switcher";
-import { RoleSwitcher } from "#/components/common/role-switcher";
+import {
+  membershipSwitcherTrigger,
+  projectSwitcherTrigger,
+  roleSwitcherTrigger,
+} from "#/components/common/switcher-triggers";
+import { deferred } from "#/components/deferred";
+import { AccountMenu, PhoneMenu, ReportingMenu } from "#/components/header-menus";
 import { Button } from "#/components/ui/button";
 import type { ImplementerPersonnel } from "#/lib/actions/fetch-personnel";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "#/components/ui/dropdown-menu";
 
 import { roleHome } from "#/lib/auth/role-home";
+import { Icons } from "#/components/icons";
 import { cn, getInitials } from "#/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { toastOnError } from "#/components/ui/use-toast";
 
 export type AdminTabs = { users: boolean; surveys: boolean; payouts: boolean };
 
@@ -52,6 +45,18 @@ export type AdminTabs = { users: boolean; surveys: boolean; payouts: boolean };
 const ProfileDialog = dynamic(
   () => import("#/components/common/profile/profile-dialog").then((mod) => mod.ProfileDialog),
   { ssr: false },
+);
+
+// The switchers pull in cmdk and Base UI's Popover, so they load after the page; their triggers
+// are drawn until then. Menus defer their own code (components/ui/dropdown-menu.tsx).
+const ProjectSwitcher = deferred(() =>
+  import("#/components/common/project-switcher").then((mod) => mod.ProjectSwitcher),
+);
+const RoleSwitcher = deferred(() =>
+  import("#/components/common/role-switcher").then((mod) => mod.RoleSwitcher),
+);
+const MembershipSwitcher = deferred(() =>
+  import("#/components/common/membership-switcher").then((mod) => mod.MembershipSwitcher),
 );
 
 type RoleTab = { segment: string; label: string; icon: LucideIcon; alsoActiveOn?: string };
@@ -108,6 +113,14 @@ function roleTabs(mainRoute: string, adminTabs: AdminTabs) {
   }
 }
 
+const tabClass = (active: boolean) =>
+  cn(
+    "flex shrink-0 items-center gap-2 whitespace-nowrap border-b-[3px] py-2.5 font-semibold transition-colors [&_svg]:shrink-0",
+    active
+      ? "border-lime text-white"
+      : "border-transparent text-white/75 hover:border-white/40 hover:text-white",
+  );
+
 // Centres the active tab in the phone tab strip without scrolling the page.
 function revealActiveTab(activeTab: HTMLElement | null) {
   const tabStrip = activeTab?.parentElement;
@@ -151,7 +164,9 @@ export function LayoutClient({
   const avatar = (
     <Avatar className="h-8 w-8" aria-hidden>
       {avatarUrl ? <AvatarImage src={avatarUrl} width={32} height={32} alt="" /> : null}
-      <AvatarFallback>{userInitials}</AvatarFallback>
+      <AvatarFallback className="bg-lavender-20 text-sm font-bold text-primary">
+        {userInitials}
+      </AvatarFallback>
     </Avatar>
   );
 
@@ -159,27 +174,25 @@ export function LayoutClient({
     <div className={className}>
       {adminProjects && (
         <ProjectSwitcher
-          loading={loading}
+          trigger={projectSwitcherTrigger(user, adminProjects, loading)}
           setLoading={setLoading}
           user={user}
           projects={adminProjects}
-          className="nav-link"
         />
       )}
       {personnel && (
-        <div className="nav-link">
+        <div>
           <RoleSwitcher
-            loading={loading}
+            trigger={roleSwitcherTrigger(user, personnel, loading)}
             setLoading={setLoading}
-            user={user}
             implementerMembers={personnel}
           />
         </div>
       )}
       {isAdminUser && (
-        <div className="nav-link">
+        <div>
           <MembershipSwitcher
-            loading={loading}
+            trigger={membershipSwitcherTrigger(user, loading)}
             setLoading={setLoading}
             user={user}
             isAdminUser={isAdminUser}
@@ -189,141 +202,90 @@ export function LayoutClient({
     </div>
   );
 
-  // The phone menu and the desktop account menu show the same items; only one is visible.
-  const accountMenuItems = (
-    <>
-      <DropdownMenuItem
-        className="gap-2 px-4 py-3 lg:px-2 lg:py-1.5"
-        onSelect={() => setIsProfileOpen(true)}
-      >
-        <UserRound className="size-4 text-shamiri-text-grey" />
-        My Profile
-      </DropdownMenuItem>
-      <DropdownMenuItem
-        className="gap-2 px-4 py-3 lg:px-2 lg:py-1.5"
-        onSelect={toastOnError(signOut)}
-      >
-        <LogOut className="size-4 text-shamiri-text-grey" />
-        Sign out
-      </DropdownMenuItem>
-    </>
-  );
+  const openProfile = () => setIsProfileOpen(true);
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="bg-background-secondary border-b">
-        <div className="container space-y-4 px-4 pt-2 lg:px-8">
-          <div className="flex flex-col items-center justify-between lg:flex-row">
-            <div className="flex w-full flex-row items-center justify-between px-3 py-2 lg:py-0">
-              <Link href={homeHref} className="text-shamiri-new-blue text-2xl font-semibold">
-                Shamiri Hub
-              </Link>
-              <div className="relative lg:hidden">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      aria-label="Account menu"
-                      className="bg-white"
-                    >
-                      <Menu className="text-muted-foreground h-4 w-4 shrink-0" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] max-w-sm">
-                    <DropdownMenuLabel className="flex items-center gap-4 px-4 font-normal">
-                      {avatar}
-                      <span className="text-muted-foreground min-w-0 truncate text-base">
-                        {displayName}
-                      </span>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {hasSwitchers && (
-                      <>
-                        {renderSwitchers("flex flex-col py-2")}
-                        <DropdownMenuSeparator />
-                      </>
-                    )}
-                    {accountMenuItems}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-            <div className="hidden shrink-0 items-center gap-4 py-2 lg:flex">
-              {hasSwitchers && renderSwitchers("flex flex-row items-center gap-4")}
-              <DropdownMenu>
-                <DropdownMenuTrigger className="nav-link items-center rounded-md">
+      <header className="bg-primary text-white [&_:focus-visible]:outline-lime">
+        <div className="container flex items-center justify-between gap-4 px-4 pt-3 lg:px-8">
+          <Link href={homeHref} className="flex items-center gap-3 rounded-sm">
+            <Icons.logo className="h-7 w-auto text-white" />
+            <span className="sr-only">Shamiri home</span>
+            <span className="hidden border-l border-white/30 pl-3 text-sm font-semibold uppercase tracking-wider text-white/80 sm:block">
+              Digital Hub
+            </span>
+          </Link>
+          <div className="lg:hidden">
+            <PhoneMenu
+              trigger={
+                <Button variant="outline" size="icon" aria-label="Account menu">
+                  <Menu className="size-4" />
+                </Button>
+              }
+              avatar={avatar}
+              displayName={displayName}
+              switchers={hasSwitchers ? renderSwitchers("flex flex-col gap-2 px-2 py-2") : null}
+              onOpenProfile={openProfile}
+            />
+          </div>
+          <div className="hidden shrink-0 items-center gap-4 lg:flex">
+            {hasSwitchers && renderSwitchers("flex flex-row items-center gap-3")}
+            <AccountMenu
+              trigger={
+                <button
+                  type="button"
+                  className="flex items-center gap-2 rounded-md py-1 font-semibold text-white/90 hover:text-white"
+                >
                   {avatar}
                   <span className="max-w-72 truncate">{displayName}</span>
                   <ChevronDown className="size-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40 max-w-none">
-                  {accountMenuItems}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+                </button>
+              }
+              onOpenProfile={openProfile}
+            />
           </div>
-          <nav
-            aria-label="Main"
-            className="no-scrollbar flex items-center gap-8 overflow-x-auto ps-2 pe-10 mask-r-from-90% lg:mask-none"
-          >
-            {roleTabs(mainRoute, adminTabs).map((tab) => {
-              const active = subRoute === tab.segment || subRoute === tab.alsoActiveOn;
-              return (
-                <Link
-                  key={tab.segment}
-                  href={`/${mainRoute}/${tab.segment}`}
-                  ref={active ? revealActiveTab : undefined}
-                  aria-current={active ? "page" : undefined}
-                  className={cn("tab-link", active && "active")}
-                >
-                  <tab.icon className="size-5" />
-                  {tab.label}
-                </Link>
-              );
-            })}
-            {hasReporting && (
-              <DropdownMenu>
-                <DropdownMenuTrigger
+        </div>
+        <nav
+          aria-label="Main"
+          className="no-scrollbar container mt-2 flex items-center gap-7 overflow-x-auto px-4 pe-10 mask-r-from-90% lg:px-8 lg:mask-none"
+        >
+          {roleTabs(mainRoute, adminTabs).map((tab) => {
+            const active = subRoute === tab.segment || subRoute === tab.alsoActiveOn;
+            return (
+              <Link
+                key={tab.segment}
+                href={`/${mainRoute}/${tab.segment}`}
+                ref={active ? revealActiveTab : undefined}
+                aria-current={active ? "page" : undefined}
+                className={tabClass(active)}
+              >
+                <tab.icon className="size-5" />
+                {tab.label}
+              </Link>
+            );
+          })}
+          {hasReporting && (
+            <ReportingMenu
+              trigger={
+                <button
+                  type="button"
                   ref={reportingActive ? revealActiveTab : undefined}
-                  className={cn("tab-link cursor-pointer", reportingActive && "active")}
+                  className={cn(tabClass(reportingActive), "cursor-pointer")}
                 >
                   <ChartColumn className="size-5" />
                   Reporting
                   <ChevronDown className="size-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <DropdownMenuItem asChild>
-                    <Link href={`/${mainRoute}/reporting/expenses/fellows`}>Expenses</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href={`/${mainRoute}/reporting/school-reports`}>School Reports</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href={`/${mainRoute}/reporting/fellow-reports`}>Fellow Reports</Link>
-                  </DropdownMenuItem>
-                  {(mainRoute === "sc" || mainRoute === "hc") && (
-                    <DropdownMenuItem asChild>
-                      <Link href={`/${mainRoute}/reporting/monitoring-and-evaluation`}>
-                        Monitoring and Evaluation
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
-                  {mainRoute === "sc" && (
-                    <DropdownMenuItem asChild>
-                      <Link href={`/${mainRoute}/reporting/recordings`}>Session Recordings</Link>
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </nav>
-        </div>
+                </button>
+              }
+              mainRoute={mainRoute}
+            />
+          )}
+        </nav>
       </header>
       {/* overflow-x-clip (not -hidden): hidden makes <main> a scroll container, which breaks
           position:sticky for every descendant; clip clips without capturing sticky.
           pb-20 lets the last row and the footer scroll clear of the floating Sentry button. */}
-      <main className="bg-background-secondary flex min-h-0 grow items-stretch overflow-x-clip pb-20">
+      <main className="flex min-h-0 grow items-stretch overflow-x-clip bg-white pb-20">
         {children}
       </main>
       {isProfileOpen && (

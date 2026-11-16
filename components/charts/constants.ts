@@ -23,38 +23,43 @@ export function sessionLabel(sessionName: string) {
 }
 
 /**
- * Categorical series colours, assigned in this order and never cycled past the end. The order keeps
- * neighbouring colours, and the first and last slices of a donut, apart for colour-blind readers.
+ * Categorical series colours, assigned in this order. The six brand hues pass the dataviz checks
+ * (lightness band, chroma, colour-blind separation of neighbours, 3:1 on the card); anything past
+ * them is the neutral "other" colour rather than a repeat.
  */
 export const SERIES_COLORS = [
-  "var(--color-shamiri-new-blue)",
-  "var(--color-shamiri-graph-green)",
-  "var(--color-shamiri-graph-purple)",
-  "var(--color-shamiri-red)",
-  "var(--color-shamiri-light-orange)",
-  "var(--color-shamiri-dark-orange)",
-  "var(--color-shamiri-graph-yellow)",
-  "var(--color-shamiri-graph-light-blue)",
+  "var(--color-chart-1)",
+  "var(--color-chart-2)",
+  "var(--color-chart-3)",
+  "var(--color-chart-4)",
+  "var(--color-chart-5)",
+  "var(--color-chart-6)",
 ];
+
+const OTHER_COLOR = "var(--color-navy-40)";
+
+export function seriesColor(index: number) {
+  return SERIES_COLORS[index] ?? OTHER_COLOR;
+}
 
 /** Colour of a value from a fixed list, so it keeps its colour whatever else is in the data. */
 export function categoryColor(name: string, knownNames: readonly string[]) {
   const index = knownNames.indexOf(name);
-  return SERIES_COLORS[index === -1 ? knownNames.length : index];
+  return seriesColor(index === -1 ? knownNames.length : index);
 }
 
 /**
- * One blue ramp, light to dark, for series that follow an order (sessions, forms, ages). The
+ * One navy ramp, light to dark, for series that follow an order (sessions, forms, ages). The
  * light end fades toward the card surface; the steps pass the dataviz ordinal check for 2-9 series.
  */
 export function orderedSeriesColor(index: number, count: number) {
   const darkShare = count < 2 ? 100 : Math.round((index / (count - 1)) * 100);
-  return `color-mix(in oklab, var(--color-shamiri-dark-blue) ${darkShare}%, color-mix(in oklab, var(--color-shamiri-blue) 55%, var(--color-card)))`;
+  return `color-mix(in oklab, var(--color-primary) ${darkShare}%, color-mix(in oklab, var(--color-primary) 55%, var(--color-card)))`;
 }
 
 export const CASE_STATUS_COLORS = {
-  Active: "var(--color-shamiri-new-blue)",
-  FollowUp: "var(--color-shamiri-light-orange)",
-  Terminated: "var(--color-shamiri-graph-green)",
-  Referred: "var(--color-shamiri-graph-purple)",
+  Active: "var(--color-chart-1)",
+  FollowUp: "var(--color-chart-3)",
+  Terminated: "var(--color-chart-5)",
+  Referred: "var(--color-chart-4)",
 } as const;

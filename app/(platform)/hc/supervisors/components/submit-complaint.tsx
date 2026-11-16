@@ -128,7 +128,7 @@ function SubmitComplaintForm({ supervisorId, children, setIsOpen }: SubmitCompla
         <Separator />
         <DialogFooter className="flex justify-end">
           <Button
-            className="text-shamiri-new-blue"
+            className="text-primary"
             variant="ghost"
             type="button"
             onClick={() => {
@@ -138,7 +138,6 @@ function SubmitComplaintForm({ supervisorId, children, setIsOpen }: SubmitCompla
             Cancel
           </Button>
           <Button
-            variant="brand"
             type="submit"
             disabled={form.formState.isSubmitting}
             loading={form.formState.isSubmitting}

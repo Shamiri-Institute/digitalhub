@@ -7,14 +7,14 @@ import {
 } from "#/db/enums";
 
 const SURVEY_STATUS_VARIANT: Record<SurveyStatus, BadgeProps["variant"]> = {
-  DRAFT: "outline-solid",
-  ACTIVE: "shamiri-green",
+  DRAFT: "outline",
+  ACTIVE: "success",
   CLOSED: "secondary",
 };
 
 const VERSION_STATUS_VARIANT: Record<SurveyVersionStatus, BadgeProps["variant"]> = {
-  DRAFT: "outline-solid",
-  PUBLISHED: "shamiri-green",
+  DRAFT: "outline",
+  PUBLISHED: "success",
   RETIRED: "secondary",
 };
 

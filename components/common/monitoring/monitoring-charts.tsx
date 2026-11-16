@@ -1,36 +1,12 @@
-"use client";
-
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Label,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ReferenceLine,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import { SERIES_COLORS, orderedSeriesColor } from "#/components/charts/constants";
+import { orderedSeriesColor, seriesColor } from "#/components/charts/constants";
+import { ColumnChart, LineChart, RingBreakdown } from "#/components/charts/static-charts";
 import {
   formatCell,
   pivotRowsBySeries,
   type SupervisorEmphasis,
   YOU_SUFFIX,
 } from "#/components/common/monitoring/card-cells";
-import type { CardRow, CardView, ChartSeries } from "#/lib/monitoring/types";
-
-const MUTED_OPACITY = 0.35;
-const MAX_BARS_WITH_LABELS = 24;
-
-function seriesColor(index: number) {
-  return SERIES_COLORS[index % SERIES_COLORS.length];
-}
+import type { CardCell, CardRow, CardView, ChartSeries } from "#/lib/monitoring/types";
 
 type DrawnSeries = ChartSeries & { colorIndex: number; muted?: boolean; stackId?: string };
 
@@ -150,21 +126,13 @@ function drawnChart(
   };
 }
 
-type LegendItem = { key: string; label: string; color: string | undefined; muted?: boolean };
+const formatPercent = (value: number) =>
+  `${(value * 100).toLocaleString("en", { maximumFractionDigits: 1 })}%`;
 
-function ChartLegend({ items }: { items: LegendItem[] }) {
-  return (
-    <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 pt-2 text-xs text-shamiri-text-dark-grey">
-      {items.map(({ key, label, color, muted }) => (
-        <li key={key} className="flex items-center gap-1.5">
-          <svg aria-hidden="true" className="size-3" viewBox="0 0 12 12">
-            <rect width="12" height="12" fill={color} fillOpacity={muted ? MUTED_OPACITY : 1} />
-          </svg>
-          {label}
-        </li>
-      ))}
-    </ul>
-  );
+function numberOrNull(cell: CardCell | undefined) {
+  if (cell === null || cell === undefined || cell === "") return null;
+  const value = Number(cell);
+  return Number.isNaN(value) ? null : value;
 }
 
 export function CartesianChart({
@@ -180,92 +148,42 @@ export function CartesianChart({
 }) {
   const { chartRows, drawnSeries } = drawnChart(rows, view, emphasis);
   const colorCount = Math.max(...drawnSeries.map(({ colorIndex }) => colorIndex)) + 1;
-  const coloredSeries = drawnSeries.map((series) => ({
-    ...series,
-    color: view.ordered
-      ? orderedSeriesColor(series.colorIndex, colorCount)
-      : seriesColor(series.colorIndex),
+  const series = drawnSeries.map(({ label, colorIndex, muted, stackId }) => ({
+    name: label,
+    color: view.ordered ? orderedSeriesColor(colorIndex, colorCount) : seriesColor(colorIndex),
+    muted,
+    stack: stackId,
   }));
-  const formatValue = (value: unknown) =>
-    view.percent
-      ? `${(Number(value) * 100).toLocaleString("en", { maximumFractionDigits: 1 })}%`
-      : formatCell(typeof value === "number" ? value : null);
-  const formatBarLabel = (value: unknown) =>
-    value === null || value === undefined ? "" : formatValue(value);
-  // Recharts drops crowded ticks, which could be the viewer's own bar. A chart per fellow has too
-  // many bars to name, so its colour and tooltip identify them.
-  const barsMarkOwn = drawnSeries.some(({ key }) => key.startsWith("own:"));
-  const axisForOwnBars = !barsMarkOwn
-    ? {}
-    : view.x === "fellowName"
-      ? { tick: false }
-      : { interval: 0, angle: -30, textAnchor: "end" as const, height: 80 };
-  const showsBarLabels = !view.stacked && chartRows.length <= MAX_BARS_WITH_LABELS;
-  const axes = (
-    <>
-      <CartesianGrid vertical={false} strokeDasharray="3 3" />
-      <XAxis
-        dataKey={(row: CardRow) => formatCell(row[view.x])}
-        tick={{ fontSize: 11 }}
-        {...axisForOwnBars}
-      >
-        {view.xLabel && <Label value={view.xLabel} position="insideBottom" offset={-4} />}
-      </XAxis>
-      <YAxis
-        tick={{ fontSize: 11 }}
-        tickFormatter={formatValue}
-        allowDecimals={Boolean(view.percent)}
-        domain={view.percent ? [0, 1] : undefined}
-      >
-        {view.yLabel && (
-          <Label value={view.yLabel} angle={-90} position="insideLeft" textAnchor="middle" />
-        )}
-      </YAxis>
-      <Tooltip formatter={formatValue} />
-      {coloredSeries.length > 1 && <Legend content={<ChartLegend items={coloredSeries} />} />}
-      {view.goal !== undefined && (
-        <ReferenceLine y={view.goal} stroke="var(--color-shamiri-red)" strokeDasharray="4 4" />
-      )}
-    </>
-  );
+  const categories = chartRows.map((row) => ({
+    name: formatCell(row[view.x]),
+    values: drawnSeries.map(({ key }) => numberOrNull(row[key])),
+  }));
+  const formatValue = view.percent ? formatPercent : formatCell;
   return (
     <div className="h-80 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        {view.kind === "bar" ? (
-          <BarChart data={chartRows} aria-label={title}>
-            {axes}
-            {coloredSeries.map(({ key, label, color, muted, stackId }) => (
-              <Bar
-                key={key}
-                dataKey={(row: CardRow) => row[key]}
-                name={label}
-                fill={color}
-                fillOpacity={muted ? MUTED_OPACITY : 1}
-                maxBarSize={96}
-                stackId={stackId}
-                label={
-                  showsBarLabels
-                    ? { position: "top", fontSize: 11, formatter: formatBarLabel }
-                    : undefined
-                }
-              />
-            ))}
-          </BarChart>
-        ) : (
-          <LineChart data={chartRows} aria-label={title}>
-            {axes}
-            {coloredSeries.map(({ key, label, color, muted }) => (
-              <Line
-                key={key}
-                dataKey={(row: CardRow) => row[key]}
-                name={label}
-                stroke={color}
-                strokeOpacity={muted ? MUTED_OPACITY : 1}
-              />
-            ))}
-          </LineChart>
-        )}
-      </ResponsiveContainer>
+      {view.kind === "bar" ? (
+        <ColumnChart
+          label={title}
+          categories={categories}
+          series={series}
+          formatValue={formatValue}
+          minimumTop={view.percent ? 1 : undefined}
+          goal={view.goal}
+          valueLabels={!view.stacked}
+          xLabel={view.xLabel}
+          yLabel={view.yLabel}
+        />
+      ) : (
+        <LineChart
+          label={title}
+          categories={categories}
+          series={series}
+          formatValue={formatValue}
+          minimumTop={view.percent ? 1 : undefined}
+          xLabel={view.xLabel}
+          yLabel={view.yLabel}
+        />
+      )}
     </div>
   );
 }
@@ -281,35 +199,17 @@ export function PieCard({
   name: string;
   value: string;
 }) {
-  const pieRows = rows.map((row, index) => ({
-    name: row[name] === null ? "Not recorded" : formatCell(row[name]),
-    value: Number(row[value] ?? 0),
-    fill: seriesColor(index),
-  }));
   return (
     <div className="h-80 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart aria-label={title}>
-          <Pie
-            data={pieRows}
-            dataKey="value"
-            nameKey="name"
-            label={{ fill: "var(--color-shamiri-text-dark-grey)", fontSize: 12 }}
-          />
-          <Tooltip />
-          <Legend
-            content={
-              <ChartLegend
-                items={pieRows.map((pieRow) => ({
-                  key: pieRow.name,
-                  label: pieRow.name,
-                  color: pieRow.fill,
-                }))}
-              />
-            }
-          />
-        </PieChart>
-      </ResponsiveContainer>
+      <RingBreakdown
+        label={title}
+        formatValue={formatCell}
+        slices={rows.map((row, index) => ({
+          name: row[name] === null ? "Not recorded" : formatCell(row[name]),
+          value: Number(row[value] ?? 0),
+          color: seriesColor(index),
+        }))}
+      />
     </div>
   );
 }

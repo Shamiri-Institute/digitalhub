@@ -1,6 +1,6 @@
 import { AdaptationType, SupportType } from "#/db/enums";
 import { z } from "zod";
-import { stringValidation } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 
 function ratingScale(max: 4 | 5) {
   return z

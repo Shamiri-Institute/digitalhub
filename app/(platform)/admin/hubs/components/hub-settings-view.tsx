@@ -41,7 +41,7 @@ export default function HubSettingsView({
       <SettingsSection title="Hub details" description={HUB_DETAILS_DESCRIPTION}>
         <dl className="space-y-1">
           <dt className="text-sm font-medium">Hub name</dt>
-          <dd className="text-sm text-shamiri-text-dark-grey">{hubName}</dd>
+          <dd className="text-sm text-muted-foreground">{hubName}</dd>
         </dl>
       </SettingsSection>
       <SettingsSection title="Session types" description={SESSION_TYPES_DESCRIPTION}>
@@ -49,7 +49,7 @@ export default function HubSettingsView({
           <div key={group.type} className="space-y-2">
             <SessionGroupHeading label={group.label} count={group.rows.length} />
             {group.rows.length === 0 ? (
-              <p className="rounded-lg border border-dashed px-4 py-3 text-sm text-shamiri-text-dark-grey">
+              <p className="rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">
                 No {group.noun}s at this hub.
               </p>
             ) : (

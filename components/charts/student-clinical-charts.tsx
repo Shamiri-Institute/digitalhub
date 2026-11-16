@@ -1,34 +1,10 @@
-"use client";
-
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Label,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { CASE_STATUS_COLORS, categoryColor, possibleSessions } from "#/components/charts/constants";
+import { BarList, ColumnChart, RingBreakdown } from "#/components/charts/static-charts";
 import ChartCard from "#/components/ui/chart-card";
 import { caseStatusOptions } from "#/db/enums";
 import type { StudentClinicalStats } from "#/lib/actions/clinical/students";
 
 const INITIAL_CONTACTS = ["student", "fellow", "supervisor", "teacher"];
-
-const pieLegend = (
-  <Legend
-    layout="horizontal"
-    verticalAlign="bottom"
-    align="center"
-    iconType="circle"
-    iconSize={8}
-  />
-);
 
 export default function HubStudentClinicalDataCharts({
   clinicalStats,
@@ -39,17 +15,14 @@ export default function HubStudentClinicalDataCharts({
     .map((status) => ({
       name: status === "FollowUp" ? "Follow-up" : status,
       value: clinicalStats.casesByStatus[status] ?? 0,
-      fill: CASE_STATUS_COLORS[status],
+      color: CASE_STATUS_COLORS[status],
     }))
     .filter(({ value }) => value > 0);
 
-  const filteredFormatedSessions = possibleSessions.map((session) => {
-    const found = clinicalStats.sessionsBySession.find((item) => item.session === session);
-    return {
-      session,
-      count: found ? found.count : 0,
-    };
-  });
+  const sessionCounts = possibleSessions.map((session) => ({
+    name: session,
+    values: [clinicalStats.sessionsBySession.find((item) => item.session === session)?.count ?? 0],
+  }));
 
   const casesByInitialContact = clinicalStats.casesByReferredFrom
     .filter(({ count }) => count > 0)
@@ -58,112 +31,37 @@ export default function HubStudentClinicalDataCharts({
         ? initialReferredFromSpecified.charAt(0).toUpperCase() +
           initialReferredFromSpecified.slice(1)
         : "Not recorded",
-      count,
-      fill: categoryColor(initialReferredFromSpecified ?? "", INITIAL_CONTACTS),
+      value: count,
+      color: categoryColor(initialReferredFromSpecified ?? "", INITIAL_CONTACTS),
     }));
 
   return (
     <div className="grid grid-cols-1 gap-5 py-5 sm:grid-cols-2 md:grid-cols-4">
-      <ChartCard title="Clinical cases by case status" showCardFooter={false}>
+      <ChartCard title="Clinical cases by case status">
         {caseStatusCounts.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={250} height={250} aria-label="Clinical cases by case status">
-              <Pie
-                data={caseStatusCounts}
-                dataKey="value"
-                nameKey="name"
-                startAngle={90}
-                endAngle={450}
-                outerRadius={80}
-                innerRadius={55}
-              >
-                <Label
-                  position="center"
-                  className="fill-shamiri-black text-xl font-semibold leading-8"
-                >
-                  {caseStatusCounts.reduce((acc, d) => acc + d.value, 0)}
-                </Label>
-              </Pie>
-              <Tooltip />
-              {pieLegend}
-            </PieChart>
-          </ResponsiveContainer>
+          <RingBreakdown label="Clinical cases" slices={caseStatusCounts} />
         ) : null}
       </ChartCard>
-
-      <ChartCard title={`Clinical sessions (${clinicalStats.sessionCount})`} showCardFooter={false}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={filteredFormatedSessions}
-            margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
-            aria-label="Clinical sessions"
-          >
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="session" tick={{ fontSize: 11 }} interval="preserveStartEnd" />
-            <YAxis dataKey="count" tick={{ fontSize: 12 }} width={35} allowDecimals={false} />
-            <Tooltip />
-            <Bar
-              dataKey="count"
-              fill="var(--color-shamiri-new-blue)"
-              name="Sessions"
-              radius={[4, 4, 0, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
+      <ChartCard title={`Clinical sessions (${clinicalStats.sessionCount})`}>
+        <ColumnChart
+          label="Clinical sessions, by session"
+          series={[{ name: "Sessions", color: "var(--color-primary)" }]}
+          categories={sessionCounts}
+        />
       </ChartCard>
-      <ChartCard title="Clinical cases by supervisor" showCardFooter={false}>
+      <ChartCard title="Clinical cases by supervisor">
         {clinicalStats.casesBySupervisor.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={clinicalStats.casesBySupervisor}
-              layout="vertical"
-              margin={{ top: 0, right: 10, left: 0, bottom: 0 }}
-              aria-label="Clinical cases by supervisor"
-            >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 12 }} allowDecimals={false} />
-              <YAxis
-                type="category"
-                dataKey="supervisorName"
-                tick={{ fontSize: 12 }}
-                width={80}
-                interval={0}
-              />
-              <Tooltip formatter={(value) => [`${value} cases`, "Cases"]} />
-              <Bar
-                dataKey="count"
-                fill="var(--color-shamiri-new-blue)"
-                name="Cases"
-                radius={[0, 4, 4, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <BarList
+            label="Clinical cases, by supervisor"
+            rows={clinicalStats.casesBySupervisor
+              .map(({ supervisorName, count }) => ({ name: supervisorName, value: count }))
+              .toSorted((first, second) => second.value - first.value)}
+          />
         ) : null}
       </ChartCard>
-      <ChartCard title="Clinical cases by initial contact" showCardFooter={false}>
+      <ChartCard title="Clinical cases by initial contact">
         {casesByInitialContact.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={250} height={250} aria-label="Clinical cases by initial contact">
-              <Pie
-                data={casesByInitialContact}
-                dataKey="count"
-                nameKey="name"
-                startAngle={90}
-                endAngle={450}
-                outerRadius={80}
-                innerRadius={55}
-              >
-                <Label
-                  position="center"
-                  className="fill-shamiri-black text-xl font-semibold leading-8"
-                >
-                  {casesByInitialContact.reduce((acc, d) => acc + d.count, 0)}
-                </Label>
-              </Pie>
-              <Tooltip />
-              {pieLegend}
-            </PieChart>
-          </ResponsiveContainer>
+          <RingBreakdown label="Clinical cases" slices={casesByInitialContact} />
         ) : null}
       </ChartCard>
     </div>

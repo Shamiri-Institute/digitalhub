@@ -31,7 +31,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { createEscalation } from "#/lib/actions/ticket";
-import { stringValidation } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { TicketData } from "./columns";
 
@@ -153,12 +153,14 @@ function EscalateTicketForm({ ticketId, close }: { ticketId: string; close: () =
         <Separator />
 
         <DialogFooter className="flex justify-end gap-2">
-          <DialogClose asChild>
-            <Button variant="ghost" type="button">
-              Cancel
-            </Button>
-          </DialogClose>
-          <Button variant="brand" type="submit" disabled={isSaving} loading={isSaving}>
+          <DialogClose
+            render={
+              <Button variant="ghost" type="button">
+                Cancel
+              </Button>
+            }
+          />
+          <Button type="submit" disabled={isSaving} loading={isSaving}>
             Escalate Ticket
           </Button>
         </DialogFooter>

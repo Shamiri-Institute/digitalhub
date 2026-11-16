@@ -137,8 +137,8 @@ export async function MonitoringDashboard({
             href={tabHref(tab, searchParams)}
             aria-current={tab.slug === selectedTab.slug ? "page" : undefined}
             className={cn(
-              "rounded-md px-3 py-1.5 text-sm font-medium text-shamiri-text-dark-grey",
-              tab.slug === selectedTab.slug && "bg-shamiri-new-light-blue text-shamiri-new-blue",
+              "rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground",
+              tab.slug === selectedTab.slug && "bg-info-bg text-primary",
             )}
           >
             {tab.title}
@@ -153,7 +153,9 @@ export async function MonitoringDashboard({
         if (visibleCards.length === 0) return null;
         return (
           <section key={section.heading ?? sectionIndex} className="flex flex-col gap-4">
-            {section.heading && <h2 className="text-lg font-semibold">{section.heading}</h2>}
+            {section.heading && (
+              <h2 className="text-lg font-bold text-primary">{section.heading}</h2>
+            )}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-24">
               {visibleCards.map((card) => (
                 <MonitoringCardPanel

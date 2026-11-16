@@ -1,6 +1,3 @@
-import type { ImplementerRole } from "#/db/enums";
-import { redirect } from "next/navigation";
-import { getCurrentUserSession } from "#/app/auth";
 import FellowsDatatableSkeleton from "#/components/common/fellow/fellows-datatable-skeleton";
 import GroupsDatatableSkeleton from "#/components/common/group/groups-datatable-skeleton";
 import SessionsDatatableSkeleton from "#/components/common/session/sessions-datatable-skeleton";
@@ -13,19 +10,9 @@ const SKELETONS = {
   groups: GroupsDatatableSkeleton,
   fellows: FellowsDatatableSkeleton,
   supervisors: SupervisorsDatatableSkeleton,
-} as const;
+};
 
-export default async function SchoolTabLoading({
-  tab,
-  fallbackRole,
-}: {
-  tab: keyof typeof SKELETONS;
-  fallbackRole: ImplementerRole;
-}) {
-  const session = await getCurrentUserSession();
-  if (!session) {
-    redirect("/login");
-  }
+export default function SchoolTabLoading({ tab }: { tab: keyof typeof SKELETONS }) {
   const Skeleton = SKELETONS[tab];
-  return <Skeleton role={session?.user.activeMembership?.role ?? fallbackRole} />;
+  return <Skeleton />;
 }

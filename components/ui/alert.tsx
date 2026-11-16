@@ -2,13 +2,12 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
 import { cn } from "#/lib/utils";
 
-const alertVariants = cva("w-full text-sm font-medium rounded-xl p-3", {
+const alertVariants = cva("w-full rounded-lg border p-3 text-sm font-medium", {
   variants: {
     variant: {
-      primary: "bg-shamiri-new-light-blue border-2 border-blue-border text-shamiri-new-blue",
-      default: "bg-background text-foreground rounded-lg border",
-      destructive:
-        "border-2 border-red-border text-shamiri-light-red bg-shamiri-light-red-background-base/10",
+      default: "bg-background text-foreground",
+      info: "border-info-border bg-info-bg text-info",
+      destructive: "border-destructive-border bg-destructive-bg text-destructive",
     },
   },
   defaultVariants: {

@@ -3,7 +3,8 @@ import { z } from "zod";
 import { SurveyVersionPrefill } from "#/db/enums";
 import { MAX_SCAN_BYTES, SCAN_CONTENT_TYPES } from "#/lib/survey/scan-files";
 import { MAX_COPIES_PER_RUN } from "#/lib/survey/serial";
-import { formatBytes, stringValidation } from "#/lib/utils";
+import { formatBytes } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 
 export const CreateSurveySchema = z.object({
   title: stringValidation("Please enter a title").max(255, {

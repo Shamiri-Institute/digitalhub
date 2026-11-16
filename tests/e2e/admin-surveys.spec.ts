@@ -279,7 +279,7 @@ test("R-SURV-SAVE: the builder saves an unfinished form of several pages and eve
   await page.getByLabel("Lines").fill("4");
   await addItem(page, 2, "Divider");
   await addItem(page, 2, "Signature", "Signature");
-  await page.getByLabel("Required").check();
+  await page.getByRole("checkbox", { name: "Required" }).check();
 
   // Leaving with unsaved changes asks first; dismissing stays on the builder.
   // The confirm blocks the click until it is answered, so answer it in the handler.
@@ -301,7 +301,7 @@ test("R-SURV-SAVE: the builder saves an unfinished form of several pages and eve
   await page.goBack({ timeout: 3000 }).catch(() => null);
   expect(prompt).toContain("unsaved changes");
   await expect(page).toHaveURL(/\/versions\/1(\?page=\d+)?$/);
-  await expect(page.getByLabel("Required")).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: "Required" })).toBeChecked();
 
   await save(page);
   await page.reload();
@@ -329,7 +329,7 @@ test("R-SURV-SAVE: the builder saves an unfinished form of several pages and eve
   await expect(page.getByLabel("Digits")).toHaveValue("3");
   await showPage(page, 2);
   await page.getByRole("button", { name: /Signature.*Signature/ }).click();
-  await expect(page.getByLabel("Required")).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: "Required" })).toBeChecked();
 });
 
 test("R-SURV-KEYS: a duplicate key is rejected on its field", async ({ page, context }) => {

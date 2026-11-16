@@ -161,14 +161,14 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
       .execute<SupervisorInfo>(sql`
       SELECT
         "supervisors".id,
-        "supervisor_name"
+        "supervisor_name" AS "supervisorName"
       FROM "supervisors"
       ${sup.join}
       WHERE ${sup.where}
       UNION ALL
       SELECT
         'CLINICAL_LEAD' as id,
-        'Clinical Lead' as "supervisor_name"
+        'Clinical Lead' as "supervisorName"
     `)
       .then((r) => r.rows),
   ]);
@@ -183,20 +183,12 @@ export async function fetchClinicalCasesChartData(scope: CasesScope) {
     };
   });
 
-  const casesBySupervisor = casesBySupervisorResult.map((supervisor) => {
-    if (supervisor.id === "CLINICAL_LEAD") {
-      return {
-        name: "CL",
-        total: Number(supervisor.value),
-      };
-    }
-    const sup = supervisorsResult.find((s) => s.id === supervisor.id);
-    const names = sup?.supervisorName?.split(" ") ?? ["", ""];
-    return {
-      name: `${names[0]?.[0] ?? ""}${names[1]?.[0] ?? ""}`,
-      total: Number(supervisor.value),
-    };
-  });
+  const casesBySupervisor = casesBySupervisorResult.map((supervisor) => ({
+    name:
+      supervisorsResult.find((candidate) => candidate.id === supervisor.id)?.supervisorName ??
+      "Unknown",
+    total: Number(supervisor.value),
+  }));
 
   return {
     casesByStatus: casesByStatusResult.map((status) => ({

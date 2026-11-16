@@ -1,17 +1,16 @@
-"use client";
+import TableSkeleton from "#/components/common/table-skeleton";
 
-import type { ImplementerRole } from "#/db/enums";
-import { DatatableSkeleton } from "#/components/common/build-skeleton-columns";
-import { columns } from "#/components/common/session/columns";
-
-export default function SessionsDatatableSkeleton({ role }: { role: ImplementerRole }) {
+export default function SessionsDatatableSkeleton() {
   return (
-    <DatatableSkeleton
+    <TableSkeleton
       rows={5}
-      columns={columns({
-        openDialog: () => {},
-        role,
-      })}
+      columnNames={[
+        "Date of attendance",
+        "Last updated",
+        "Session type",
+        "Assigned supervisor",
+        "Session status",
+      ]}
     />
   );
 }

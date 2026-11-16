@@ -1,4 +1,3 @@
-import { ImplementerRole } from "#/db/enums";
 import FellowSchoolsDatatableSkeleton from "#/components/common/fellow/fellow-schools-datatable-skeleton";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
@@ -10,7 +9,7 @@ export default function TableSkeleton() {
       <div className="container w-full grow space-y-3 py-10">
         <PageHeading title="Fellow Portal" />
         <Separator />
-        <FellowSchoolsDatatableSkeleton role={ImplementerRole.FELLOW} />
+        <FellowSchoolsDatatableSkeleton />
       </div>
       <PageFooter />
     </div>

@@ -22,7 +22,7 @@ export default function SurveysDataTable({ surveys }: { surveys: SurveyListItem[
         emptyStateMessage="No surveys yet"
         getRowCanExpand={() => false}
         renderTableActions={
-          <Button variant="brand" className="flex gap-2" onClick={() => setShowCreate(true)}>
+          <Button className="flex gap-2" onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4" />
             New survey
           </Button>

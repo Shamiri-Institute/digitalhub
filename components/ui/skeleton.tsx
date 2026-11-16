@@ -12,7 +12,7 @@ function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>)
 
 /** Table cell placeholder for loading skeletons. Pass it as `cell: SkeletonCell` so its identity is stable. */
 function SkeletonCell() {
-  return <Skeleton className="h-5 w-full bg-shamiri-light-grey" />;
+  return <Skeleton className="h-5 w-full bg-muted" />;
 }
 
 export { Skeleton, SkeletonCell };

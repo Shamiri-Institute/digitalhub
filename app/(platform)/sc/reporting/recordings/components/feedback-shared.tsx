@@ -6,19 +6,19 @@ import { cn } from "#/lib/utils";
 import type { SafetyFlag } from "./feedback-types";
 
 export function getScoreColor(score: string | number | undefined): string {
-  if (!score) return "bg-muted text-shamiri-black";
+  if (!score) return "bg-muted text-foreground";
   const numScore = typeof score === "string" ? Number.parseFloat(score) : score;
-  if (Number.isNaN(numScore)) return "bg-muted text-shamiri-black";
+  if (Number.isNaN(numScore)) return "bg-muted text-foreground";
 
-  if (numScore >= 6) return "bg-green-bg text-green-base border-green-border";
-  if (numScore >= 3) return "bg-yellow-bg text-shamiri-dark-orange border-yellow-border";
-  return "bg-red-bg text-red-base border-red-border";
+  if (numScore >= 6) return "bg-success-bg text-success border-success-border";
+  if (numScore >= 3) return "bg-warning-bg text-warning border-warning-border";
+  return "bg-destructive-bg text-destructive border-destructive-border";
 }
 
 export function FeedbackSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-lg border p-4">
-      <h4 className="mb-3 font-medium text-shamiri-text-dark-grey">{title}</h4>
+      <h4 className="mb-3 font-medium text-muted-foreground">{title}</h4>
       {children}
     </div>
   );
@@ -73,16 +73,16 @@ export function SafetyFlagsSection({ flags }: { flags: SafetyFlag[] }) {
           <div
             // oxlint-disable-next-line react/no-array-index-key -- read-only server feedback list; idx disambiguates duplicate type+severity combos
             key={`${flag.type}-${flag.severity ?? ""}-${idx}`}
-            className="rounded-md border border-red-border bg-red-bg p-4"
+            className="rounded-md border border-destructive-border bg-destructive-bg p-4"
           >
             <div className="mb-2 flex items-center justify-between">
-              <span className="font-semibold text-shamiri-light-red capitalize">
+              <span className="font-semibold text-destructive capitalize">
                 {flag.type} {flag.severity && `- ${flag.severity} severity`}
               </span>
               {flag.requires_follow_up && (
                 <Badge
                   variant="outline"
-                  className="bg-shamiri-light-orange/10 text-shamiri-dark-orange border-shamiri-light-orange/40"
+                  className="bg-warning-bg text-warning border-warning-border"
                 >
                   Follow-up Required
                 </Badge>
@@ -95,7 +95,7 @@ export function SafetyFlagsSection({ flags }: { flags: SafetyFlag[] }) {
               <p className="text-xs text-muted-foreground">Timestamp: {flag.timestamp_reference}</p>
             )}
             {flag.context_analysis && (
-              <div className="mt-2 pt-2 border-t border-red-border">
+              <div className="mt-2 pt-2 border-t border-destructive-border">
                 <p className="text-xs text-muted-foreground">
                   <MarkdownText>{flag.context_analysis}</MarkdownText>
                 </p>

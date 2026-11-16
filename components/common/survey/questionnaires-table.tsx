@@ -38,7 +38,7 @@ function copyColumns(showsStudent: boolean): ColumnDef<PrintRunCopy>[] {
                 <>
                   {copyStudent?.studentName}
                   {copyStudent?.admissionNumber && (
-                    <span className="text-shamiri-text-grey"> · {copyStudent.admissionNumber}</span>
+                    <span className="text-muted-foreground"> · {copyStudent.admissionNumber}</span>
                   )}
                 </>
               );
@@ -50,7 +50,7 @@ function copyColumns(showsStudent: boolean): ColumnDef<PrintRunCopy>[] {
       id: "Page codes",
       header: "Page codes",
       cell: ({ row }) => (
-        <ul className="flex flex-wrap gap-x-3 text-xs tabular-nums text-shamiri-text-grey">
+        <ul className="flex flex-wrap gap-x-3 text-xs tabular-nums text-muted-foreground">
           {row.original.pages.map((p) => (
             <li key={p.code}>{p.code}</li>
           ))}
@@ -64,7 +64,7 @@ function copyColumns(showsStudent: boolean): ColumnDef<PrintRunCopy>[] {
       cell: ({ row }) => (
         <Badge
           variant={
-            row.original.status === SurveyQuestionnaireStatus.VOID ? "destructive" : "outline-solid"
+            row.original.status === SurveyQuestionnaireStatus.VOID ? "destructive" : "outline"
           }
         >
           {SURVEY_QUESTIONNAIRE_STATUS_LABELS[row.original.status]}
@@ -112,15 +112,15 @@ export function QuestionnairesTable({
       {pageCount > 1 && (
         <nav className="flex items-center justify-end gap-4 text-sm" aria-label="Copies pages">
           {page > 1 && (
-            <Link href={`${runPath}?page=${page - 1}`} className="text-shamiri-new-blue">
+            <Link href={`${runPath}?page=${page - 1}`} className="text-primary">
               Previous
             </Link>
           )}
-          <span className="text-shamiri-text-grey">
+          <span className="text-muted-foreground">
             Page {page} of {pageCount}
           </span>
           {page < pageCount && (
-            <Link href={`${runPath}?page=${page + 1}`} className="text-shamiri-new-blue">
+            <Link href={`${runPath}?page=${page + 1}`} className="text-primary">
               Next
             </Link>
           )}

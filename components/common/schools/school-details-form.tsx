@@ -195,7 +195,7 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
         <div className="space-y-6">
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+              <span className="pb-2 text-xs uppercase text-muted-foreground">
                 School Information
               </span>
               <Separator />
@@ -402,26 +402,28 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
                     <FormItem required className="col-span-3">
                       <FormLabel>Pre-session date</FormLabel>
                       <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "mt-1.5 w-full justify-start px-3 text-left font-normal",
-                                !field.value && "text-muted-foreground",
-                              )}
-                              // ARIA does not allow aria-required on a button.
-                              aria-required={undefined}
-                            >
-                              <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                              {field.value ? (
-                                format(field.value, DISPLAY_DATE)
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
+                        <PopoverTrigger
+                          render={
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground",
+                                )}
+                                // ARIA does not allow aria-required on a button.
+                                aria-required={undefined}
+                              >
+                                <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                                {field.value ? (
+                                  format(field.value, DISPLAY_DATE)
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                              </Button>
+                            </FormControl>
+                          }
+                        />
                         <PopoverContent className="w-auto p-0">
                           <Calendar
                             mode="single"
@@ -441,7 +443,7 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
           </div>
           <div className="flex flex-col">
             <div className="col-span-2 py-2">
-              <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+              <span className="pb-2 text-xs uppercase text-muted-foreground">
                 Contact Information
               </span>
               <Separator />
@@ -549,7 +551,7 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
                               <Button
                                 variant="ghost"
                                 type="button"
-                                className="flex items-center text-shamiri-light-red hover:bg-red-bg"
+                                className="flex items-center text-destructive hover:bg-destructive-bg"
                                 aria-label={`Remove phone number ${index + 1}`}
                                 onClick={() => {
                                   const newValue = field.value?.split("/");
@@ -589,7 +591,7 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
                         <Button
                           variant="ghost"
                           type="button"
-                          className="flex items-center text-shamiri-new-blue"
+                          className="flex items-center text-primary"
                           aria-label="Add phone number"
                           onClick={() => {
                             if (isValidPhoneNumber(pointPersonPhone, "KE")) {
@@ -622,7 +624,7 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
           <Button
             variant="ghost"
             type="button"
-            className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+            className="text-base font-semibold leading-6 text-primary hover:text-primary"
             onClick={() => {
               setOpen(false);
             }}
@@ -630,7 +632,7 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
             Cancel
           </Button>
           <Button
-            className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white"
+            className="flex items-center gap-2 bg-primary text-base font-semibold leading-6 text-white"
             type="submit"
             disabled={form.formState.isSubmitting}
           >

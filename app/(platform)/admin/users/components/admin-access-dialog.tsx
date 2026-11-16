@@ -160,7 +160,7 @@ function AdminAccessForm({ admin, onDone }: { admin?: ImplementerAdmin; onDone: 
                   <Checkbox
                     checked={field.value}
                     onCheckedChange={(checked) => field.onChange(checked === true)}
-                    className="h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+                    className="h-5 w-5"
                   />
                 </FormControl>
                 <FormLabel className="font-normal">Is super admin?</FormLabel>
@@ -173,13 +173,13 @@ function AdminAccessForm({ admin, onDone }: { admin?: ImplementerAdmin; onDone: 
           <Button
             variant="ghost"
             type="button"
-            className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+            className="text-base font-semibold leading-6 text-primary hover:text-primary"
             onClick={onDone}
           >
             Cancel
           </Button>
           <Button
-            className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white"
+            className="flex items-center gap-2 bg-primary text-base font-semibold leading-6 text-white"
             type="submit"
             disabled={form.formState.isSubmitting}
             loading={form.formState.isSubmitting}

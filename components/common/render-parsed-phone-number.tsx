@@ -12,7 +12,7 @@ export default function RenderParsedPhoneNumber(number?: string) {
           <Tooltip>
             <TooltipTrigger>
               <div className="flex gap-1">
-                <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
+                <Icons.flagTriangleRight className="h-4 w-4 text-destructive" />
                 <span>{number}</span>
               </div>
             </TooltipTrigger>

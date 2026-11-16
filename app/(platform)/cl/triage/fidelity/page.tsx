@@ -35,7 +35,7 @@ export default function TriageFidelityPage() {
       <div className="container flex min-h-0 w-full flex-1 flex-col space-y-6 py-10">
         <div>
           <PageHeading title="Triage fidelity" />
-          <p className="mt-1 text-sm text-shamiri-text-grey">
+          <p className="mt-1 text-sm text-muted-foreground">
             Per-fellow triage completion and quality metrics. Flagged values (⚠) fall outside
             expected ranges — triage rate &lt;10% or &gt;80%, escalation compliance &lt;95%.
           </p>

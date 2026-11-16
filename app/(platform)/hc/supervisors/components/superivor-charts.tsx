@@ -1,29 +1,24 @@
-"use client";
-
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Label,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import type {
-  fetchSupervisorDataCompletenessData,
   SessionRatingAverages,
   SupervisorAttendanceData,
   SupervisorDropoutReasonsGraphData,
+  fetchSupervisorDataCompletenessData,
 } from "#/app/(platform)/hc/supervisors/actions";
 import { categoryColor, sessionLabel } from "#/components/charts/constants";
+import {
+  BarList,
+  CompletionRing,
+  LineChart,
+  RingBreakdown,
+} from "#/components/charts/static-charts";
 import ChartCard from "#/components/ui/chart-card";
 import { SUPERVISOR_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
+
+const RATING_SERIES = [
+  { name: "Student behaviour", color: "var(--color-chart-1)" },
+  { name: "Admin support", color: "var(--color-chart-2)" },
+  { name: "Workload", color: "var(--color-chart-3)" },
+];
 
 export default function SupervisorCharts({
   attendanceData,
@@ -38,116 +33,58 @@ export default function SupervisorCharts({
   >;
   supervisorsSessionRatings: SessionRatingAverages[];
 }) {
-  const formattedAttendanceData = attendanceData.map((session) => ({
-    supervisor_name: session.supervisor_name,
-    attended: session.attended,
-  }));
+  const completedPercentage = supervisorDataCompletenessPercentage.find(
+    ({ name }) => name === "actual",
+  )?.value;
 
   return (
     <div className="grid grid-cols-1 gap-5 py-5 sm:grid-cols-2 md:grid-cols-4">
-      <ChartCard title="Attendances" showCardFooter={false}>
-        {formattedAttendanceData?.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              width={307}
-              height={307}
-              data={formattedAttendanceData}
-              aria-label="Attendances"
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="supervisor_name" />
-              <YAxis dataKey="attended" allowDecimals={false} />
-              <Tooltip />
-              <Bar dataKey="attended" fill="var(--color-shamiri-new-blue)" name="Attended" />
-            </BarChart>
-          </ResponsiveContainer>
+      <ChartCard title="Attendances">
+        {attendanceData.length ? (
+          <BarList
+            label="Sessions attended, by supervisor"
+            rows={attendanceData
+              .map(({ supervisor_name, attended }) => ({
+                name: supervisor_name,
+                value: Number(attended),
+              }))
+              .toSorted((first, second) => second.value - first.value)}
+          />
         ) : null}
       </ChartCard>
-      <ChartCard title="Drop out reasons" showCardFooter={false}>
-        {dropoutData.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={307} height={307} aria-label="Drop out reasons">
-              <Pie
-                data={dropoutData.map((reason) => ({
-                  ...reason,
-                  fill: categoryColor(reason.name, SUPERVISOR_DROP_OUT_REASONS),
-                }))}
-                dataKey="value"
-                nameKey="name"
-                startAngle={90}
-                endAngle={450}
-                outerRadius={100}
-                innerRadius={70}
-              >
-                <Label
-                  position="center"
-                  className="fill-shamiri-black text-2xl font-semibold leading-8"
-                >
-                  {dropoutData.reduce((acc, val) => acc + val.value, 0)}
-                </Label>
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+      <ChartCard title="Drop out reasons">
+        {dropoutData.some(({ value }) => value > 0) ? (
+          <RingBreakdown
+            label="Supervisors dropped out"
+            slices={dropoutData
+              .map(({ name, value }) => ({
+                name,
+                value: Number(value),
+                color: categoryColor(name, SUPERVISOR_DROP_OUT_REASONS),
+              }))
+              .toSorted((first, second) => second.value - first.value)}
+          />
         ) : null}
       </ChartCard>
-      <ChartCard title="Supervisor information completion" showCardFooter={false}>
-        {supervisorDataCompletenessPercentage.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={250} height={250} aria-label="Supervisor information completion">
-              <Pie
-                data={supervisorDataCompletenessPercentage.map((entry) => ({
-                  ...entry,
-                  fill:
-                    entry.name === "actual"
-                      ? "var(--color-shamiri-new-blue)"
-                      : "var(--color-shamiri-new-light-blue)",
-                }))}
-                dataKey="value"
-                nameKey="name"
-                startAngle={90}
-                endAngle={450}
-                outerRadius={100}
-                innerRadius={70}
-              >
-                <Label
-                  position="center"
-                  className="fill-shamiri-black text-2xl font-semibold leading-8"
-                >
-                  {`${supervisorDataCompletenessPercentage.find((d) => d.name === "actual")?.value}%`}
-                </Label>
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-        ) : null}
+      <ChartCard title="Supervisor information completion">
+        {completedPercentage === undefined ? null : (
+          <CompletionRing
+            label="Supervisor information complete"
+            percentage={completedPercentage}
+          />
+        )}
       </ChartCard>
-      <ChartCard title="Ratings" showCardFooter={false}>
-        {supervisorsSessionRatings?.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              width={307}
-              height={307}
-              data={supervisorsSessionRatings}
-              aria-label="Ratings"
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="session_type" tickFormatter={sessionLabel} />
-              <YAxis allowDecimals={false} />
-              <Tooltip labelFormatter={(value) => sessionLabel(String(value))} />
-              <Legend />
-              <Line
-                dataKey="student_behaviour"
-                stroke="var(--color-shamiri-new-blue)"
-                name="Student behaviour"
-              />
-              <Line
-                dataKey="admin_support"
-                stroke="var(--color-shamiri-graph-green)"
-                name="Admin support"
-              />
-              <Line dataKey="workload" stroke="var(--color-shamiri-light-orange)" name="Workload" />
-            </LineChart>
-          </ResponsiveContainer>
+      <ChartCard title="Ratings">
+        {supervisorsSessionRatings.length ? (
+          <LineChart
+            label="Average session ratings, by session"
+            series={RATING_SERIES}
+            minimumTop={5}
+            categories={supervisorsSessionRatings.map((rating) => ({
+              name: sessionLabel(rating.session_type),
+              values: [rating.student_behaviour, rating.admin_support, rating.workload],
+            }))}
+          />
         ) : null}
       </ChartCard>
     </div>

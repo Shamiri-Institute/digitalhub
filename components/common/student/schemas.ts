@@ -1,7 +1,7 @@
 import type { QuestionnaireType } from "#/db/enums";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
-import { stringValidation } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 
 export const QUESTIONNAIRE_TYPE_OPTIONS: [QuestionnaireType, ...QuestionnaireType[]] = [
   "QA",

@@ -34,7 +34,7 @@ export default function HandoffQualityPage() {
       <div className="container flex min-h-0 w-full flex-1 flex-col space-y-6 py-10">
         <div>
           <PageHeading title="Handoff quality" />
-          <p className="mt-1 text-sm text-shamiri-text-grey">
+          <p className="mt-1 text-sm text-muted-foreground">
             Distribution of supervisor handoff outcomes per supervisor. A &ldquo;Could not
             reach&rdquo; rate &gt;15% (⚠) indicates a structural contact problem.
           </p>

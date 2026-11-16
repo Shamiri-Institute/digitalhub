@@ -1,6 +1,5 @@
-import { ImplementerRole } from "#/db/enums";
 import SchoolTabLoading from "#/components/common/schools/school-tab-loading";
 
 export default function Loading() {
-  return <SchoolTabLoading tab="sessions" fallbackRole={ImplementerRole.ADMIN} />;
+  return <SchoolTabLoading tab="sessions" />;
 }

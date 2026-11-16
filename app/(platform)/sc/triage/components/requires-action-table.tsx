@@ -42,16 +42,16 @@ function RowMenu({ event }: { event: RequiresActionEvent }) {
         />
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>
-            <span className="text-shamiri-text-grey text-xs font-medium uppercase">Actions</span>
+            <span className="text-muted-foreground text-xs font-medium uppercase">Actions</span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-shamiri-black" onClick={() => setOpen("details")}>
+          <DropdownMenuItem className="text-foreground" onClick={() => setOpen("details")}>
             View details
           </DropdownMenuItem>
-          <DropdownMenuItem className="text-shamiri-black" onClick={() => setOpen("case")}>
+          <DropdownMenuItem className="text-foreground" onClick={() => setOpen("case")}>
             Create clinical case
           </DropdownMenuItem>
-          <DropdownMenuItem className="text-shamiri-black" onClick={() => setOpen("review")}>
+          <DropdownMenuItem className="text-foreground" onClick={() => setOpen("review")}>
             Mark reviewed
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -105,7 +105,7 @@ const columns: ColumnDef<RequiresActionEvent>[] = [
       return (
         <span>
           {label}
-          {date && <span className="text-shamiri-text-grey ml-1">· {date}</span>}
+          {date && <span className="text-muted-foreground ml-1">· {date}</span>}
         </span>
       );
     },
@@ -116,13 +116,17 @@ const columns: ColumnDef<RequiresActionEvent>[] = [
     cell: ({ row }) => {
       const outcome = row.original.riskScreenOutcome;
       if (outcome === "ANY_YES")
-        return <Badge className="bg-red-bg text-red-base border-red-border">Risk positive</Badge>;
+        return (
+          <Badge className="bg-destructive-bg text-destructive border-destructive-border">
+            Risk positive
+          </Badge>
+        );
       if (outcome === "ALL_NO")
         return (
-          <Badge className="bg-green-bg text-green-base border-green-border">Risk negative</Badge>
+          <Badge className="bg-success-bg text-success border-success-border">Risk negative</Badge>
         );
       return (
-        <Badge variant="outline" className="text-shamiri-text-grey">
+        <Badge variant="outline" className="text-muted-foreground">
           Not completed
         </Badge>
       );
@@ -141,7 +145,7 @@ const columns: ColumnDef<RequiresActionEvent>[] = [
     header: "Days waiting",
     meta: { numeric: true },
     cell: ({ row }) => (
-      <span className={cn("font-medium", row.original.daysSince > 3 && "text-red-base")}>
+      <span className={cn("font-medium", row.original.daysSince > 3 && "text-destructive")}>
         {row.original.daysSince}d
       </span>
     ),

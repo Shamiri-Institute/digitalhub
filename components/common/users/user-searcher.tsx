@@ -114,24 +114,26 @@ export function UserSearcher({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          id={id}
-          variant="outline"
-          // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role, jsx-a11y/role-has-required-aria-props -- shadcn popover combobox trigger
-          role="combobox"
-          aria-expanded={open}
-          aria-invalid={invalid}
-          className="w-full justify-between bg-white"
-          disabled={disabled || hubGated}
-        >
-          <span className={cn("truncate", !selectedLabel && "text-muted-foreground")}>
-            {selectedLabel ?? config.triggerLabel}
-          </span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-(--radix-popover-trigger-width) min-w-[240px] p-0" align="start">
+      <PopoverTrigger
+        render={
+          <Button
+            id={id}
+            variant="outline"
+            // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role, jsx-a11y/role-has-required-aria-props -- shadcn popover combobox trigger
+            role="combobox"
+            aria-expanded={open}
+            aria-invalid={invalid}
+            className="w-full justify-between bg-white"
+            disabled={disabled || hubGated}
+          >
+            <span className={cn("truncate", !selectedLabel && "text-muted-foreground")}>
+              {selectedLabel ?? config.triggerLabel}
+            </span>
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        }
+      />
+      <PopoverContent className="w-(--anchor-width) min-w-[240px] p-0" align="start">
         <Command shouldFilter={false}>
           <CommandInput
             placeholder={`Search ${config.noun}...`}

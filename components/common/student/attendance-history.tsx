@@ -57,11 +57,7 @@ export default function AttendanceHistory({
           className="data-table lg:mt-4"
         />
         <DialogFooter className="flex justify-end gap-2">
-          <Button
-            variant="brand"
-            onClick={() => onOpenChange(false)}
-            className="flex items-center gap-2"
-          >
+          <Button onClick={() => onOpenChange(false)} className="flex items-center gap-2">
             Done
           </Button>
         </DialogFooter>
@@ -106,29 +102,29 @@ const columns = (
             className={cn(
               "flex items-center rounded-lg border px-1.5 py-0.5",
               {
-                "border-green-border": attended,
-                "border-red-border": !attended,
-                "border-blue-border": attended === undefined || attended === null,
+                "border-success-border": attended,
+                "border-destructive-border": !attended,
+                "border-info-border": attended === undefined || attended === null,
               },
               {
-                "bg-green-bg": attended,
-                "bg-red-bg": !attended,
-                "bg-blue-bg": attended === undefined || attended === null,
+                "bg-success-bg": attended,
+                "bg-destructive-bg": !attended,
+                "bg-info-bg": attended === undefined || attended === null,
               },
             )}
           >
             {attended === null || attended === undefined ? (
-              <div className="flex items-center gap-1 text-blue-base">
+              <div className="flex items-center gap-1 text-info">
                 <Icons.helpCircle className="h-3 w-3" strokeWidth={2.5} />
                 <span>Not marked</span>
               </div>
             ) : attended ? (
-              <div className="flex items-center gap-1 text-green-base">
+              <div className="flex items-center gap-1 text-success">
                 <Icons.checkCircle className="h-3 w-3" strokeWidth={2.5} />
                 <span>Attended</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1 text-red-base">
+              <div className="flex items-center gap-1 text-destructive">
                 <Icons.crossCircleFilled className="h-3 w-3" strokeWidth={2.5} />
                 <span>Missed</span>
               </div>
@@ -148,7 +144,7 @@ const columns = (
         />
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>
-            <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
+            <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem

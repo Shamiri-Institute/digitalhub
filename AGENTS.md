@@ -17,8 +17,14 @@ and the tests that cover the change pass. `pnpm install` sets up a pre-push hook
 
 ## UI
 
-- Build from `components/ui` (shadcn on Radix, variants through `cva`) and `components/common` (feature components, `data-table.tsx`). Extend an existing component through props or composition before writing a new one.
-- Style with Tailwind classes merged through `cn()`. The design tokens (`shamiri-new-blue`, `red-bg`, `blue-border`, ...) are the `@theme` colors in `app/globals.css`; use them in place of the default palette (`bg-red-500`) or arbitrary values. No inline `style`, no new CSS files.
+- Build from `components/ui` (shadcn components, variants through `cva`) and `components/common` (feature components, `data-table.tsx`). Extend an existing component through props or composition before writing a new one.
+- `components/ui` is built on Base UI (`@base-ui/react`); there is no Radix. Compose a part with another element through its `render` prop, and put the label inside the render element (`<DialogTrigger render={<Button>Add</Button>} />`): a Server Component renders `<Button />` with its own empty children, which win over the part's.
+- Menu items take `onClick`; an item that opens a dialog nested in the menu is a `NestedDialogMenuItem`. A link item is `DropdownMenuLinkItem render={<Link />}`.
+- `Select` reads each value's label from the `SelectItem`s written inline in its children, so keep them inline. `onValueChange` receives only picked values, as a string.
+- `useDialogSave` keeps a dialog open while its save runs; the guard lives in the `Dialog` root.
+- `toast()` works from anywhere; the toast UI loads after the page.
+- Base UI loads a component's whole namespace when any part is used, so menus, selects and tooltips load theirs on the visitor's first interaction (`afterPage()` in `components/deferred.tsx`), not with the page: `DropdownMenu`, `Select` and `Tooltip` draw their closed trigger until the code arrives, and a press before then opens them once it does. The header's switchers do the same through `deferred()` in `components/deferred.tsx`, taking their trigger as a prop. A dialog that draws nothing until opened, like a table's row-action dialogs, is declared with `deferredHidden()` from the same file so its form code loads the same way, as does a collapsed row's detail; a menu or dialog that draws its own trigger can take it as a `trigger` prop and load through `deferred()`, like the clinical row menus with `rowActionsButton()`.
+- Style with Tailwind classes merged through `cn()`. The design tokens (`primary`, `muted-foreground`, `destructive-bg`, `info-border`, ...) are the `@theme` colors in `app/globals.css`, documented in `DESIGN.md`; Tailwind's default palette is switched off. No arbitrary colours, no inline `style`, no new CSS files.
 - Forms use React Hook Form with Zod.
 
 ## React hooks
@@ -30,7 +36,7 @@ oxlint's `hooks-policy/justify` rule (`lint/hooks-policy.mjs`) fails any `useEff
 - Data comes from a Server Component or a server action.
 - An effect is for a real external subscription only: a DOM listener, a timer, a third-party widget.
 - Memoize only for a measured or obvious hot path, and say why in the PR. A lint rule whose only fix is memoization is not enforced.
-- A dialog's form lives in a component inside `DialogContent`, so Radix unmounts it on close and each open starts from the row's values.
+- A dialog's form lives in a component inside `DialogContent`, so Base UI unmounts it on close and each open starts from the row's values.
 - A multi-step dialog (form, then confirm) keeps its steps as state in one `Dialog`. Example: `components/common/fellow/fellow-dropout-form.tsx`.
 - Clear a dependent field (sub-county, absence reason) in the parent field's `onValueChange`. `hooks-policy/no-form-reset-in-effect` fails on `reset` or `setValue` (`form.reset`, or destructured from `useForm`) in an effect.
 

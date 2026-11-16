@@ -18,7 +18,7 @@ import { Label } from "#/components/ui/label";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toastOnError, useToast } from "#/components/ui/use-toast";
-import { stringValidation } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 import { zodResolver } from "#/lib/zod-resolver";
 
 const FormSchema = z.object({
@@ -32,13 +32,13 @@ export default function MarkCaseAsSpecial({
 }: {
   caseId: string;
   reason: string | null;
-  children: React.ReactNode;
+  children: React.ReactElement;
 }) {
   const [dialogOpen, setDialogOpen] = React.useState(false);
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} />
       <DialogContent className="gap-0 p-0">
         <FlagCaseForm caseId={caseId} reason={reason} close={() => setDialogOpen(false)} />
       </DialogContent>
@@ -137,7 +137,6 @@ function FlagCaseForm({
         <div className="flex justify-end px-6 pb-6">
           <Button
             form="modifyFlagAction"
-            variant="brand"
             type="submit"
             className="w-full"
             disabled={isSaving}

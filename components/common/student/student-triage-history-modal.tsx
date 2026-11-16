@@ -17,8 +17,11 @@ import { getStudentTriageHistory } from "#/lib/actions/triage";
 type HistoryEvent = Awaited<ReturnType<typeof getStudentTriageHistory>>[number];
 
 const RISK_LABELS: Record<string, { label: string; className: string }> = {
-  ALL_NO: { label: "Risk negative", className: "bg-green-bg text-green-base border-green-border" },
-  ANY_YES: { label: "Risk positive", className: "bg-red-bg text-red-base border-red-border" },
+  ALL_NO: { label: "Risk negative", className: "bg-success-bg text-success border-success-border" },
+  ANY_YES: {
+    label: "Risk positive",
+    className: "bg-destructive-bg text-destructive border-destructive-border",
+  },
   NOT_COMPLETED: { label: "Not completed", className: "" },
 };
 
@@ -51,7 +54,7 @@ function HistoryRow({ event }: { event: HistoryEvent }) {
     <div className="rounded-lg border p-4 space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">{sessionLabel}</span>
-        <span className="text-xs text-shamiri-text-grey">
+        <span className="text-xs text-muted-foreground">
           {event.session.sessionDate
             ? new Date(event.session.sessionDate).toLocaleDateString("en-GB", {
                 day: "numeric",
@@ -68,18 +71,18 @@ function HistoryRow({ event }: { event: HistoryEvent }) {
           </Badge>
         )}
         {event.actionTaken && (
-          <span className="text-xs text-shamiri-text-grey">
+          <span className="text-xs text-muted-foreground">
             {ACTION_LABELS[event.actionTaken] ?? event.actionTaken}
           </span>
         )}
       </div>
       {event.supervisorHandoffStatus && (
-        <p className="text-xs text-shamiri-text-grey">
+        <p className="text-xs text-muted-foreground">
           Handoff: {HANDOFF_LABELS[event.supervisorHandoffStatus] ?? event.supervisorHandoffStatus}
         </p>
       )}
       {event.note && (
-        <p className="text-xs text-shamiri-text-grey italic">&ldquo;{event.note}&rdquo;</p>
+        <p className="text-xs text-muted-foreground italic">&ldquo;{event.note}&rdquo;</p>
       )}
     </div>
   );
@@ -100,7 +103,7 @@ export default function StudentTriageHistoryModal({
         <DialogHeader>
           <DialogTitle className="text-lg font-bold">Student triage history</DialogTitle>
           {studentName && (
-            <p className="text-sm text-shamiri-text-grey capitalize">{studentName.toLowerCase()}</p>
+            <p className="text-sm text-muted-foreground capitalize">{studentName.toLowerCase()}</p>
           )}
         </DialogHeader>
 
@@ -136,7 +139,7 @@ function HistoryRows({ events }: { events: ReturnType<typeof getStudentTriageHis
   const history = use(events);
   if (history.length === 0) {
     return (
-      <p className="py-6 text-center text-sm text-shamiri-text-grey">
+      <p className="py-6 text-center text-sm text-muted-foreground">
         No triage history for this student in your sessions.
       </p>
     );

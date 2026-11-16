@@ -4,7 +4,7 @@ import type { Row } from "@tanstack/react-table";
 import { useState } from "react";
 import { updateClinicalSessionAttendance } from "#/app/(platform)/sc/clinical/action";
 import type { AttendanceRecord } from "#/app/(platform)/sc/clinical/components/columns";
-import { CustomIndicator } from "#/components/common/mark-attendance";
+import { CustomIndicator } from "#/components/common/custom-indicator";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -42,9 +42,9 @@ export default function HandleSessionAttendanceUpdate({ row }: { row: Row<Attend
         <RowActionsTrigger label={`Actions for ${row.original.session}`} className="bg-white" />
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>
-            <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
+            <span className="text-xs font-medium uppercase text-muted-foreground">Actions</span>
           </DropdownMenuLabel>
-          <DropdownMenuItem onSelect={() => setIsOpen(true)}>Mark attendance</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setIsOpen(true)}>Mark attendance</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -106,7 +106,7 @@ function MarkClinicalAttendanceForm({
               aria-label="Attended"
               value="attended"
               id="mark_attended"
-              className="custom-radio border-border data-[state=checked]:border-shamiri-green"
+              className="custom-radio border-border data-checked:border-success"
             />
           </div>
           <div className="relative">
@@ -115,7 +115,7 @@ function MarkClinicalAttendanceForm({
               aria-label="Missed"
               value="missed"
               id="mark_missed"
-              className="custom-radio border-border data-[state=checked]:border-shamiri-red"
+              className="custom-radio border-border data-checked:border-destructive"
             />
           </div>
           <div className="relative">
@@ -124,15 +124,13 @@ function MarkClinicalAttendanceForm({
               aria-label="Unmarked"
               value="unmarked"
               id="unmarked"
-              className="custom-radio border-border data-[state=checked]:border-shamiri-new-blue"
+              className="custom-radio border-border data-checked:border-primary"
             />
           </div>
         </RadioGroup>
 
         <div className="flex justify-end gap-2">
-          <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DialogClose>
+          <DialogClose render={<Button variant="outline">Cancel</Button>} />
           <Button
             disabled={isSaving}
             loading={isSaving}

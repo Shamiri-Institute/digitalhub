@@ -36,7 +36,7 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
             })}
 
             {feedback.fidelity_scores.overall_assessment && (
-              <div className="rounded-md border border-blue-border bg-blue-bg p-4">
+              <div className="rounded-md border border-info-border bg-info-bg p-4">
                 <h5 className="font-medium mb-2">Overall Assessment</h5>
                 <p className="text-sm">
                   <MarkdownText>{feedback.fidelity_scores.overall_assessment}</MarkdownText>
@@ -53,7 +53,7 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
             {feedback.recommendations.map((rec, idx) => (
               // oxlint-disable-next-line react/no-array-index-key -- read-only server feedback list; composite key disambiguates potential duplicate text
               <li key={`${idx}-${rec.slice(0, 40)}`} className="flex gap-2 text-sm">
-                <span className="font-semibold text-shamiri-new-blue mt-0.5">{idx + 1}.</span>
+                <span className="font-semibold text-primary mt-0.5">{idx + 1}.</span>
                 <span>
                   <MarkdownText>{rec}</MarkdownText>
                 </span>
@@ -68,7 +68,7 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
           <div className="space-y-4">
             {feedback.qualitative_feedback.strengths && (
               <div>
-                <h5 className="font-medium text-shamiri-green mb-2">Strengths</h5>
+                <h5 className="font-medium text-success mb-2">Strengths</h5>
                 <ul className="list-disc pl-5 space-y-1">
                   {feedback.qualitative_feedback.strengths.map((strength, idx) => (
                     // oxlint-disable-next-line react/no-array-index-key -- read-only server feedback list; composite key disambiguates potential duplicate text
@@ -91,7 +91,7 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
 
             {feedback.qualitative_feedback.areas_for_improvement && (
               <div>
-                <h5 className="font-medium text-shamiri-dark-orange mb-2">Areas for Improvement</h5>
+                <h5 className="font-medium text-warning mb-2">Areas for Improvement</h5>
                 <ul className="list-disc pl-5 space-y-1">
                   {feedback.qualitative_feedback.areas_for_improvement.map((area, idx) => (
                     // oxlint-disable-next-line react/no-array-index-key -- read-only server feedback list; composite key disambiguates potential duplicate text

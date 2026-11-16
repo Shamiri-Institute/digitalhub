@@ -22,7 +22,7 @@ export default function AdminAccessDataTable({ admins }: { admins: ImplementerAd
         emptyStateMessage="No users found"
         getRowCanExpand={() => false}
         renderTableActions={
-          <Button variant="brand" className="flex gap-2" onClick={() => setShowAdd(true)}>
+          <Button className="flex gap-2" onClick={() => setShowAdd(true)}>
             <Plus className="h-4 w-4" />
             Add new user
           </Button>

@@ -29,10 +29,8 @@ export default function RatingStarsInput({
               key={index.toString()}
               disabled={disabled}
               className={cn(
-                "peer relative h-5 w-5 shrink cursor-pointer transition ease-in hover:text-shamiri-light-orange active:scale-[1.25] peer-hover:text-shamiri-light-orange",
-                value && value >= 5 - index
-                  ? "text-shamiri-light-orange"
-                  : "text-shamiri-light-grey",
+                "peer relative h-5 w-5 shrink cursor-pointer transition ease-in hover:text-rating active:scale-[1.25] peer-hover:text-rating",
+                value && value >= 5 - index ? "text-rating" : "text-navy-5",
               )}
               onClick={() => {
                 onChange(5 - index);

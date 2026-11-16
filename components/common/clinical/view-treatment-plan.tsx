@@ -24,7 +24,7 @@ interface TreatmentPlan {
 }
 
 interface ViewTreatmentPlanProps {
-  children: React.ReactNode;
+  children: React.ReactElement;
   treatmentPlan: TreatmentPlan | null;
   pseudonym: string;
 }
@@ -47,7 +47,7 @@ export function ViewTreatmentPlan({ children, treatmentPlan, pseudonym }: ViewTr
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} />
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Treatment Plan - {pseudonym}</DialogTitle>

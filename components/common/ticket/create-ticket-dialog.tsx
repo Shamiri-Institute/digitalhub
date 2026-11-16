@@ -43,12 +43,14 @@ export default function CreateTicketDialog({ disabled }: { disabled?: boolean })
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="brand" className="flex gap-1" disabled={disabled}>
-          <Icons.plusCircle className="h-4 w-4" />
-          <span>New ticket</span>
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button className="flex gap-1" disabled={disabled}>
+            <Icons.plusCircle className="h-4 w-4" />
+            <span>New ticket</span>
+          </Button>
+        }
+      />
       <DialogContent className="sm:max-w-[500px]">
         <CreateTicketForm close={() => setOpen(false)} />
       </DialogContent>
@@ -175,16 +177,18 @@ function CreateTicketForm({ close }: { close: () => void }) {
         </div>
         <Separator className="my-6" />
         <DialogFooter className="flex justify-end gap-2">
-          <DialogClose asChild>
-            <Button
-              variant="ghost"
-              type="button"
-              className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
-            >
-              Cancel
-            </Button>
-          </DialogClose>
-          <Button variant="brand" type="submit" disabled={isSaving} loading={isSaving}>
+          <DialogClose
+            render={
+              <Button
+                variant="ghost"
+                type="button"
+                className="text-base font-semibold leading-6 text-primary hover:text-primary"
+              >
+                Cancel
+              </Button>
+            }
+          />
+          <Button type="submit" disabled={isSaving} loading={isSaving}>
             Submit
           </Button>
         </DialogFooter>
