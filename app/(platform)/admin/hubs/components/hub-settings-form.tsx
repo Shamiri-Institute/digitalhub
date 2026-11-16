@@ -100,7 +100,7 @@ export default function HubSettingsForm({
               <Button type="button" variant="outline" onClick={() => form.reset()}>
                 Discard
               </Button>
-              <Button type="submit">Review &amp; save</Button>
+              <Button type="submit">Review and save</Button>
             </div>
           </div>
         )}
