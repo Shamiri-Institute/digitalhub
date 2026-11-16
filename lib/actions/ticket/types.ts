@@ -19,6 +19,7 @@ export const CreateTicketSchema = z.object({
 });
 
 export const ACTIVE_TICKET_STATUSES: TicketStatus[] = ["OPEN", "IN_PROGRESS", "ESCALATED"];
+export const RESOLVED_TICKET_STATUSES: TicketStatus[] = ["RESOLVED", "CLOSED"];
 
 export const TicketReasonSchema = stringValidation("A reason is required");
 

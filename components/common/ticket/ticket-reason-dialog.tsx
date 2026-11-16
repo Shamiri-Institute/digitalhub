@@ -39,13 +39,39 @@ import type { TicketData } from "./columns";
 const ReasonOnlySchema = ChangeTicketPrioritySchema.partial({ priority: true });
 type TicketReasonInput = z.infer<typeof ReasonOnlySchema>;
 
-export type TicketReasonDialogKind = "changePriority" | "reopen" | "cancel";
-
-const DIALOG_TEXT: Record<TicketReasonDialogKind, { title: string; placeholder: string }> = {
-  changePriority: { title: "Change priority", placeholder: "Explain why the priority is changing" },
-  reopen: { title: "Reopen ticket", placeholder: "Explain what still needs to be done" },
-  cancel: { title: "Cancel ticket", placeholder: "Explain why this ticket is no longer needed" },
+const REASON_DIALOGS = {
+  changePriority: {
+    title: "Change priority",
+    placeholder: "Explain why the priority is changing",
+    schema: ChangeTicketPrioritySchema,
+    asksPriority: true,
+    destructive: false,
+    submit: (ticketId: string, data: TicketReasonInput) =>
+      changeTicketPriority(ticketId, ChangeTicketPrioritySchema.parse(data)),
+  },
+  reopen: {
+    title: "Reopen ticket",
+    placeholder: "Explain what still needs to be done",
+    schema: ReasonOnlySchema,
+    asksPriority: false,
+    destructive: false,
+    submit: (ticketId: string, data: TicketReasonInput) => reopenTicket(ticketId, data.reason),
+  },
+  cancel: {
+    title: "Cancel ticket",
+    placeholder: "Explain why this ticket is no longer needed",
+    schema: ReasonOnlySchema,
+    asksPriority: false,
+    destructive: true,
+    submit: (ticketId: string, data: TicketReasonInput) => cancelTicket(ticketId, data.reason),
+  },
 };
+
+export type TicketReasonDialogKind = keyof typeof REASON_DIALOGS;
+
+export function isTicketReasonDialogKind(kind: string): kind is TicketReasonDialogKind {
+  return Object.hasOwn(REASON_DIALOGS, kind);
+}
 
 interface TicketReasonDialogProps {
   ticket: TicketData;
@@ -58,7 +84,7 @@ export function TicketReasonDialog({ ticket, kind, onOpenChange }: TicketReasonD
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">{DIALOG_TEXT[kind].title}</DialogTitle>
+          <DialogTitle className="text-xl font-bold">{REASON_DIALOGS[kind].title}</DialogTitle>
         </DialogHeader>
         <TicketReasonForm ticket={ticket} kind={kind} onDone={() => onOpenChange(false)} />
       </DialogContent>
@@ -75,22 +101,16 @@ function TicketReasonForm({
   kind: TicketReasonDialogKind;
   onDone: () => void;
 }) {
+  const dialog = REASON_DIALOGS[kind];
   const { isSaving, save } = useDialogSave();
   const form = useForm<TicketReasonInput>({
-    resolver: zodResolver(
-      kind === "changePriority" ? ChangeTicketPrioritySchema : ReasonOnlySchema,
-    ),
+    resolver: zodResolver(dialog.schema),
     defaultValues: { priority: ticket.priority, reason: "" },
   });
 
   const onSubmit = (data: TicketReasonInput) => {
     save(async () => {
-      const result =
-        kind === "changePriority"
-          ? await changeTicketPriority(ticket.id, ChangeTicketPrioritySchema.parse(data))
-          : kind === "reopen"
-            ? await reopenTicket(ticket.id, data.reason)
-            : await cancelTicket(ticket.id, data.reason);
+      const result = await dialog.submit(ticket.id, data);
       if (!result.success) {
         toast({ variant: "destructive", description: result.message });
         return;
@@ -103,7 +123,7 @@ function TicketReasonForm({
   return (
     <Form {...form}>
       <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-6">
-        {kind === "changePriority" && (
+        {dialog.asksPriority && (
           <FormField
             control={form.control}
             name="priority"
@@ -136,11 +156,7 @@ function TicketReasonForm({
             <FormItem required>
               <FormLabel>Reason</FormLabel>
               <FormControl>
-                <Textarea
-                  {...field}
-                  placeholder={DIALOG_TEXT[kind].placeholder}
-                  className="min-h-[100px]"
-                />
+                <Textarea {...field} placeholder={dialog.placeholder} className="min-h-[100px]" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -153,12 +169,12 @@ function TicketReasonForm({
             </Button>
           </DialogClose>
           <Button
-            variant={kind === "cancel" ? "destructive" : "brand"}
+            variant={dialog.destructive ? "destructive" : "brand"}
             type="submit"
             disabled={isSaving}
             loading={isSaving}
           >
-            {DIALOG_TEXT[kind].title}
+            {dialog.title}
           </Button>
         </DialogFooter>
       </form>

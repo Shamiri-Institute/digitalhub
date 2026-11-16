@@ -17,7 +17,7 @@ type FellowAndSupervisor = {
 // A fellow who raises the ticket and the supervisor who holds it, both able to sign in.
 async function pickFellowAndSupervisor() {
   const {
-    rows: [row],
+    rows: [fellowAndSupervisor],
   } = await db.execute<FellowAndSupervisor>(sql`
     select fu.email as "fellowEmail", fu.id as "fellowUserId",
       su.email as "supervisorEmail", su.id as "supervisorUserId"
@@ -31,19 +31,19 @@ async function pickFellowAndSupervisor() {
     where ${signableMember()}
     order by fu.email
     limit 1`);
-  return row;
+  return fellowAndSupervisor;
 }
 
-async function insertHeldTicket(pair: FellowAndSupervisor, undo: Undo) {
+async function insertHeldTicket(fellowAndSupervisor: FellowAndSupervisor, undo: Undo) {
   const ticketSubject = `E2E ticket lifecycle ${Date.now()}`;
   const [ticket] = await db
     .insert(tickets)
     .values({
-      createdById: pair.fellowUserId,
+      createdById: fellowAndSupervisor.fellowUserId,
       subject: ticketSubject,
       description: "Raised by the ticket lifecycle spec.",
       category: "TECH",
-      holderId: pair.supervisorUserId,
+      holderId: fellowAndSupervisor.supervisorUserId,
     })
     .returning({ id: tickets.id });
   required(ticket, "the spec's ticket");
@@ -54,8 +54,8 @@ async function insertHeldTicket(pair: FellowAndSupervisor, undo: Undo) {
   await db.insert(ticketEvents).values({
     ticketId: ticket.id,
     kind: "CREATED",
-    actorId: pair.fellowUserId,
-    assigneeId: pair.supervisorUserId,
+    actorId: fellowAndSupervisor.fellowUserId,
+    assigneeId: fellowAndSupervisor.supervisorUserId,
     reason: "Raised by the ticket lifecycle spec.",
   });
   return { ticketId: ticket.id, ticketSubject };
@@ -91,11 +91,11 @@ test("the holder starts, reprioritises and resolves a ticket, and its creator re
   undo,
 }) => {
   test.slow();
-  const pair = await pickFellowAndSupervisor();
-  required(pair, "a fellow and their supervisor who can both sign in");
-  const { ticketId, ticketSubject } = await insertHeldTicket(pair, undo);
+  const fellowAndSupervisor = await pickFellowAndSupervisor();
+  required(fellowAndSupervisor, "a fellow and their supervisor who can both sign in");
+  const { ticketId, ticketSubject } = await insertHeldTicket(fellowAndSupervisor, undo);
 
-  await signInWithEmail(context, pair.supervisorEmail);
+  await signInWithEmail(context, fellowAndSupervisor.supervisorEmail);
   await page.goto(getUrl("/sc/tickets"));
   await expect(await searchRows(page, ticketSubject)).toContainText(/open/i);
   await chooseRowAction(page, await searchRows(page, ticketSubject), "Start ticket");
@@ -117,7 +117,7 @@ test("the holder starts, reprioritises and resolves a ticket, and its creator re
   await expect(resolve).toBeHidden();
   await expectRowAfterReload(page, ticketSubject, /resolved/i);
 
-  await signInWithEmail(context, pair.fellowEmail);
+  await signInWithEmail(context, fellowAndSupervisor.fellowEmail);
   await page.goto(getUrl("/fel/tickets"));
   await chooseRowAction(page, await searchRows(page, ticketSubject), "Reopen ticket");
   await giveReason(page, "Reopen ticket", "The device still drops the connection.");
@@ -142,18 +142,18 @@ test("the holder starts, reprioritises and resolves a ticket, and its creator re
 });
 
 test("the creator cancels an open ticket with a reason", async ({ page, context, undo }) => {
-  const pair = await pickFellowAndSupervisor();
-  required(pair, "a fellow and their supervisor who can both sign in");
-  const { ticketId, ticketSubject } = await insertHeldTicket(pair, undo);
+  const fellowAndSupervisor = await pickFellowAndSupervisor();
+  required(fellowAndSupervisor, "a fellow and their supervisor who can both sign in");
+  const { ticketId, ticketSubject } = await insertHeldTicket(fellowAndSupervisor, undo);
 
-  await signInWithEmail(context, pair.fellowEmail);
+  await signInWithEmail(context, fellowAndSupervisor.fellowEmail);
   await page.goto(getUrl("/fel/tickets"));
   await chooseRowAction(page, await searchRows(page, ticketSubject), "Cancel ticket");
   await giveReason(page, "Cancel ticket", "Raised by mistake.");
   await expectRowAfterReload(page, ticketSubject, /cancelled/i);
   await expectNoActions(page, ticketSubject, ["Cancel ticket", "Reopen ticket"]);
 
-  await signInWithEmail(context, pair.supervisorEmail);
+  await signInWithEmail(context, fellowAndSupervisor.supervisorEmail);
   await page.goto(getUrl("/sc/tickets"));
   await expectNoActions(page, ticketSubject, [
     "Start ticket",

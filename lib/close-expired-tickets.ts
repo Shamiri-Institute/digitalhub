@@ -7,7 +7,7 @@ import { REOPEN_WINDOW_MS } from "#/lib/ticket-reopen-window";
 export async function closeExpiredTickets(executor: typeof db | Transaction = db) {
   const now = new Date();
   return executor.transaction(async (tx) => {
-    const closed = await tx
+    const closedTicketIds = await tx
       .update(tickets)
       .set({ status: "CLOSED", closedAt: now })
       .where(
@@ -17,9 +17,9 @@ export async function closeExpiredTickets(executor: typeof db | Transaction = db
         ),
       )
       .returning({ id: tickets.id });
-    if (closed.length > 0) {
+    if (closedTicketIds.length > 0) {
       await tx.insert(ticketEvents).values(
-        closed.map(({ id }) => ({
+        closedTicketIds.map(({ id }) => ({
           ticketId: id,
           actorId: null,
           kind: "CLOSED" as const,
@@ -28,6 +28,6 @@ export async function closeExpiredTickets(executor: typeof db | Transaction = db
         })),
       );
     }
-    return closed.length;
+    return closedTicketIds.length;
   });
 }

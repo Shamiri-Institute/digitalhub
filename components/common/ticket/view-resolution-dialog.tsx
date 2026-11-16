@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/u
 import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
 import { getTicketResolution } from "#/lib/actions/ticket";
+import { RESOLVED_TICKET_STATUSES } from "#/lib/actions/ticket/types";
 import type { TicketData } from "./columns";
 import { enumLabel } from "#/lib/utils";
 
@@ -26,7 +27,7 @@ export function ViewResolutionDialog({
   resolution: ReturnType<typeof getTicketResolution>;
   onOpenChange: (open: boolean) => void;
 }) {
-  const isResolved = ticket.status === "RESOLVED" || ticket.status === "CLOSED";
+  const isResolved = RESOLVED_TICKET_STATUSES.includes(ticket.status);
 
   return (
     <Dialog open onOpenChange={onOpenChange}>
