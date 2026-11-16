@@ -129,7 +129,8 @@ test("the users table lists only the admins of the caller's implementer", async 
     columns: { id: true },
   });
   const active = superAdmin ? (await loadSessionUser(superAdmin.id))?.activeMembership : undefined;
-  if (!active) throw new Error(`${superAdminEmail} has no active membership; run npm run db:reset`);
+  if (!active)
+    throw new Error(`${superAdminEmail} has no active membership; run pnpm run db:reset`);
 
   const otherImplementerAdmin = await db.query.adminUser.findFirst({
     where: (a, { and, ne }) =>

@@ -1,11 +1,9 @@
 // @vitest-environment node
 import { and, eq, sql, TransactionRollbackError } from "drizzle-orm";
-import { afterAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { db, pool, type Transaction } from "#/db/client";
+import { db, type Transaction } from "#/db/client";
 import { adminUser, fellow, implementerMember } from "#/db/schema";
-
-afterAll(() => pool.end());
 
 // The checks are deferred to commit, so this forces them with SET CONSTRAINTS and then rolls back.
 // It returns the error a commit would raise, or null.

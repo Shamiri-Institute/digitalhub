@@ -5,9 +5,9 @@
 // and expect the refusal; everything a user can do is tested through the UI in
 // tests/e2e/admin-surveys.spec.ts. Same approach as membership-identifier.test.ts for 0014.
 import { eq, sql, TransactionRollbackError } from "drizzle-orm";
-import { afterAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { db, pool, type Transaction } from "#/db/client";
+import { db, type Transaction } from "#/db/client";
 import { survey, surveyAuditEvent, surveyVersion } from "#/db/schema";
 import type { SurveyForm } from "#/lib/survey/form";
 
@@ -17,8 +17,6 @@ function only<T>(rows: T[]): T {
   if (!row) throw new Error("The insert returned no row");
   return row;
 }
-
-afterAll(() => pool.end());
 
 // Runs the write in a transaction that is always rolled back, and returns the database error it
 // raised, or null.

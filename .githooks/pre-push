@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+# Installed by `pnpm install` (the "prepare" script).
+set -eu
+
+base=$(git merge-base HEAD "@{upstream}" 2>/dev/null || git merge-base HEAD origin/dev)
+files=$(git diff --name-only --diff-filter=ACMR "$base" -- '*.ts' '*.tsx' '*.js' '*.mjs' '*.json' '*.css' '*.md' '*.yml' '*.yaml')
+[ -n "$files" ] || exit 0
+
+code=$(printf '%s\n' "$files" | grep -E '\.(ts|tsx|js|mjs)$' || true)
+
+# shellcheck disable=SC2086 # one argument per file
+pnpm exec oxfmt --check $files
+if [ -n "$code" ]; then
+  # shellcheck disable=SC2086
+  pnpm exec oxlint --type-aware $code
+  pnpm run typecheck >/dev/null
+fi

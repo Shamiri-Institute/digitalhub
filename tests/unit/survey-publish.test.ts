@@ -6,7 +6,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { db, pool } from "#/db/client";
+import { db } from "#/db/client";
 import { survey, surveyAuditEvent, surveyVersion } from "#/db/schema";
 import type { SurveyStatus } from "#/db/enums";
 import type { AdminScope } from "#/lib/auth/admin-access";
@@ -42,7 +42,6 @@ afterAll(async () => {
   if (createdCodes.length > 0) {
     await db.delete(survey).where(inArray(survey.code, createdCodes));
   }
-  await pool.end();
 });
 
 /** A survey in the caller's scope whose v1 is a draft with this form. */

@@ -1,3 +1,5 @@
+import { availableParallelism } from "node:os";
+
 import { defineConfig, devices } from "@playwright/test";
 
 const isCI = !!process.env.CI;
@@ -8,8 +10,8 @@ const useHeadless = process.env.CI ? { headless: true } : devices["Desktop Chrom
 export default defineConfig({
   testDir: "./tests/e2e",
   webServer: {
-    // CI and `npm run test:prod` set E2E_PROD=1 to serve a production build; `npm test` uses `next dev`.
-    command: process.env.E2E_PROD ? "npm run start" : "npm run dev",
+    // CI and `pnpm run test:prod` set E2E_PROD=1 to serve a production build; `pnpm run test` uses `next dev`.
+    command: process.env.E2E_PROD ? "pnpm run start" : "pnpm run dev",
     timeout: 480 * 1000,
     port: Number(process.env.PORT ?? 3000),
     reuseExistingServer: !isCI,
@@ -22,8 +24,9 @@ export default defineConfig({
   forbidOnly: isCI,
   // Stop at the first failure; `--max-failures=0` runs everything.
   maxFailures: 1,
-  retries: isCI ? 2 : 0,
-  workers: isCI ? 1 : undefined,
+  retries: 0,
+  // Workers share one server and database; more than one per two cores oversubscribes the machine.
+  workers: isCI ? Math.max(1, Math.floor(availableParallelism() / 2)) : undefined,
   // Server actions write to a real database; 5s is short when several workers share one machine.
   // `next dev` also compiles a page on first visit, so a cold dev server needs longer.
   expect: { timeout: process.env.E2E_PROD ? 10_000 : 60_000 },

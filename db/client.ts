@@ -64,3 +64,17 @@ export function isIntegrityViolation(error: unknown) {
 export function isSerializationFailure(error: unknown) {
   return pgError(error)?.code === "40001";
 }
+
+/**
+ * A serializable transaction, run again when Postgres cancels it as a serialization failure, as
+ * Postgres asks. Its read tracking is by index page, so writes to unrelated rows can conflict.
+ */
+export async function serializableTransaction<T>(work: (tx: Transaction) => Promise<T>) {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await db.transaction(work, { isolationLevel: "serializable" });
+    } catch (error) {
+      if (attempt === 3 || !isSerializationFailure(error)) throw error;
+    }
+  }
+}

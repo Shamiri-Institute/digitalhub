@@ -6,7 +6,7 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { db, pool } from "#/db/client";
+import { db } from "#/db/client";
 import {
   hub,
   project,
@@ -61,7 +61,6 @@ afterAll(async () => {
     await removeSurvey({ code });
   }
   await db.delete(school).where(eq(school.id, testSchoolId));
-  await pool.end();
 });
 
 /** A run of `copies` blank copies of a new two-page version, recorded but not yet printed. */

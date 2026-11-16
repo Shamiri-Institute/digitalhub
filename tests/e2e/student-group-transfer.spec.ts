@@ -18,10 +18,13 @@ type Fixture = {
 };
 
 // A hub coordinator's school with two active groups whose names are unique in the school.
+// signableMember() inline makes the planner misjudge the join: 7s on an analyzed database.
 async function pickSchool() {
   const {
     rows: [row],
   } = await db.execute<Fixture>(sql`
+    with signable_members as materialized (
+      select m.id from implementer_members m where ${signableMember()})
     select u.email, s.id as "schoolId", s.visible_id as "visibleId",
       t.group_name as "targetGroupName", f.id as "sourceGroupId", f.group_name as "sourceGroupName"
     from hub_coordinators hc
@@ -31,7 +34,7 @@ async function pickSchool() {
       and coalesce(s.dropped_out, false) = false
     join intervention_groups t on t.school_id = s.id and t.archived_at is null
     join intervention_groups f on f.school_id = s.id and f.archived_at is null and f.id <> t.id
-    where ${signableMember()}
+    where m.id in (select id from signable_members)
       and (select count(*) from intervention_groups o
         where o.school_id = s.id and o.group_name in (t.group_name, f.group_name)) = 2
     order by u.email desc, s.visible_id, t.id, f.id

@@ -220,4 +220,4 @@ avatars and status dots fully round.
 - Do pair every status colour with a word or an icon.
 - Don't put lime or lavender text on white, or grey text on a coloured fill.
 - Don't add a shadow to a bordered card, or a coloured stripe down one side of a card.
-- Don't add colours, fonts or radii outside this file; `npm run design:audit` checks them.
+- Don't add colours, fonts or radii outside this file; `pnpm run design:audit` checks them.

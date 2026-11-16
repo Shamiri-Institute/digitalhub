@@ -1,0 +1,207 @@
+name: CI
+
+# Pull requests run what their diff can reach (scripts/ci/affected.sh). The merge queue and pushes to
+# dev and main run everything; the pushes also save the caches pull requests start from.
+on:
+  pull_request:
+    branches: [dev, main]
+  merge_group:
+  push:
+    branches: [dev, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  E2E_SHARDS: 8
+  GOOGLE_ID: mock-google-client-id
+  GOOGLE_SECRET: mock-google-secret
+  AWS_ACCESS_KEY_ID: mock-aws-access-key-id
+  AWS_SECRET_ACCESS_KEY: mock-aws-secret-access-key
+  AWS_REGION: af-south-1
+  # The key, secret and buckets scripts/local-s3.sh gives SeaweedFS.
+  S3_UPLOAD_KEY: GKdeadbeefdeadbeefdeadbeef
+  S3_UPLOAD_SECRET: "0000000000000000000000000000000000000000000000000000000000000001"
+  S3_RECORDINGS_BUCKET: recordings
+  S3_RECORDINGS_REGION: af-south-1
+  S3_SURVEY_PRINT_FILES_BUCKET: survey-print-files
+  S3_SURVEY_PRINT_FILES_REGION: af-south-1
+  AWS_ENDPOINT_URL_S3: http://localhost:8333
+  S3_STUDENT_ATTENDANCE_BUCKET: student-attendance
+  S3_STUDENT_ATTENDANCE_REGION: af-south-1
+  S3_SURVEY_SCANS_BUCKET: survey-scans
+  S3_SURVEY_SCANS_REGION: af-south-1
+  BETTER_AUTH_URL: http://localhost:3000
+  BETTER_AUTH_SECRET: e2e-better-auth-secret-at-least-32-chars
+  DATABASE_URL: postgres://youth:thriving@localhost:5432/shamiri_db
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+  # Baked in at build time: credential sign-in works, the development-only role switcher does not.
+  NEXT_PUBLIC_ENV: testing
+  # Serve `next start` on the build; `next dev` hides bugs like #844.
+  E2E_PROD: "1"
+  TEST_USER_PASSWORD: TestPassword123!
+
+# ubuntu-24.04, not ubuntu-latest: Playwright 1.59 cannot install its browser on Ubuntu 26.04.
+jobs:
+  affected:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    outputs:
+      unit: ${{ steps.affected.outputs.unit }}
+      e2e: ${{ steps.affected.outputs.e2e }}
+      shards: ${{ steps.affected.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          filter: blob:none
+          fetch-depth: 0
+      - id: affected
+        shell: bash
+        run: scripts/ci/affected.sh "${{ github.event_name }}" "${{ github.event.pull_request.base.sha }}" "$E2E_SHARDS" | tee -a "$GITHUB_OUTPUT"
+
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          filter: blob:none
+      - uses: ./.github/actions/setup
+      - run: pnpm run stylecheck
+
+  typecheck:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          filter: blob:none
+      - uses: ./.github/actions/setup
+      - run: pnpm run typecheck
+
+  shellcheck:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          filter: blob:none
+      - run: shellcheck scripts/*.sh scripts/*/*.sh .githooks/*
+
+  design_audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    # Impeccable's detector checks the UI against DESIGN.md and its anti-pattern rules. It annotates
+    # findings without failing the build until the first baseline has been reviewed.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          filter: blob:none
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - name: Impeccable design audit
+        run: pnpm dlx impeccable@4.8.2 detect --github app components
+
+  migrations:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    services:
+      postgres:
+        image: postgres:18
+        env: { POSTGRES_USER: youth, POSTGRES_PASSWORD: thriving, POSTGRES_DB: shamiri_db }
+        options: --health-cmd pg_isready --health-interval 1s --health-timeout 5s --health-retries 30
+        ports: ["5432:5432"]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          filter: blob:none
+      - uses: ./.github/actions/setup
+      - run: pnpm exec drizzle-kit migrate
+      - run: pnpm exec tsx scripts/db/check-schema.ts
+
+  unit:
+    needs: affected
+    if: needs.affected.outputs.unit != 'none'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    services:
+      postgres:
+        image: postgres:18
+        env: { POSTGRES_USER: youth, POSTGRES_PASSWORD: thriving, POSTGRES_DB: shamiri_db }
+        options: --health-cmd pg_isready --health-interval 1s --health-timeout 5s --health-retries 30
+        ports: ["5432:5432"]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          filter: blob:none
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      # Some unit tests upload to S3.
+      - uses: ./.github/actions/seaweedfs
+      - run: pnpm exec drizzle-kit migrate && pnpm exec tsx db/seed/seed.ts
+      - run: timeout 60 sh -c 'until grep -q "S3 ready" seaweedfs.log; do sleep 1; done' || { cat seaweedfs.log; exit 1; }
+      - run: pnpm exec vitest run ${{ needs.affected.outputs.unit == 'changed' && format('--changed {0} --passWithNoTests', github.event.pull_request.base.sha) || '' }}
+
+  e2e:
+    needs: affected
+    if: needs.affected.outputs.e2e != 'none'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.affected.outputs.shards) }}
+    services:
+      postgres:
+        image: postgres:18
+        env: { POSTGRES_USER: youth, POSTGRES_PASSWORD: thriving, POSTGRES_DB: shamiri_db }
+        options: --health-cmd pg_isready --health-interval 1s --health-timeout 5s --health-retries 30
+        ports: ["5432:5432"]
+    env:
+      CI_TYPES_CHECKED_ELSEWHERE: "1"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          filter: blob:none
+      - uses: ./.github/actions/setup
+        with:
+          browsers: "true"
+      - uses: ./.github/actions/seaweedfs
+      - uses: actions/cache@v5
+        with:
+          path: .next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+      - name: Seed and build
+        run: |
+          (pnpm exec drizzle-kit migrate && pnpm exec tsx db/seed/seed.ts) > seed.log 2>&1 &
+          seed=$!
+          pnpm run build
+          wait "$seed" || { cat seed.log; exit 1; }
+      - run: timeout 60 sh -c 'until grep -q "S3 ready" seaweedfs.log; do sleep 1; done' || { cat seaweedfs.log; exit 1; }
+      - name: Playwright
+        run: scripts/ci/e2e-run.sh "${{ matrix.shard }}" "${{ strategy.job-total }}" ${{ needs.affected.outputs.e2e != 'all' && needs.affected.outputs.e2e || '' }}
+      - uses: actions/upload-artifact@v7
+        if: ${{ failure() }}
+        with:
+          name: playwright-${{ matrix.shard }}
+          path: test-results
+          retention-days: 14
+
+  # The check branch protection and the merge queue require. Skipped jobs count as passing.
+  ci:
+    if: ${{ always() }}
+    needs: [affected, lint, typecheck, shellcheck, migrations, unit, e2e]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: echo "$NEEDS" | jq -e 'to_entries | all(.value.result == "success" or .value.result == "skipped")'

@@ -196,10 +196,14 @@ test.describe("marking unmarked fellows", () => {
   };
   let fixture: Fixture;
 
+  // The helpers inline make the planner misjudge the join: 8s on an analyzed database.
   async function pickLoneSessionWithTwoUnmarkedFellows() {
     const {
       rows: [row],
     } = await db.execute<Omit<Fixture, "sessionDate"> & { sessionDate: string }>(sql`
+      with signable_members as materialized (
+          select m.id from implementer_members m where ${signableMember()}),
+        unique_fellows as materialized (select f.id from fellows f where ${uniqueFellowName()})
       select i.id as "sessionId", i.session_date as "sessionDate", sn.amount as "sessionAmount",
         sn.id as "sessionNameId", s.school_name as "schoolName", u.email,
         (array_agg(f.id order by f.id))[1:2] as "fellowIds",
@@ -211,12 +215,12 @@ test.describe("marking unmarked fellows", () => {
       join schools s on s.id = i.school_id
       join intervention_groups g on g.school_id = s.id and g.group_type = 'TREATMENT'
       join fellows f on f.id = g.leader_id and coalesce(f.dropped_out, false) = false
-        and f.fellow_name is not null and ${uniqueFellowName()}
+        and f.fellow_name is not null and f.id in (select id from unique_fellows)
       join supervisors sv on sv.id = f.supervisor_id and sv.hub_id = f.hub_id
         and sv.hub_id = s.hub_id
       join implementer_members m on m.identifier = sv.id and m.role = 'SUPERVISOR'
       join users u on u.id = m.user_id
-      where i.occurred and ${signableMember()}
+      where i.occurred and m.id in (select id from signable_members)
         and not exists (
           select 1 from fellow_attendances fa where fa.session_id = i.id and fa.fellow_id = f.id)
         and ${onlySessionAtSchoolThatWeek()}
