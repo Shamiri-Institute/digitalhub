@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
+import { DrizzleQueryError } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { DatabaseError, Pool } from "pg";
 
@@ -42,6 +43,18 @@ function pgError(error: unknown): DatabaseError | undefined {
   if (error instanceof DatabaseError) return error;
   if (error instanceof Error && error.cause instanceof DatabaseError) return error.cause;
   return undefined;
+}
+
+/**
+ * An error's message, safe to log or store: a failed query's message carries its SQL and bound
+ * parameters, which can be a transcript or feedback, so only its Postgres code is kept.
+ */
+export function errorMessageWithoutQuery(error: unknown) {
+  if (error instanceof DrizzleQueryError) {
+    const code = pgError(error)?.code;
+    return code ? `Database error ${code}` : "Database error";
+  }
+  return error instanceof Error ? error.message : String(error);
 }
 
 export function isUniqueViolation(error: unknown, constraint?: string) {

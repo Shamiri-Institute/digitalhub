@@ -5,7 +5,8 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { buildReport, ratedSessionLine } from "#/lib/fidelity-rating/rate";
+import { buildReport, parseRating } from "#/lib/fidelity-rating/rate";
+import { ratedSessionLine } from "#/lib/fidelity-rating/sessions";
 
 // A shipped prompt is never edited: ratings record which version they used. v7 is
 // evaluation-fidelity-monitoring's evals/fidelity/prompts/v7-draft.md at a0737f4, byte for byte.
@@ -59,5 +60,48 @@ describe("fidelity rating", () => {
         '**TEXT:** "Asante"\n',
       ].join("\n"),
     );
+  });
+
+  const items = Object.fromEntries(
+    [
+      "question_1_protocol_adherence",
+      "question_2_content_specifications",
+      "question_3_thoroughness",
+      "question_4_skillful_delivery",
+      "question_5_clarity_accessibility",
+      "question_6_protocol_boundaries",
+    ].map((item, i) => [item, { score: i < 4 ? 7 : 6, justification: "Covered." }]),
+  );
+  const answer = {
+    fidelity_scores: { ...items, overall_score: 5.8, overall_assessment: "High fidelity." },
+    qualitative_feedback: {
+      session_summary: "Session 1.",
+      strengths: ["Clear introduction."],
+      areas_for_improvement: [],
+    },
+    safety_flags: [],
+    recommendations: [],
+  };
+
+  it("scores the mean of the six items, as the eval does, not the model's overall score", () => {
+    expect(parseRating(JSON.stringify(answer)).fidelity_scores.overall_score).toBe(6.67);
+  });
+
+  it("refuses an answer the feedback dialog cannot render", () => {
+    const strengthsAsText = {
+      ...answer,
+      qualitative_feedback: { ...answer.qualitative_feedback, strengths: "Clear introduction." },
+    };
+    const missingItem: Record<string, unknown> = { ...answer.fidelity_scores };
+    delete missingItem.question_3_thoroughness;
+    for (const malformed of [
+      strengthsAsText,
+      { ...answer, safety_flags: [null] },
+      { ...answer, fidelity_scores: missingItem },
+    ]) {
+      expect(() => parseRating(JSON.stringify(malformed))).toThrow(
+        "Gemini returned a rating that does not match the schema",
+      );
+    }
   });
 });

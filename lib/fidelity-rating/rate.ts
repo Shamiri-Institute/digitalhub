@@ -20,19 +20,6 @@ const PROMPT = readFileSync(
 );
 export const RATING_PROMPT_SHA256 = createHash("sha256").update(PROMPT).digest("hex");
 
-// The prompt carries the checklists of these four sessions and no others.
-const RATED_SESSIONS: Record<string, string> = {
-  s1: "1 of 4 (Growth Mindset)",
-  s2: "2 of 4 (Growth Mindset, part 2)",
-  s3: "3 of 4 (Gratitude)",
-  s4: "4 of 4 (Value Affirmations)",
-};
-
-/** The session line the judge reads, or null for a session the prompt has no checklist for. */
-export function ratedSessionLine(sessionName: string | null | undefined) {
-  return (sessionName && RATED_SESSIONS[sessionName]) ?? null;
-}
-
 const mmss = (seconds: number) => {
   const whole = Math.trunc(seconds);
   return `${String(Math.trunc(whole / 60)).padStart(2, "0")}:${String(whole % 60).padStart(2, "0")}`;
@@ -132,15 +119,52 @@ const RESPONSE_SCHEMA = {
   required: ["fidelity_scores", "qualitative_feedback"],
 };
 
-// Only what the SDH reads back; the rest is stored as the model wrote it. The dialog renders this
-// shape as its version 1 (feedback-v1-content.tsx).
+// Every field the dialog reads (feedback-v1-content.tsx, feedback-shared.tsx), so a malformed answer
+// fails the run and stays retryable instead of completing with feedback the dialog cannot render.
+const ItemScore = z.looseObject({
+  score: z.number().int().min(1).max(7),
+  justification: z.string(),
+});
 const Rating = z.looseObject({
-  fidelity_scores: z.looseObject({ overall_score: z.number() }),
-  qualitative_feedback: z.looseObject({}),
-  safety_flags: z.array(z.unknown()).default([]),
+  fidelity_scores: z.looseObject({
+    ...Object.fromEntries(ITEMS.map((item) => [item, ItemScore])),
+    overall_score: z.number(),
+    overall_assessment: z.string(),
+  }),
+  qualitative_feedback: z.looseObject({
+    session_summary: z.string(),
+    strengths: z.array(z.string()),
+    areas_for_improvement: z.array(z.string()),
+    session_flow_and_engagement: z.string().optional(),
+  }),
+  safety_flags: z
+    .array(
+      z.looseObject({
+        type: z.string(),
+        description: z.string(),
+        severity: z.string(),
+        timestamp_reference: z.string().optional(),
+        context_analysis: z.string().optional(),
+        requires_follow_up: z.boolean(),
+      }),
+    )
+    .default([]),
   recommendations: z.array(z.string()).default([]),
 });
 export type Rating = z.infer<typeof Rating>;
+
+/**
+ * The mean of the six item scores, to two places. The eval scores this, not the model's own
+ * overall_score (evals/fidelity/analyze.py scores_of), so it replaces the model's figure.
+ */
+function withComposite(rating: Rating): Rating {
+  const scores = ITEMS.map((item) => (rating.fidelity_scores[item] as { score: number }).score);
+  const mean = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+  return {
+    ...rating,
+    fidelity_scores: { ...rating.fidelity_scores, overall_score: Math.round(mean * 100) / 100 },
+  };
+}
 
 /** Rates one session's transcript; throws when the model gives no usable rating. */
 export async function rateTranscript(
@@ -180,14 +204,19 @@ export async function rateTranscript(
   if (!response.candidates?.length || (finish && finish !== FinishReason.STOP)) {
     throw new Error(`Gemini returned no rating (finish reason ${finish ?? "none"})`);
   }
+  return parseRating(response.text ?? "");
+}
+
+/** The model's answer as a Rating with the eval's composite; throws when it is not one. */
+export function parseRating(text: string): Rating {
   let json: unknown;
   try {
-    json = JSON.parse(response.text ?? "");
+    json = JSON.parse(text);
   } catch {
     json = undefined;
   }
   const parsed = Rating.safeParse(json);
   // The parse error would quote the model's output, which describes a session with minors.
   if (!parsed.success) throw new Error("Gemini returned a rating that does not match the schema");
-  return parsed.data;
+  return withComposite(parsed.data);
 }

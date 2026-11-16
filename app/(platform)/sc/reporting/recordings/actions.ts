@@ -8,6 +8,7 @@ import { db, isUniqueViolation } from "#/db/client";
 import { FidelityRatingStatus, RecordingProcessingStatus, TranscriptionStatus } from "#/db/enums";
 import { fidelityRating, sessionRecording, transcription } from "#/db/schema";
 import { isSupervisorInFidelityAbTest } from "#/lib/fidelity-ab-test";
+import { rerateAfterSessionChange } from "#/lib/fidelity-rating/sessions";
 import {
   discardOrphanedUpload,
   verifyUploadClaim,
@@ -506,20 +507,26 @@ export async function updateSessionRecording(input: {
   }
 
   try {
-    const updated = await db
-      .update(sessionRecording)
-      .set({
-        fellowId: input.fellowId,
-        schoolId,
-        groupId: input.groupId,
-        sessionId: input.sessionId,
-        originalFileName: input.originalFileName,
-      })
-      .where(eq(sessionRecording.id, input.recordingId))
-      .returning({ id: sessionRecording.id });
-    if (updated.length === 0) {
-      throw new Error(`Recording ${input.recordingId} not found`);
-    }
+    await db.transaction(async (tx) => {
+      const updated = await tx
+        .update(sessionRecording)
+        .set({
+          fellowId: input.fellowId,
+          schoolId,
+          groupId: input.groupId,
+          sessionId: input.sessionId,
+          originalFileName: input.originalFileName,
+        })
+        .where(eq(sessionRecording.id, input.recordingId))
+        .returning({ id: sessionRecording.id });
+      if (updated.length === 0) {
+        throw new Error(`Recording ${input.recordingId} not found`);
+      }
+      // The feedback rates the transcript against its session's checklist.
+      if (recording.sessionId !== input.sessionId) {
+        await rerateAfterSessionChange(tx, input.recordingId);
+      }
+    });
 
     revalidatePath("/sc/reporting/recordings");
 

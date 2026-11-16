@@ -3,7 +3,7 @@ import "server-only";
 import * as Sentry from "@sentry/nextjs";
 import { and, asc, eq, inArray, lt, or, sql } from "drizzle-orm";
 
-import { db } from "#/db/client";
+import { db, errorMessageWithoutQuery } from "#/db/client";
 import { FidelityRatingStatus, RecordingProcessingStatus } from "#/db/enums";
 import { fidelityRating, sessionRecording } from "#/db/schema";
 import {
@@ -11,8 +11,8 @@ import {
   RATING_PROMPT_SHA256,
   RATING_PROMPT_VERSION,
   rateTranscript,
-  ratedSessionLine,
 } from "#/lib/fidelity-rating/rate";
+import { ratedSessionLine } from "#/lib/fidelity-rating/sessions";
 
 // Not a "use server" file: its exports would be public endpoints. Only the cron route calls them.
 
@@ -22,6 +22,7 @@ const LEASE_MINUTES = 10;
 const RUN_DEADLINE_MS = 300_000;
 // The feedback dialog renders the v7 prompt's output with its version 1 layout.
 const FEEDBACK_LAYOUT = 1;
+const ARCHIVED_MESSAGE = "The recording was archived before feedback was generated";
 
 export type ClaimedRating = Awaited<ReturnType<typeof claimRatings>>[number];
 
@@ -75,11 +76,22 @@ export async function claimRatings(limit = RUNS_PER_TICK) {
  */
 export async function finishRating(
   run: ClaimedRating,
-  result:
+  outcome:
     | { status: "QUEUED" | "FAILED"; errorMessage: string }
     | { status: "COMPLETED"; feedback: { fidelity_scores: { overall_score: number } } },
 ) {
   return db.transaction(async (tx) => {
+    // Locked first, as a session edit locks it. A recording archived while Gemini was rating it is
+    // withdrawn, so its feedback is not kept.
+    const [recording] = await tx
+      .select({ archivedAt: sessionRecording.archivedAt })
+      .from(sessionRecording)
+      .where(eq(sessionRecording.id, run.recordingId))
+      .for("update");
+    const result =
+      outcome.status === "COMPLETED" && recording?.archivedAt
+        ? { status: "FAILED" as const, errorMessage: ARCHIVED_MESSAGE }
+        : outcome;
     const [finished] = await tx
       .update(fidelityRating)
       .set(
@@ -163,7 +175,7 @@ async function runRating(run: ClaimedRating) {
     if (recording.archivedAt) {
       await finishRating(run, {
         status: FidelityRatingStatus.FAILED,
-        errorMessage: "The recording was archived before feedback was generated",
+        errorMessage: ARCHIVED_MESSAGE,
       });
       return;
     }
@@ -187,7 +199,7 @@ async function runRating(run: ClaimedRating) {
     const recorded = await finishRating(run, { status: FidelityRatingStatus.COMPLETED, feedback });
     console.log(`${label} ${recorded ? "completed" : "result dropped: claimed again"}`);
   } catch (error) {
-    const errorMessage = (error instanceof Error ? error.message : String(error)).slice(0, 500);
+    const errorMessage = errorMessageWithoutQuery(error).slice(0, 500);
     const status =
       run.attempts >= MAX_ATTEMPTS ? FidelityRatingStatus.FAILED : FidelityRatingStatus.QUEUED;
     await finishRating(run, { status, errorMessage });

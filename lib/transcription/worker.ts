@@ -3,10 +3,16 @@ import "server-only";
 import * as Sentry from "@sentry/nextjs";
 import { and, asc, eq, inArray, lt, or, sql } from "drizzle-orm";
 
-import { db } from "#/db/client";
+import { db, errorMessageWithoutQuery } from "#/db/client";
 import { RecordingProcessingStatus, TranscriptionStatus } from "#/db/enums";
-import { fidelityRating, sessionRecording, transcription } from "#/db/schema";
-import { ratedSessionLine } from "#/lib/fidelity-rating/rate";
+import {
+  fidelityRating,
+  interventionSession,
+  sessionName,
+  sessionRecording,
+  transcription,
+} from "#/db/schema";
+import { ratedSessionLine } from "#/lib/fidelity-rating/sessions";
 import { getPresignedUrl } from "#/lib/s3/s3.service";
 import {
   UnusableAudioError,
@@ -91,8 +97,8 @@ export async function claimTranscriptions(limit = RUNS_PER_TICK) {
 
 /**
  * Moves a claimed run out of PROCESSING, only if no later claim has taken it over, and queues a
- * fidelity rating of a completed transcript when `queueRating` is set. Returns false when the run
- * lost its claim and the write was dropped.
+ * fidelity rating of a completed transcript of a session the judge has a checklist for. Returns
+ * false when the run lost its claim and the write was dropped.
  */
 export async function finishTranscription(
   run: ClaimedTranscription,
@@ -102,9 +108,17 @@ export async function finishTranscription(
         typeof transcription.$inferInsert,
         "id" | "recordingId" | "status"
       >),
-  queueRating = false,
 ) {
   return db.transaction(async (tx) => {
+    // The recording is locked first, as a session edit locks it, so the session read here is the
+    // one the recording has when the rating is queued.
+    const [current] = await tx
+      .select({ sessionName: sessionName.sessionName })
+      .from(sessionRecording)
+      .innerJoin(interventionSession, eq(interventionSession.id, sessionRecording.sessionId))
+      .leftJoin(sessionName, eq(sessionName.id, interventionSession.sessionId))
+      .where(eq(sessionRecording.id, run.recordingId))
+      .for("update", { of: sessionRecording });
     const [finished] = await tx
       .update(transcription)
       .set(result)
@@ -117,7 +131,9 @@ export async function finishTranscription(
       )
       .returning({ id: transcription.id });
     if (!finished) return false;
-    const ratingQueued = queueRating && result.status === TranscriptionStatus.COMPLETED;
+    const ratingQueued =
+      result.status === TranscriptionStatus.COMPLETED &&
+      ratedSessionLine(current?.sessionName) !== null;
     if (ratingQueued) {
       await tx
         .insert(fidelityRating)
@@ -165,7 +181,6 @@ async function runTranscription(run: ClaimedTranscription) {
     const recording = await db.query.sessionRecording.findFirst({
       where: (r, { eq }) => eq(r.id, run.recordingId),
       columns: { s3Key: true, archivedAt: true },
-      with: { session: { columns: {}, with: { session: { columns: { sessionName: true } } } } },
     });
     if (!recording) throw new Error(`Recording ${run.recordingId} not found`);
     // Archiving withdraws the recording, so its audio must not reach Gemini.
@@ -178,19 +193,15 @@ async function runTranscription(run: ClaimedTranscription) {
     }
     const url = await getPresignedUrl(recording.s3Key, "recordings", 3600);
     const transcript = await transcribeAudio(url, AbortSignal.timeout(RUN_DEADLINE_MS));
-    const recorded = await finishTranscription(
-      run,
-      {
-        status: TranscriptionStatus.COMPLETED,
-        completedAt: new Date(),
-        errorMessage: null,
-        model: TRANSCRIPTION_MODEL,
-        promptVersion: PROMPT_VERSION,
-        promptSha256: PROMPT_SHA256,
-        ...transcript,
-      },
-      ratedSessionLine(recording.session.session?.sessionName) !== null,
-    );
+    const recorded = await finishTranscription(run, {
+      status: TranscriptionStatus.COMPLETED,
+      completedAt: new Date(),
+      errorMessage: null,
+      model: TRANSCRIPTION_MODEL,
+      promptVersion: PROMPT_VERSION,
+      promptSha256: PROMPT_SHA256,
+      ...transcript,
+    });
     console.log(
       `${label} ${recorded ? "completed" : "result dropped: claimed again"}: ` +
         `${transcript.chunkCount} chunks, ${transcript.gaps.length} gaps`,
@@ -199,7 +210,7 @@ async function runTranscription(run: ClaimedTranscription) {
       report(run, "gaps", `Transcription completed with ${transcript.gaps.length} gaps`, "warning");
     }
   } catch (error) {
-    const errorMessage = (error instanceof Error ? error.message : String(error)).slice(0, 500);
+    const errorMessage = errorMessageWithoutQuery(error).slice(0, 500);
     const unusable = error instanceof UnusableAudioError;
     const status =
       unusable || run.attempts >= MAX_ATTEMPTS
