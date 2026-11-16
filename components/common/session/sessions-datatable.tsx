@@ -4,20 +4,27 @@ import { deferredHidden } from "#/components/deferred";
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { ImplementerRole } from "#/db/enums";
 import { type SetStateAction, useState } from "react";
-import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import { columns, type SessionData } from "#/components/common/session/columns";
 import {
   SessionDetail,
   type SessionDialogKind,
   type SessionDialogOpener,
 } from "#/components/common/session/session-list";
-import StudentAttendance, {
+import {
   startStudentAttendanceOpening,
   type StudentAttendanceOpening,
-} from "#/components/common/student/student-attendance";
+} from "#/components/common/student/student-attendance-opening";
 import DataTable from "#/components/data-table";
 
 // These dialogs draw nothing until opened, so their code loads after the page.
+const MarkSessionOccurrence = deferredHidden(() =>
+  import("#/app/(platform)/sc/schedule/components/mark-session-occurrence").then(
+    (mod) => mod.MarkSessionOccurrence,
+  ),
+);
+const StudentAttendance = deferredHidden(() =>
+  import("#/components/common/student/student-attendance").then((mod) => mod.default),
+);
 const FellowAttendance = deferredHidden(() =>
   import("#/components/common/fellow/fellow-attendance").then((mod) => mod.default),
 );

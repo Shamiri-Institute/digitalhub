@@ -4,7 +4,7 @@ import type { Row } from "@tanstack/react-table";
 import { useState } from "react";
 import { updateClinicalSessionAttendance } from "#/app/(platform)/sc/clinical/action";
 import type { AttendanceRecord } from "#/app/(platform)/sc/clinical/components/columns";
-import { CustomIndicator } from "#/components/common/mark-attendance";
+import { CustomIndicator } from "#/components/common/custom-indicator";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,

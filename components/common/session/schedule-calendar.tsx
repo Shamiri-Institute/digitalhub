@@ -10,6 +10,7 @@ import {
 } from "@internationalized/date";
 import type { ScheduleSupervisor } from "#/lib/actions/schedule-data";
 import { ImplementerRole } from "#/db/enums";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import {
@@ -33,16 +34,15 @@ import {
 } from "react-aria";
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
 import { type CalendarState, useCalendarState } from "react-stately";
-import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import {
   SessionDetail,
   type SessionDialogKind,
   type SessionDialogOpener,
 } from "#/components/common/session/session-list";
-import StudentAttendance, {
+import {
   startStudentAttendanceOpening,
   type StudentAttendanceOpening,
-} from "#/components/common/student/student-attendance";
+} from "#/components/common/student/student-attendance-opening";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "#/components/ui/dialog";
@@ -63,11 +63,22 @@ import { DayView } from "./day-view";
 import { ListView } from "./list-view";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
-import { TableView } from "./table-view";
 import { WeekView } from "./week-view";
 import type { school, sessionName } from "#/db/schema";
 
+// Only hub coordinators have the table view, and it brings in two data tables, their attendance
+// forms and phone number parsing, so its code loads only when the table is shown.
+const TableView = dynamic(() => import("./table-view").then((mod) => mod.TableView));
+
 // These dialogs draw nothing until opened, so their code loads after the page.
+const MarkSessionOccurrence = deferredHidden(() =>
+  import("#/app/(platform)/sc/schedule/components/mark-session-occurrence").then(
+    (mod) => mod.MarkSessionOccurrence,
+  ),
+);
+const StudentAttendance = deferredHidden(() =>
+  import("#/components/common/student/student-attendance").then((mod) => mod.default),
+);
 const FellowAttendance = deferredHidden(() =>
   import("#/components/common/fellow/fellow-attendance").then((mod) => mod.default),
 );

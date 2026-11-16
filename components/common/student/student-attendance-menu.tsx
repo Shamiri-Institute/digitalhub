@@ -1,7 +1,7 @@
 "use client";
 
 import type { Dispatch, SetStateAction } from "react";
-import type { StudentAttendanceData } from "#/components/common/student/student-attendance";
+import type { StudentAttendanceData } from "#/components/common/student/student-attendance-opening";
 import {
   DropdownMenu,
   DropdownMenuContent,

@@ -9,7 +9,7 @@ import { MarkSessionOccurrenceSchema } from "#/components/common/session/schema"
 import type { Session } from "#/lib/actions/fetch-sessions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { CustomIndicator } from "#/components/common/mark-attendance";
+import { CustomIndicator } from "#/components/common/custom-indicator";
 import {
   Dialog,
   DialogContent,

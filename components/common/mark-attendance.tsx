@@ -35,7 +35,8 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
-import { cn, sessionDisplayName } from "#/lib/utils";
+import { sessionDisplayName } from "#/lib/utils";
+import { CustomIndicator } from "#/components/common/custom-indicator";
 import { zodResolver } from "#/lib/zod-resolver";
 
 type Attendance = {
@@ -370,21 +371,5 @@ function MarkAttendanceContent({
         </DialogFooter>
       </form>
     </Form>
-  );
-}
-
-export function CustomIndicator({ className, label }: { className: string; label: string }) {
-  return (
-    <div className="custom-indicator pointer-events-none absolute inset-0 flex h-20 items-center pl-6">
-      <div className="flex items-center gap-3">
-        <div
-          className={cn(
-            "indicator h-4 w-4 rounded-full border border-input bg-white shadow-sm",
-            className,
-          )}
-        />
-        <span>{label}</span>
-      </div>
-    </div>
   );
 }
