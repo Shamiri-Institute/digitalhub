@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.12.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.11.1...v2.12.0) (2026-11-16)
+
+### Features
+
+- **survey:** store scanned pages, answers and the fields each version prints ([#1060](https://github.com/Shamiri-Institute/digitalhub/issues/1060)) ([c0a5825](https://github.com/Shamiri-Institute/digitalhub/commit/c0a5825befb0e7eebdd49c26c11cf9cb0bf158d1))
+
 ## [2.11.1](https://github.com/Shamiri-Institute/digitalhub/compare/v2.11.0...v2.11.1) (2026-11-10)
 
 ### Bug Fixes
