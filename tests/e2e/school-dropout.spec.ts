@@ -28,7 +28,7 @@ async function createSchool(
   dropout: { droppedOut: boolean; dropoutReason?: string } = { droppedOut: false },
 ) {
   const schoolId = objectId("sch");
-  const schoolName = `E2E dropout school ${Date.now()}`;
+  const schoolName = `E2E dropout school ${schoolId}`;
   await db.insert(school).values({
     // The edit form saves only a school whose details pass its checks.
     schoolDemographics: "Mixed",

@@ -7,16 +7,24 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: pnpm/action-setup@v4
     - uses: actions/setup-node@v6
       with:
         node-version: "24"
+    - id: package-manager
+      shell: bash
+      run: echo "version=$(node -p 'require("./package.json").packageManager')" >> "$GITHUB_OUTPUT"
+    - uses: actions/cache@v5
+      with:
+        path: ~/.cache/node/corepack
+        key: corepack-${{ runner.os }}-${{ steps.package-manager.outputs.version }}
+    - shell: bash
+      run: corepack enable && corepack install
     # Pull requests restore the copy that pushes to dev and main save.
     - id: modules
       uses: actions/cache@v5
       with:
         path: node_modules
-        key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
+        key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}
     - if: steps.modules.outputs.cache-hit != 'true'
       shell: bash
       run: pnpm install --frozen-lockfile

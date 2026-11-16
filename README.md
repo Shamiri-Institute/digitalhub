@@ -93,7 +93,9 @@ On Node.js 25 or later, which no longer ship Corepack, install it first with `np
 
 `pnpm install` also points git at `.githooks`, whose pre-push hook formats, lints and typechecks the files a push changes.
 
-To move to a new pnpm version, run `corepack use pnpm@<version>`, which updates `packageManager`, and commit `package.json` and `pnpm-lock.yaml`. Vercel builds with that same version only while the projects have the environment variable `ENABLE_EXPERIMENTAL_COREPACK=1`; without it, Vercel picks pnpm 9 or 10 from the lockfile. Without Corepack, Vercel never runs pnpm 11 or 12, so moving past pnpm 10 needs that variable set on both projects first.
+To move to a new pnpm version, run `corepack use pnpm@<version>`, which updates `packageManager`, and commit `package.json` and `pnpm-lock.yaml`. Vercel builds with that same version because both projects set the environment variable `ENABLE_EXPERIMENTAL_COREPACK=1`. Keep it set: without it, Vercel falls back to pnpm 9 or 10, which cannot read this lockfile.
+
+Settings that pnpm reads, such as `allowBuilds` (which dependencies may run install scripts), live in `pnpm-workspace.yaml`. Since pnpm 11, a dependency with an install script that is not listed there fails the install.
 
 ### One-Command Setup
 
