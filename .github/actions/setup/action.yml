@@ -10,8 +10,15 @@ runs:
     - uses: actions/setup-node@v6
       with:
         node-version: "24"
+    - id: package-manager
+      shell: bash
+      run: echo "version=$(node -p 'require("./package.json").packageManager')" >> "$GITHUB_OUTPUT"
+    - uses: actions/cache@v5
+      with:
+        path: ~/.cache/node/corepack
+        key: corepack-${{ runner.os }}-${{ steps.package-manager.outputs.version }}
     - shell: bash
-      run: corepack enable
+      run: corepack enable && corepack install
     # Pull requests restore the copy that pushes to dev and main save.
     - id: modules
       uses: actions/cache@v5
