@@ -1,0 +1,207 @@
+name: CI
+
+# Pull requests run what their diff can reach (scripts/ci/affected.sh). The merge queue and pushes to
+# dev and main run everything, so nothing reaches main without the full suite; the pushes also save
+# the caches pull requests start from.
+on:
+  pull_request:
+    branches: [dev, main]
+  merge_group:
+  push:
+    branches: [dev, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+# Runners: GitHub's 4-core ubuntu-latest until the repository variables name Blacksmith's.
+#   CI_RUNNER    small jobs, e.g. blacksmith-2vcpu-ubuntu-2404
+#   CI_RUNNER_8  lint, typecheck, unit and E2E, e.g. blacksmith-8vcpu-ubuntu-2404
+# scripts/ci/budget.sh fails a step over its time budget once CI_RUNNER_8 is set; the budgets are for
+# those machines.
+env:
+  CI_ENFORCE_BUDGETS: ${{ vars.CI_RUNNER_8 != '' }}
+  # About 800s of single-worker Playwright: 4 shards on 8 cores, or 8 on GitHub's free 4-core runners.
+  E2E_SHARDS: ${{ vars.CI_RUNNER_8 != '' && 4 || 8 }}
+  GOOGLE_ID: mock-google-client-id
+  GOOGLE_SECRET: mock-google-secret
+  AWS_ACCESS_KEY_ID: mock-aws-access-key-id
+  AWS_SECRET_ACCESS_KEY: mock-aws-secret-access-key
+  AWS_REGION: af-south-1
+  # The key, secret and buckets scripts/local-s3.sh gives the SeaweedFS server the E2E job starts.
+  S3_UPLOAD_KEY: GKdeadbeefdeadbeefdeadbeef
+  S3_UPLOAD_SECRET: "0000000000000000000000000000000000000000000000000000000000000001"
+  S3_RECORDINGS_BUCKET: recordings
+  S3_RECORDINGS_REGION: af-south-1
+  S3_SURVEY_PRINT_FILES_BUCKET: survey-print-files
+  S3_SURVEY_PRINT_FILES_REGION: af-south-1
+  AWS_ENDPOINT_URL_S3: http://localhost:8333
+  S3_STUDENT_ATTENDANCE_BUCKET: student-attendance
+  S3_STUDENT_ATTENDANCE_REGION: af-south-1
+  S3_SURVEY_SCANS_BUCKET: survey-scans
+  S3_SURVEY_SCANS_REGION: af-south-1
+  BETTER_AUTH_URL: http://localhost:3000
+  BETTER_AUTH_SECRET: e2e-better-auth-secret-at-least-32-chars
+  DATABASE_URL: postgres://youth:thriving@localhost:5432/shamiri_db
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+  # Baked in at build time: credential sign-in works, the development-only role switcher does not.
+  NEXT_PUBLIC_ENV: testing
+  # Serve `next start` on the build; `next dev` hides bugs like #844.
+  E2E_PROD: "1"
+  TEST_USER_PASSWORD: TestPassword123!
+
+jobs:
+  affected:
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 1
+    outputs:
+      unit: ${{ steps.affected.outputs.unit }}
+      e2e: ${{ steps.affected.outputs.e2e }}
+      shards: ${{ steps.affected.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          filter: blob:none
+          fetch-depth: 0
+      - id: affected
+        shell: bash
+        run: scripts/ci/affected.sh "${{ github.event_name }}" "${{ github.event.pull_request.base.sha }}" "$E2E_SHARDS" | tee -a "$GITHUB_OUTPUT"
+
+  lint:
+    runs-on: ${{ vars.CI_RUNNER_8 || 'ubuntu-latest' }}
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          filter: blob:none
+      - uses: ./.github/actions/setup
+      - run: scripts/ci/budget.sh 5 bun run stylecheck
+
+  typecheck:
+    runs-on: ${{ vars.CI_RUNNER_8 || 'ubuntu-latest' }}
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          filter: blob:none
+      - uses: ./.github/actions/setup
+      - run: scripts/ci/budget.sh 5 bun run typecheck
+
+  shellcheck:
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 1
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          filter: blob:none
+      - run: scripts/ci/budget.sh 5 sh -c 'shellcheck scripts/*.sh scripts/*/*.sh .githooks/*'
+
+  migrations:
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 2
+    services:
+      postgres:
+        image: postgres:18
+        env: { POSTGRES_USER: youth, POSTGRES_PASSWORD: thriving, POSTGRES_DB: shamiri_db }
+        options: --health-cmd pg_isready --health-interval 1s --health-timeout 5s --health-retries 30
+        ports: ["5432:5432"]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          filter: blob:none
+      - uses: ./.github/actions/setup
+      - run: bunx drizzle-kit migrate
+      - run: scripts/ci/budget.sh 10 bun scripts/db/check-schema.ts
+
+  unit:
+    needs: affected
+    if: needs.affected.outputs.unit != 'none'
+    runs-on: ${{ vars.CI_RUNNER_8 || 'ubuntu-latest' }}
+    timeout-minutes: 3
+    services:
+      postgres:
+        image: postgres:18
+        env: { POSTGRES_USER: youth, POSTGRES_PASSWORD: thriving, POSTGRES_DB: shamiri_db }
+        options: --health-cmd pg_isready --health-interval 1s --health-timeout 5s --health-retries 30
+        ports: ["5432:5432"]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          filter: blob:none
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - run: bunx drizzle-kit migrate && bun db/seed/seed.ts
+      # `--changed` runs the test files that import, directly or not, a file the pull request changed.
+      - run: scripts/ci/budget.sh 60 bunx vitest run ${{ needs.affected.outputs.unit == 'changed' && format('--changed {0} --passWithNoTests', github.event.pull_request.base.sha) || '' }}
+
+  e2e:
+    needs: affected
+    if: needs.affected.outputs.e2e != 'none'
+    runs-on: ${{ vars.CI_RUNNER_8 || 'ubuntu-latest' }}
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.affected.outputs.shards) }}
+    services:
+      postgres:
+        image: postgres:18
+        env: { POSTGRES_USER: youth, POSTGRES_PASSWORD: thriving, POSTGRES_DB: shamiri_db }
+        options: --health-cmd pg_isready --health-interval 1s --health-timeout 5s --health-retries 30
+        ports: ["5432:5432"]
+    env:
+      # The typecheck job checks this commit; see next.config.js.
+      CI_TYPES_CHECKED_ELSEWHERE: "1"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          filter: blob:none
+      - uses: ./.github/actions/setup
+        with:
+          browsers: "true"
+      # The S3 server developers run, from the same script, so it checks request signatures here too.
+      - name: Start SeaweedFS
+        run: |
+          curl -fsSLo seaweedfs.tar.gz https://github.com/seaweedfs/seaweedfs/releases/download/4.52/linux_amd64.tar.gz
+          echo "8b538c22d47d0c3fb6792adaa6b0c735a967401270a53427d5a476dcaca9b7ae  seaweedfs.tar.gz" | sha256sum -c -
+          sudo tar -xzf seaweedfs.tar.gz -C /usr/local/bin weed
+          nohup scripts/local-s3.sh >seaweedfs.log 2>&1 &
+      - uses: actions/cache@v5
+        with:
+          path: .next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('bun.lock') }}-${{ github.sha }}
+          restore-keys: nextjs-${{ runner.os }}-${{ hashFiles('bun.lock') }}-
+      # The seed and the build need different things (database, CPU), so they overlap.
+      - name: Seed and build
+        run: |
+          (bunx drizzle-kit migrate && bun db/seed/seed.ts) > seed.log 2>&1 &
+          seed=$!
+          bun run build
+          wait "$seed" || { cat seed.log; exit 1; }
+      - run: timeout 60 sh -c 'until grep -q "S3 ready" seaweedfs.log; do sleep 1; done' || { cat seaweedfs.log; exit 1; }
+      - name: Playwright
+        run: |
+          scripts/ci/e2e-shard-files.sh "${{ matrix.shard }}" "${{ strategy.job-total }}" "${{ needs.affected.outputs.e2e }}" > shard-files.txt
+          cat shard-files.txt
+          scripts/ci/budget.sh 60 bunx playwright test $(cat shard-files.txt)
+      - uses: actions/upload-artifact@v7
+        if: ${{ failure() }}
+        with:
+          name: playwright-${{ matrix.shard }}
+          path: test-results
+          retention-days: 14
+
+  # The single check branch protection and the merge queue require. It fails when any job failed or
+  # was cancelled; a job the diff did not need is skipped and counts as passing.
+  ci:
+    if: ${{ always() }}
+    needs: [affected, lint, typecheck, shellcheck, migrations, unit, e2e]
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 1
+    steps:
+      - env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: echo "$NEEDS" | jq -e 'to_entries | all(.value.result == "success" or .value.result == "skipped")'
