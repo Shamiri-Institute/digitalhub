@@ -4,8 +4,9 @@ import * as Sentry from "@sentry/nextjs";
 import { and, asc, eq, inArray, lt, or, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { type RecordingProcessingStatus, TranscriptionStatus } from "#/db/enums";
-import { sessionRecording, transcription } from "#/db/schema";
+import { RecordingProcessingStatus, TranscriptionStatus } from "#/db/enums";
+import { fidelityRating, sessionRecording, transcription } from "#/db/schema";
+import { ratedSessionLine } from "#/lib/fidelity-rating/rate";
 import { getPresignedUrl } from "#/lib/s3/s3.service";
 import {
   UnusableAudioError,
@@ -24,7 +25,8 @@ const MAX_ATTEMPTS = 3;
 const LEASE_MINUTES = 25;
 const RUN_DEADLINE_MS = 700_000;
 
-// The recording's own status mirrors its transcription until a feedback stage extends it.
+// The recording's own status mirrors its transcription, except that a completed transcription with a
+// rating queued after it leaves the recording processing until the rating finishes.
 const recordingStatusFor = {
   QUEUED: "PENDING",
   PROCESSING: "PROCESSING",
@@ -88,8 +90,9 @@ export async function claimTranscriptions(limit = RUNS_PER_TICK) {
 }
 
 /**
- * Moves a claimed run out of PROCESSING, only if no later claim has taken it over. Returns false
- * when the run lost its claim and the write was dropped.
+ * Moves a claimed run out of PROCESSING, only if no later claim has taken it over, and queues a
+ * fidelity rating of a completed transcript when `queueRating` is set. Returns false when the run
+ * lost its claim and the write was dropped.
  */
 export async function finishTranscription(
   run: ClaimedTranscription,
@@ -99,6 +102,7 @@ export async function finishTranscription(
         typeof transcription.$inferInsert,
         "id" | "recordingId" | "status"
       >),
+  queueRating = false,
 ) {
   return db.transaction(async (tx) => {
     const [finished] = await tx
@@ -113,10 +117,18 @@ export async function finishTranscription(
       )
       .returning({ id: transcription.id });
     if (!finished) return false;
+    const ratingQueued = queueRating && result.status === TranscriptionStatus.COMPLETED;
+    if (ratingQueued) {
+      await tx
+        .insert(fidelityRating)
+        .values({ recordingId: run.recordingId, transcriptionId: run.id });
+    }
     await tx
       .update(sessionRecording)
       .set({
-        status: recordingStatusFor[result.status],
+        status: ratingQueued
+          ? RecordingProcessingStatus.PROCESSING
+          : recordingStatusFor[result.status],
         processedAt: result.status === "QUEUED" ? null : new Date(),
         errorMessage: result.status === "COMPLETED" ? null : result.errorMessage,
       })
@@ -153,6 +165,7 @@ async function runTranscription(run: ClaimedTranscription) {
     const recording = await db.query.sessionRecording.findFirst({
       where: (r, { eq }) => eq(r.id, run.recordingId),
       columns: { s3Key: true, archivedAt: true },
+      with: { session: { columns: {}, with: { session: { columns: { sessionName: true } } } } },
     });
     if (!recording) throw new Error(`Recording ${run.recordingId} not found`);
     // Archiving withdraws the recording, so its audio must not reach Gemini.
@@ -165,15 +178,19 @@ async function runTranscription(run: ClaimedTranscription) {
     }
     const url = await getPresignedUrl(recording.s3Key, "recordings", 3600);
     const transcript = await transcribeAudio(url, AbortSignal.timeout(RUN_DEADLINE_MS));
-    const recorded = await finishTranscription(run, {
-      status: TranscriptionStatus.COMPLETED,
-      completedAt: new Date(),
-      errorMessage: null,
-      model: TRANSCRIPTION_MODEL,
-      promptVersion: PROMPT_VERSION,
-      promptSha256: PROMPT_SHA256,
-      ...transcript,
-    });
+    const recorded = await finishTranscription(
+      run,
+      {
+        status: TranscriptionStatus.COMPLETED,
+        completedAt: new Date(),
+        errorMessage: null,
+        model: TRANSCRIPTION_MODEL,
+        promptVersion: PROMPT_VERSION,
+        promptSha256: PROMPT_SHA256,
+        ...transcript,
+      },
+      ratedSessionLine(recording.session.session?.sessionName) !== null,
+    );
     console.log(
       `${label} ${recorded ? "completed" : "result dropped: claimed again"}: ` +
         `${transcript.chunkCount} chunks, ${transcript.gaps.length} gaps`,

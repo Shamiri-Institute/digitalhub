@@ -1,6 +1,10 @@
 "use client";
 
-import type { RecordingProcessingStatus, TranscriptionStatus } from "#/db/enums";
+import type {
+  FidelityRatingStatus,
+  RecordingProcessingStatus,
+  TranscriptionStatus,
+} from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import RecordingStatusBadge from "./recording-status-badge";
 import RecordingsDataTableMenu from "./recordings-datatable-menu";
@@ -32,6 +36,7 @@ export interface RecordingTableData {
   sessionName: string;
   transcriptionStatus: TranscriptionStatus | null;
   transcriptionGapCount: number;
+  ratingStatus: FidelityRatingStatus | null;
 }
 
 export type RecordingDialogKind = "edit" | "viewFeedback" | "viewTranscript";

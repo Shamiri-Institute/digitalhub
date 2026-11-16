@@ -5,8 +5,8 @@ import { refresh, revalidatePath } from "next/cache";
 
 import { currentSupervisor } from "#/app/auth";
 import { db, isUniqueViolation } from "#/db/client";
-import { RecordingProcessingStatus, TranscriptionStatus } from "#/db/enums";
-import { sessionRecording, transcription } from "#/db/schema";
+import { FidelityRatingStatus, RecordingProcessingStatus, TranscriptionStatus } from "#/db/enums";
+import { fidelityRating, sessionRecording, transcription } from "#/db/schema";
 import { isSupervisorInFidelityAbTest } from "#/lib/fidelity-ab-test";
 import {
   discardOrphanedUpload,
@@ -249,6 +249,11 @@ export async function loadSupervisorRecordings() {
         orderBy: (t, { desc }) => desc(t.createdAt),
         limit: 1,
       },
+      fidelityRatings: {
+        columns: { status: true },
+        orderBy: (f, { desc }) => desc(f.createdAt),
+        limit: 1,
+      },
     },
     orderBy: (r, { desc }) => desc(r.createdAt),
   });
@@ -278,6 +283,7 @@ export async function loadSupervisorRecordings() {
     sessionName: r.session.session?.sessionName ?? r.session.sessionType ?? "Unknown Session",
     transcriptionStatus: r.transcriptions[0]?.status ?? null,
     transcriptionGapCount: r.transcriptions[0]?.gaps?.length ?? 0,
+    ratingStatus: r.fidelityRatings[0]?.status ?? null,
   }));
 
   if (!isSupervisorInFidelityAbTest(supervisor.profile.id)) {
@@ -343,6 +349,64 @@ export async function retryTranscription(recordingId: string) {
 
   refresh();
   return { success: true, message: "Transcription queued" };
+}
+
+/** Queues a new fidelity rating of the transcript a recording's failed rating was given. */
+export async function retryFeedback(recordingId: string) {
+  const supervisor = await currentSupervisor();
+  if (!supervisor?.profile?.id) {
+    return { success: false, message: "Unauthorized user" };
+  }
+  const supervisorId = supervisor.profile.id;
+  if (!isSupervisorInFidelityAbTest(supervisorId)) {
+    return { success: false, message: "Feedback is not enabled for your account." };
+  }
+
+  const ownedRecording = await db.query.sessionRecording.findFirst({
+    where: (r, { and, eq, isNull }) =>
+      and(eq(r.id, recordingId), eq(r.supervisorId, supervisorId), isNull(r.archivedAt)),
+    columns: { id: true },
+    with: {
+      fidelityRatings: {
+        columns: { status: true, transcriptionId: true },
+        orderBy: (f, { desc }) => desc(f.createdAt),
+        limit: 1,
+      },
+    },
+  });
+  if (!ownedRecording) {
+    return { success: false, message: "Recording not found" };
+  }
+  const failedRating = ownedRecording.fidelityRatings[0];
+  if (failedRating?.status !== FidelityRatingStatus.FAILED) {
+    return { success: false, message: "Only failed feedback can be retried" };
+  }
+
+  try {
+    await db.transaction(async (tx) => {
+      await tx.insert(fidelityRating).values({
+        recordingId: ownedRecording.id,
+        transcriptionId: failedRating.transcriptionId,
+      });
+      await tx
+        .update(sessionRecording)
+        .set({
+          status: RecordingProcessingStatus.PROCESSING,
+          errorMessage: null,
+          processedAt: null,
+        })
+        .where(eq(sessionRecording.id, ownedRecording.id));
+    });
+  } catch (error) {
+    // The partial unique index allows one queued or running rating per recording.
+    if (isUniqueViolation(error)) {
+      return { success: false, message: "Feedback for this recording is already being generated" };
+    }
+    throw error;
+  }
+
+  refresh();
+  return { success: true, message: "Feedback queued" };
 }
 
 export async function loadRecordingTranscript(recordingId: string) {
