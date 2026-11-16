@@ -4,7 +4,6 @@ import { db, type Transaction } from "#/db/client";
 import { ticketEvents, tickets } from "#/db/schema";
 import { REOPEN_WINDOW_MS } from "#/lib/ticket-reopen-window";
 
-/** Closes resolved tickets whose reopen window has passed, so their stored status says so. */
 export async function closeExpiredTickets(executor: typeof db | Transaction = db) {
   const now = new Date();
   return executor.transaction(async (tx) => {

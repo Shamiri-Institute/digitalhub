@@ -9,6 +9,7 @@ import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
 import { getTicketResolution } from "#/lib/actions/ticket";
 import type { TicketData } from "./columns";
+import { enumLabel } from "#/lib/utils";
 
 const formatSafeDate = (date: Date | string | null | undefined) => {
   if (!date) return "—";
@@ -53,7 +54,7 @@ export function ViewResolutionDialog({
             <div className="rounded-md bg-blue-bg border border-blue-border p-4">
               <p className="text-sm text-blue-base font-medium">
                 {ticket.currentTier
-                  ? `This ticket has been escalated to ${ticket.currentTier.toLowerCase().replace("_", " ")} for resolution. It has not yet been resolved.`
+                  ? `This ticket has been escalated to ${enumLabel(ticket.currentTier)} for resolution. It has not yet been resolved.`
                   : "This ticket has not yet been resolved."}
               </p>
             </div>
@@ -98,9 +99,7 @@ function ResolutionDetails({
       <div>
         <div className="text-sm font-medium text-shamiri-text-grey uppercase">Resolved By</div>
         <div className="text-base capitalize">
-          {resolution.resolvedByRole
-            ? resolution.resolvedByRole.toLowerCase().replace("_", " ")
-            : "Unknown"}
+          {resolution.resolvedByRole ? enumLabel(resolution.resolvedByRole) : "Unknown"}
         </div>
       </div>
       <Separator />

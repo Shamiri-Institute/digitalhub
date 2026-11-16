@@ -17,6 +17,7 @@ import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
 import { getEscalationsPerTicket } from "#/lib/actions/ticket";
 import type { TicketData } from "./columns";
+import { enumLabel } from "#/lib/utils";
 
 const formatSafeDate = (date: Date | string | null | undefined) => {
   if (!date) return "—";
@@ -68,18 +69,14 @@ export function ViewTicketDialog({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <div className="text-sm font-medium text-shamiri-text-grey uppercase">Status</div>
-              <div className="text-base capitalize">
-                {ticket.status.toLowerCase().replace("_", " ")}
-              </div>
+              <div className="text-base capitalize">{enumLabel(ticket.status)}</div>
             </div>
             <div>
               <div className="text-sm font-medium text-shamiri-text-grey uppercase">
                 Current Tier
               </div>
               <div className="text-base capitalize">
-                {ticket.currentTier
-                  ? ticket.currentTier.toLowerCase().replace("_", " ")
-                  : "No escalation"}
+                {ticket.currentTier ? enumLabel(ticket.currentTier) : "No escalation"}
               </div>
             </div>
           </div>

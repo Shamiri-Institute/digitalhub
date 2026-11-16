@@ -41,7 +41,7 @@ type TicketReasonInput = z.infer<typeof ReasonOnlySchema>;
 
 export type TicketReasonDialogKind = "changePriority" | "reopen" | "cancel";
 
-const COPY: Record<TicketReasonDialogKind, { title: string; placeholder: string }> = {
+const DIALOG_TEXT: Record<TicketReasonDialogKind, { title: string; placeholder: string }> = {
   changePriority: { title: "Change priority", placeholder: "Explain why the priority is changing" },
   reopen: { title: "Reopen ticket", placeholder: "Explain what still needs to be done" },
   cancel: { title: "Cancel ticket", placeholder: "Explain why this ticket is no longer needed" },
@@ -58,7 +58,7 @@ export function TicketReasonDialog({ ticket, kind, onOpenChange }: TicketReasonD
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">{COPY[kind].title}</DialogTitle>
+          <DialogTitle className="text-xl font-bold">{DIALOG_TEXT[kind].title}</DialogTitle>
         </DialogHeader>
         <TicketReasonForm ticket={ticket} kind={kind} onDone={() => onOpenChange(false)} />
       </DialogContent>
@@ -138,7 +138,7 @@ function TicketReasonForm({
               <FormControl>
                 <Textarea
                   {...field}
-                  placeholder={COPY[kind].placeholder}
+                  placeholder={DIALOG_TEXT[kind].placeholder}
                   className="min-h-[100px]"
                 />
               </FormControl>
@@ -158,7 +158,7 @@ function TicketReasonForm({
             disabled={isSaving}
             loading={isSaving}
           >
-            {COPY[kind].title}
+            {DIALOG_TEXT[kind].title}
           </Button>
         </DialogFooter>
       </form>

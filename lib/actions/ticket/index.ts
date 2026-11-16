@@ -326,11 +326,11 @@ export async function startTicket(ticketId: string): Promise<ActionResponse> {
     const { userId: callerUserId } = await requireAuthRole(...ESCALATION_RECIPIENT_ROLES);
 
     await db.transaction(async (tx) => {
-      const { status, holderId } = await lockTicket(tx, ticketId);
-      if (status !== "OPEN" && status !== "ESCALATED") {
+      const lockedTicket = await lockTicket(tx, ticketId);
+      if (lockedTicket.status !== "OPEN" && lockedTicket.status !== "ESCALATED") {
         throw new Error("Only an open or escalated ticket can be started");
       }
-      if (holderId !== callerUserId) {
+      if (lockedTicket.holderId !== callerUserId) {
         throw new Error("Only the current escalation recipient can start this ticket");
       }
 
@@ -340,7 +340,7 @@ export async function startTicket(ticketId: string): Promise<ActionResponse> {
           ticketId,
           kind: "STARTED",
           actorId: callerUserId,
-          fromValue: status,
+          fromValue: lockedTicket.status,
           toValue: "IN_PROGRESS",
         },
         { status: "IN_PROGRESS" },
@@ -363,14 +363,16 @@ export async function changeTicketPriority(
     const { priority, reason } = ChangeTicketPrioritySchema.parse(input);
 
     await db.transaction(async (tx) => {
-      const { status, holderId, priority: currentPriority } = await lockTicket(tx, ticketId);
-      if (!isActiveTicketStatus(status)) {
+      const lockedTicket = await lockTicket(tx, ticketId);
+      if (!isActiveTicketStatus(lockedTicket.status)) {
         throw new Error("Only an open, in-progress or escalated ticket's priority can be changed");
       }
-      if (holderId !== callerUserId) {
+      if (lockedTicket.holderId !== callerUserId) {
         throw new Error("Only the current escalation recipient can change this ticket's priority");
       }
-      if (currentPriority === priority) throw new Error("The ticket already has this priority");
+      if (lockedTicket.priority === priority) {
+        throw new Error("The ticket already has this priority");
+      }
 
       await recordTicketEvent(
         tx,
@@ -378,11 +380,11 @@ export async function changeTicketPriority(
           ticketId,
           kind: "PRIORITY_CHANGED",
           actorId: callerUserId,
-          fromValue: currentPriority,
+          fromValue: lockedTicket.priority,
           toValue: priority,
           reason,
         },
-        { status, priority },
+        { priority },
       );
     });
 
@@ -438,9 +440,11 @@ export async function cancelTicket(ticketId: string, reason: string): Promise<Ac
     const cancelReason = TicketReasonSchema.parse(reason);
 
     await db.transaction(async (tx) => {
-      const { status, createdById } = await lockTicket(tx, ticketId);
-      if (createdById !== callerUserId) throw new Error("Only the ticket's creator can cancel it");
-      if (!isActiveTicketStatus(status)) {
+      const lockedTicket = await lockTicket(tx, ticketId);
+      if (lockedTicket.createdById !== callerUserId) {
+        throw new Error("Only the ticket's creator can cancel it");
+      }
+      if (!isActiveTicketStatus(lockedTicket.status)) {
         throw new Error("Only an open, in-progress or escalated ticket can be cancelled");
       }
 
@@ -450,7 +454,7 @@ export async function cancelTicket(ticketId: string, reason: string): Promise<Ac
           ticketId,
           kind: "CANCELLED",
           actorId: callerUserId,
-          fromValue: status,
+          fromValue: lockedTicket.status,
           toValue: "CANCELLED",
           reason: cancelReason,
         },

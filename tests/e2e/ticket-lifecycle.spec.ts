@@ -7,7 +7,7 @@ import { expect, test, type Undo } from "#/tests/fixtures";
 import { required, signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
-type Chain = {
+type FellowAndSupervisor = {
   fellowEmail: string;
   fellowUserId: string;
   supervisorEmail: string;
@@ -18,7 +18,7 @@ type Chain = {
 async function pickFellowAndSupervisor() {
   const {
     rows: [row],
-  } = await db.execute<Chain>(sql`
+  } = await db.execute<FellowAndSupervisor>(sql`
     select fu.email as "fellowEmail", fu.id as "fellowUserId",
       su.email as "supervisorEmail", su.id as "supervisorUserId"
     from fellows f
@@ -34,16 +34,16 @@ async function pickFellowAndSupervisor() {
   return row;
 }
 
-async function insertHeldTicket(chain: Chain, undo: Undo) {
+async function insertHeldTicket(pair: FellowAndSupervisor, undo: Undo) {
   const ticketSubject = `E2E ticket lifecycle ${Date.now()}`;
   const [ticket] = await db
     .insert(tickets)
     .values({
-      createdById: chain.fellowUserId,
+      createdById: pair.fellowUserId,
       subject: ticketSubject,
       description: "Raised by the ticket lifecycle spec.",
       category: "TECH",
-      holderId: chain.supervisorUserId,
+      holderId: pair.supervisorUserId,
     })
     .returning({ id: tickets.id });
   required(ticket, "the spec's ticket");
@@ -54,8 +54,8 @@ async function insertHeldTicket(chain: Chain, undo: Undo) {
   await db.insert(ticketEvents).values({
     ticketId: ticket.id,
     kind: "CREATED",
-    actorId: chain.fellowUserId,
-    assigneeId: chain.supervisorUserId,
+    actorId: pair.fellowUserId,
+    assigneeId: pair.supervisorUserId,
     reason: "Raised by the ticket lifecycle spec.",
   });
   return { ticketId: ticket.id, ticketSubject };
@@ -80,11 +80,11 @@ test("the holder starts, reprioritises and resolves a ticket, and its creator re
   undo,
 }) => {
   test.slow();
-  const chain = await pickFellowAndSupervisor();
-  required(chain, "a fellow and their supervisor who can both sign in");
-  const { ticketId, ticketSubject } = await insertHeldTicket(chain, undo);
+  const pair = await pickFellowAndSupervisor();
+  required(pair, "a fellow and their supervisor who can both sign in");
+  const { ticketId, ticketSubject } = await insertHeldTicket(pair, undo);
 
-  await signInWithEmail(context, chain.supervisorEmail);
+  await signInWithEmail(context, pair.supervisorEmail);
   await page.goto(getUrl("/sc/tickets"));
   await expect(await searchRows(page, ticketSubject)).toContainText(/open/i);
   await chooseRowAction(page, await searchRows(page, ticketSubject), "Start ticket");
@@ -106,7 +106,7 @@ test("the holder starts, reprioritises and resolves a ticket, and its creator re
   await expect(resolve).toBeHidden();
   await expectRowAfterReload(page, ticketSubject, /resolved/i);
 
-  await signInWithEmail(context, chain.fellowEmail);
+  await signInWithEmail(context, pair.fellowEmail);
   await page.goto(getUrl("/fel/tickets"));
   await chooseRowAction(page, await searchRows(page, ticketSubject), "Reopen ticket");
   await giveReason(page, "Reopen ticket", "The device still drops the connection.");
@@ -131,11 +131,11 @@ test("the holder starts, reprioritises and resolves a ticket, and its creator re
 });
 
 test("the creator cancels an open ticket with a reason", async ({ page, context, undo }) => {
-  const chain = await pickFellowAndSupervisor();
-  required(chain, "a fellow and their supervisor who can both sign in");
-  const { ticketId, ticketSubject } = await insertHeldTicket(chain, undo);
+  const pair = await pickFellowAndSupervisor();
+  required(pair, "a fellow and their supervisor who can both sign in");
+  const { ticketId, ticketSubject } = await insertHeldTicket(pair, undo);
 
-  await signInWithEmail(context, chain.fellowEmail);
+  await signInWithEmail(context, pair.fellowEmail);
   await page.goto(getUrl("/fel/tickets"));
   await chooseRowAction(page, await searchRows(page, ticketSubject), "Cancel ticket");
   await giveReason(page, "Cancel ticket", "Raised by mistake.");

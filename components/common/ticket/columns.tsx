@@ -7,6 +7,7 @@ import { TicketDropdown } from "#/components/common/ticket/ticket-dropdown";
 import { Badge, type BadgeProps } from "#/components/ui/badge";
 import type { FullTicket } from "#/lib/actions/ticket/types";
 import { sortBy } from "#/lib/table-view";
+import { enumLabel } from "#/lib/utils";
 
 export type TicketData = FullTicket;
 
@@ -88,7 +89,7 @@ export const columns = (state: TicketTableState): ColumnDef<TicketData>[] => {
       cell: ({ row }) => {
         const tier = row.original.currentTier;
         return tier ? (
-          <span className="text-sm">{tier.toLowerCase().replace("_", " ")}</span>
+          <span className="text-sm">{enumLabel(tier)}</span>
         ) : (
           <span className="text-shamiri-text-grey text-sm">No escalation</span>
         );
@@ -102,7 +103,7 @@ export const columns = (state: TicketTableState): ColumnDef<TicketData>[] => {
         const status = row.original.status;
         return (
           <Badge variant={statusBadgeVariant[status]} className="select-none">
-            {status.toLowerCase().replace("_", " ")}
+            {enumLabel(status)}
           </Badge>
         );
       },
