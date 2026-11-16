@@ -75,23 +75,23 @@ Get the platform running locally in under 5 minutes:
 
 - Node.js v22.x or later
 - PostgreSQL v18
-- npm
+- bun
 
 ### One-Command Setup
 
 ```bash
 # Install dependencies
-npm install
+bun install
 
 # Copy environment file (see Environment Setup section for details)
 cp .env.example .env.development
 
 # Build the schema
-npm run db:migrate
-npm run db:seed
+bun run db:migrate
+bun run db:seed
 
 # Start development server
-npm run dev
+bun run dev
 ```
 
 ### Verify Installation

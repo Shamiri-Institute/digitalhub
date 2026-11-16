@@ -22,7 +22,7 @@ export default defineConfig({
     isolate: false,
     setupFiles: ["./tests/unit/setup.ts"],
     // Random file and test order surfaces state one test leaves for another. A failing order
-    // reruns with the seed Vitest prints: `npx vitest run --sequence.seed=<seed>`.
+    // reruns with the seed Vitest prints: `bunx vitest run --sequence.seed=<seed>`.
     sequence: { shuffle: true },
   },
 });

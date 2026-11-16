@@ -4,7 +4,7 @@ import { sessionCookieFor } from "#/tests/helpers";
 async function main() {
   const email = process.argv[2];
   if (!email) {
-    console.error("Usage: npm run auth:session -- <email>");
+    console.error("Usage: bun run auth:session -- <email>");
     process.exit(1);
   }
 
