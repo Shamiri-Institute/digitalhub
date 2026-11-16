@@ -168,9 +168,8 @@ type RerouteFixture = {
 // A fellow's group at a school with an occurred session, two supervisors in the session's hub (one
 // a referral is first routed to and one it is routed to next) and the hub's clinical lead. Ordered
 // from the other end to hub-scoped-writes.spec.ts, like pickReferral.
-// The small sets are built once in materialized CTEs. As one 17-table join, the planner misjudged
-// how many members are signable and took 12-15s on a seeded database once Postgres had analyzed
-// it, long enough on a busy CI runner to time a test out; this takes 0.35s and picks the same row.
+// Materialized CTEs: as one join, the planner misestimates signableMember() once the tables are
+// analyzed and takes 12-15s.
 async function pickReroute() {
   const {
     rows: [row],

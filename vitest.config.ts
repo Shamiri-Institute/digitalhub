@@ -17,12 +17,9 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     include: ["./**/*.test.{ts,tsx}"],
-    // Files reuse one worker and its loaded modules instead of reloading the app per file.
     // tests/unit/setup.ts resets process state after each file; AGENTS.md has the rules.
     isolate: false,
     setupFiles: ["./tests/unit/setup.ts"],
-    // Random file and test order surfaces state one test leaves for another. A failing order
-    // reruns with the seed Vitest prints: `pnpm exec vitest run --sequence.seed=<seed>`.
     sequence: { shuffle: true },
   },
 });

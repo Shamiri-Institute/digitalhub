@@ -42,9 +42,7 @@ const PRINT_FONTS = ["./public/fonts/figtree/*.ttf"];
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // CI's E2E builds set this: its typecheck job runs `next typegen` and TypeScript 7 on the same commit,
-  // which reports what this build's TypeScript step would. Every other build, Vercel's included,
-  // still checks types.
+  // CI's E2E build skips the type check its typecheck job runs on the same commit.
   typescript: { ignoreBuildErrors: process.env.CI_TYPES_CHECKED_ELSEWHERE === "1" },
   // ffmpeg-static locates its binary beside its own files, so it is loaded at runtime, and the
   // binary and the transcription prompts are traced into the route that runs them.

@@ -37,7 +37,7 @@ beforeAll(async () => {
   if (recordings.length < 3) throw new Error("seed the database first: three session recordings");
 });
 
-// Each test starts with no runs and the recordings as seeded; tests run in random order.
+// Per test, not per file: tests run in random order.
 afterEach(async () => {
   const ids = recordings.map((r) => r.id);
   await db.delete(transcription).where(inArray(transcription.recordingId, ids));

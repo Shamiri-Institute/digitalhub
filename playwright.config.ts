@@ -24,11 +24,8 @@ export default defineConfig({
   forbidOnly: isCI,
   // Stop at the first failure; `--max-failures=0` runs everything.
   maxFailures: 1,
-  // A test that needs a retry to pass has a bug; fix it rather than retry it.
   retries: 0,
-  // Each worker drives a browser against one shared server and database. Measured on 4 cores, a
-  // second worker cut a shard from 164s to 97s, a third only to 89s, and a fourth pushed long tests
-  // past their timeout, so CI runs one worker per two cores.
+  // Workers share one server and database; more than one per two cores oversubscribes the machine.
   workers: isCI ? Math.max(1, Math.floor(availableParallelism() / 2)) : undefined,
   // Server actions write to a real database; 5s is short when several workers share one machine.
   // `next dev` also compiles a page on first visit, so a cold dev server needs longer.

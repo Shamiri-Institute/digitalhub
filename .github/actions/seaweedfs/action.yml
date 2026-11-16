@@ -3,7 +3,6 @@ description: Starts the S3 server developers run (scripts/local-s3.sh), in the b
 runs:
   using: composite
   steps:
-    # The same script as in development, so request signatures are checked here too.
     - shell: bash
       run: |
         curl -fsSLo seaweedfs.tar.gz https://github.com/seaweedfs/seaweedfs/releases/download/4.52/linux_amd64.tar.gz

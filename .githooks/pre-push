@@ -1,6 +1,5 @@
 #!/usr/bin/env sh
-# Formats, lints and typechecks what this push changes before it leaves the machine, so CI is not
-# where those failures show up first. `pnpm install` points git at this directory (see "prepare").
+# Installed by `pnpm install` (the "prepare" script).
 set -eu
 
 base=$(git merge-base HEAD "@{upstream}" 2>/dev/null || git merge-base HEAD origin/dev)
@@ -14,7 +13,5 @@ pnpm exec oxfmt --check $files
 if [ -n "$code" ]; then
   # shellcheck disable=SC2086
   pnpm exec oxlint --type-aware $code
-  # A change in one file can break the types of another, so the whole project is checked; it takes
-  # about a second.
   pnpm run typecheck >/dev/null
 fi

@@ -7,13 +7,11 @@ inputs:
 runs:
   using: composite
   steps:
-    # The pnpm version comes from packageManager in package.json.
     - uses: pnpm/action-setup@v4
     - uses: actions/setup-node@v6
       with:
         node-version: "24"
-    # node_modules itself, keyed on the lockfile. Pushes to dev and main save it, and pull requests
-    # read their base branch's copy, so a PR that leaves pnpm-lock.yaml alone never installs.
+    # Pull requests restore the copy that pushes to dev and main save.
     - id: modules
       uses: actions/cache@v5
       with:
@@ -26,7 +24,7 @@ runs:
       id: playwright
       shell: bash
       run: echo "version=$(node -p 'require("@playwright/test/package.json").version')" >> "$GITHUB_OUTPUT"
-    # Keyed on the OS image too: a browser cached on one Ubuntu release may lack libraries on another.
+    # A browser cached on one Ubuntu release may lack libraries on another.
     - if: inputs.browsers == 'true'
       id: browsers
       uses: actions/cache@v5
