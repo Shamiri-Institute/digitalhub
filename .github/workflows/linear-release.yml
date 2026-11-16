@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   linear-release:
-    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-24.04' }}
     steps:
       - uses: actions/checkout@v6
         with:

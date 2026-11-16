@@ -5,7 +5,7 @@ on:
 jobs:
   deployment_status_check:
     if: github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success'
-    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-24.04' }}
     timeout-minutes: 1
     steps:
       - name: Print out deployment URL

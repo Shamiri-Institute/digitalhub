@@ -17,7 +17,8 @@ concurrency:
 permissions:
   contents: read
 
-# Runners: GitHub's 4-core ubuntu-latest until the repository variables name Blacksmith's.
+# Runners: GitHub's 4-core ubuntu-24.04 until the repository variables name Blacksmith's. Not
+# ubuntu-latest: that is Ubuntu 26.04, where Playwright 1.59 cannot install its browser.
 #   CI_RUNNER    small jobs, e.g. blacksmith-2vcpu-ubuntu-2404
 #   CI_RUNNER_8  lint, typecheck, unit and E2E, e.g. blacksmith-8vcpu-ubuntu-2404
 # scripts/ci/budget.sh fails a step over its time budget once CI_RUNNER_8 is set; the budgets are for
@@ -55,7 +56,7 @@ env:
 
 jobs:
   affected:
-    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-24.04' }}
     timeout-minutes: 1
     outputs:
       unit: ${{ steps.affected.outputs.unit }}
@@ -71,7 +72,7 @@ jobs:
         run: scripts/ci/affected.sh "${{ github.event_name }}" "${{ github.event.pull_request.base.sha }}" "$E2E_SHARDS" | tee -a "$GITHUB_OUTPUT"
 
   lint:
-    runs-on: ${{ vars.CI_RUNNER_8 || 'ubuntu-latest' }}
+    runs-on: ${{ vars.CI_RUNNER_8 || 'ubuntu-24.04' }}
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v6
@@ -81,7 +82,7 @@ jobs:
       - run: scripts/ci/budget.sh 5 bun run stylecheck
 
   typecheck:
-    runs-on: ${{ vars.CI_RUNNER_8 || 'ubuntu-latest' }}
+    runs-on: ${{ vars.CI_RUNNER_8 || 'ubuntu-24.04' }}
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v6
@@ -91,7 +92,7 @@ jobs:
       - run: scripts/ci/budget.sh 5 bun run typecheck
 
   shellcheck:
-    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-24.04' }}
     timeout-minutes: 1
     steps:
       - uses: actions/checkout@v6
@@ -100,7 +101,7 @@ jobs:
       - run: scripts/ci/budget.sh 5 sh -c 'shellcheck scripts/*.sh scripts/*/*.sh .githooks/*'
 
   migrations:
-    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-24.04' }}
     timeout-minutes: 2
     services:
       postgres:
@@ -119,7 +120,7 @@ jobs:
   unit:
     needs: affected
     if: needs.affected.outputs.unit != 'none'
-    runs-on: ${{ vars.CI_RUNNER_8 || 'ubuntu-latest' }}
+    runs-on: ${{ vars.CI_RUNNER_8 || 'ubuntu-24.04' }}
     timeout-minutes: 3
     services:
       postgres:
@@ -143,7 +144,7 @@ jobs:
   e2e:
     needs: affected
     if: needs.affected.outputs.e2e != 'none'
-    runs-on: ${{ vars.CI_RUNNER_8 || 'ubuntu-latest' }}
+    runs-on: ${{ vars.CI_RUNNER_8 || 'ubuntu-24.04' }}
     timeout-minutes: 8
     strategy:
       fail-fast: false
@@ -196,7 +197,7 @@ jobs:
   ci:
     if: ${{ always() }}
     needs: [affected, lint, typecheck, shellcheck, migrations, unit, e2e]
-    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-24.04' }}
     timeout-minutes: 1
     steps:
       - env:
