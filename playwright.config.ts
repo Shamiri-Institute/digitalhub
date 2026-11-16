@@ -1,3 +1,5 @@
+import { availableParallelism } from "node:os";
+
 import { defineConfig, devices } from "@playwright/test";
 
 const isCI = !!process.env.CI;
@@ -22,8 +24,12 @@ export default defineConfig({
   forbidOnly: isCI,
   // Stop at the first failure; `--max-failures=0` runs everything.
   maxFailures: 1,
-  retries: isCI ? 2 : 0,
-  workers: isCI ? 1 : undefined,
+  // A test that needs a retry to pass has a bug; fix it rather than retry it.
+  retries: 0,
+  // Each worker drives a browser against one shared server and database. Measured on 4 cores, a
+  // second worker cut a shard from 164s to 97s, a third only to 89s, and a fourth pushed long tests
+  // past their timeout, so CI runs one worker per two cores.
+  workers: isCI ? Math.max(1, Math.floor(availableParallelism() / 2)) : undefined,
   // Server actions write to a real database; 5s is short when several workers share one machine.
   // `next dev` also compiles a page on first visit, so a cold dev server needs longer.
   expect: { timeout: process.env.E2E_PROD ? 10_000 : 60_000 },
