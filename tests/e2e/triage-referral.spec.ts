@@ -168,43 +168,56 @@ type RerouteFixture = {
 // A fellow's group at a school with an occurred session, two supervisors in the session's hub (one
 // a referral is first routed to and one it is routed to next) and the hub's clinical lead. Ordered
 // from the other end to hub-scoped-writes.spec.ts, like pickReferral.
+// The small sets are built once in materialized CTEs. As one 17-table join, the planner misjudged
+// how many members are signable and took 12-15s on a seeded database once Postgres had analyzed
+// it, long enough on a busy CI runner to time a test out; this takes 0.35s and picks the same row.
 async function pickReroute() {
   const {
     rows: [row],
   } = await db.execute<RerouteFixture>(sql`
+    with signable as materialized (
+        select m.* from implementer_members m where ${signableMember()}),
+      supervisor_pairs as materialized (
+        select a.hub_id, a.id as a_id, a.supervisor_name as a_name, au.email as a_email,
+          b.id as b_id, b.supervisor_name as b_name, bu.email as b_email
+        from supervisors a
+        join signable am on am.identifier = a.id and am.role = 'SUPERVISOR'
+        join users au on au.id = am.user_id
+        join supervisors b on b.hub_id = a.hub_id and b.id <> a.id and b.supervisor_name is not null
+        join signable bm on bm.identifier = b.id and bm.role = 'SUPERVISOR'
+        join users bu on bu.id = bm.user_id
+        where a.supervisor_name is not null
+          and (select count(*) from supervisors o
+            where o.hub_id = b.hub_id
+              and o.supervisor_name in (a.supervisor_name, b.supervisor_name)) = 2),
+      hub_leads as materialized (
+        select cl.assigned_hub_id as hub_id, lu.email
+        from clinical_leads cl
+        join signable lm on lm.identifier = cl.id and lm.role = 'CLINICAL_LEAD'
+        join users lu on lu.id = lm.user_id),
+      unique_session_names as materialized (
+        select o.school_id, n.session_name from intervention_sessions o
+        join session_names n on n.id = o.session_id
+        group by o.school_id, n.session_name having count(*) = 1)
     select u.email as "fellowEmail", f.id as "fellowId", s.visible_id as "visibleId",
       s.id as "schoolId", g.id as "groupId", i.id as "sessionId",
-      sn.session_name as "sessionLabel", i.hub_id as "hubId", a.id as "reviewerId",
-      a.supervisor_name as "reviewerName", au.email as "reviewerEmail", b.id as "supervisorId",
-      bu.email as "supervisorEmail", b.supervisor_name as "supervisorName",
-      lu.email as "clinicalLeadEmail"
+      sn.session_name as "sessionLabel", i.hub_id as "hubId", sp.a_id as "reviewerId",
+      sp.a_name as "reviewerName", sp.a_email as "reviewerEmail", sp.b_id as "supervisorId",
+      sp.b_email as "supervisorEmail", sp.b_name as "supervisorName",
+      hl.email as "clinicalLeadEmail"
     from intervention_groups g
     join fellows f on f.id = g.leader_id
-    join implementer_members m on m.identifier = f.id and m.role = 'FELLOW'
+    join signable m on m.identifier = f.id and m.role = 'FELLOW'
     join users u on u.id = m.user_id
     join schools s on s.id = g.school_id
     join intervention_sessions i on i.school_id = s.id and i.occurred and i.session_date < now()
       and coalesce(i.status::text, '') <> 'Cancelled'
     join session_names sn on sn.id = i.session_id
-    join supervisors a on a.hub_id = i.hub_id and a.supervisor_name is not null
-    join implementer_members am on am.identifier = a.id and am.role = 'SUPERVISOR'
-      and ${signableMember("am")}
-    join users au on au.id = am.user_id
-    join supervisors b on b.hub_id = i.hub_id and b.id <> a.id and b.supervisor_name is not null
-    join implementer_members bm on bm.identifier = b.id and bm.role = 'SUPERVISOR'
-      and ${signableMember("bm")}
-    join users bu on bu.id = bm.user_id
-    join clinical_leads cl on cl.assigned_hub_id = i.hub_id
-    join implementer_members lm on lm.identifier = cl.id and lm.role = 'CLINICAL_LEAD'
-      and ${signableMember("lm")}
-    join users lu on lu.id = lm.user_id
-    where ${signableMember()} and g.archived_at is null
-      and (select count(*) from supervisors o
-        where o.hub_id = b.hub_id and o.supervisor_name in (a.supervisor_name, b.supervisor_name)) = 2
-      and (select count(*) from intervention_sessions o
-        join session_names on session_names.id = o.session_id
-        where o.school_id = s.id and session_names.session_name = sn.session_name) = 1
-    order by u.email desc, i.session_date desc, a.id, b.id, lu.email
+    join unique_session_names us on us.school_id = s.id and us.session_name = sn.session_name
+    join supervisor_pairs sp on sp.hub_id = i.hub_id
+    join hub_leads hl on hl.hub_id = i.hub_id
+    where g.archived_at is null
+    order by u.email desc, i.session_date desc, sp.a_id, sp.b_id, hl.email
     limit 1`);
   return row && { ...row, sessionLabel: sessionDisplayName(row.sessionLabel) ?? row.sessionLabel };
 }
