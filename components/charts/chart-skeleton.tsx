@@ -40,3 +40,14 @@ export default function ChartSkeleton({ title }: { title?: string }) {
     </Card>
   );
 }
+
+/** A row of titled chart cards, laid out as the hub pages' chart rows are. */
+export function ChartRowSkeleton({ titles }: { titles: string[] }) {
+  return (
+    <div className="grid grid-cols-1 gap-5 py-5 sm:grid-cols-2 md:grid-cols-4">
+      {titles.map((title) => (
+        <ChartSkeleton key={title} title={title} />
+      ))}
+    </div>
+  );
+}

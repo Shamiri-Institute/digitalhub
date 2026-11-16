@@ -1,5 +1,4 @@
-import SchoolsDatatableSkeleton from "#/components/common/schools/schools-datatable-skeleton";
-import { ImplementerRole } from "#/db/enums";
+import TableSkeleton from "#/components/common/table-skeleton";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
@@ -19,7 +18,19 @@ export default function Loading() {
         </div>
         <ChartAreaSkeleton />
         <Separator />
-        <SchoolsDatatableSkeleton role={ImplementerRole.HUB_COORDINATOR} />
+        <TableSkeleton
+          columnNames={[
+            "School name",
+            "County",
+            "Expected number of students",
+            "Point supervisor",
+            "Upcoming session",
+            "Report submission",
+            "Date added",
+            "Type",
+            "Active status",
+          ]}
+        />
       </div>
       <PageFooter />
     </div>
