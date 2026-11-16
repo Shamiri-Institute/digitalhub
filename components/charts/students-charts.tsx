@@ -1,28 +1,19 @@
-"use client";
-
 import type { student } from "#/db/schema";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Label,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import {
   categoryColor,
   possibleInterventionSessions,
   sessionLabel,
 } from "#/components/charts/constants";
+import {
+  ColumnChart,
+  CompletionRing,
+  LineChart,
+  RingBreakdown,
+} from "#/components/charts/static-charts";
 import ChartCard from "#/components/ui/chart-card";
 import { STUDENT_DROPOUT_REASONS } from "#/lib/app-constants/constants";
+
+const formatRating = (value: number) => value.toFixed(2);
 
 export default function HubStudentsDetailsCharts({
   studentsAttendanceGroupedBySession,
@@ -41,135 +32,72 @@ export default function HubStudentsDetailsCharts({
   studentInfoCompletion?: { name: string; value: number }[];
   studentGroupRatings?: { session: string; value: number }[];
 }) {
-  const filteredFormatedSessions = possibleInterventionSessions.map((session) => {
-    const found = studentsAttendanceGroupedBySession.find((item) => item.sessionType === session);
-    return {
-      sessionType: session,
-      attendance: found ? found.count : 0,
-    };
-  });
-
-  const filteredFormatedDropOutReasons = studentsDropOutReasonsGroupedByReason.map((reason) => ({
-    name: reason?.dropOutReason ?? "",
-    value: reason.count,
+  const attendanceBySession = possibleInterventionSessions.map((session) => ({
+    name: sessionLabel(session),
+    values: [
+      studentsAttendanceGroupedBySession.find(({ sessionType }) => sessionType === session)
+        ?.count ?? 0,
+    ],
   }));
 
-  const formatedStudentsDropOutReasons = filteredFormatedDropOutReasons.reduce(
-    (acc, val) => {
-      const existing = acc.find(
-        (item) => item.name.trim().toLowerCase() === val.name.trim().toLowerCase(),
-      );
-      if (existing) {
-        existing.value += val.value;
-      } else {
-        acc.push({ ...val });
-      }
-      return acc;
-    },
-    [] as { name: string; value: number }[],
-  );
+  // Reasons typed by hand differ in case and spacing; count them as one.
+  const dropOutReasons = studentsDropOutReasonsGroupedByReason.reduce<
+    { name: string; value: number }[]
+  >((reasons, { dropOutReason, count }) => {
+    const name = dropOutReason ?? "";
+    const existing = reasons.find(
+      (reason) => reason.name.trim().toLowerCase() === name.trim().toLowerCase(),
+    );
+    return existing
+      ? reasons.map((reason) =>
+          reason === existing ? { ...reason, value: reason.value + count } : reason,
+        )
+      : [...reasons, { name, value: count }];
+  }, []);
 
   return (
     <div className="grid grid-cols-1 gap-5 py-5 sm:grid-cols-2 md:grid-cols-4">
       <ChartCard title="Attendance">
-        {filteredFormatedSessions?.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              width={307}
-              height={307}
-              data={filteredFormatedSessions}
-              aria-label="Attendance"
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="sessionType" tickFormatter={sessionLabel} />
-              <YAxis dataKey="attendance" allowDecimals={false} />
-              <Tooltip labelFormatter={(value) => `Session: ${sessionLabel(String(value))}`} />
-              <Bar dataKey="attendance" name="Sessions" fill="var(--color-primary)" />
-            </BarChart>
-          </ResponsiveContainer>
-        ) : null}
+        <ColumnChart
+          label="Attendance, by session"
+          series={[{ name: "Attendance", color: "var(--color-primary)" }]}
+          categories={attendanceBySession}
+        />
       </ChartCard>
       <ChartCard title="Drop-out reasons">
-        {formatedStudentsDropOutReasons.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={307} height={307} aria-label="Drop-out reasons">
-              <Pie
-                data={formatedStudentsDropOutReasons.map((reason) => ({
-                  ...reason,
-                  fill: categoryColor(reason.name, STUDENT_DROPOUT_REASONS),
-                }))}
-                dataKey="value"
-                nameKey="name"
-                startAngle={90}
-                endAngle={450}
-                outerRadius={100}
-                innerRadius={70}
-              >
-                <Label
-                  position="center"
-                  className="fill-foreground text-2xl font-semibold leading-8"
-                >
-                  {formatedStudentsDropOutReasons.reduce((acc, val) => acc + val.value, 0)}
-                </Label>
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+        {dropOutReasons.some(({ value }) => value > 0) ? (
+          <RingBreakdown
+            label="Students dropped out"
+            slices={dropOutReasons
+              .map(({ name, value }) => ({
+                name,
+                value,
+                color: categoryColor(name, STUDENT_DROPOUT_REASONS),
+              }))
+              .toSorted((first, second) => second.value - first.value)}
+          />
         ) : null}
       </ChartCard>
       <ChartCard title="Student information completion">
         {studentInfoCompletion.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={250} height={250} aria-label="Student information completion">
-              <Pie
-                data={studentInfoCompletion.map((entry) => ({
-                  ...entry,
-                  fill: entry.name === "actual" ? "var(--color-primary)" : "var(--color-info-bg)",
-                }))}
-                dataKey="value"
-                nameKey="name"
-                startAngle={90}
-                endAngle={450}
-                outerRadius={100}
-                innerRadius={70}
-              >
-                <Label
-                  position="center"
-                  className="fill-foreground text-2xl font-semibold leading-8"
-                >
-                  {`${studentInfoCompletion.find((d) => d.name === "actual")?.value ?? 0}%`}
-                </Label>
-              </Pie>
-              <Tooltip formatter={(value) => `${value}%`} />
-            </PieChart>
-          </ResponsiveContainer>
+          <CompletionRing
+            label="Student information complete"
+            percentage={studentInfoCompletion.find(({ name }) => name === "actual")?.value ?? 0}
+          />
         ) : null}
       </ChartCard>
       <ChartCard title="Student group ratings">
         {studentGroupRatings.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              width={307}
-              height={307}
-              data={studentGroupRatings}
-              aria-label="Student group ratings"
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="session" tickFormatter={sessionLabel} />
-              <YAxis domain={[0, 5]} allowDecimals={false} />
-              <Tooltip
-                labelFormatter={(value) => sessionLabel(String(value))}
-                formatter={(value) => (typeof value === "number" ? value.toFixed(2) : value)}
-              />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="value"
-                name="Avg rating"
-                stroke="var(--color-primary)"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <LineChart
+            label="Average student group rating, by session"
+            series={[{ name: "Average rating", color: "var(--color-primary)" }]}
+            minimumTop={5}
+            formatValue={formatRating}
+            categories={studentGroupRatings.map(({ session, value }) => ({
+              name: sessionLabel(session),
+              values: [value],
+            }))}
+          />
         ) : null}
       </ChartCard>
     </div>

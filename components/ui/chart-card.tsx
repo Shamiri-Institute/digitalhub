@@ -18,8 +18,7 @@ export default function ChartCard({
         </CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
-      {/* Recharts colours legend text with the series colour inline; keep it in text ink. */}
-      <CardContent className="h-[275px] pt-6 [&_.recharts-legend-item-text]:text-muted-foreground! [&_.recharts-legend-wrapper]:text-xs">
+      <CardContent className="h-[275px] pt-6">
         {children ? (
           children
         ) : (

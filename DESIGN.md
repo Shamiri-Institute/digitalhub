@@ -204,12 +204,14 @@ avatars and status dots fully round.
   `app/globals.css`; inside the navy header it turns lime. Components do not add their own rings.
 - **Checkbox**: white with the `input` border; checked is navy. Callers set only the size.
 - **Rating stars**: filled stars are `rating` orange, empty ones `navy-5`, always beside the number.
-- **Charts**: a chart the page shows on load is drawn on the server with
-  `components/charts/static-charts.tsx` (stacked columns, lines, rings), so it appears with the
-  page. Recharts draws nothing until its code loads and measures the card, so the charts still on
-  it fill in after the page does. Columns are 20px wide (55% of their slot on a narrow card) with a
-  4px rounded top; lines are 2px with 8px dots in a 2px card-coloured ring; gridlines are solid
-  1px `border`.
+- **Charts** come from `components/charts/static-charts.tsx`, plain SVG and HTML with no chart
+  library, so a server-rendered page shows them with its first paint: `ColumnChart` (single,
+  side-by-side or stacked columns, with an optional goal line), `LineChart`, `BarList` for long
+  names such as people's, `RingBreakdown` (a ring with a legend of counts) and `CompletionRing`.
+  Columns are up to 20px wide with a 4px rounded top and 2px between neighbours; lines are 2px
+  with 8px dots in a 2px card-coloured ring; gridlines are solid 1px `border`; a goal is a dashed
+  `destructive` line. A muted series (the hub beside "You") is drawn at 35% opacity. A legend shows
+  for two or more series, and hovering a column or session shows every series' value.
 
 ## Do's and Don'ts
 

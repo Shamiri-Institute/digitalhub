@@ -1,7 +1,5 @@
-"use client";
-
-import { Label, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { orderedSeriesColor, seriesColor } from "#/components/charts/constants";
+import { RingBreakdown } from "#/components/charts/static-charts";
 import ChartCard from "#/components/ui/chart-card";
 
 export default function StudentsStatsBreakdown({
@@ -13,93 +11,43 @@ export default function StudentsStatsBreakdown({
     genderStats: { gender: string | null; value: number }[];
   };
 }) {
+  const { formStats, ageStats, genderStats } = studentsStats;
   return (
     <div className="grid grid-cols-1 gap-5 py-5 sm:grid-cols-2 md:grid-cols-3">
       <ChartCard title="Students grouped by form">
-        {studentsStats.formStats.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={307} height={307} aria-label="Students grouped by form">
-              <Pie
-                data={studentsStats.formStats.map((val, index, forms) => ({
-                  ...val,
-                  fill: orderedSeriesColor(index, forms.length),
-                }))}
-                dataKey="value"
-                nameKey="form"
-                startAngle={90}
-                endAngle={450}
-                outerRadius={100}
-                innerRadius={70}
-              >
-                <Label
-                  position="center"
-                  className="fill-foreground text-2xl font-semibold leading-8"
-                >
-                  {studentsStats.formStats.reduce(
-                    (acc: number, val: { value: number }) => acc + val.value,
-                    0,
-                  )}
-                </Label>
-              </Pie>
-              <Tooltip formatter={(value) => `${value} students`} />
-            </PieChart>
-          </ResponsiveContainer>
+        {formStats.some(({ value }) => value > 0) ? (
+          <RingBreakdown
+            label="Students"
+            slices={formStats.map(({ form, value }, index) => ({
+              name: form ?? "Not recorded",
+              value,
+              color: orderedSeriesColor(index, formStats.length),
+            }))}
+          />
         ) : null}
       </ChartCard>
       <ChartCard title="Students grouped by age">
-        {studentsStats.ageStats.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={307} height={307} aria-label="Students grouped by age">
-              <Pie
-                data={studentsStats.ageStats.map((val, index, ages) => ({
-                  ...val,
-                  fill: orderedSeriesColor(index, ages.length),
-                }))}
-                dataKey="value"
-                nameKey="age"
-                startAngle={90}
-                endAngle={450}
-                outerRadius={100}
-                innerRadius={70}
-              />
-              <Tooltip
-                formatter={(value) => `${value} students`}
-                labelFormatter={(label) => `${label} years`}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+        {ageStats.some(({ value }) => value > 0) ? (
+          <RingBreakdown
+            label="Students"
+            slices={ageStats.map(({ age, value }, index) => ({
+              name: age ?? "Not recorded",
+              value,
+              color: orderedSeriesColor(index, ageStats.length),
+            }))}
+          />
         ) : null}
       </ChartCard>
-
       <ChartCard title="Students grouped by gender">
-        {studentsStats.genderStats.length ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={307} height={307} aria-label="Students grouped by gender">
-              <Pie
-                data={studentsStats.genderStats.map((val, index) => ({
-                  ...val,
-                  fill: seriesColor(index),
-                }))}
-                dataKey="value"
-                nameKey="gender"
-                startAngle={90}
-                endAngle={450}
-                outerRadius={100}
-                innerRadius={70}
-              >
-                <Label
-                  position="center"
-                  className="fill-foreground text-2xl font-semibold leading-8"
-                >
-                  {studentsStats.genderStats.reduce(
-                    (acc: number, val: { value: number }) => acc + val.value,
-                    0,
-                  )}
-                </Label>
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+        {genderStats.some(({ value }) => value > 0) ? (
+          <RingBreakdown
+            label="Students"
+            slices={genderStats.map(({ gender, value }, index) => ({
+              name: gender ?? "Not recorded",
+              value,
+              color: seriesColor(index),
+            }))}
+          />
         ) : null}
       </ChartCard>
     </div>
