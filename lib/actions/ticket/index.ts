@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, desc, eq, exists, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, exists, inArray, isNull, or, sql } from "drizzle-orm";
 import { refresh } from "next/cache";
 
 import { db, type Transaction } from "#/db/client";
@@ -10,7 +10,6 @@ import {
   clinicalLead,
   hubCoordinator,
   implementerMember,
-  supervisor,
   ticketEvents,
   tickets,
 } from "#/db/schema";
@@ -230,56 +229,6 @@ async function recordTicketEvent(
     .where(eq(tickets.id, event.ticketId));
 }
 
-// Mirrors the active filters fetchEscalationRecipientHandlers apply when routing a ticket.
-async function isActiveRecipient(tx: Transaction, recipientUserId: string, implementerId: string) {
-  const [membership] = await tx
-    .select({ userId: implementerMember.userId })
-    .from(implementerMember)
-    .leftJoin(
-      supervisor,
-      and(
-        eq(implementerMember.role, "SUPERVISOR"),
-        eq(supervisor.id, implementerMember.identifier),
-      ),
-    )
-    .leftJoin(
-      hubCoordinator,
-      and(
-        eq(implementerMember.role, "HUB_COORDINATOR"),
-        eq(hubCoordinator.id, implementerMember.identifier),
-      ),
-    )
-    .leftJoin(
-      clinicalLead,
-      and(
-        eq(implementerMember.role, "CLINICAL_LEAD"),
-        eq(clinicalLead.id, implementerMember.identifier),
-      ),
-    )
-    .where(
-      and(
-        eq(implementerMember.userId, recipientUserId),
-        eq(implementerMember.implementerId, implementerId),
-        or(
-          and(
-            isNotNull(supervisor.id),
-            isNull(supervisor.archivedAt),
-            sql`${supervisor.droppedOut} is not true`,
-          ),
-          and(
-            isNotNull(hubCoordinator.id),
-            isNull(hubCoordinator.archivedAt),
-            sql`${hubCoordinator.droppedOut} is not true`,
-          ),
-          and(isNotNull(clinicalLead.id), sql`${clinicalLead.droppedOut} is not true`),
-          eq(implementerMember.role, "ADMIN"),
-        ),
-      ),
-    )
-    .limit(1);
-  return Boolean(membership);
-}
-
 function isActiveTicketStatus(status: TicketStatus) {
   return ACTIVE_TICKET_STATUSES.includes(status);
 }
@@ -446,23 +395,20 @@ export async function changeTicketPriority(
 
 export async function reopenTicket(ticketId: string, reason: string): Promise<ActionResponse> {
   try {
-    const { userId: callerUserId, implementerId } = await requireAuthRole(
-      ...ESCALATION_INITIATOR_ROLES,
-    );
+    const { userId: callerUserId } = await requireAuthRole(...ESCALATION_INITIATOR_ROLES);
     const reopenReason = TicketReasonSchema.parse(reason);
 
     await db.transaction(async (tx) => {
       // The ticket returns to its holder, who resolved it.
-      const { status, holderId, createdById, resolvedAt } = await lockTicket(tx, ticketId);
-      if (createdById !== callerUserId) throw new Error("Only the ticket's creator can reopen it");
-      if (status !== "RESOLVED") throw new Error("Only a resolved ticket can be reopened");
-      if (!mayReopenTicket(resolvedAt, new Date())) {
-        throw new Error("Tickets can only be reopened within 7 days of being resolved");
+      const lockedTicket = await lockTicket(tx, ticketId);
+      if (lockedTicket.createdById !== callerUserId) {
+        throw new Error("Only the ticket's creator can reopen it");
       }
-      if (!(await isActiveRecipient(tx, holderId, implementerId))) {
-        throw new Error(
-          "The person who resolved this ticket is no longer active. Please open a new ticket.",
-        );
+      if (lockedTicket.status !== "RESOLVED") {
+        throw new Error("Only a resolved ticket can be reopened");
+      }
+      if (!mayReopenTicket(lockedTicket.resolvedAt, new Date())) {
+        throw new Error("Tickets can only be reopened within 7 days of being resolved");
       }
 
       await recordTicketEvent(
@@ -471,7 +417,7 @@ export async function reopenTicket(ticketId: string, reason: string): Promise<Ac
           ticketId,
           kind: "REOPENED",
           actorId: callerUserId,
-          fromValue: status,
+          fromValue: lockedTicket.status,
           toValue: "IN_PROGRESS",
           reason: reopenReason,
         },

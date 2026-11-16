@@ -2,8 +2,7 @@ import type { Page } from "@playwright/test";
 import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { implementerMember, supervisor, ticketEvents, tickets, user } from "#/db/schema";
-import { objectId } from "#/lib/crypto";
+import { ticketEvents, tickets } from "#/db/schema";
 import { expect, test, type Undo } from "#/tests/fixtures";
 import { required, signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
@@ -148,68 +147,4 @@ test("the creator cancels an open ticket with a reason", async ({ page, context,
     .from(ticketEvents)
     .where(and(eq(ticketEvents.ticketId, ticketId), eq(ticketEvents.kind, "CANCELLED")));
   expect(cancellation?.reason).toBe("Raised by mistake.");
-});
-
-test("a ticket whose resolver has dropped out cannot be reopened", async ({
-  page,
-  context,
-  undo,
-}) => {
-  const chain = await pickFellowAndSupervisor();
-  required(chain, "a fellow and their supervisor who can both sign in");
-  const [chainSupervisor] = await db
-    .select({ hubId: supervisor.hubId, implementerId: supervisor.implementerId })
-    .from(supervisor)
-    .innerJoin(
-      implementerMember,
-      and(
-        eq(implementerMember.identifier, supervisor.id),
-        eq(implementerMember.role, "SUPERVISOR"),
-      ),
-    )
-    .where(eq(implementerMember.userId, chain.supervisorUserId))
-    .limit(1);
-  required(chainSupervisor, "the chain supervisor's profile");
-
-  const supervisorId = objectId("sup");
-  await db.insert(supervisor).values({
-    id: supervisorId,
-    supervisorName: `E2E dropped resolver ${Date.now()}`,
-    hubId: chainSupervisor.hubId,
-    implementerId: chainSupervisor.implementerId,
-    droppedOut: true,
-    dropOutReason: "Left the programme",
-  });
-  undo(() => db.delete(supervisor).where(eq(supervisor.id, supervisorId)));
-  const [resolver] = await db
-    .insert(user)
-    .values({ name: "E2E dropped resolver" })
-    .returning({ id: user.id });
-  required(resolver, "the dropped resolver's user");
-  undo(() => db.delete(user).where(eq(user.id, resolver.id)));
-  await db.insert(implementerMember).values({
-    implementerId: chainSupervisor.implementerId,
-    userId: resolver.id,
-    role: "SUPERVISOR",
-    identifier: supervisorId,
-  });
-  undo(() => db.delete(implementerMember).where(eq(implementerMember.userId, resolver.id)));
-
-  const { ticketId, ticketSubject } = await insertHeldTicket(
-    { ...chain, supervisorUserId: resolver.id },
-    undo,
-  );
-  await db
-    .update(tickets)
-    .set({ status: "RESOLVED", resolvedAt: new Date() })
-    .where(eq(tickets.id, ticketId));
-
-  await signInWithEmail(context, chain.fellowEmail);
-  await page.goto(getUrl("/fel/tickets"));
-  await chooseRowAction(page, await searchRows(page, ticketSubject), "Reopen ticket");
-  const dialog = page.getByRole("dialog", { name: "Reopen ticket" });
-  await dialog.getByLabel("Reason").fill("Still broken.");
-  await dialog.getByRole("button", { name: "Reopen ticket" }).click();
-  await expect(page.getByText("no longer active").first()).toBeVisible();
-  await expectRowAfterReload(page, ticketSubject, /resolved/i);
 });
