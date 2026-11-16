@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { GENDER_OPTIONS } from "#/lib/constants";
-import { stringValidation } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 import { loginEmail } from "./access-schemas";
 
 const counties = KENYAN_COUNTIES.map((county) => county.name) as [string, ...string[]];

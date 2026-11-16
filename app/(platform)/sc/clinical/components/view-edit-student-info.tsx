@@ -33,7 +33,7 @@ import {
 } from "#/components/ui/select";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { GENDER_OPTIONS } from "#/lib/constants";
-import { stringValidation } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 import { zodResolver } from "#/lib/zod-resolver";
 
 const EditStudentSchema = z.object({

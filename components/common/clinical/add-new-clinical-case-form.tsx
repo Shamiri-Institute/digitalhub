@@ -44,7 +44,8 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { GENDER_OPTIONS } from "#/lib/constants";
-import { cn, stringValidation } from "#/lib/utils";
+import { cn } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 import { zodResolver } from "#/lib/zod-resolver";
 import { DISPLAY_DATE } from "#/lib/date-utils";
 

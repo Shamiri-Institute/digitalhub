@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { COMPLAINT_TYPES } from "#/lib/app-constants/constants";
-import { stringValidation } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 
 export const SubmitComplaintSchema = z.object({
   id: stringValidation("Missing ID"),

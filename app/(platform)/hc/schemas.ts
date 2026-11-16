@@ -11,7 +11,7 @@ import {
   STUDENT_DROPOUT_REASONS,
   SUPERVISOR_DROP_OUT_REASONS,
 } from "#/lib/app-constants/constants";
-import { stringValidation } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 
 const loginEmail = z
   .string()

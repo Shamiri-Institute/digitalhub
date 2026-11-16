@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { GENDER_OPTIONS } from "#/lib/constants";
-import { stringValidation } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 
 export const FellowSchema = z.object({
   fellowName: stringValidation("Please enter the fellow's name."),

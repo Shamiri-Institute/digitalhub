@@ -28,7 +28,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { submitQualitativeFeedback } from "#/lib/actions/session/session";
-import { stringValidation } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 import { zodResolver } from "#/lib/zod-resolver";
 
 export const QualitativeFeedbackSchema = z.object({

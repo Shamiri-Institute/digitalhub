@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { AdminTeam, enumValues } from "#/db/enums";
-import { stringValidation } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 
 const accessFields = {
   team: z.enum(enumValues(AdminTeam), { error: "Please pick a valid team" }).nullable(),

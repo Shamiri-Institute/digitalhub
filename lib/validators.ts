@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { stringValidation } from "./utils";
+import { stringValidation } from "#/lib/string-validation";
 
 export const EditFellowSchema = z.object({
   id: z.string(),

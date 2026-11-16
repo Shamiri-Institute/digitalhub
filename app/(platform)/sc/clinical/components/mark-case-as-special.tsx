@@ -18,7 +18,7 @@ import { Label } from "#/components/ui/label";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toastOnError, useToast } from "#/components/ui/use-toast";
-import { stringValidation } from "#/lib/utils";
+import { stringValidation } from "#/lib/string-validation";
 import { zodResolver } from "#/lib/zod-resolver";
 
 const FormSchema = z.object({
