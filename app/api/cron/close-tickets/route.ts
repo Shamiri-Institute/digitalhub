@@ -3,7 +3,10 @@ import * as Sentry from "@sentry/nextjs";
 import { isCronRequest } from "#/lib/auth/cron";
 import { closeExpiredTickets } from "#/lib/close-expired-tickets";
 
-/** Called hourly by Vercel Cron (vercel.json); reopening is refused past the window regardless. */
+/**
+ * Housekeeping only: reopenTicket checks the window itself, so a ticket the cron has not yet
+ * closed still cannot be reopened.
+ */
 export async function GET(request: Request) {
   if (!isCronRequest(request)) {
     return new Response(null, { status: 401 });

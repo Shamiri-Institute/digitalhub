@@ -30,40 +30,37 @@ import {
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { cancelTicket, changeTicketPriority, reopenTicket } from "#/lib/actions/ticket";
-import type { z } from "zod";
-import { ChangeTicketPrioritySchema } from "#/lib/actions/ticket/types";
+import {
+  ChangeTicketPrioritySchema,
+  type ChangeTicketPriorityInput,
+} from "#/lib/actions/ticket/types";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { TicketData } from "./columns";
-
-// Reopen and cancel leave the priority as it is, so they validate only the reason.
-const ReasonOnlySchema = ChangeTicketPrioritySchema.partial({ priority: true });
-type TicketReasonInput = z.infer<typeof ReasonOnlySchema>;
 
 const REASON_DIALOGS = {
   changePriority: {
     title: "Change priority",
     placeholder: "Explain why the priority is changing",
-    schema: ChangeTicketPrioritySchema,
     asksPriority: true,
     destructive: false,
-    submit: (ticketId: string, data: TicketReasonInput) =>
-      changeTicketPriority(ticketId, ChangeTicketPrioritySchema.parse(data)),
+    submit: (ticketId: string, data: ChangeTicketPriorityInput) =>
+      changeTicketPriority(ticketId, data),
   },
   reopen: {
     title: "Reopen ticket",
     placeholder: "Explain what still needs to be done",
-    schema: ReasonOnlySchema,
     asksPriority: false,
     destructive: false,
-    submit: (ticketId: string, data: TicketReasonInput) => reopenTicket(ticketId, data.reason),
+    submit: (ticketId: string, data: ChangeTicketPriorityInput) =>
+      reopenTicket(ticketId, data.reason),
   },
   cancel: {
     title: "Cancel ticket",
     placeholder: "Explain why this ticket is no longer needed",
-    schema: ReasonOnlySchema,
     asksPriority: false,
     destructive: true,
-    submit: (ticketId: string, data: TicketReasonInput) => cancelTicket(ticketId, data.reason),
+    submit: (ticketId: string, data: ChangeTicketPriorityInput) =>
+      cancelTicket(ticketId, data.reason),
   },
 };
 
@@ -103,12 +100,13 @@ function TicketReasonForm({
 }) {
   const dialog = REASON_DIALOGS[kind];
   const { isSaving, save } = useDialogSave();
-  const form = useForm<TicketReasonInput>({
-    resolver: zodResolver(dialog.schema),
+  // Reopen and cancel validate the priority too, which is always the ticket's own.
+  const form = useForm<ChangeTicketPriorityInput>({
+    resolver: zodResolver(ChangeTicketPrioritySchema),
     defaultValues: { priority: ticket.priority, reason: "" },
   });
 
-  const onSubmit = (data: TicketReasonInput) => {
+  const onSubmit = (data: ChangeTicketPriorityInput) => {
     save(async () => {
       const result = await dialog.submit(ticket.id, data);
       if (!result.success) {

@@ -281,7 +281,7 @@ test("a supervisor's ticket skips an archived hub coordinator", async ({ page, c
   const activeEmail =
     firstCoordinator.id === hub.coordinatorId ? hub.otherCoordinatorEmail : hub.coordinatorEmail;
   await signIn(context, activeEmail);
-  // Only the holder may resolve.
+  // Resolve shows only to the holder, so this proves routing skipped the archived coordinator.
   const menu = await ticketMenu(page, "/hc/tickets", subject);
   await expect(menu.getByText("Resolve ticket")).toBeVisible();
 });

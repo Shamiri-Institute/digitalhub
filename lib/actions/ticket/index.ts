@@ -218,16 +218,15 @@ async function lockTicket(tx: Transaction, ticketId: string) {
   return ticket;
 }
 
-// The event logs the status or priority the change moves, so callers never restate it.
 async function recordTicketEvent(
   tx: Transaction,
   lockedTicket: Awaited<ReturnType<typeof lockTicket>>,
   event: Omit<typeof ticketEvents.$inferInsert, "fromValue" | "toValue">,
   ticketChanges: Pick<typeof tickets.$inferInsert, "status" | "priority" | "resolvedAt">,
+  loggedField: "status" | "priority",
 ) {
-  const [fromValue, toValue] = ticketChanges.priority
-    ? [lockedTicket.priority, ticketChanges.priority]
-    : [lockedTicket.status, ticketChanges.status];
+  const fromValue = lockedTicket[loggedField];
+  const toValue = ticketChanges[loggedField];
   await tx
     .insert(ticketEvents)
     .values({ ...event, ...(fromValue !== toValue ? { fromValue, toValue } : {}) });
@@ -304,6 +303,7 @@ export async function createEscalation(
           reason: escalationReason,
         },
         { status: "ESCALATED" },
+        "status",
       );
     });
   });
@@ -329,6 +329,7 @@ export async function resolveTicket(
         lockedTicket,
         { ticketId, kind: "RESOLVED", actorId: callerUserId, reason: resolutionReason },
         { status: "RESOLVED", resolvedAt: new Date() },
+        "status",
       );
     });
   });
@@ -352,6 +353,7 @@ export async function startTicket(ticketId: string): Promise<ActionResponse> {
         lockedTicket,
         { ticketId, kind: "STARTED", actorId: callerUserId },
         { status: "IN_PROGRESS" },
+        "status",
       );
     });
   });
@@ -380,6 +382,7 @@ export async function changeTicketPriority(
         lockedTicket,
         { ticketId, kind: "PRIORITY_CHANGED", actorId: callerUserId, reason },
         { priority },
+        "priority",
       );
     });
   });
@@ -391,7 +394,6 @@ export async function reopenTicket(ticketId: string, reason: string): Promise<Ac
     const reopenReason = TicketReasonSchema.parse(reason);
 
     await db.transaction(async (tx) => {
-      // The ticket returns to its holder, who resolved it.
       const lockedTicket = await lockTicket(tx, ticketId);
       if (lockedTicket.createdById !== callerUserId) {
         throw new Error("Only the ticket's creator can reopen it");
@@ -405,11 +407,13 @@ export async function reopenTicket(ticketId: string, reason: string): Promise<Ac
         );
       }
 
+      // The ticket returns to its holder, who resolved it.
       await recordTicketEvent(
         tx,
         lockedTicket,
         { ticketId, kind: "REOPENED", actorId: callerUserId, reason: reopenReason },
         { status: "IN_PROGRESS", resolvedAt: null },
+        "status",
       );
     });
   });
@@ -432,6 +436,7 @@ export async function cancelTicket(ticketId: string, reason: string): Promise<Ac
         lockedTicket,
         { ticketId, kind: "CANCELLED", actorId: callerUserId, reason: cancelReason },
         { status: "CANCELLED" },
+        "status",
       );
     });
   });
@@ -477,6 +482,7 @@ export async function reassignTicket(
         },
         // The new holder has not picked the ticket up, so it must be startable again.
         { status: lockedTicket.status === "IN_PROGRESS" ? "OPEN" : lockedTicket.status },
+        "status",
       );
     });
   });

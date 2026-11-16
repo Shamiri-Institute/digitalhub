@@ -68,7 +68,6 @@ async function giveReason(page: Page, title: string, reason: string) {
   await expect(dialog).toBeHidden();
 }
 
-// The table renders the status and priority lowercased.
 async function expectRowAfterReload(page: Page, ticketSubject: string, text: RegExp) {
   await page.reload();
   await expect(await searchRows(page, ticketSubject)).toContainText(text);
@@ -163,7 +162,6 @@ test("the creator cancels an open ticket with a reason", async ({ page, context,
     "Reassign ticket",
   ]);
 
-  // No page shows the cancellation reason.
   const [cancellation] = await db
     .select({ reason: ticketEvents.reason })
     .from(ticketEvents)
