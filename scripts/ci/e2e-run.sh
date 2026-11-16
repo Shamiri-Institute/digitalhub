@@ -1,15 +1,17 @@
 #!/usr/bin/env sh
-# Runs the spec files one E2E shard was given (scripts/ci/e2e-shard-files.sh prints them).
-#   scripts/ci/e2e-run.sh <spec files...>
-# payout-run.spec.ts is its own project that depends on the chromium one, and Playwright does not
-# filter a dependency by the files named: naming payout-run would run every chromium spec. So the
-# shard runs its chromium specs, then payout-run with --no-deps, after them on the same database.
+# scripts/ci/e2e-run.sh <shard> <total> [spec files]
+# payout-run depends on the chromium project, and Playwright runs a dependency unsharded, so the
+# last shard runs payout-run after its share of chromium.
 set -eu
-others=$(printf '%s\n' "$@" | grep -v 'payout-run\.spec\.ts$' || true)
-if [ -n "$others" ]; then
+shard=$1
+total=$2
+shift 2
+specs=$(printf '%s\n' "$@" | grep -v 'payout-run\.spec\.ts$' || true)
+# Named no files, Playwright runs every spec.
+if [ $# -eq 0 ] || [ -n "$specs" ]; then
   # shellcheck disable=SC2086 # one spec file per word
-  pnpm exec playwright test --project=chromium $others
+  pnpm exec playwright test --project=chromium --shard="$shard/$total" --pass-with-no-tests $specs
 fi
-if printf '%s\n' "$@" | grep -q 'payout-run\.spec\.ts$'; then
+if [ "$shard" = "$total" ] && { [ $# -eq 0 ] || printf '%s\n' "$@" | grep -q 'payout-run\.spec\.ts$'; }; then
   pnpm exec playwright test --project=payout-run --no-deps
 fi

@@ -1,8 +1,6 @@
 #!/usr/bin/env sh
-# Prints the GitHub step outputs that say which tests a run needs:
-#   unit=all|changed|none   e2e=all|<spec files>|none   shards=<JSON list of e2e shard numbers>
-# Only pull requests are narrowed. The merge queue and pushes run everything.
-#   scripts/ci/affected.sh <event> <pull request base sha> <e2e shards> [head, default HEAD]
+# Prints step outputs: unit=all|changed|none e2e=all|<spec files>|none shards=<JSON list>
+#   scripts/ci/affected.sh <event> <base sha> <e2e shards> [head]
 set -eu
 event=$1
 base=$2
@@ -20,14 +18,11 @@ everything() {
 [ "$event" = pull_request ] || everything
 changed=$(git diff --name-only "$base"..."$head")
 
-# Files no test can reach: docs and agent instructions.
 inert='^(.*\.md|LICENSE|\.agents/.*|\.claude/.*|\.github/copilot-instructions\.md)$'
-# Files the unit tests reach without an import Vitest can follow: the schema the database is migrated
-# to, the seed, dependencies and the test setup. Any of these runs every unit test.
+# Reach unit tests without an import `vitest --changed` can follow.
 unit_wide='^(drizzle/.*|db/seed/.*|package\.json|pnpm-lock\.yaml|vitest\.config\.ts|tests/unit/setup\.ts|tsconfig\.json|\.github/.*|scripts/ci/.*)$'
-# Specs are the only e2e files that cannot change the app or another spec. Anything else (app code,
-# helpers, fixtures, config, CI) runs the whole suite: the app is driven over HTTP, so no import
-# graph says which specs a change reaches.
+# Specs drive the app over HTTP, so no import graph links app code to them: any change other than a
+# spec runs every spec.
 spec='^tests/e2e/.*\.spec\.ts$'
 
 reachable=$(printf '%s\n' "$changed" | grep -Ev "$inert" || true)
