@@ -133,7 +133,10 @@ jobs:
           filter: blob:none
           fetch-depth: 0
       - uses: ./.github/actions/setup
+      # Some unit tests upload to S3.
+      - uses: ./.github/actions/seaweedfs
       - run: bunx drizzle-kit migrate && bun db/seed/seed.ts
+      - run: timeout 60 sh -c 'until grep -q "S3 ready" seaweedfs.log; do sleep 1; done' || { cat seaweedfs.log; exit 1; }
       # `--changed` runs the test files that import, directly or not, a file the pull request changed.
       - run: scripts/ci/budget.sh 60 bunx vitest run ${{ needs.affected.outputs.unit == 'changed' && format('--changed {0} --passWithNoTests', github.event.pull_request.base.sha) || '' }}
 
@@ -162,13 +165,7 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           browsers: "true"
-      # The S3 server developers run, from the same script, so it checks request signatures here too.
-      - name: Start SeaweedFS
-        run: |
-          curl -fsSLo seaweedfs.tar.gz https://github.com/seaweedfs/seaweedfs/releases/download/4.52/linux_amd64.tar.gz
-          echo "8b538c22d47d0c3fb6792adaa6b0c735a967401270a53427d5a476dcaca9b7ae  seaweedfs.tar.gz" | sha256sum -c -
-          sudo tar -xzf seaweedfs.tar.gz -C /usr/local/bin weed
-          nohup scripts/local-s3.sh >seaweedfs.log 2>&1 &
+      - uses: ./.github/actions/seaweedfs
       - uses: actions/cache@v5
         with:
           path: .next/cache
