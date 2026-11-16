@@ -184,7 +184,8 @@ jobs:
         run: |
           scripts/ci/e2e-shard-files.sh "${{ matrix.shard }}" "${{ strategy.job-total }}" "${{ needs.affected.outputs.e2e }}" > shard-files.txt
           cat shard-files.txt
-          scripts/ci/budget.sh 60 bunx playwright test $(cat shard-files.txt)
+          # shellcheck disable=SC2046 # one spec file per word
+          scripts/ci/budget.sh 60 scripts/ci/e2e-run.sh $(cat shard-files.txt)
       - uses: actions/upload-artifact@v7
         if: ${{ failure() }}
         with:
