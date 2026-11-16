@@ -9,7 +9,7 @@ selection=$3
 if [ "$selection" != all ]; then
   export E2E_SPECS="$selection"
 fi
-files=$(bun scripts/ci/e2e-shard.ts "$shard" "$count")
+files=$(pnpm exec tsx scripts/ci/e2e-shard.ts "$shard" "$count")
 # With no files Playwright would run every spec, hiding a split that lost some.
 if [ -z "$files" ]; then
   echo "shard $shard of $count has no spec files" >&2

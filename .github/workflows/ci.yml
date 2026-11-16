@@ -79,7 +79,7 @@ jobs:
         with:
           filter: blob:none
       - uses: ./.github/actions/setup
-      - run: scripts/ci/budget.sh 5 bun run stylecheck
+      - run: scripts/ci/budget.sh 5 pnpm run stylecheck
 
   typecheck:
     runs-on: ${{ vars.CI_RUNNER_8 || 'ubuntu-24.04' }}
@@ -89,7 +89,7 @@ jobs:
         with:
           filter: blob:none
       - uses: ./.github/actions/setup
-      - run: scripts/ci/budget.sh 5 bun run typecheck
+      - run: scripts/ci/budget.sh 5 pnpm run typecheck
 
   shellcheck:
     runs-on: ${{ vars.CI_RUNNER || 'ubuntu-24.04' }}
@@ -114,8 +114,8 @@ jobs:
         with:
           filter: blob:none
       - uses: ./.github/actions/setup
-      - run: bunx drizzle-kit migrate
-      - run: scripts/ci/budget.sh 10 bun scripts/db/check-schema.ts
+      - run: pnpm exec drizzle-kit migrate
+      - run: scripts/ci/budget.sh 10 pnpm exec tsx scripts/db/check-schema.ts
 
   unit:
     needs: affected
@@ -136,10 +136,10 @@ jobs:
       - uses: ./.github/actions/setup
       # Some unit tests upload to S3.
       - uses: ./.github/actions/seaweedfs
-      - run: bunx drizzle-kit migrate && bun db/seed/seed.ts
+      - run: pnpm exec drizzle-kit migrate && pnpm exec tsx db/seed/seed.ts
       - run: timeout 60 sh -c 'until grep -q "S3 ready" seaweedfs.log; do sleep 1; done' || { cat seaweedfs.log; exit 1; }
       # `--changed` runs the test files that import, directly or not, a file the pull request changed.
-      - run: scripts/ci/budget.sh 60 bunx vitest run ${{ needs.affected.outputs.unit == 'changed' && format('--changed {0} --passWithNoTests', github.event.pull_request.base.sha) || '' }}
+      - run: scripts/ci/budget.sh 60 pnpm exec vitest run ${{ needs.affected.outputs.unit == 'changed' && format('--changed {0} --passWithNoTests', github.event.pull_request.base.sha) || '' }}
 
   e2e:
     needs: affected
@@ -170,14 +170,14 @@ jobs:
       - uses: actions/cache@v5
         with:
           path: .next/cache
-          key: nextjs-${{ runner.os }}-${{ hashFiles('bun.lock') }}-${{ github.sha }}
-          restore-keys: nextjs-${{ runner.os }}-${{ hashFiles('bun.lock') }}-
+          key: nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
       # The seed and the build need different things (database, CPU), so they overlap.
       - name: Seed and build
         run: |
-          (bunx drizzle-kit migrate && bun db/seed/seed.ts) > seed.log 2>&1 &
+          (pnpm exec drizzle-kit migrate && pnpm exec tsx db/seed/seed.ts) > seed.log 2>&1 &
           seed=$!
-          bun run build
+          pnpm run build
           wait "$seed" || { cat seed.log; exit 1; }
       - run: timeout 60 sh -c 'until grep -q "S3 ready" seaweedfs.log; do sleep 1; done' || { cat seaweedfs.log; exit 1; }
       - name: Playwright

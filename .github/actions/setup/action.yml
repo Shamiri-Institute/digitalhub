@@ -1,5 +1,5 @@
 name: Setup
-description: Bun and node_modules restored from cache, plus Playwright's browser when asked.
+description: Node and pnpm, node_modules restored from cache, plus Playwright's browser when asked.
 inputs:
   browsers:
     description: Install Chromium for Playwright
@@ -7,22 +7,21 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: oven-sh/setup-bun@v2
-      with:
-        bun-version-file: package.json
+    # The pnpm version comes from packageManager in package.json.
+    - uses: pnpm/action-setup@v4
     - uses: actions/setup-node@v6
       with:
         node-version: "24"
     # node_modules itself, keyed on the lockfile. Pushes to dev and main save it, and pull requests
-    # read their base branch's copy, so a PR that leaves bun.lock alone never installs.
+    # read their base branch's copy, so a PR that leaves pnpm-lock.yaml alone never installs.
     - id: modules
       uses: actions/cache@v5
       with:
         path: node_modules
-        key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('bun.lock') }}
+        key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
     - if: steps.modules.outputs.cache-hit != 'true'
       shell: bash
-      run: bun install --frozen-lockfile
+      run: pnpm install --frozen-lockfile
     - if: inputs.browsers == 'true'
       id: playwright
       shell: bash
@@ -36,7 +35,7 @@ runs:
         key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ env.ImageOS }}-${{ steps.playwright.outputs.version }}
     - if: inputs.browsers == 'true' && steps.browsers.outputs.cache-hit != 'true'
       shell: bash
-      run: bunx playwright install --with-deps --only-shell chromium
+      run: pnpm exec playwright install --with-deps --only-shell chromium
     - if: inputs.browsers == 'true' && steps.browsers.outputs.cache-hit == 'true'
       shell: bash
-      run: bunx playwright install-deps chromium
+      run: pnpm exec playwright install-deps chromium

@@ -24,7 +24,7 @@ changed=$(git diff --name-only "$base"..."$head")
 inert='^(.*\.md|LICENSE|\.agents/.*|\.claude/.*|\.github/copilot-instructions\.md)$'
 # Files the unit tests reach without an import Vitest can follow: the schema the database is migrated
 # to, the seed, dependencies and the test setup. Any of these runs every unit test.
-unit_wide='^(drizzle/.*|db/seed/.*|package\.json|bun\.lock|vitest\.config\.ts|tests/unit/setup\.ts|tsconfig\.json|\.github/.*|scripts/ci/.*)$'
+unit_wide='^(drizzle/.*|db/seed/.*|package\.json|pnpm-lock\.yaml|vitest\.config\.ts|tests/unit/setup\.ts|tsconfig\.json|\.github/.*|scripts/ci/.*)$'
 # Specs are the only e2e files that cannot change the app or another spec. Anything else (app code,
 # helpers, fixtures, config, CI) runs the whole suite: the app is driven over HTTP, so no import
 # graph says which specs a change reaches.

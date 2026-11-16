@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 # Formats, lints and typechecks what this push changes before it leaves the machine, so CI is not
-# where those failures show up first. `bun install` points git at this directory (see "prepare").
+# where those failures show up first. `pnpm install` points git at this directory (see "prepare").
 set -eu
 
 base=$(git merge-base HEAD "@{upstream}" 2>/dev/null || git merge-base HEAD origin/dev)
@@ -10,11 +10,11 @@ files=$(git diff --name-only --diff-filter=ACMR "$base" -- '*.ts' '*.tsx' '*.js'
 code=$(printf '%s\n' "$files" | grep -E '\.(ts|tsx|js|mjs)$' || true)
 
 # shellcheck disable=SC2086 # one argument per file
-bunx oxfmt --check $files
+pnpm exec oxfmt --check $files
 if [ -n "$code" ]; then
   # shellcheck disable=SC2086
-  bunx oxlint --type-aware $code
+  pnpm exec oxlint --type-aware $code
   # A change in one file can break the types of another, so the whole project is checked; it takes
   # about a second.
-  bun run typecheck >/dev/null
+  pnpm run typecheck >/dev/null
 fi

@@ -131,7 +131,7 @@ async function truncateTables() {
     await db.execute(sql.raw(truncateCommand));
     console.log("Selected tables truncated successfully.");
   } else {
-    console.log("No tables to truncate. Make sure to run `bun run db:migrate` first.");
+    console.log("No tables to truncate. Make sure to run `pnpm run db:migrate` first.");
   }
 }
 

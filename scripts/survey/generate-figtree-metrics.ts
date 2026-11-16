@@ -1,5 +1,5 @@
 // Writes lib/survey/figtree-metrics.generated.ts from the print font files in public/fonts/figtree,
-// so the layout engine can measure text without loading a font. Run `bun run survey:metrics`
+// so the layout engine can measure text without loading a font. Run `pnpm run survey:metrics`
 // after replacing a font file; tests/unit/survey-text-metrics.test.ts fails until you do.
 
 import fs from "node:fs";

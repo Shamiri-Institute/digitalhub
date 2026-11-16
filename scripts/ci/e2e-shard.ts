@@ -1,7 +1,7 @@
 // Picks the spec files for one CI shard so every shard gets about the same measured run time.
-//   bun scripts/ci/e2e-shard.ts <shard> <total>       prints the shard's spec files, one per line
+//   pnpm exec tsx scripts/ci/e2e-shard.ts <shard> <total>       prints the shard's spec files, one per line
 //                                                     (only those in E2E_SPECS, when it is set)
-//   bun scripts/ci/e2e-shard.ts --record <report.json>  rewrites durations from a Playwright JSON report
+//   pnpm exec tsx scripts/ci/e2e-shard.ts --record <report.json>  rewrites durations from a Playwright JSON report
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 

@@ -8,8 +8,8 @@ set -eu
 others=$(printf '%s\n' "$@" | grep -v 'payout-run\.spec\.ts$' || true)
 if [ -n "$others" ]; then
   # shellcheck disable=SC2086 # one spec file per word
-  bunx playwright test --project=chromium $others
+  pnpm exec playwright test --project=chromium $others
 fi
 if printf '%s\n' "$@" | grep -q 'payout-run\.spec\.ts$'; then
-  bunx playwright test --project=payout-run --no-deps
+  pnpm exec playwright test --project=payout-run --no-deps
 fi
