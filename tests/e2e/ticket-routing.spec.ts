@@ -201,6 +201,8 @@ test("a hub coordinator reassigns to an active coordinator of the hub, who may p
 
   await signIn(context, hub.otherCoordinatorEmail);
   await expect(await currentTier(page, "/hc/tickets", subject)).toHaveText("hub coordinator");
+  // A reassign is a handover at the same tier, not an escalation.
+  await expect(await cellUnder(page, await searchRows(page, subject), "Status")).toHaveText("open");
   // Reassigns are not limited, so a wrong one can be passed on, and the history stays in reach.
   const menu = await ticketMenu(page, "/hc/tickets", subject);
   await expect(menu.getByText("Reassign ticket")).toBeVisible();

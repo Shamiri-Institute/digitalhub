@@ -560,7 +560,7 @@ export async function reassignTicket(
           reason: reassignmentReason,
         },
         // The new holder has not picked the ticket up, so it must be startable again.
-        { status: "ESCALATED" },
+        { status: lockedTicket.status === "IN_PROGRESS" ? "OPEN" : lockedTicket.status },
       );
     });
 
