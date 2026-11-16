@@ -16,7 +16,7 @@
     "start": "next start",
     "format": "oxfmt",
     "stylecheck": "oxfmt --check && oxlint --type-aware",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && bun check --no-script",
     "test:ci": "playwright test",
     "test": "dotenv -c development -- playwright test",
     "test:ui": "dotenv -c development -- playwright test --ui",
