@@ -1,10 +1,10 @@
 // @vitest-environment node
 import { inArray, sql } from "drizzle-orm";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { db, pool } from "#/db/client";
+import { db } from "#/db/client";
 import { sessionRecording, transcription } from "#/db/schema";
 import {
   claimTranscriptions,
@@ -37,7 +37,8 @@ beforeAll(async () => {
   if (recordings.length < 3) throw new Error("seed the database first: three session recordings");
 });
 
-afterAll(async () => {
+// Each test starts with no runs and the recordings as seeded; tests run in random order.
+afterEach(async () => {
   const ids = recordings.map((r) => r.id);
   await db.delete(transcription).where(inArray(transcription.recordingId, ids));
   for (const { id, ...mirrored } of recordings) {
@@ -46,7 +47,6 @@ afterAll(async () => {
       .set(mirrored)
       .where(sql`${sessionRecording.id} = ${id}`);
   }
-  await pool.end();
 });
 
 describe("transcription worker", () => {

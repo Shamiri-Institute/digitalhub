@@ -74,6 +74,11 @@ Every export of a `"use server"` file is a public POST endpoint, even when only 
 - A spec that changes data creates its own rows, or picks rows no other spec edits, and removes what it made.
 - Test behaviour through real dependencies: the local Postgres, and SeaweedFS for S3 (`scripts/local-s3.sh`, which CI runs too). Leave out a test that would need a mocked module, env, SDK client or network call.
 - E2E specs drive the UI. Action IDs and encoding are framework internals, so a spec never posts to a server action directly.
+- Vitest runs every file in one shared process (`isolate: false`) and in random order (`sequence.shuffle`). A file must leave the process and database as it found them:
+  - Delete the rows it inserted and restore the rows it changed: in `afterAll`, or in `afterEach` when its tests touch the same rows, since tests inside a file are shuffled too. Run on a freshly seeded database and never depend on another file's rows.
+  - Never call `pool.end()`; the pool is shared by every file in the worker.
+  - Never change `process.env`, globals or timers directly. Use `vi.stubEnv`, `vi.stubGlobal` and `vi.useFakeTimers`; `tests/unit/setup.ts` undoes them after each file, along with spies.
+  - A failure that only shows in some orders is a leak between files. Rerun with the seed Vitest printed (`npx vitest run --sequence.seed=<seed>`) and fix the file that leaks, not the one that fails.
 - After a mutation, assert through the UI after a reload. Read the database only for what no page shows (values the server takes from the session, stored but undisplayed data, revoked sessions, writes that must not happen), with a comment saying so.
 
 ## Code style

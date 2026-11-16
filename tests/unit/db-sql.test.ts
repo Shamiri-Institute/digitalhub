@@ -1,12 +1,10 @@
 // @vitest-environment node
 import { eq, sql } from "drizzle-orm";
-import { afterAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { db, pool } from "#/db/client";
+import { db } from "#/db/client";
 import { clinicalScreeningInfo, school, student } from "#/db/schema";
 import { countOf } from "#/db/sql";
-
-afterAll(() => pool.end());
 
 describe("countOf", () => {
   it("counts the same at the query root and nested under a relation", async () => {

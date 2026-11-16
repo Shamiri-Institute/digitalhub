@@ -16,7 +16,7 @@ import {
 import { DatabaseError } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { db, pool, type Transaction } from "#/db/client";
+import { db, type Transaction } from "#/db/client";
 import {
   hub,
   project,
@@ -75,7 +75,6 @@ afterAll(async () => {
     await db.delete(survey).where(inArray(survey.code, createdCodes));
   }
   await db.delete(school).where(eq(school.id, testSchoolId));
-  await pool.end();
 });
 
 function publishPrintForm() {

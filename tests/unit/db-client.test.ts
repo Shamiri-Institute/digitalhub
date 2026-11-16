@@ -1,11 +1,9 @@
 // @vitest-environment node
 import { eq, TransactionRollbackError } from "drizzle-orm";
-import { afterAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { db, pool } from "#/db/client";
+import { db } from "#/db/client";
 import { user } from "#/db/schema";
-
-afterAll(() => pool.end());
 
 describe("db client", () => {
   it("fills id, createdAt and updatedAt on insert and bumps updatedAt on update", async () => {
