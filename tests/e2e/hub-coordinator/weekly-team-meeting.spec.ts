@@ -3,11 +3,11 @@ import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { weeklyTeamMeetingReport } from "#/db/schema";
-import { signInAs } from "#/tests/helpers";
+import { signInAs, uniqueSuffix } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 test("Hub Coordinator submits a weekly team meeting report", async ({ page, context, undo }) => {
-  const recommendations = `E2E weekly team meeting ${Date.now()}`;
+  const recommendations = `E2E weekly team meeting ${uniqueSuffix()}`;
   undo(() =>
     db
       .delete(weeklyTeamMeetingReport)

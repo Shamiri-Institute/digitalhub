@@ -3,7 +3,7 @@ import { eq, inArray, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { ticketEvents, tickets } from "#/db/schema";
 import { expect, test } from "#/tests/fixtures";
-import { signableMember, signInWithEmail, required } from "#/tests/helpers";
+import { signableMember, signInWithEmail, required, uniqueSuffix } from "#/tests/helpers";
 import { chooseRowAction, getUrl, searchRows } from "#/tests/pages/helpers";
 
 type Fixture = { fellowEmail: string; supervisorEmail: string; clinicalLeadEmail: string };
@@ -45,7 +45,7 @@ test("a supervisor escalates a fellow's clinical ticket to the hub's clinical le
   test.slow();
   const fixture = await pickClinicalChain();
   required(fixture, "a fellow whose supervisor's hub has one clinical lead");
-  const subject = `E2E clinical escalation ${Date.now()}`;
+  const subject = `E2E clinical escalation ${uniqueSuffix()}`;
   undo(async () => {
     const created = db.select({ id: tickets.id }).from(tickets).where(eq(tickets.subject, subject));
     await db.delete(ticketEvents).where(inArray(ticketEvents.ticketId, created));

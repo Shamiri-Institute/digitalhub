@@ -5,7 +5,7 @@ import { db } from "#/db/client";
 import { fellow, interventionGroup, school } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { required, signableMember, signInWithEmail } from "#/tests/helpers";
+import { required, signableMember, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { cellUnder, chooseRowAction, getUrl, searchRows } from "#/tests/pages/helpers";
 
 /** A new school of the coordinator's hub with one active group, led by a new fellow. */
@@ -35,7 +35,7 @@ async function createHubGroup(undo: Undo) {
   const visibleId = objectId("sch");
   const fellowId = objectId("fellow");
   const groupId = objectId("group");
-  const groupName = `E2E archive scope ${Date.now()}`;
+  const groupName = `E2E archive scope ${uniqueSuffix()}`;
   await db.insert(school).values({
     id: schoolId,
     visibleId,
@@ -44,7 +44,7 @@ async function createHubGroup(undo: Undo) {
   });
   await db.insert(fellow).values({
     id: fellowId,
-    fellowName: `E2E archive scope fellow ${Date.now()}`,
+    fellowName: `E2E archive scope fellow ${uniqueSuffix()}`,
     hubId: coordinator.hubId,
     implementerId: coordinator.implementerId,
   });

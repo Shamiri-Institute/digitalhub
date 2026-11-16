@@ -4,7 +4,7 @@ import { db } from "#/db/client";
 import { fellow, interventionGroup, interventionSession, school } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { signableMember, signInWithEmail, required } from "#/tests/helpers";
+import { signableMember, signInWithEmail, required, uniqueSuffix } from "#/tests/helpers";
 import { cellUnder, chooseRowAction, dataRows, getUrl, searchRows } from "#/tests/pages/helpers";
 
 type Fixture = {
@@ -40,7 +40,7 @@ async function pickHub() {
 
 async function createDroppedOutFellow(fixture: Fixture, undo: Undo) {
   const fellowId = objectId("fellow");
-  const fellowName = `E2E dropped fellow ${Date.now()}`;
+  const fellowName = `E2E dropped fellow ${uniqueSuffix()}`;
   await db.insert(fellow).values({
     id: fellowId,
     fellowName,
@@ -59,7 +59,7 @@ test("a group whose leader dropped out stays archived", async ({ page, context, 
   required(fixture, "a hub coordinator whose hub's fellows all lead a group");
   const { fellowId } = await createDroppedOutFellow(fixture, undo);
   const groupId = objectId("group");
-  const groupName = `E2E archived ${Date.now()}`;
+  const groupName = `E2E archived ${uniqueSuffix()}`;
   await db.insert(interventionGroup).values({
     id: groupId,
     groupName,
@@ -91,7 +91,7 @@ test("adding a school leaves dropped-out fellows without groups", async ({
   const fixture = await pickHub();
   required(fixture, "a hub coordinator whose hub's fellows all lead a group");
   const { fellowName } = await createDroppedOutFellow(fixture, undo);
-  const schoolName = `E2E School ${Date.now()}`;
+  const schoolName = `E2E School ${uniqueSuffix()}`;
   undo(async () => {
     const created = db
       .select({ id: school.id })

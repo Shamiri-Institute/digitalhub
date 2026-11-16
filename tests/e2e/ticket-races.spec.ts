@@ -4,7 +4,13 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { ticketEvents, tickets } from "#/db/schema";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { raceOnRow, required, signableMember, signInWithEmail } from "#/tests/helpers";
+import {
+  raceOnRow,
+  required,
+  signableMember,
+  signInWithEmail,
+  uniqueSuffix,
+} from "#/tests/helpers";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
 
 type Fixture = { supervisorEmail: string; supervisorUserId: string; fellowUserId: string };
@@ -86,7 +92,7 @@ test("escalating and resolving a ticket at once lets only the first one through"
   test.slow();
   const fixture = await pickSupervisor();
   required(fixture, "a supervisor with a fellow and a hub coordinator");
-  const subject = `E2E ticket race ${Date.now()}`;
+  const subject = `E2E ticket race ${uniqueSuffix()}`;
   const ticket = await createEscalatedTicket(fixture, undo, subject);
 
   await signInWithEmail(context, fixture.supervisorEmail);

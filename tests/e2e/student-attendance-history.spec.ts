@@ -5,7 +5,7 @@ import { student, studentAttendance } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { sessionDisplayName } from "#/lib/utils";
 import { expect, test } from "#/tests/fixtures";
-import { required, signableMember, signInWithEmail } from "#/tests/helpers";
+import { required, signableMember, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { chooseRowAction, getUrl, rowWithCell } from "#/tests/pages/helpers";
 
 test("marking a session twice from an open attendance history starts from the saved value", async ({
@@ -44,7 +44,7 @@ test("marking a session twice from an open attendance history starts from the sa
 
   // The history lists a student's attendance rows, so the spec's own student starts with one that
   // is not marked yet.
-  const label = `e2e-history-${Date.now()}`;
+  const label = `e2e-history-${uniqueSuffix()}`;
   const studentId = objectId("stu");
   const studentName = `${label} student`;
   undo(async () => {

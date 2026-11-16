@@ -5,7 +5,7 @@ import { db } from "#/db/client";
 import { monthlySupervisorEvaluation, supervisor } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { expect, test } from "#/tests/fixtures";
-import { required, signableMember, signInWithEmail } from "#/tests/helpers";
+import { required, signableMember, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { chooseRowAction, getUrl, searchRows } from "#/tests/pages/helpers";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -38,7 +38,7 @@ test("saving a monthly supervisor evaluation past its 14 days is refused", async
     limit 1`);
   required(coordinator, "a hub coordinator whose project has started");
   const supervisorId = objectId("sup");
-  const supervisorName = `E2E evaluated supervisor ${Date.now()}`;
+  const supervisorName = `E2E evaluated supervisor ${uniqueSuffix()}`;
   await db.insert(supervisor).values({
     id: supervisorId,
     supervisorName,
@@ -47,7 +47,7 @@ test("saving a monthly supervisor evaluation past its 14 days is refused", async
   });
   // The dialog's first month is the project's first.
   const month = startOfMonth(new Date(coordinator.projectStart));
-  const savedComment = `saved comment ${Date.now()}`;
+  const savedComment = `saved comment ${uniqueSuffix()}`;
   const [evaluation] = await db
     .insert(monthlySupervisorEvaluation)
     .values({
@@ -99,7 +99,7 @@ test("saving a monthly supervisor evaluation past its 14 days is refused", async
   }
 
   await openMonth();
-  await dialog.getByRole("textbox").first().fill(`changed comment ${Date.now()}`);
+  await dialog.getByRole("textbox").first().fill(`changed comment ${uniqueSuffix()}`);
   // Ageing the row behind the open dialog leaves the browser believing it may still edit, so only
   // the server can refuse this save.
   await db

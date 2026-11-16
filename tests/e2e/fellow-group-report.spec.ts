@@ -5,7 +5,7 @@ import { db } from "#/db/client";
 import { fellowGroupReport, interventionGroup, interventionSession, school } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { required, signableMember, signInWithEmail } from "#/tests/helpers";
+import { required, signableMember, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 type Fixture = { email: string; fellowId: string; hubId: string; projectId: string };
@@ -37,13 +37,13 @@ async function createReportGroup(undo: Undo) {
   await db.insert(school).values({
     id: schoolId,
     visibleId,
-    schoolName: `E2E group report school ${Date.now()}`,
+    schoolName: `E2E group report school ${uniqueSuffix()}`,
     hubId: fixture.hubId,
   });
   const groupId = objectId("group");
   await db.insert(interventionGroup).values({
     id: groupId,
-    groupName: `E2E report group ${Date.now()}`,
+    groupName: `E2E report group ${uniqueSuffix()}`,
     schoolId,
     leaderId: fixture.fellowId,
     projectId: fixture.projectId,

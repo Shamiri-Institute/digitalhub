@@ -9,7 +9,13 @@ import {
   sessionRecording,
 } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
-import { signableMember, signInWithEmail, uniqueFellowName, required } from "#/tests/helpers";
+import {
+  signableMember,
+  signInWithEmail,
+  uniqueFellowName,
+  required,
+  uniqueSuffix,
+} from "#/tests/helpers";
 import { getUrl, chooseRowAction, rowWithCell } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -118,7 +124,7 @@ test.beforeAll(async () => {
 });
 
 test("a fellow evaluates a group they lead", async ({ page, context, undo }) => {
-  const comment = `e2e-scoped-write-${Date.now()}`;
+  const comment = `e2e-scoped-write-${uniqueSuffix()}`;
   undo(() =>
     db
       .delete(interventionGroupReport)
@@ -167,7 +173,7 @@ test("a supervisor renames a recording of their fellow's group", async ({
   context,
   undo,
 }) => {
-  const newFileName = `e2e-scoped-write-${Date.now()}`;
+  const newFileName = `e2e-scoped-write-${uniqueSuffix()}`;
   undo(() =>
     db
       .update(sessionRecording)

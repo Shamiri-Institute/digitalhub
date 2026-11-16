@@ -19,7 +19,7 @@ import {
 import { objectId } from "#/lib/crypto";
 import { deleteObject } from "#/lib/s3/s3.service";
 import type { Undo } from "#/tests/fixtures";
-import { required } from "#/tests/helpers";
+import { required, uniqueSuffix } from "#/tests/helpers";
 
 type Hub = {
   hubId: string;
@@ -56,7 +56,7 @@ async function pickHub() {
  */
 export async function createStudentSchool(undo: Undo) {
   const hub = await pickHub();
-  const label = `e2e stu ${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const label = `e2e stu ${uniqueSuffix()}`;
   const coordinatorId = objectId("hc");
   const supervisorId = objectId("sup");
   const fellowId = objectId("fellow");
@@ -113,7 +113,7 @@ export async function createStudentSchool(undo: Undo) {
   });
 
   async function createUser(role: "HUB_COORDINATOR" | "SUPERVISOR" | "FELLOW", identifier: string) {
-    const email = `e2e-${role.toLowerCase()}-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
+    const email = `e2e-${role.toLowerCase()}-${uniqueSuffix()}@example.com`;
     userEmails.push(email);
     const [created] = await db
       .insert(user)

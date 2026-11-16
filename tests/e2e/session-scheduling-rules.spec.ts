@@ -5,7 +5,7 @@ import { db } from "#/db/client";
 import { interventionSession, sessionName } from "#/db/schema";
 import { TIME_ZONE_COOKIE } from "#/lib/schedule-view";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { required, signableMember, signInWithEmail } from "#/tests/helpers";
+import { required, signableMember, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 const timeZone = "Africa/Nairobi";
@@ -36,7 +36,7 @@ async function pickCoordinator() {
 
 /** A clinical and a supervision session type of the hub, new so no session of either exists. */
 async function createSessionTypes(hubId: string, undo: Undo) {
-  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const suffix = `${uniqueSuffix()}`;
   const created = await db
     .insert(sessionName)
     .values([
@@ -98,7 +98,7 @@ test("a school session type needs a school, and a hub session type is saved with
 }) => {
   const coordinator = await pickCoordinator();
   const { clinicalLabel, supervisionLabel } = await createSessionTypes(coordinator.hubId, undo);
-  const venue = `E2E venue ${Date.now()}`;
+  const venue = `E2E venue ${uniqueSuffix()}`;
   await signInWithEmail(context, coordinator.email);
 
   const dialog = await openScheduleDialog(page);

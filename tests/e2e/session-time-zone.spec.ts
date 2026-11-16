@@ -6,7 +6,7 @@ import { interventionGroup, interventionSession, school } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { TIME_ZONE_COOKIE } from "#/lib/schedule-view";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { required, signableMember, signInWithEmail } from "#/tests/helpers";
+import { required, signableMember, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 type Coordinator = {
@@ -118,7 +118,7 @@ test.describe("a viewer in UTC", () => {
   }) => {
     test.slow();
     const coordinator = await pickCoordinator();
-    const schoolName = `E2E Nairobi school ${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    const schoolName = `E2E Nairobi school ${uniqueSuffix()}`;
     undo(async () => {
       const created = db
         .select({ id: school.id })

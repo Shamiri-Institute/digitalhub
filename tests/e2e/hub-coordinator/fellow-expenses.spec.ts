@@ -10,7 +10,7 @@ import {
 } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { expect, test } from "#/tests/fixtures";
-import { required, signableMember, signInWithEmail } from "#/tests/helpers";
+import { required, signableMember, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { cellUnder, expandRow, getUrl, searchRows } from "#/tests/pages/helpers";
 
 type Coordinator = {
@@ -53,7 +53,7 @@ test("a fellow's row counts their sessions by kind and totals their payouts", as
     limit 1`);
   required(coordinator, "a hub coordinator whose hub has a school");
 
-  const label = `E2E Expenses ${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const label = `E2E Expenses ${uniqueSuffix()}`;
   const [special] = await db
     .insert(sessionName)
     .values({

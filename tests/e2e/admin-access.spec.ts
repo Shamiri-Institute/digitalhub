@@ -7,7 +7,7 @@ import { loadSessionUser } from "#/lib/auth/session-user";
 import { objectId } from "#/lib/crypto";
 import { createProjectWithHub, createSuperAdminCopy } from "#/tests/access-helpers";
 import { expect, test } from "#/tests/fixtures";
-import { required, signInWithEmail } from "#/tests/helpers";
+import { required, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
@@ -16,9 +16,9 @@ import { getUrl, searchRows } from "#/tests/pages/helpers";
  * super admin, and they see only the admins of their own implementer. Admins who are not super
  * admins have no Users tab and cannot open the page.
  */
-const NEW_ADMIN_EMAIL = `e2e-admin-access-${Date.now()}@example.com`;
+const NEW_ADMIN_EMAIL = `e2e-admin-access-${uniqueSuffix()}@example.com`;
 // A user whose email has capitals, as a sign-in provider can store it.
-const MIXED_CASE_EMAIL = `E2E-Mixed-Case-${Date.now()}@Example.com`;
+const MIXED_CASE_EMAIL = `E2E-Mixed-Case-${uniqueSuffix()}@Example.com`;
 
 test.afterAll(async () => {
   const created = await db.query.adminUser.findMany({
@@ -205,13 +205,13 @@ test("adding an admin of another implementer gives them a second profile and kee
   const otherHubId = objectId("hub");
   await db.insert(hub).values({
     id: otherHubId,
-    hubName: `E2E second implementer hub ${Date.now()}`,
+    hubName: `E2E second implementer hub ${uniqueSuffix()}`,
     implementerId: otherImplementer.id,
     projectId: sharedProject.projectId,
   });
   undo(() => db.delete(hub).where(eq(hub.id, otherHubId)));
 
-  const email = `e2e-two-implementers-${Date.now()}@example.com`;
+  const email = `e2e-two-implementers-${uniqueSuffix()}@example.com`;
   const [person] = await db
     .insert(user)
     .values({ email, name: "E2E Two Implementers", activeProjectId: sharedProject.projectId })

@@ -5,7 +5,13 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { attendanceDocuments, clinicalSessionAttendance } from "#/db/schema";
 import { sessionDisplayName } from "#/lib/utils";
-import { createClinicalCase, signInWithEmail, signableMember, required } from "#/tests/helpers";
+import {
+  createClinicalCase,
+  signInWithEmail,
+  signableMember,
+  required,
+  uniqueSuffix,
+} from "#/tests/helpers";
 import { getUrl, chooseRowAction, rowWithCell, searchRows } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -97,7 +103,7 @@ test("a supervisor saves emergency, general and other presenting issues, then un
   page,
   context,
 }) => {
-  const otherIssues = `e2e other issues ${Date.now()}`;
+  const otherIssues = `e2e other issues ${uniqueSuffix()}`;
   const highRiskBullying = page.getByRole("checkbox", { name: "Bullying: High risk" });
 
   await signInWithEmail(context, caseOwner.email);
@@ -186,7 +192,7 @@ test("a fellow deletes their group's attendance document", async ({ page, contex
     !process.env.S3_STUDENT_ATTENDANCE_BUCKET || !process.env.S3_STUDENT_ATTENDANCE_REGION,
     "set S3_STUDENT_ATTENDANCE_BUCKET and S3_STUDENT_ATTENDANCE_REGION (mock values will do)",
   );
-  const fileName = `e2e-attendance-${Date.now()}.pdf`;
+  const fileName = `e2e-attendance-${uniqueSuffix()}.pdf`;
   const [document] = await db
     .insert(attendanceDocuments)
     .values({

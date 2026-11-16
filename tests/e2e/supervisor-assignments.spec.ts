@@ -4,7 +4,7 @@ import { db } from "#/db/client";
 import { school, supervisor } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { expect, test } from "#/tests/fixtures";
-import { required, signableMember, signInWithEmail } from "#/tests/helpers";
+import { required, signableMember, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { cellUnder, chooseRowAction, getUrl, searchRows } from "#/tests/pages/helpers";
 
 test("a dropped-out supervisor cannot be made a school's point supervisor", async ({
@@ -25,7 +25,7 @@ test("a dropped-out supervisor cannot be made a school's point supervisor", asyn
     limit 1`);
   required(coordinator, "a hub coordinator with a hub");
   const supervisorId = objectId("sup");
-  const supervisorName = `E2E dropped supervisor ${Date.now()}`;
+  const supervisorName = `E2E dropped supervisor ${uniqueSuffix()}`;
   await db.insert(supervisor).values({
     id: supervisorId,
     supervisorName,
@@ -36,7 +36,7 @@ test("a dropped-out supervisor cannot be made a school's point supervisor", asyn
   });
   undo(() => db.delete(supervisor).where(eq(supervisor.id, supervisorId)));
   const schoolId = objectId("sch");
-  const schoolName = `E2E point supervisor school ${Date.now()}`;
+  const schoolName = `E2E point supervisor school ${uniqueSuffix()}`;
   await db
     .insert(school)
     .values({ id: schoolId, visibleId: objectId("sch"), schoolName, hubId: coordinator.hubId });

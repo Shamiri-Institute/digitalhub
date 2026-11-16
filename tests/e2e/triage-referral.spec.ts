@@ -13,7 +13,13 @@ import {
 import { objectId } from "#/lib/crypto";
 import { sessionDisplayName } from "#/lib/utils";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { signableMember, signInWithEmail, required } from "#/tests/helpers";
+import {
+  signableMember,
+  signInWithEmail,
+  required,
+  uniqueSuffix,
+  uniqueDigits,
+} from "#/tests/helpers";
 import { chooseRowAction, getUrl, rowWithCell, searchRows } from "#/tests/pages/helpers";
 
 type Fixture = {
@@ -231,8 +237,8 @@ async function seedReferral(
   review?: { reviewNote: string; reviewedById: string },
 ) {
   const studentId = objectId("stu");
-  const studentName = `e2e rerouted student ${Date.now()}`;
-  const admissionNumber = String(Date.now()).slice(-9);
+  const studentName = `e2e rerouted student ${uniqueSuffix()}`;
+  const admissionNumber = uniqueDigits(9);
   await db.insert(student).values({
     id: studentId,
     visibleId: objectId("stu"),
@@ -287,10 +293,10 @@ test("a reviewed referral routed to another supervisor waits for their action", 
   const fixture = await pickReroute();
   required(fixture, "a fellow's group with an occurred session, two supervisors and a lead");
   // The seeded supervisors' users have no names, so the review comes from a named user.
-  const reviewer = { id: objectId("user"), name: `E2E reviewer ${Date.now()}` };
+  const reviewer = { id: objectId("user"), name: `E2E reviewer ${uniqueSuffix()}` };
   await db.insert(user).values(reviewer);
   undo(() => db.delete(user).where(eq(user.id, reviewer.id)));
-  const reviewNote = `Spoke with the student ${Date.now()}`;
+  const reviewNote = `Spoke with the student ${uniqueSuffix()}`;
   const { studentName, admissionNumber } = await seedReferral(fixture, undo, {
     reviewNote,
     reviewedById: reviewer.id,
@@ -384,7 +390,7 @@ test("the audit trail lists a re-route between two supervisors with the same nam
     columns: { implementerId: true },
   });
   required(fixtureHub, "the fixture's hub");
-  const sharedName = `E2E namesake supervisor ${Date.now()}`;
+  const sharedName = `E2E namesake supervisor ${uniqueSuffix()}`;
   const namesakes = [objectId("sup"), objectId("sup")].map((id) => ({
     id,
     supervisorName: sharedName,
@@ -401,7 +407,7 @@ test("the audit trail lists a re-route between two supervisors with the same nam
     ),
   );
   // An edit that routed the referral from one namesake to the other, as the edit form records it.
-  const editor = { id: objectId("user"), name: `E2E namesake editor ${Date.now()}` };
+  const editor = { id: objectId("user"), name: `E2E namesake editor ${uniqueSuffix()}` };
   await db.insert(user).values(editor);
   undo(() => db.delete(user).where(eq(user.id, editor.id)));
   const [from, to] = namesakes;
@@ -457,7 +463,7 @@ test("a supervisor's queue counts a referral, opens it and turns it into a clini
   const fixture = await pickReroute();
   required(fixture, "a fellow's group with an occurred session, two supervisors and a lead");
   const { studentName } = await seedReferral(fixture, undo);
-  const pseudonym = `e2e-triage-case-${Date.now()}`;
+  const pseudonym = `e2e-triage-case-${uniqueSuffix()}`;
   undo(() =>
     db.delete(clinicalScreeningInfo).where(eq(clinicalScreeningInfo.pseudonym, pseudonym)),
   );

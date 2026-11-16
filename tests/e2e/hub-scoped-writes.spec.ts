@@ -16,7 +16,13 @@ import {
 } from "#/db/schema";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { objectId } from "#/lib/crypto";
-import { signableMember, signInWithEmail, required } from "#/tests/helpers";
+import {
+  signableMember,
+  signInWithEmail,
+  required,
+  uniqueSuffix,
+  uniqueDigits,
+} from "#/tests/helpers";
 import { chooseRowAction, getUrl, rowWithCell } from "#/tests/pages/helpers";
 import { sessionDisplayName } from "#/lib/utils";
 
@@ -273,7 +279,7 @@ test("a hub coordinator adds a student to a group in their hub", async ({
   context,
   undo,
 }) => {
-  const newStudentName = `E2E Student ${Date.now()}`;
+  const newStudentName = `E2E Student ${uniqueSuffix()}`;
   undo(() => db.delete(student).where(eq(student.studentName, newStudentName)));
   await signInWithEmail(context, coordinator.email);
   await page.goto(getUrl(`/hc/schools/${school.visibleId}/groups`));
@@ -293,7 +299,7 @@ test("a hub coordinator adds a student to a group in their hub", async ({
   await page.getByRole("option", { name: "Female" }).click();
   await form.getByLabel("Year of birth").fill("2012");
   // A new admission number, so the form does not offer to transfer an existing student.
-  await form.getByLabel("Admission number").fill(String(Date.now()).slice(-9));
+  await form.getByLabel("Admission number").fill(uniqueDigits(9));
   await form.getByLabel("Grade/Form").fill("2");
   await form.getByLabel("Stream").fill("East");
   await form.getByRole("button", { name: "Submit" }).click();
@@ -411,7 +417,7 @@ test("a fellow documents a triage event; another fellow at the school does not s
   undo,
 }) => {
   test.slow();
-  const note = `e2e-2212-${Date.now()}`;
+  const note = `e2e-2212-${uniqueSuffix()}`;
   await signInWithEmail(context, triage.email);
   const openAttendance = () => openStudentAttendance(page);
 
@@ -487,8 +493,8 @@ test("a hub coordinator edits a fellow of their hub, and cannot once the fellow 
   required(otherHub, "a second hub");
   const [county] = KENYAN_COUNTIES;
   required(county, "a county");
-  const label = `E2E Scoped Fellow ${Date.now()}`;
-  const fellowEmail = `e2e-scoped-fellow-${Date.now()}@example.com`;
+  const label = `E2E Scoped Fellow ${uniqueSuffix()}`;
+  const fellowEmail = `e2e-scoped-fellow-${uniqueSuffix()}@example.com`;
   const fellowId = objectId("fellow");
   // Fellows are added through a form another spec covers; this one needs a fellow it can move.
   await db.insert(fellow).values({
