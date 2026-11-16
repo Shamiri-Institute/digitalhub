@@ -73,9 +73,27 @@ Get the platform running locally in under 5 minutes:
 
 ### Prerequisites
 
-- Node.js v22.x or later
-- PostgreSQL v18
-- pnpm (`corepack enable` picks the version in package.json)
+- Node.js 24 (`engines` in `package.json`)
+- PostgreSQL 18
+- pnpm, at the version pinned in `package.json` (`packageManager`)
+
+### pnpm
+
+Corepack, which ships with Node.js 24, installs the pinned pnpm. Enable it once:
+
+```bash
+corepack enable
+```
+
+```bash
+pnpm --version  # prints the version in package.json's packageManager
+```
+
+On Node.js 25 or later, which no longer ship Corepack, install it first with `npm install --global corepack`.
+
+`pnpm install` also points git at `.githooks`, whose pre-push hook formats, lints and typechecks the files a push changes.
+
+To move to a new pnpm version, run `corepack use pnpm@<version>`, which updates `packageManager`, and commit `package.json` and `pnpm-lock.yaml`. Vercel builds with that same version only while the projects have the environment variable `ENABLE_EXPERIMENTAL_COREPACK=1`; without it, Vercel picks pnpm 9 or 10 from the lockfile. Without Corepack, Vercel never runs pnpm 11 or 12, so moving past pnpm 10 needs that variable set on both projects first.
 
 ### One-Command Setup
 
