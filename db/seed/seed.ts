@@ -2216,6 +2216,10 @@ async function main() {
 
   await createDemoRecords(schoolsWithGroupsAndFellows, students, interventionSessions);
   await createResearchPrintRun(arsenal);
+
+  // Until autovacuum analyzes the new rows, the planner has no statistics and some fixture queries
+  // that take under a second instead run for minutes.
+  await db.execute(sql`analyze`);
 }
 
 /**
