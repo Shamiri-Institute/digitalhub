@@ -5,7 +5,7 @@ import { db } from "#/db/client";
 import { clinicalScreeningInfo, interventionSession } from "#/db/schema";
 import { expect, test } from "#/tests/fixtures";
 import { createSupervisorCase, type HubTeam, pickHubTeam } from "#/tests/clinical-helpers";
-import { required, signInWithEmail } from "#/tests/helpers";
+import { required, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
 
 async function schoolName(team: HubTeam) {
@@ -24,7 +24,7 @@ async function schoolName(team: HubTeam) {
 }
 
 async function addCaseForExistingStudent(page: Page, school: string, studentName: string) {
-  const pseudonym = `e2e-one-open-${Date.now()}`;
+  const pseudonym = `e2e-one-open-${uniqueSuffix()}`;
   await page.getByRole("button", { name: "New case" }).click();
   const dialog = page.getByRole("dialog", { name: "Add clinical case" });
   await dialog.getByRole("button", { name: "Select a school..." }).click();

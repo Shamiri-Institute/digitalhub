@@ -17,7 +17,7 @@ import {
 import { objectId } from "#/lib/crypto";
 import type { BrowserContext, Page } from "@playwright/test";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { required, signInAs, signInWithEmail } from "#/tests/helpers";
+import { required, signInAs, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 import {
   createPrintSchool,
@@ -218,7 +218,7 @@ test("a coordinator whose hub is archived can't open the print page", async ({
   required(seededProfile?.assignedHub, "a hub coordinator with a hub");
   const { implementerId, projectId } = seededProfile.assignedHub;
 
-  const label = `e2e-archived-hub-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const label = `e2e-archived-hub-${uniqueSuffix()}`;
   const email = `${label}@example.com`;
   const hubId = objectId("hub");
   const coordinatorId = objectId("hc");

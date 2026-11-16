@@ -7,7 +7,7 @@ import { fellow, hub, interventionSession, school, sessionName, user } from "#/d
 import { objectId } from "#/lib/crypto";
 import { createProjectWithHub } from "#/tests/access-helpers";
 import { expect, test } from "#/tests/fixtures";
-import { createAdminCopy, required, signInWithEmail } from "#/tests/helpers";
+import { createAdminCopy, required, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { getUrl, rowWithCell, scheduleUrl } from "#/tests/pages/helpers";
 
 async function plainAdminCopy() {
@@ -140,7 +140,7 @@ test("a hub's fellows tab lists the hub's fellows, whatever implementer the fell
     columns: { id: true },
   });
   required(foreignImplementer, "a second implementer");
-  const fellowName = `E2E fellow ${Date.now()}`;
+  const fellowName = `E2E fellow ${uniqueSuffix()}`;
   const fellowId = objectId("fellow");
   // Fellows join a hub from the hub coordinator's pages; the spec inserts one with another
   // implementer's id so only its hub ties it to the admin.

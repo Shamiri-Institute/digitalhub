@@ -3,10 +3,10 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { supervisorComplaints } from "#/db/schema";
-import { signableMember, signInWithEmail, required } from "#/tests/helpers";
+import { signableMember, signInWithEmail, required, uniqueSuffix } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
-const complaintComment = `E2E supervisor complaint ${Date.now()}`;
+const complaintComment = `E2E supervisor complaint ${uniqueSuffix()}`;
 
 let coordinatorEmail: string;
 let targetSupervisor: { supervisorId: string; supervisorName: string };

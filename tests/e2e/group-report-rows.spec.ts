@@ -4,7 +4,7 @@ import { db } from "#/db/client";
 import { fellow, interventionGroup } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { expect, test } from "#/tests/fixtures";
-import { required, signableMember, signInWithEmail } from "#/tests/helpers";
+import { required, signableMember, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
 
 test("a group with no report shows one Not yet submitted row under its current leader", async ({
@@ -33,9 +33,9 @@ test("a group with no report shows one Not yet submitted row under its current l
     limit 1`);
   required(coordinator, "a hub coordinator with a school");
   const leaderId = objectId("fellow");
-  const leaderName = `E2E report leader ${Date.now()}`;
+  const leaderName = `E2E report leader ${uniqueSuffix()}`;
   const groupId = objectId("group");
-  const groupName = `E2E unreported ${Date.now()}`;
+  const groupName = `E2E unreported ${uniqueSuffix()}`;
   await db.insert(fellow).values({
     id: leaderId,
     fellowName: leaderName,

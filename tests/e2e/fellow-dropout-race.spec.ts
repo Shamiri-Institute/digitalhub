@@ -5,7 +5,13 @@ import { db } from "#/db/client";
 import { fellow, interventionGroup } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { raceOnRow, required, signableMember, signInWithEmail } from "#/tests/helpers";
+import {
+  raceOnRow,
+  required,
+  signableMember,
+  signInWithEmail,
+  uniqueSuffix,
+} from "#/tests/helpers";
 import { cellUnder, chooseRowAction, getUrl, searchRows } from "#/tests/pages/helpers";
 
 type Fixture = {
@@ -43,7 +49,7 @@ async function prepareUnarchiveAndDropout(page: Page, context: BrowserContext, u
   const fixture = await pickHubSchool();
   required(fixture, "a hub coordinator with a school");
   const fellowId = objectId("fellow");
-  const fellowName = `E2E race fellow ${Date.now()}`;
+  const fellowName = `E2E race fellow ${uniqueSuffix()}`;
   await db.insert(fellow).values({
     id: fellowId,
     fellowName,
@@ -53,7 +59,7 @@ async function prepareUnarchiveAndDropout(page: Page, context: BrowserContext, u
   });
   undo(() => db.delete(fellow).where(eq(fellow.id, fellowId)));
   const groupId = objectId("group");
-  const groupName = `E2E race group ${Date.now()}`;
+  const groupName = `E2E race group ${uniqueSuffix()}`;
   await db.insert(interventionGroup).values({
     id: groupId,
     groupName,

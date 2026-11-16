@@ -7,10 +7,10 @@ import { adminUser, hub, hubCoordinator, implementerMember, session, user } from
 import { objectId } from "#/lib/crypto";
 import { createProjectWithHub, createSuperAdminCopy } from "#/tests/access-helpers";
 import { expect, test } from "#/tests/fixtures";
-import { required, signInWithEmail } from "#/tests/helpers";
+import { required, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
-const RUN_ID = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const RUN_ID = `${uniqueSuffix()}`;
 const HUB_PREFIX = `E2E Hub Managers ${RUN_ID}`;
 const EMAIL_PREFIX = `e2e-hub-manager-${RUN_ID}`;
 

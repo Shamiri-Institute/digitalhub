@@ -5,7 +5,7 @@ import { db } from "#/db/client";
 import { clinicalScreeningInfo } from "#/db/schema";
 import { expect, test } from "#/tests/fixtures";
 import { createSupervisorCase, openCaseAction, pickHubTeam } from "#/tests/clinical-helpers";
-import { signInWithEmail } from "#/tests/helpers";
+import { signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
 
 async function flag(page: Page, pseudonym: string, reason: string) {
@@ -29,7 +29,7 @@ async function expectFlagged(page: Page, pseudonym: string, reason: string) {
 test("the supervisor who holds a case flags it for follow-up", async ({ page, context, undo }) => {
   const team = await pickHubTeam();
   const clinicalCase = await createSupervisorCase(team, undo);
-  const reason = `e2e flag ${Date.now()}`;
+  const reason = `e2e flag ${uniqueSuffix()}`;
   await signInWithEmail(context, team.supervisorEmail);
   await page.goto(getUrl("/sc/clinical"));
 
@@ -44,7 +44,7 @@ test("a clinical lead flags a case they hold for follow-up", async ({ page, cont
     .update(clinicalScreeningInfo)
     .set({ currentSupervisorId: null, clinicalLeadId: team.leadId })
     .where(eq(clinicalScreeningInfo.id, clinicalCase.caseId));
-  const reason = `e2e lead flag ${Date.now()}`;
+  const reason = `e2e lead flag ${uniqueSuffix()}`;
   await signInWithEmail(context, team.leadEmail);
   await page.goto(getUrl("/cl/clinical"));
 

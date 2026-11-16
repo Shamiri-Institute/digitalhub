@@ -5,7 +5,13 @@ import { interventionGroup, student, studentGroupTransferTrail } from "#/db/sche
 import { objectId } from "#/lib/crypto";
 import { createStudentSchool } from "#/tests/delivery-student-helpers";
 import { expect, test } from "#/tests/fixtures";
-import { required, signableMember, signInWithEmail } from "#/tests/helpers";
+import {
+  required,
+  signableMember,
+  signInWithEmail,
+  uniqueSuffix,
+  uniqueDigits,
+} from "#/tests/helpers";
 import { chooseRowAction, getUrl, rowWithCell, searchRows } from "#/tests/pages/helpers";
 
 type Fixture = {
@@ -51,8 +57,8 @@ test("moving a student between groups of the school records each move, newest fi
   const fixture = await pickSchool();
   required(fixture, "a hub coordinator's school with two groups");
   const studentId = objectId("stu");
-  const studentName = `E2E transfer student ${Date.now()}`;
-  const admissionNumber = String(Date.now()).slice(-9);
+  const studentName = `E2E transfer student ${uniqueSuffix()}`;
+  const admissionNumber = uniqueDigits(9);
   await db.insert(student).values({
     id: studentId,
     visibleId: objectId("stu"),

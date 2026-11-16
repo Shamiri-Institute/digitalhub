@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { implementerMember, supervisor, user } from "#/db/schema";
-import { emailForProfile, signInWithEmail, required } from "#/tests/helpers";
+import { emailForProfile, signInWithEmail, required, uniqueSuffix } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 let target: typeof supervisor.$inferSelect;
@@ -31,7 +31,7 @@ test.beforeAll(async () => {
     });
     if (!ownEmail || !otherEmail || !template) continue;
 
-    const suffix = Date.now();
+    const suffix = uniqueSuffix();
     targetEmail = `e2e-supervisor-${suffix}@example.com`;
     const [createdUser] = await db
       .insert(user)

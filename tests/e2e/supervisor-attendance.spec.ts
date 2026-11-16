@@ -10,6 +10,7 @@ import {
   signableMember,
   signInWithEmail,
   required,
+  uniqueSuffix,
 } from "#/tests/helpers";
 import { chooseRowAction, scheduleUrl, searchRows } from "#/tests/pages/helpers";
 
@@ -134,8 +135,8 @@ test("marking supervisors in bulk starts unmarked, not from the supervisor opene
   context,
   undo,
 }) => {
-  const markedAloneName = `E2E supervisor marked alone ${Date.now()}`;
-  const markedInBulkName = `E2E supervisor marked in bulk ${Date.now()}`;
+  const markedAloneName = `E2E supervisor marked alone ${uniqueSuffix()}`;
+  const markedInBulkName = `E2E supervisor marked in bulk ${uniqueSuffix()}`;
   const newSupervisors = [markedAloneName, markedInBulkName].map((supervisorName) => ({
     id: objectId("sup"),
     supervisorName,

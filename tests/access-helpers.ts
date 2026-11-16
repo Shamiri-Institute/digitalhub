@@ -4,7 +4,7 @@ import { db } from "#/db/client";
 import { superAdminEmail } from "#/db/seed/fixtures";
 import { adminUser, hub, project, school } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
-import { createAdminCopy } from "#/tests/helpers";
+import { createAdminCopy, uniqueSuffix } from "#/tests/helpers";
 
 /** A new super admin of each implementer the seeded super admin belongs to. */
 export async function createSuperAdminCopy() {
@@ -24,7 +24,7 @@ export async function createSuperAdminCopy() {
  * whose active project it is first.
  */
 export async function createProjectWithHub(implementerId: string) {
-  const label = `E2E ${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const label = `E2E ${uniqueSuffix()}`;
   const [createdProject] = await db
     .insert(project)
     .values({ name: `${label} project`, visibleId: objectId("proj") })

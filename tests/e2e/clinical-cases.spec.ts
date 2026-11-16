@@ -24,6 +24,7 @@ import {
   required,
   signInAs,
   signInWithEmail,
+  uniqueSuffix,
 } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
@@ -154,7 +155,7 @@ test.afterAll(async () => {
 });
 
 test("a supervisor's new case is listed as theirs", async ({ page, context, undo }) => {
-  const casePseudonym = `e2e-sc-${Date.now()}`;
+  const casePseudonym = `e2e-sc-${uniqueSuffix()}`;
   await signInWithEmail(context, owner.email);
   await page.goto(getUrl("/sc/clinical"));
   undo(() => deleteCase(casePseudonym));
@@ -172,7 +173,7 @@ test("a supervisor's new case is listed as theirs", async ({ page, context, undo
 });
 
 test("a clinical lead's new case is assigned to them", async ({ page, context, undo }) => {
-  const casePseudonym = `e2e-cl-${Date.now()}`;
+  const casePseudonym = `e2e-cl-${uniqueSuffix()}`;
   await signInWithEmail(context, clinicalLead.email);
   await page.goto(getUrl("/cl/clinical"));
   undo(() => deleteCase(casePseudonym));
@@ -188,14 +189,14 @@ test("a clinical lead's new case is assigned to them", async ({ page, context, u
 });
 
 test("a case first raised by a fellow names that fellow", async ({ page, context, undo }) => {
-  const casePseudonym = `e2e-fellow-contact-${Date.now()}`;
+  const casePseudonym = `e2e-fellow-contact-${uniqueSuffix()}`;
   const ownerHub = await db.query.hub.findFirst({
     where: (h, { eq }) => eq(h.id, owner.hubId),
     columns: { hubName: true, implementerId: true },
   });
   required(ownerHub, "the supervisor's hub");
   const fellowId = objectId("fellow");
-  const fellowName = `E2E first contact fellow ${Date.now()}`;
+  const fellowName = `E2E first contact fellow ${uniqueSuffix()}`;
   await db.insert(fellow).values({
     id: fellowId,
     fellowName,
@@ -234,14 +235,14 @@ test("a clinical lead's case first raised by a supervisor names that supervisor"
   context,
   undo,
 }) => {
-  const casePseudonym = `e2e-supervisor-contact-${Date.now()}`;
+  const casePseudonym = `e2e-supervisor-contact-${uniqueSuffix()}`;
   const leadHub = await db.query.hub.findFirst({
     where: (h, { eq }) => eq(h.id, clinicalLead.hubId),
     columns: { implementerId: true },
   });
   required(leadHub, "the clinical lead's hub");
   const supervisorId = objectId("sup");
-  const supervisorName = `E2E first contact supervisor ${Date.now()}`;
+  const supervisorName = `E2E first contact supervisor ${uniqueSuffix()}`;
   await db.insert(supervisor).values({
     id: supervisorId,
     supervisorName,
@@ -278,7 +279,7 @@ test("a supervisor opens a case for an existing student with a non-numeric admis
   context,
   undo,
 }) => {
-  const casePseudonym = `e2e-existing-${Date.now()}`;
+  const casePseudonym = `e2e-existing-${uniqueSuffix()}`;
   const schoolWithSessions = await db.query.school.findFirst({
     where: (s, { and, eq, exists }) =>
       and(
@@ -297,7 +298,7 @@ test("a supervisor opens a case for an existing student with a non-numeric admis
   const existingStudentName = `${casePseudonym} student`;
   await db.insert(student).values({
     id: objectId("stu"),
-    visibleId: `E2E-${Date.now()}`,
+    visibleId: `E2E-${uniqueSuffix()}`,
     studentName: existingStudentName,
     schoolId: schoolWithSessions.id,
     admissionNumber: "ADM/0042-A",
@@ -339,7 +340,7 @@ test("a supervisor edits their case's student and the change survives a reload",
   });
   if (!ownCase) throw new Error(`case ${caseId} is gone`);
   const original = ownCase.student;
-  const studentName = `E2E student ${Date.now()}`;
+  const studentName = `E2E student ${uniqueSuffix()}`;
   await signInWithEmail(context, owner.email);
   await page.goto(getUrl("/sc/clinical"));
   undo(() =>
@@ -481,7 +482,7 @@ test("a supervisor writes case notes and reads them back after a reload", async 
   undo,
 }) => {
   const sessionLabel = "S1";
-  const presentingIssues = `e2e-notes-${Date.now()} presenting issues`;
+  const presentingIssues = `e2e-notes-${uniqueSuffix()} presenting issues`;
   const clinicalSessionId = await addClinicalSession(sessionLabel, undo);
   undo(() =>
     db.delete(clinicalCaseNotes).where(eq(clinicalCaseNotes.sessionId, clinicalSessionId)),
@@ -531,7 +532,7 @@ test("a supervisor writes case notes and reads them back after a reload", async 
 
 test("a supervisor terminates their case", async ({ page, context, undo }) => {
   const sessionLabel = "S3";
-  const terminationReasonExplanation = `e2e-termination-${Date.now()} explanation`;
+  const terminationReasonExplanation = `e2e-termination-${uniqueSuffix()} explanation`;
   const clinicalSessionId = await addClinicalSession(sessionLabel, undo);
   undo(
     () =>
@@ -734,7 +735,7 @@ test("a clinical lead reopens a terminated case with a reason and keeps its term
         .set({ caseStatus: "Active" })
         .where(eq(clinicalScreeningInfo.id, caseId)),
   );
-  const reason = `e2e-reopen-${Date.now()}`;
+  const reason = `e2e-reopen-${uniqueSuffix()}`;
 
   await signInWithEmail(context, hubLeadEmail);
   await page.goto(getUrl("/cl/clinical"));

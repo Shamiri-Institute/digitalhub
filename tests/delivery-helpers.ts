@@ -17,7 +17,7 @@ import {
 } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import type { Undo } from "#/tests/fixtures";
-import { required, signableMember } from "#/tests/helpers";
+import { required, signableMember, uniqueSuffix } from "#/tests/helpers";
 
 type DeliveryHub = {
   hubId: string;
@@ -57,10 +57,10 @@ async function pickDeliveryHub() {
  */
 export async function createSupervisedSession(undo: Undo) {
   const hub = await pickDeliveryHub();
-  const label = `E2E delivery ${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const label = `E2E delivery ${uniqueSuffix()}`;
   const supervisorId = objectId("sup");
   const supervisorName = `${label} supervisor`;
-  const supervisorEmail = `e2e-sup-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
+  const supervisorEmail = `e2e-sup-${uniqueSuffix()}@example.com`;
   const schoolId = objectId("sch");
   const schoolName = `${label} school`;
   const schoolVisibleId = objectId("sch");

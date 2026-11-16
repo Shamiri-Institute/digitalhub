@@ -3,13 +3,19 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { fellowComplaints } from "#/db/schema";
-import { signableMember, signInWithEmail, uniqueFellowName, required } from "#/tests/helpers";
+import {
+  signableMember,
+  signInWithEmail,
+  uniqueFellowName,
+  required,
+  uniqueSuffix,
+} from "#/tests/helpers";
 import { expandRow, getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
 
-const complaintComment = `E2E complaint ${Date.now()}`;
-const editedComplaint = `Edited complaint ${Date.now()}`;
+const complaintComment = `E2E complaint ${uniqueSuffix()}`;
+const editedComplaint = `Edited complaint ${uniqueSuffix()}`;
 
 let supervisorEmail: string;
 let targetFellow: { fellowId: string; fellowName: string };
@@ -143,7 +149,7 @@ test("a supervisor who does not supervise the fellow does not see the complaint"
 });
 
 test("the fellow's hub coordinator edits the complaint", async ({ context, page }) => {
-  const coordinatorEdit = `Coordinator edit ${Date.now()}`;
+  const coordinatorEdit = `Coordinator edit ${uniqueSuffix()}`;
   await signInWithEmail(context, hubCoordinatorEmail);
   await page.goto(getUrl("/hc/reporting/fellow-reports/complaints"));
   await chooseRowAction(page, await expandedComplaintRow(page), "Edit fellow complaint");

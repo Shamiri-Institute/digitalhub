@@ -1,4 +1,6 @@
 import { type BrowserContext, expect, type Locator, type Page } from "@playwright/test";
+import { randomInt, randomUUID } from "node:crypto";
+
 import { eq, sql } from "drizzle-orm";
 
 import { db, pool } from "#/db/client";
@@ -22,13 +24,23 @@ import { objectId } from "#/lib/crypto";
 import { createSessionCookie } from "#/lib/auth/test-auth";
 import { type Role, pickUser } from "#/tests/platform-routes";
 
+/** Tests run in parallel, so a name made from the clock can match another test's row. */
+export function uniqueSuffix() {
+  return randomUUID().slice(0, 8);
+}
+
+/** Digits for fields read as numbers, so the first is never 0. */
+export function uniqueDigits(length: number) {
+  return [randomInt(1, 10), ...Array.from({ length: length - 1 }, () => randomInt(10))].join("");
+}
+
 /**
  * A new user with an admin profile in each implementer the seeded admin is an ADMIN of, so a test
  * can sign it out, archive it or switch its project without touching a user another spec signs in
  * as. Pass `remove` to `undo`.
  */
 export async function createAdminCopy(seededUserId: string, activeProjectId?: string) {
-  const email = `e2e-admin-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
+  const email = `e2e-admin-${uniqueSuffix()}@example.com`;
   const [created] = await db
     .insert(user)
     .values({ email, name: "E2E Admin", activeProjectId })
@@ -140,7 +152,7 @@ export async function signInWithEmail(context: BrowserContext, email: string) {
  * it, then the case and the student.
  */
 export async function createClinicalCase(owner: { schoolId: string; currentSupervisorId: string }) {
-  const label = `e2e-case-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const label = `e2e-case-${uniqueSuffix()}`;
   const studentId = objectId("stu");
   const studentName = `${label} student`;
   // The case's edit form needs the fields a seeded student has, its group among them.

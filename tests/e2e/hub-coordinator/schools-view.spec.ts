@@ -3,11 +3,11 @@ import { eq } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { school, weeklyHubReport } from "#/db/schema";
-import { signInAs, required } from "#/tests/helpers";
+import { signInAs, required, uniqueSuffix } from "#/tests/helpers";
 import { getUrl, chooseRowAction, rowWithCell } from "#/tests/pages/helpers";
 
 test("Hub Coordinator can submit a weekly hub report", async ({ page, context, undo }) => {
-  const recommendations = `E2E weekly hub report ${Date.now()}`;
+  const recommendations = `E2E weekly hub report ${uniqueSuffix()}`;
   undo(() =>
     db.delete(weeklyHubReport).where(eq(weeklyHubReport.recommendations, recommendations)),
   );
@@ -72,7 +72,7 @@ test("Hub Coordinator edits a school in one dialog", async ({ page, context, und
     orderBy: (s, { asc }) => asc(s.visibleId),
   });
   required(template, "the hub has no open school");
-  const suffix = Date.now();
+  const suffix = uniqueSuffix();
   const schoolName = `E2E School ${suffix}`;
   const [targetSchool] = await db
     .insert(school)

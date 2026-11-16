@@ -5,7 +5,13 @@ import { db } from "#/db/client";
 import { interventionGroupReport, weeklyFellowRatings } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { signableMember, signInWithEmail, uniqueFellowName, required } from "#/tests/helpers";
+import {
+  signableMember,
+  signInWithEmail,
+  uniqueFellowName,
+  required,
+  uniqueSuffix,
+} from "#/tests/helpers";
 import { chooseRowAction, expandRow, getUrl, searchRows } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -36,7 +42,7 @@ test.beforeAll(async () => {
 });
 
 async function saveEvaluation(createdAt: Date, undo: Undo) {
-  const notes = `saved notes ${Date.now()}`;
+  const notes = `saved notes ${uniqueSuffix()}`;
   const [rating] = await db
     .insert(weeklyFellowRatings)
     .values({
@@ -117,7 +123,7 @@ test("saving a weekly evaluation past its 14 days is refused", async ({ page, co
   await signInWithEmail(context, fixture.email);
 
   const dialog = await openEvaluation(page);
-  await dialog.getByRole("textbox").first().fill(`changed notes ${Date.now()}`);
+  await dialog.getByRole("textbox").first().fill(`changed notes ${uniqueSuffix()}`);
   // Ageing the row behind the open dialog leaves the browser believing it may still edit, as one
   // whose clock runs behind would, so only the server can refuse this save.
   await db
@@ -144,7 +150,7 @@ test("editing a weekly evaluation from the report past its 14 days is refused", 
   const weeks = await expandRow(page, await searchRows(page, fixture.fellowName));
   await chooseRowAction(page, weeks.getByRole("row").last(), "Edit weekly evaluation");
   const dialog = page.getByRole("dialog", { name: "Edit Weekly fellow evaluation" });
-  await dialog.getByRole("textbox").first().fill(`changed notes ${Date.now()}`);
+  await dialog.getByRole("textbox").first().fill(`changed notes ${uniqueSuffix()}`);
   await dialog.getByRole("button", { name: "Save Changes" }).click();
   await expect(page.getByText(/can no longer be edited/).first()).toBeVisible();
 
@@ -174,7 +180,7 @@ test("editing a student group evaluation from the report past its 14 days is ref
     order by u.email, g.id
     limit 1`);
   required(leader, "a supervised fellow whose groups have no evaluations");
-  const comment = `saved comment ${Date.now()}`;
+  const comment = `saved comment ${uniqueSuffix()}`;
   const reportId = objectId("ige");
   await db.insert(interventionGroupReport).values({
     id: reportId,
@@ -191,7 +197,7 @@ test("editing a student group evaluation from the report past its 14 days is ref
   const sessions = await expandRow(page, await searchRows(page, leader.fellowName));
   await chooseRowAction(page, sessions.getByRole("row").last(), "Edit student group evaluation");
   const dialog = page.getByRole("dialog", { name: "Edit Student Group Evaluation" });
-  await dialog.getByRole("textbox").first().fill(`changed comment ${Date.now()}`);
+  await dialog.getByRole("textbox").first().fill(`changed comment ${uniqueSuffix()}`);
   await dialog.getByRole("button", { name: "Save Changes" }).click();
   await expect(page.getByText(/can no longer be edited/).first()).toBeVisible();
 

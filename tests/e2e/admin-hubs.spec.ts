@@ -20,7 +20,7 @@ import { hubSessionTypes } from "#/lib/app-constants/hub-session-types";
 import { objectId } from "#/lib/crypto";
 import { createSuperAdminCopy } from "#/tests/access-helpers";
 import { expect, test } from "#/tests/fixtures";
-import { required, signableMember, signInWithEmail } from "#/tests/helpers";
+import { required, signableMember, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { dataRows, getUrl, searchRows } from "#/tests/pages/helpers";
 
 /**
@@ -30,7 +30,7 @@ import { dataRows, getUrl, searchRows } from "#/tests/pages/helpers";
  */
 // Each worker loads this file, and its afterAll deletes every hub with its prefix, so two
 // workers that start in the same millisecond must still get different prefixes.
-const RUN_ID = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const RUN_ID = `${uniqueSuffix()}`;
 const HUB_PREFIX = `E2E Hub ${RUN_ID}`;
 const HUB_NAME = `${HUB_PREFIX} Nairobi`;
 const RENAMED_HUB_NAME = `${HUB_PREFIX} Mombasa`;

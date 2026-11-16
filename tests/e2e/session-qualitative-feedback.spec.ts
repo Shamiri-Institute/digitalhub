@@ -5,13 +5,13 @@ import { db } from "#/db/client";
 import { interventionSessionRating, sessionComment, supervisor } from "#/db/schema";
 import { createSupervisedSession, otherHubOf } from "#/tests/delivery-helpers";
 import { expect, test } from "#/tests/fixtures";
-import { signableMember, signInAs, signInWithEmail, required } from "#/tests/helpers";
+import { signableMember, signInAs, signInWithEmail, required, uniqueSuffix } from "#/tests/helpers";
 import { expandRow, getUrl } from "#/tests/pages/helpers";
 
 test.describe.configure({ mode: "serial" });
 
 const ratingId = "isr_e2e_eng2231";
-const notes = `Feedback ${Date.now()}`;
+const notes = `Feedback ${uniqueSuffix()}`;
 
 let supervisorEmail: string;
 let interventionSessionId: string;
@@ -114,8 +114,8 @@ test("session feedback is refused once the session is outside the supervisor's h
 }) => {
   const supervised = await createSupervisedSession(undo);
   const otherHubId = await otherHubOf(supervised.hubId);
-  const refusedNotes = `Refused feedback ${Date.now()}`;
-  const supervisorRatingId = `isr_e2e_${Date.now()}`;
+  const refusedNotes = `Refused feedback ${uniqueSuffix()}`;
+  const supervisorRatingId = `isr_e2e_${uniqueSuffix()}`;
   await db.insert(interventionSessionRating).values({
     id: supervisorRatingId,
     sessionId: supervised.sessionId,

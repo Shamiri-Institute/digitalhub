@@ -5,7 +5,13 @@ import { SupportType } from "#/db/enums";
 import { fellowGroupReport, interventionGroup } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { expect, test } from "#/tests/fixtures";
-import { required, signableMember, signInWithEmail, uniqueFellowName } from "#/tests/helpers";
+import {
+  required,
+  signableMember,
+  signInWithEmail,
+  uniqueFellowName,
+  uniqueSuffix,
+} from "#/tests/helpers";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
 
 test("a group whose leader changed lists each leader's report under its author", async ({
@@ -42,7 +48,7 @@ test("a group whose leader changed lists each leader's report under its author",
   required(fixture, "two fellows in a hub coordinator's hub");
 
   const groupId = objectId("group");
-  const groupName = `E2E ${Date.now()}`;
+  const groupName = `E2E ${uniqueSuffix()}`;
   await db.insert(interventionGroup).values({
     id: groupId,
     groupName,

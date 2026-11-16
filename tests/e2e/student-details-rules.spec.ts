@@ -6,7 +6,7 @@ import { hubCoordinator, interventionGroup } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { createStudentSchool } from "#/tests/delivery-student-helpers";
 import { expect, test } from "#/tests/fixtures";
-import { signInWithEmail } from "#/tests/helpers";
+import { signInWithEmail, uniqueDigits } from "#/tests/helpers";
 import { cellUnder, chooseRowAction, getUrl, rowWithCell, searchRows } from "#/tests/pages/helpers";
 
 type School = Awaited<ReturnType<typeof createStudentSchool>>;
@@ -35,7 +35,7 @@ async function fillNewStudent(page: Page, form: ReturnType<Page["getByRole"]>, n
   await form.getByLabel("Student name").fill(name);
   await form.getByRole("combobox", { name: /Gender/ }).click();
   await page.getByRole("option", { name: "Female" }).click();
-  await form.getByLabel("Admission number").fill(String(Date.now()).slice(-8));
+  await form.getByLabel("Admission number").fill(uniqueDigits(8));
   await form.getByLabel("Grade/Form").fill("2");
   await form.getByLabel("Stream").fill("East");
 }
@@ -89,7 +89,7 @@ test("only a hub coordinator edits a student's admission number and questionnair
   const school = await createStudentSchool(undo);
   const { studentName } = await school.addStudent();
   const edit = page.getByRole("dialog", { name: "Edit student information" });
-  const newAdmissionNumber = String(Date.now()).slice(-7);
+  const newAdmissionNumber = uniqueDigits(7);
 
   await signInWithEmail(context, school.coordinatorEmail);
   const coordinatorPath = `/hc/schools/${school.visibleId}/students`;

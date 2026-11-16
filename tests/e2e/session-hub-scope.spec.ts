@@ -13,7 +13,7 @@ import {
 import { objectId } from "#/lib/crypto";
 import { TIME_ZONE_COOKIE } from "#/lib/schedule-view";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { required, signableMember, signInWithEmail } from "#/tests/helpers";
+import { required, signableMember, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { chooseRowAction, getUrl } from "#/tests/pages/helpers";
 
 const timeZone = "Africa/Nairobi";
@@ -92,7 +92,7 @@ async function createSchoolSession(undo: Undo) {
 /** A new hub coordinator of `hubId` who can sign in, and a way to move them to another hub. */
 async function createHubCoordinator(hubs: { hubId: string; implementerId: string }, undo: Undo) {
   const coordinatorId = objectId("hc");
-  const email = `e2e-hc-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
+  const email = `e2e-hc-${uniqueSuffix()}@example.com`;
   await db.insert(hubCoordinator).values({
     id: coordinatorId,
     visibleId: coordinatorId,

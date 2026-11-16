@@ -4,7 +4,13 @@ import { eq, inArray, like, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { adminUser, hubCoordinator, ticketEvents, tickets } from "#/db/schema";
 import { expect, test } from "#/tests/fixtures";
-import { createAdminCopy, required, signableMember, signInWithEmail } from "#/tests/helpers";
+import {
+  createAdminCopy,
+  required,
+  signableMember,
+  signInWithEmail,
+  uniqueSuffix,
+} from "#/tests/helpers";
 import { cellUnder, chooseRowAction, getUrl, searchRows } from "#/tests/pages/helpers";
 
 // Hub coordinators reassign to each other and the sign-ins share people, so the tests take turns.
@@ -22,7 +28,7 @@ type Hub = {
   adminUserId: string;
 };
 
-const subjectPrefix = `E2E ticket routing ${Date.now()}`;
+const subjectPrefix = `E2E ticket routing ${uniqueSuffix()}`;
 let hub: Hub;
 
 // Two supervisors, two hub coordinators and a clinical lead of one hub, each able to sign in.
