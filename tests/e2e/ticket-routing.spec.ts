@@ -21,6 +21,7 @@ type Hub = {
   bystanderEmail: string;
   coordinatorEmail: string;
   coordinatorName: string;
+  coordinatorId: string;
   otherCoordinatorId: string;
   otherCoordinatorName: string;
   otherCoordinatorEmail: string;
@@ -37,7 +38,7 @@ test.beforeAll(async () => {
     rows: [row],
   } = await db.execute<Hub>(sql`
     select su.email as "supervisorEmail", bu.email as "bystanderEmail",
-      hu.email as "coordinatorEmail", hc.coordinator_name as "coordinatorName", hc2.id as "otherCoordinatorId",
+      hu.email as "coordinatorEmail", hc.coordinator_name as "coordinatorName", hc.id as "coordinatorId", hc2.id as "otherCoordinatorId",
       hc2.coordinator_name as "otherCoordinatorName", h2u.email as "otherCoordinatorEmail",
       lu.email as "leadEmail", am.user_id as "adminUserId"
     from supervisors sv
@@ -251,6 +252,35 @@ test("an archived hub coordinator cannot receive a reassigned ticket", async ({
   await reassign.getByRole("combobox").click();
   await page.getByPlaceholder("Search coordinators...").fill(hub.otherCoordinatorName);
   await expect(page.getByText("No eligible", { exact: false })).toBeVisible();
+});
+
+test("a supervisor's ticket skips an archived hub coordinator", async ({ page, context, undo }) => {
+  const subject = `${subjectPrefix} skips archived`;
+  // Archive the coordinator routing would pick first, so only the filter keeps it from the ticket.
+  const [first] = await db
+    .select({ id: hubCoordinator.id })
+    .from(hubCoordinator)
+    .where(inArray(hubCoordinator.id, [hub.coordinatorId, hub.otherCoordinatorId]))
+    .orderBy(hubCoordinator.createdAt, hubCoordinator.id)
+    .limit(1);
+  required(first, "the hub's first coordinator");
+  await db
+    .update(hubCoordinator)
+    .set({ archivedAt: new Date() })
+    .where(eq(hubCoordinator.id, first.id));
+  undo(() =>
+    db.update(hubCoordinator).set({ archivedAt: null }).where(eq(hubCoordinator.id, first.id)),
+  );
+
+  await signIn(context, hub.supervisorEmail);
+  await createTicket(page, "/sc/tickets", subject, "TECH");
+
+  const activeEmail =
+    first.id === hub.coordinatorId ? hub.otherCoordinatorEmail : hub.coordinatorEmail;
+  await signIn(context, activeEmail);
+  // Only the holder may resolve.
+  const menu = await ticketMenu(page, "/hc/tickets", subject);
+  await expect(menu.getByText("Resolve ticket")).toBeVisible();
 });
 
 test("a hub coordinator's ticket goes to the implementer's first super admin, not a newer one", async ({

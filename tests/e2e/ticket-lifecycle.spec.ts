@@ -74,6 +74,17 @@ async function expectRowAfterReload(page: Page, ticketSubject: string, text: Reg
   await expect(await searchRows(page, ticketSubject)).toContainText(text);
 }
 
+async function expectNoActions(page: Page, ticketSubject: string, actions: string[]) {
+  await (await searchRows(page, ticketSubject)).getByRole("cell").last().click();
+  const menu = page.getByRole("menu");
+  // The actions arrive with a status request the menu makes as it opens.
+  await expect(menu.getByText("View ticket")).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  for (const action of actions)
+    await expect(menu.getByText(action, { exact: true })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+}
+
 test("the holder starts, reprioritises and resolves a ticket, and its creator reopens it", async ({
   page,
   context,
@@ -140,6 +151,17 @@ test("the creator cancels an open ticket with a reason", async ({ page, context,
   await chooseRowAction(page, await searchRows(page, ticketSubject), "Cancel ticket");
   await giveReason(page, "Cancel ticket", "Raised by mistake.");
   await expectRowAfterReload(page, ticketSubject, /cancelled/i);
+  await expectNoActions(page, ticketSubject, ["Cancel ticket", "Reopen ticket"]);
+
+  await signInWithEmail(context, pair.supervisorEmail);
+  await page.goto(getUrl("/sc/tickets"));
+  await expectNoActions(page, ticketSubject, [
+    "Start ticket",
+    "Change priority",
+    "Resolve ticket",
+    "Escalate ticket",
+    "Reassign ticket",
+  ]);
 
   // No page shows the cancellation reason.
   const [cancellation] = await db
