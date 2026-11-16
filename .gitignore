@@ -69,4 +69,3 @@ vscode
 
 # local S3 (scripts/local-s3.sh)
 .seaweedfs/
-.env*
