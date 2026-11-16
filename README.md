@@ -75,23 +75,23 @@ Get the platform running locally in under 5 minutes:
 
 - Node.js v22.x or later
 - PostgreSQL v18
-- npm
+- pnpm (`corepack enable` picks the version in package.json)
 
 ### One-Command Setup
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Copy environment file (see Environment Setup section for details)
 cp .env.example .env.development
 
 # Build the schema
-npm run db:migrate
-npm run db:seed
+pnpm run db:migrate
+pnpm run db:seed
 
 # Start development server
-npm run dev
+pnpm run dev
 ```
 
 ### Verify Installation

@@ -9,11 +9,11 @@ The Shamiri Digital Hub is the operational back-end for the Shamiri Institute: p
 A task is done when these pass:
 
 ```bash
-npm run typecheck
-npm run stylecheck  # oxfmt --check, oxlint --type-aware
+pnpm run typecheck
+pnpm run stylecheck  # oxfmt --check, oxlint --type-aware
 ```
 
-and the tests that cover the change pass. Use npm only.
+and the tests that cover the change pass. `pnpm install` sets up a pre-push hook (`.githooks/pre-push`) that runs both on the files a push changes. Use pnpm only (`pnpm install`, `pnpm run <script>`, `pnpm exec <bin>`); everything runs on Node.
 
 ## UI
 
@@ -54,9 +54,9 @@ Drizzle ORM 0.45 on PostgreSQL (`pg` driver). Write native Drizzle: relational q
 Schema changes:
 
 1. Edit `db/schema.ts` (and `db/relations.ts` / `db/enums.ts`).
-2. `npm run db:generate`, then read the SQL. A data migration is `npx drizzle-kit generate --custom --name <what>`.
-3. `npm run db:migrate`; prove it from scratch with `npm run db:reset`.
-4. `npm run db:check` (CI runs it): every new foreign key needs an index on its columns, and a migration that drops a column or table starts with `SET LOCAL lock_timeout = '5s';`.
+2. `pnpm run db:generate`, then read the SQL. A data migration is `pnpm exec drizzle-kit generate --custom --name <what>`.
+3. `pnpm run db:migrate`; prove it from scratch with `pnpm run db:reset`.
+4. `pnpm run db:check` (CI runs it): every new foreign key needs an index on its columns, and a migration that drops a column or table starts with `SET LOCAL lock_timeout = '5s';`.
 5. Update `db/seed/` if the seed needs the change.
 
 ## Auth
@@ -69,11 +69,16 @@ Every export of a `"use server"` file is a public POST endpoint, even when only 
 
 ## Testing
 
-- `npm test` runs Playwright against `next dev`; `npm run test:prod` builds and runs against `next start`, as CI does. `npm run test:unit` runs Vitest.
+- `pnpm run test` runs Playwright against `next dev`; `pnpm run test:prod` builds and runs against `next start`, as CI does. `pnpm run test:unit` runs Vitest.
 - E2E specs sign in as seeded users picked from the database (`signInAs`, `signInWithEmail` in `tests/helpers.ts`).
 - A spec that changes data creates its own rows, or picks rows no other spec edits, and removes what it made.
 - Test behaviour through real dependencies: the local Postgres, and SeaweedFS for S3 (`scripts/local-s3.sh`, which CI runs too). Leave out a test that would need a mocked module, env, SDK client or network call.
 - E2E specs drive the UI. Action IDs and encoding are framework internals, so a spec never posts to a server action directly.
+- Vitest runs every file in one shared process (`isolate: false`) and in random order (`sequence.shuffle`). A file must leave the process and database as it found them:
+  - Delete the rows it inserted and restore the rows it changed: in `afterAll`, or in `afterEach` when its tests touch the same rows, since tests inside a file are shuffled too. Run on a freshly seeded database and never depend on another file's rows.
+  - Never call `pool.end()`; the pool is shared by every file in the worker.
+  - Never change `process.env`, globals or timers directly. Use `vi.stubEnv`, `vi.stubGlobal` and `vi.useFakeTimers`; `tests/unit/setup.ts` undoes them after each file, along with spies.
+  - A failure that only shows in some orders is a leak between files. Rerun with the seed Vitest printed (`pnpm exec vitest run --sequence.seed=<seed>`) and fix the file that leaks, not the one that fails.
 - After a mutation, assert through the UI after a reload. Read the database only for what no page shows (values the server takes from the session, stored but undisplayed data, revoked sessions, writes that must not happen), with a comment saying so.
 
 ## Code style

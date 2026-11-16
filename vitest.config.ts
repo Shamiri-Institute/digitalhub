@@ -17,5 +17,9 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     include: ["./**/*.test.{ts,tsx}"],
+    // tests/unit/setup.ts resets process state after each file; AGENTS.md has the rules.
+    isolate: false,
+    setupFiles: ["./tests/unit/setup.ts"],
+    sequence: { shuffle: true },
   },
 });

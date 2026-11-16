@@ -5,7 +5,7 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { and, asc, eq, isNull, ne, notInArray } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { db, pool } from "#/db/client";
+import { db } from "#/db/client";
 import { hub, implementerMember, project, surveyAuditEvent, surveyUpload } from "#/db/schema";
 import type { HubSurveyScope, SurveyViewer } from "#/lib/auth/survey-access";
 import { getS3Client, headObject } from "#/lib/s3/s3.service";
@@ -78,7 +78,6 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await removeScanUploads(createdHashes);
-  await pool.end();
 });
 
 const hubViewer = (scope: HubSurveyScope): SurveyViewer => ({ kind: "hub", ...scope });

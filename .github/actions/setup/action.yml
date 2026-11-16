@@ -1,0 +1,39 @@
+name: Setup
+description: Node and pnpm, node_modules restored from cache, plus Playwright's browser when asked.
+inputs:
+  browsers:
+    description: Install Chromium for Playwright
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+    - uses: actions/setup-node@v6
+      with:
+        node-version: "24"
+    # Pull requests restore the copy that pushes to dev and main save.
+    - id: modules
+      uses: actions/cache@v5
+      with:
+        path: node_modules
+        key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
+    - if: steps.modules.outputs.cache-hit != 'true'
+      shell: bash
+      run: pnpm install --frozen-lockfile
+    - if: inputs.browsers == 'true'
+      id: playwright
+      shell: bash
+      run: echo "version=$(node -p 'require("@playwright/test/package.json").version')" >> "$GITHUB_OUTPUT"
+    # A browser cached on one Ubuntu release may lack libraries on another.
+    - if: inputs.browsers == 'true'
+      id: browsers
+      uses: actions/cache@v5
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ env.ImageOS }}-${{ steps.playwright.outputs.version }}
+    - if: inputs.browsers == 'true' && steps.browsers.outputs.cache-hit != 'true'
+      shell: bash
+      run: pnpm exec playwright install --with-deps --only-shell chromium
+    - if: inputs.browsers == 'true' && steps.browsers.outputs.cache-hit == 'true'
+      shell: bash
+      run: pnpm exec playwright install-deps chromium

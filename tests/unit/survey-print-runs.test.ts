@@ -7,7 +7,7 @@ import { and, asc, eq, inArray, isNull, sql, TransactionRollbackError } from "dr
 import { DatabaseError } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { db, isUniqueViolation, pool, type Transaction } from "#/db/client";
+import { db, isUniqueViolation, type Transaction } from "#/db/client";
 import {
   hub,
   project,
@@ -108,7 +108,6 @@ afterAll(async () => {
   }
   await db.delete(student).where(inArray(student.schoolId, createdSchoolIds));
   await db.delete(school).where(inArray(school.id, createdSchoolIds));
-  await pool.end();
 });
 
 function uniqueCode() {

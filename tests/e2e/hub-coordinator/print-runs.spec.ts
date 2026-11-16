@@ -147,6 +147,8 @@ test("going back from the confirm step keeps the students a coordinator left out
   context,
   undo,
 }) => {
+  // Waits for the background print job, which CI's 30 s test timeout leaves too little time.
+  test.slow();
   const coordinator = await signInAs(context, "HUB_COORDINATOR");
   const profile = await db.query.hubCoordinator.findFirst({
     where: (hc, { eq }) => eq(hc.id, coordinator.identifier ?? ""),
@@ -192,6 +194,10 @@ test("going back from the confirm step keeps the students a coordinator left out
   await dialog.getByRole("button", { name: "Create print run" }).click();
 
   await expect(page).toHaveURL(/\/hc\/surveys\/runs\/surveyprintrun_/);
+  // Copies exist once the print job has made the file, and it makes one file at a time.
+  await expect(page.getByRole("row").filter({ hasText: "Whole school" })).toContainText("Ready", {
+    timeout: 60_000,
+  });
   await page.reload();
   await expect(page.getByRole("cell", { name: new RegExp(`^[A-Z][a-z]+ ${code}$`) })).toHaveText([
     amy,
