@@ -13,7 +13,7 @@ bun run typecheck
 bun run stylecheck  # oxfmt --check, oxlint --type-aware
 ```
 
-and the tests that cover the change pass. Use bun only (`bun install`, `bun run <script>`, `bunx <bin>`); there is no npm lockfile.
+and the tests that cover the change pass. `bun install` sets up a pre-push hook (`.githooks/pre-push`) that runs both on the files a push changes. Use bun only (`bun install`, `bun run <script>`, `bunx <bin>`); there is no npm lockfile.
 
 ## UI
 

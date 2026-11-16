@@ -29,7 +29,8 @@
     "db:generate": "dotenv -c development -- drizzle-kit generate",
     "release": "commit-and-tag-version",
     "db:check": "dotenv -c development -- bun scripts/db/check-schema.ts",
-    "survey:metrics": "bun scripts/survey/generate-figtree-metrics.ts && oxfmt lib/survey/figtree-metrics.generated.ts"
+    "survey:metrics": "bun scripts/survey/generate-figtree-metrics.ts && oxfmt lib/survey/figtree-metrics.generated.ts",
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "commit-and-tag-version": {
     "scripts": {
