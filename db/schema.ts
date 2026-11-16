@@ -3576,11 +3576,11 @@ export const ticketEvents = pgTable(
     ),
     check(
       "ticket_events_reason_check",
-      sql`${table.kind} in ('CREATED', 'STARTED', 'CLOSED') or ${table.reason} is not null`,
+      sql`${table.kind}::text in ('CREATED', 'STARTED', 'CLOSED') or ${table.reason} is not null`,
     ),
     check(
       "ticket_events_actor_check",
-      sql`${table.kind} = 'CLOSED' or ${table.actorId} is not null`,
+      sql`${table.kind}::text = 'CLOSED' or ${table.actorId} is not null`,
     ),
     foreignKey({
       columns: [table.ticketId],
