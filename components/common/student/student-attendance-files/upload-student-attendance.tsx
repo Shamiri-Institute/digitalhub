@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { DialogFooter } from "#/components/ui/dialog";
+import { DialogClose, DialogFooter, useDialogSave } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
-import { toastOnError, useToast } from "#/components/ui/use-toast";
+import { useToast } from "#/components/ui/use-toast";
 import {
   createAttendanceDocument,
   getAttendanceDocument,
@@ -17,20 +17,18 @@ import { createAttendancePdf } from "#/lib/utils/attendance-upload";
 export default function UploadStudentAttendanceDocument({
   groupId,
   sessionId,
-  onClose,
   onUploadSuccess,
 }: {
   groupId: string;
   sessionId: string;
-  onClose: (val: boolean) => void;
   onUploadSuccess?: () => void;
 }) {
   const [photos, setPhotos] = useState<{ file: File; previewUrl: string }[]>([]);
   const createdPreviewUrls = useRef<string[]>([]);
-  const [uploading, setUploading] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const { toast } = useToast();
   const { uploadToS3 } = useS3Upload();
+  const { isSaving: uploading, save } = useDialogSave();
 
   // effect: revokes the preview object URLs on unmount; revoking one already revoked is a no-op
   useEffect(() => {
@@ -80,7 +78,6 @@ export default function UploadStudentAttendanceDocument({
       return;
     }
 
-    setUploading(true);
     // Photos can still be added while this upload runs; only these go into the document.
     const documentPhotos = photos;
 
@@ -145,8 +142,6 @@ export default function UploadStudentAttendanceDocument({
         description: "Something went wrong uploading the file",
         variant: "destructive",
       });
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -242,14 +237,16 @@ export default function UploadStudentAttendanceDocument({
 
       <Separator />
       <DialogFooter className="flex justify-end">
-        <Button className="text-shamiri-new-blue" variant="ghost" onClick={() => onClose(false)}>
-          Cancel
-        </Button>
+        <DialogClose asChild>
+          <Button className="text-shamiri-new-blue" variant="ghost">
+            Cancel
+          </Button>
+        </DialogClose>
         <Button
           type="button"
           disabled={photos.length === 0 || uploading}
           variant="brand"
-          onClick={toastOnError(handleUpload)}
+          onClick={() => save(handleUpload)}
           className="bg-shamiri-new-blue"
           loading={uploading}
         >

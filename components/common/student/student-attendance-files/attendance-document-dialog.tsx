@@ -73,7 +73,6 @@ export default function AttendanceDocumentDialog({
             <UploadStudentAttendanceDocument
               groupId={groupId}
               sessionId={session.id}
-              onClose={onOpenChange}
               onUploadSuccess={handleRefresh}
             />
           </div>

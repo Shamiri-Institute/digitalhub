@@ -1,12 +1,13 @@
 "use client";
 
 import type { ImplementerRole } from "#/db/enums";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
 import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
+import { useDialogSave } from "#/components/ui/dialog";
 import { Skeleton } from "#/components/ui/skeleton";
-import { toastOnFailure, useToast } from "#/components/ui/use-toast";
+import { useToast } from "#/components/ui/use-toast";
 import { deleteAttendanceFile, getAttendanceDocument } from "#/lib/actions/file/student-attendance";
 import { NO_ATTENDANCE_DOCUMENT_MESSAGE } from "#/lib/actions/file/student-attendance/types";
 import PdfViewerModal from "#/lib/utils/pdf/pdf-viewer-modal";
@@ -24,7 +25,7 @@ export default function ViewAttendanceDocument({
 }) {
   const { toast } = useToast();
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
-  const [isDeleting, startDeleting] = useTransition();
+  const { isSaving: isDeleting, save } = useDialogSave();
   const documentKey = `${sessionId}:${groupId}`;
   const [loaded, setLoaded] = useState<{
     key: string;
@@ -65,21 +66,19 @@ export default function ViewAttendanceDocument({
   const handleDelete = () => {
     const documentId = state?.id;
     if (!documentId) return;
-    startDeleting(() =>
-      toastOnFailure(async () => {
-        const result = await deleteAttendanceFile(documentId);
-        if (result.success) {
-          setLoaded({ key: documentKey, archived: true });
-          onDeleteSuccess?.();
-          toast({ description: "Attendance document deleted successfully." });
-        } else {
-          toast({
-            description: result.message ?? "Failed to delete document",
-            variant: "destructive",
-          });
-        }
-      }),
-    );
+    save(async () => {
+      const result = await deleteAttendanceFile(documentId);
+      if (result.success) {
+        setLoaded({ key: documentKey, archived: true });
+        onDeleteSuccess?.();
+        toast({ description: "Attendance document deleted successfully." });
+      } else {
+        toast({
+          description: result.message ?? "Failed to delete document",
+          variant: "destructive",
+        });
+      }
+    });
   };
 
   if (!state) return <Skeleton className="h-16 w-full rounded-lg" />;
