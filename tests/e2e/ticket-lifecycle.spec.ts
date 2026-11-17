@@ -5,7 +5,7 @@ import { db } from "#/db/client";
 import { ticketEvents, tickets } from "#/db/schema";
 import { REOPEN_WINDOW_MS } from "#/lib/ticket-reopen-window";
 import { expect, test, type Undo } from "#/tests/fixtures";
-import { required, signableMember, signInWithEmail } from "#/tests/helpers";
+import { required, signableMember, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
 
 type FellowAndSupervisor = {
@@ -36,7 +36,7 @@ async function pickFellowAndSupervisor() {
 }
 
 async function insertHeldTicket(fellowAndSupervisor: FellowAndSupervisor, undo: Undo) {
-  const ticketSubject = `E2E ticket lifecycle ${Date.now()}`;
+  const ticketSubject = `E2E ticket lifecycle ${uniqueSuffix()}`;
   const [ticket] = await db
     .insert(tickets)
     .values({
