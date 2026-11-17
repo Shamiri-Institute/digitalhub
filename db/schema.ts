@@ -3536,6 +3536,9 @@ export const tickets = pgTable(
       .onUpdate("cascade")
       .onDelete("restrict"),
     index("tickets_holder_id_idx").on(table.holderId),
+    index("tickets_resolved_at_idx")
+      .on(table.resolvedAt)
+      .where(sql`${table.status} = 'RESOLVED'`),
     foreignKey({
       columns: [table.holderId],
       foreignColumns: [user.id],
