@@ -246,6 +246,18 @@ function assertActiveTicket(status: TicketStatus, outcome: string) {
   }
 }
 
+function assertTicketHolder(holderId: string | null, callerUserId: string, action: string) {
+  if (holderId !== callerUserId) {
+    throw new Error(`Only the ticket's current holder can ${action} it`);
+  }
+}
+
+function assertTicketCreator(createdById: string, callerUserId: string, action: string) {
+  if (createdById !== callerUserId) {
+    throw new Error(`Only the ticket's creator can ${action} it`);
+  }
+}
+
 async function runTicketAction(
   successMessage: string,
   action: () => Promise<void>,
@@ -259,16 +271,14 @@ async function runTicketAction(
   }
 }
 
-export async function createEscalation(
-  ticketId: string,
-  escalationReason: string,
-): Promise<ActionResponse> {
+export async function createEscalation(ticketId: string, reason: string): Promise<ActionResponse> {
   return runTicketAction("Escalation created successfully", async () => {
     const {
       userId: callerUserId,
       role,
       implementerId: activeImplementerId,
     } = await requireAuthRole(...ESCALATION_INITIATOR_ROLES);
+    const escalationReason = TicketReasonSchema.parse(reason);
 
     if (!isEscalationInitiatorRole(role)) throw new Error("The role cannot create escalations");
     const ticket = await db.query.tickets.findFirst({
@@ -288,9 +298,7 @@ export async function createEscalation(
       const lockedTicket = await lockTicket(tx, ticketId);
       assertActiveTicket(lockedTicket.status, "be escalated");
 
-      if (lockedTicket.holderId !== callerUserId) {
-        throw new Error("You are not the current escalation recipient of this ticket");
-      }
+      assertTicketHolder(lockedTicket.holderId, callerUserId, "escalate");
 
       await recordTicketEvent(
         tx,
@@ -309,20 +317,16 @@ export async function createEscalation(
   });
 }
 
-export async function resolveTicket(
-  ticketId: string,
-  resolutionReason: string,
-): Promise<ActionResponse> {
+export async function resolveTicket(ticketId: string, reason: string): Promise<ActionResponse> {
   return runTicketAction("Ticket resolved successfully", async () => {
     const { userId: callerUserId } = await requireAuthRole(...ESCALATION_RECIPIENT_ROLES);
+    const resolutionReason = TicketReasonSchema.parse(reason);
 
     await db.transaction(async (tx) => {
       const lockedTicket = await lockTicket(tx, ticketId);
       assertActiveTicket(lockedTicket.status, "be resolved");
 
-      if (lockedTicket.holderId !== callerUserId) {
-        throw new Error("Only the current escalation recipient can resolve this ticket");
-      }
+      assertTicketHolder(lockedTicket.holderId, callerUserId, "resolve");
 
       await recordTicketEvent(
         tx,
@@ -344,9 +348,7 @@ export async function startTicket(ticketId: string): Promise<ActionResponse> {
       if (lockedTicket.status !== "OPEN" && lockedTicket.status !== "ESCALATED") {
         throw new Error("Only an open or escalated ticket can be started");
       }
-      if (lockedTicket.holderId !== callerUserId) {
-        throw new Error("Only the current escalation recipient can start this ticket");
-      }
+      assertTicketHolder(lockedTicket.holderId, callerUserId, "start");
 
       await recordTicketEvent(
         tx,
@@ -370,9 +372,7 @@ export async function changeTicketPriority(
     await db.transaction(async (tx) => {
       const lockedTicket = await lockTicket(tx, ticketId);
       assertActiveTicket(lockedTicket.status, "have its priority changed");
-      if (lockedTicket.holderId !== callerUserId) {
-        throw new Error("Only the current escalation recipient can change this ticket's priority");
-      }
+      assertTicketHolder(lockedTicket.holderId, callerUserId, "change the priority of");
       if (lockedTicket.priority === priority) {
         throw new Error("The ticket already has this priority");
       }
@@ -395,9 +395,7 @@ export async function reopenTicket(ticketId: string, reason: string): Promise<Ac
 
     await db.transaction(async (tx) => {
       const lockedTicket = await lockTicket(tx, ticketId);
-      if (lockedTicket.createdById !== callerUserId) {
-        throw new Error("Only the ticket's creator can reopen it");
-      }
+      assertTicketCreator(lockedTicket.createdById, callerUserId, "reopen");
       if (lockedTicket.status !== "RESOLVED") {
         throw new Error("Only a resolved ticket can be reopened");
       }
@@ -426,9 +424,7 @@ export async function cancelTicket(ticketId: string, reason: string): Promise<Ac
 
     await db.transaction(async (tx) => {
       const lockedTicket = await lockTicket(tx, ticketId);
-      if (lockedTicket.createdById !== callerUserId) {
-        throw new Error("Only the ticket's creator can cancel it");
-      }
+      assertTicketCreator(lockedTicket.createdById, callerUserId, "cancel");
       assertActiveTicket(lockedTicket.status, "be cancelled");
 
       await recordTicketEvent(
@@ -464,9 +460,7 @@ export async function reassignTicket(
       const lockedTicket = await lockTicket(tx, ticketId);
       assertActiveTicket(lockedTicket.status, "be reassigned");
 
-      if (lockedTicket.holderId !== callerUserId) {
-        throw new Error("Only the current escalation recipient can reassign this ticket");
-      }
+      assertTicketHolder(lockedTicket.holderId, callerUserId, "reassign");
 
       await assertReassignmentEligible(tx, { role, implementerId, identifier }, reassignedTo);
 

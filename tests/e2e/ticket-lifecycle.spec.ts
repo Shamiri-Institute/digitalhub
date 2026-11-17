@@ -3,6 +3,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { ticketEvents, tickets } from "#/db/schema";
+import { REOPEN_WINDOW_MS } from "#/lib/ticket-reopen-window";
 import { expect, test, type Undo } from "#/tests/fixtures";
 import { required, signableMember, signInWithEmail } from "#/tests/helpers";
 import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
@@ -162,9 +163,29 @@ test("the creator cancels an open ticket with a reason", async ({ page, context,
     "Reassign ticket",
   ]);
 
+  // No page shows the event log, so the database is where the cancel reason can be seen.
   const [cancellation] = await db
     .select({ reason: ticketEvents.reason })
     .from(ticketEvents)
     .where(and(eq(ticketEvents.ticketId, ticketId), eq(ticketEvents.kind, "CANCELLED")));
   expect(cancellation?.reason).toBe("Raised by mistake.");
+});
+
+test("the creator can't reopen a ticket once the reopen window has passed", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fellowAndSupervisor = await pickFellowAndSupervisor();
+  required(fellowAndSupervisor, "a fellow and their supervisor who can both sign in");
+  const { ticketId, ticketSubject } = await insertHeldTicket(fellowAndSupervisor, undo);
+  // Resolved just past the window, so the hourly close has not run yet and only the window guards it.
+  await db
+    .update(tickets)
+    .set({ status: "RESOLVED", resolvedAt: new Date(Date.now() - REOPEN_WINDOW_MS - 60_000) })
+    .where(eq(tickets.id, ticketId));
+
+  await signInWithEmail(context, fellowAndSupervisor.fellowEmail);
+  await page.goto(getUrl("/fel/tickets"));
+  await expectNoActions(page, ticketSubject, ["Reopen ticket", "Cancel ticket"]);
 });

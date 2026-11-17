@@ -37,13 +37,15 @@ import {
 import { zodResolver } from "#/lib/zod-resolver";
 import type { TicketData } from "./columns";
 
+type TicketReasonFormValues = ChangeTicketPriorityInput;
+
 const REASON_DIALOGS = {
   changePriority: {
     title: "Change priority",
     placeholder: "Explain why the priority is changing",
     asksPriority: true,
     destructive: false,
-    submit: (ticketId: string, data: ChangeTicketPriorityInput) =>
+    submit: (ticketId: string, data: TicketReasonFormValues) =>
       changeTicketPriority(ticketId, data),
   },
   reopen: {
@@ -51,16 +53,14 @@ const REASON_DIALOGS = {
     placeholder: "Explain what still needs to be done",
     asksPriority: false,
     destructive: false,
-    submit: (ticketId: string, data: ChangeTicketPriorityInput) =>
-      reopenTicket(ticketId, data.reason),
+    submit: (ticketId: string, data: TicketReasonFormValues) => reopenTicket(ticketId, data.reason),
   },
   cancel: {
     title: "Cancel ticket",
     placeholder: "Explain why this ticket is no longer needed",
     asksPriority: false,
     destructive: true,
-    submit: (ticketId: string, data: ChangeTicketPriorityInput) =>
-      cancelTicket(ticketId, data.reason),
+    submit: (ticketId: string, data: TicketReasonFormValues) => cancelTicket(ticketId, data.reason),
   },
 };
 
@@ -98,17 +98,17 @@ function TicketReasonForm({
   kind: TicketReasonDialogKind;
   onDone: () => void;
 }) {
-  const dialog = REASON_DIALOGS[kind];
+  const dialogConfig = REASON_DIALOGS[kind];
   const { isSaving, save } = useDialogSave();
-  // Reopen and cancel validate the priority too, which is always the ticket's own.
-  const form = useForm<ChangeTicketPriorityInput>({
+  // Reopen and cancel never show the priority field; it keeps the ticket's own value.
+  const form = useForm<TicketReasonFormValues>({
     resolver: zodResolver(ChangeTicketPrioritySchema),
     defaultValues: { priority: ticket.priority, reason: "" },
   });
 
-  const onSubmit = (data: ChangeTicketPriorityInput) => {
+  const onSubmit = (data: TicketReasonFormValues) => {
     save(async () => {
-      const result = await dialog.submit(ticket.id, data);
+      const result = await dialogConfig.submit(ticket.id, data);
       if (!result.success) {
         toast({ variant: "destructive", description: result.message });
         return;
@@ -121,7 +121,7 @@ function TicketReasonForm({
   return (
     <Form {...form}>
       <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-6">
-        {dialog.asksPriority && (
+        {dialogConfig.asksPriority && (
           <FormField
             control={form.control}
             name="priority"
@@ -154,7 +154,11 @@ function TicketReasonForm({
             <FormItem required>
               <FormLabel>Reason</FormLabel>
               <FormControl>
-                <Textarea {...field} placeholder={dialog.placeholder} className="min-h-[100px]" />
+                <Textarea
+                  {...field}
+                  placeholder={dialogConfig.placeholder}
+                  className="min-h-[100px]"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -167,12 +171,12 @@ function TicketReasonForm({
             </Button>
           </DialogClose>
           <Button
-            variant={dialog.destructive ? "destructive" : "brand"}
+            variant={dialogConfig.destructive ? "destructive" : "brand"}
             type="submit"
             disabled={isSaving}
             loading={isSaving}
           >
-            {dialog.title}
+            {dialogConfig.title}
           </Button>
         </DialogFooter>
       </form>

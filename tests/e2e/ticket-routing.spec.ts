@@ -254,37 +254,43 @@ test("an archived hub coordinator cannot receive a reassigned ticket", async ({
   await expect(page.getByText("No eligible", { exact: false })).toBeVisible();
 });
 
-test("a supervisor's ticket skips an archived hub coordinator", async ({ page, context, undo }) => {
-  const subject = `${subjectPrefix} skips archived`;
-  // Archive the coordinator routing would pick first, so only the filter keeps it from the ticket.
-  const [firstCoordinator] = await db
-    .select({ id: hubCoordinator.id })
-    .from(hubCoordinator)
-    .where(inArray(hubCoordinator.id, [hub.coordinatorId, hub.otherCoordinatorId]))
-    .orderBy(hubCoordinator.createdAt, hubCoordinator.id)
-    .limit(1);
-  required(firstCoordinator, "the hub's first coordinator");
-  await db
-    .update(hubCoordinator)
-    .set({ archivedAt: new Date() })
-    .where(eq(hubCoordinator.id, firstCoordinator.id));
-  undo(() =>
-    db
-      .update(hubCoordinator)
-      .set({ archivedAt: null })
-      .where(eq(hubCoordinator.id, firstCoordinator.id)),
-  );
+for (const [state, inactive] of [
+  ["an archived", { archivedAt: new Date() }],
+  ["a dropped-out", { droppedOut: true }],
+] as const) {
+  test(`a supervisor's ticket skips ${state} hub coordinator`, async ({ page, context, undo }) => {
+    const subject = `${subjectPrefix} skips ${state}`;
+    // Deactivate the coordinator routing would pick first, so only the filter keeps it from the ticket.
+    const [firstCoordinator] = await db
+      .select({
+        id: hubCoordinator.id,
+        archivedAt: hubCoordinator.archivedAt,
+        droppedOut: hubCoordinator.droppedOut,
+      })
+      .from(hubCoordinator)
+      .where(inArray(hubCoordinator.id, [hub.coordinatorId, hub.otherCoordinatorId]))
+      .orderBy(hubCoordinator.createdAt, hubCoordinator.id)
+      .limit(1);
+    required(firstCoordinator, "the hub's first coordinator");
+    await db.update(hubCoordinator).set(inactive).where(eq(hubCoordinator.id, firstCoordinator.id));
+    undo(() =>
+      db
+        .update(hubCoordinator)
+        .set({ archivedAt: firstCoordinator.archivedAt, droppedOut: firstCoordinator.droppedOut })
+        .where(eq(hubCoordinator.id, firstCoordinator.id)),
+    );
 
-  await signIn(context, hub.supervisorEmail);
-  await createTicket(page, "/sc/tickets", subject, "TECH");
+    await signIn(context, hub.supervisorEmail);
+    await createTicket(page, "/sc/tickets", subject, "TECH");
 
-  const activeEmail =
-    firstCoordinator.id === hub.coordinatorId ? hub.otherCoordinatorEmail : hub.coordinatorEmail;
-  await signIn(context, activeEmail);
-  // Resolve shows only to the holder, so this proves routing skipped the archived coordinator.
-  const menu = await ticketMenu(page, "/hc/tickets", subject);
-  await expect(menu.getByText("Resolve ticket")).toBeVisible();
-});
+    const activeEmail =
+      firstCoordinator.id === hub.coordinatorId ? hub.otherCoordinatorEmail : hub.coordinatorEmail;
+    await signIn(context, activeEmail);
+    // Resolve shows only to the holder, so this proves routing skipped the inactive coordinator.
+    const menu = await ticketMenu(page, "/hc/tickets", subject);
+    await expect(menu.getByText("Resolve ticket")).toBeVisible();
+  });
+}
 
 test("a hub coordinator's ticket goes to the implementer's first super admin, not a newer one", async ({
   page,

@@ -113,7 +113,7 @@ test("escalating and resolving a ticket at once lets only the first one through"
 
   await expect(page.getByText("Ticket escalated successfully").first()).toBeVisible();
   await expect(
-    otherTab.getByText("Only the current escalation recipient can resolve this ticket").first(),
+    otherTab.getByText("Only the ticket's current holder can resolve it").first(),
   ).toBeVisible();
   await page.reload();
   const row = await searchRows(page, subject);
