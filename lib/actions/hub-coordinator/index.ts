@@ -42,6 +42,7 @@ export async function fetchHubCoordinators(
           eq(hc.assignedHubId, validatedData.hubId),
           eq(hc.implementerId, implementerId),
           isNull(hc.archivedAt),
+          or(eq(hc.droppedOut, false), isNull(hc.droppedOut)),
           identifier ? ne(hc.id, identifier) : undefined,
           term
             ? or(

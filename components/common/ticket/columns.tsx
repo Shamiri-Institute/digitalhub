@@ -1,12 +1,13 @@
 "use client";
 
-import { type ImplementerRole, TicketPriorityLevel } from "#/db/enums";
+import { type ImplementerRole, TicketPriorityLevel, type TicketStatus } from "#/db/enums";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { TicketDropdown } from "#/components/common/ticket/ticket-dropdown";
+import { Badge, type BadgeProps } from "#/components/ui/badge";
 import type { FullTicket } from "#/lib/actions/ticket/types";
 import { sortBy } from "#/lib/table-view";
-import { cn } from "#/lib/utils";
+import { enumLabel } from "#/lib/utils";
 
 export type TicketData = FullTicket;
 
@@ -14,7 +15,17 @@ const prioritiesLowToHigh: TicketPriorityLevel[] = [
   TicketPriorityLevel.LOW,
   TicketPriorityLevel.MEDIUM,
   TicketPriorityLevel.HIGH,
+  TicketPriorityLevel.URGENT,
 ];
+
+const statusBadgeVariant: Record<TicketStatus, BadgeProps["variant"]> = {
+  OPEN: "warning",
+  IN_PROGRESS: "default",
+  ESCALATED: "destructive",
+  RESOLVED: "shamiri-green",
+  CLOSED: "secondary",
+  CANCELLED: "outline-solid",
+};
 
 export type TicketDialogKind =
   | "view"
@@ -22,7 +33,10 @@ export type TicketDialogKind =
   | "viewResolution"
   | "escalate"
   | "reassign"
-  | "viewReassignment";
+  | "viewReassignment"
+  | "changePriority"
+  | "reopen"
+  | "cancel";
 
 export type TicketTableState = {
   openDialog: (kind: TicketDialogKind, ticket: TicketData) => void;
@@ -75,7 +89,7 @@ export const columns = (state: TicketTableState): ColumnDef<TicketData>[] => {
       cell: ({ row }) => {
         const tier = row.original.currentTier;
         return tier ? (
-          <span className="text-sm">{tier.toLowerCase().replace("_", " ")}</span>
+          <span className="text-sm">{enumLabel(tier)}</span>
         ) : (
           <span className="text-shamiri-text-grey text-sm">No escalation</span>
         );
@@ -87,25 +101,10 @@ export const columns = (state: TicketTableState): ColumnDef<TicketData>[] => {
       header: "Status",
       cell: ({ row }) => {
         const status = row.original.status;
-        const styles: Record<string, { bg: string; border: string; text: string }> = {
-          OPEN: { bg: "bg-yellow-bg", border: "border-yellow-border", text: "text-yellow-base" },
-          ESCALATED: { bg: "bg-blue-bg", border: "border-blue-border", text: "text-blue-base" },
-          RESOLVED: { bg: "bg-green-bg", border: "border-green-border", text: "text-green-base" },
-          CANCELLED: { bg: "bg-red-bg", border: "border-red-border", text: "text-red-base" },
-        };
-        const s = styles[status] ?? {
-          bg: "bg-yellow-bg",
-          border: "border-yellow-border",
-          text: "text-yellow-base",
-        };
         return (
-          <div className="flex">
-            <div className={cn("select-none rounded-lg border px-1.5 py-0.5", s.bg, s.border)}>
-              <span className={cn("text-[0.825rem] font-semibold", s.text)}>
-                {status.toLowerCase()}
-              </span>
-            </div>
-          </div>
+          <Badge variant={statusBadgeVariant[status]} className="select-none">
+            {enumLabel(status)}
+          </Badge>
         );
       },
     },

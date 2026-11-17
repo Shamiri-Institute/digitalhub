@@ -190,6 +190,7 @@ export const TicketPriorityLevel = {
   LOW: "LOW",
   MEDIUM: "MEDIUM",
   HIGH: "HIGH",
+  URGENT: "URGENT",
 } as const;
 export type TicketPriorityLevel = (typeof TicketPriorityLevel)[keyof typeof TicketPriorityLevel];
 
@@ -204,8 +205,10 @@ export type TicketCategory = (typeof TicketCategory)[keyof typeof TicketCategory
 
 export const TicketStatus = {
   OPEN: "OPEN",
+  IN_PROGRESS: "IN_PROGRESS",
   ESCALATED: "ESCALATED",
   RESOLVED: "RESOLVED",
+  CLOSED: "CLOSED",
   CANCELLED: "CANCELLED",
 } as const;
 export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus];
@@ -215,6 +218,11 @@ export const TicketEventKind = {
   ESCALATED: "ESCALATED",
   REASSIGNED: "REASSIGNED",
   RESOLVED: "RESOLVED",
+  STARTED: "STARTED",
+  PRIORITY_CHANGED: "PRIORITY_CHANGED",
+  REOPENED: "REOPENED",
+  CANCELLED: "CANCELLED",
+  CLOSED: "CLOSED",
 } as const;
 export type TicketEventKind = (typeof TicketEventKind)[keyof typeof TicketEventKind];
 

@@ -1,4 +1,4 @@
-import type { ImplementerRole } from "#/db/enums";
+import type { ImplementerRole, TicketEventKind } from "#/db/enums";
 import {
   TicketCategory as TicketCategoryValues,
   TicketPriorityLevel as TicketPriorityLevelValues,
@@ -17,6 +17,17 @@ export const CreateTicketSchema = z.object({
   category: TicketCategoryEnum,
   priority: TicketPriorityLevelEnum.default("MEDIUM"),
 });
+
+export const ACTIVE_TICKET_STATUSES: TicketStatus[] = ["OPEN", "IN_PROGRESS", "ESCALATED"];
+export const RESOLVED_TICKET_STATUSES: TicketStatus[] = ["RESOLVED", "CLOSED"];
+
+export const TicketReasonSchema = stringValidation("A reason is required");
+
+export const ChangeTicketPrioritySchema = z.object({
+  priority: TicketPriorityLevelEnum,
+  reason: TicketReasonSchema,
+});
+export type ChangeTicketPriorityInput = z.infer<typeof ChangeTicketPrioritySchema>;
 
 export type TicketCategory = z.infer<typeof TicketCategoryEnum>;
 export type TicketStatus = z.infer<typeof TicketStatusEnum>;
@@ -123,9 +134,13 @@ export interface TicketEscalation {
 }
 
 export interface TicketEscalationStatus {
+  canStart: boolean;
+  canChangePriority: boolean;
   canEscalate: boolean;
   canReassign: boolean;
   canResolve: boolean;
+  canReopen: boolean;
+  canCancel: boolean;
   hasReassignment: boolean;
   hasResolution: boolean;
 }
@@ -134,6 +149,22 @@ export interface TicketResolution {
   id: string;
   resolvedByRole: string | null;
   resolutionReason: string;
+  createdAt: Date;
+}
+
+export const TICKET_CHANGE_KINDS = [
+  "PRIORITY_CHANGED",
+  "REOPENED",
+  "CANCELLED",
+] as const satisfies TicketEventKind[];
+
+export interface TicketChange {
+  id: string;
+  kind: (typeof TICKET_CHANGE_KINDS)[number];
+  actorName: string | null;
+  fromValue: string | null;
+  toValue: string | null;
+  reason: string;
   createdAt: Date;
 }
 

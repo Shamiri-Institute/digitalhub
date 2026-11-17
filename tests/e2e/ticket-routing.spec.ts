@@ -21,6 +21,7 @@ type Hub = {
   bystanderEmail: string;
   coordinatorEmail: string;
   coordinatorName: string;
+  coordinatorId: string;
   otherCoordinatorId: string;
   otherCoordinatorName: string;
   otherCoordinatorEmail: string;
@@ -37,7 +38,7 @@ test.beforeAll(async () => {
     rows: [row],
   } = await db.execute<Hub>(sql`
     select su.email as "supervisorEmail", bu.email as "bystanderEmail",
-      hu.email as "coordinatorEmail", hc.coordinator_name as "coordinatorName", hc2.id as "otherCoordinatorId",
+      hu.email as "coordinatorEmail", hc.coordinator_name as "coordinatorName", hc.id as "coordinatorId", hc2.id as "otherCoordinatorId",
       hc2.coordinator_name as "otherCoordinatorName", h2u.email as "otherCoordinatorEmail",
       lu.email as "leadEmail", am.user_id as "adminUserId"
     from supervisors sv
@@ -201,6 +202,8 @@ test("a hub coordinator reassigns to an active coordinator of the hub, who may p
 
   await signIn(context, hub.otherCoordinatorEmail);
   await expect(await currentTier(page, "/hc/tickets", subject)).toHaveText("hub coordinator");
+  // A reassign is a handover at the same tier, not an escalation.
+  await expect(await cellUnder(page, await searchRows(page, subject), "Status")).toHaveText("open");
   // Reassigns are not limited, so a wrong one can be passed on, and the history stays in reach.
   const menu = await ticketMenu(page, "/hc/tickets", subject);
   await expect(menu.getByText("Reassign ticket")).toBeVisible();
@@ -225,30 +228,126 @@ test("a hub coordinator reassigns to an active coordinator of the hub, who may p
   await expect(history).toContainText(/admin/i);
 });
 
-test("an archived hub coordinator cannot receive a reassigned ticket", async ({
+for (const [state, inactive] of [
+  ["An archived", { archivedAt: new Date() }],
+  ["A dropped-out", { droppedOut: true }],
+] as const) {
+  test(`${state} hub coordinator cannot receive a reassigned ticket`, async ({
+    page,
+    context,
+    undo,
+  }) => {
+    const subject = `${subjectPrefix} ${state.toLowerCase()} reassign`;
+    const [otherCoordinator] = await db
+      .select({ archivedAt: hubCoordinator.archivedAt, droppedOut: hubCoordinator.droppedOut })
+      .from(hubCoordinator)
+      .where(eq(hubCoordinator.id, hub.otherCoordinatorId));
+    required(otherCoordinator, "the hub's other coordinator");
+    await db
+      .update(hubCoordinator)
+      .set(inactive)
+      .where(eq(hubCoordinator.id, hub.otherCoordinatorId));
+    undo(() =>
+      db
+        .update(hubCoordinator)
+        .set(otherCoordinator)
+        .where(eq(hubCoordinator.id, hub.otherCoordinatorId)),
+    );
+    await signIn(context, hub.supervisorEmail);
+    await createTicket(page, "/sc/tickets", subject, "CARE");
+
+    await signIn(context, hub.coordinatorEmail);
+    const reassign = await act(page, "/hc/tickets", subject, "Reassign ticket", "On leave.");
+    await reassign.getByRole("combobox").click();
+    await page.getByPlaceholder("Search coordinators...").fill(hub.otherCoordinatorName);
+    await expect(page.getByText("No eligible", { exact: false })).toBeVisible();
+  });
+}
+
+for (const [state, inactive] of [
+  ["an archived", { archivedAt: new Date() }],
+  ["a dropped-out", { droppedOut: true }],
+] as const) {
+  test(`a supervisor's ticket skips ${state} hub coordinator`, async ({ page, context, undo }) => {
+    const subject = `${subjectPrefix} skips ${state}`;
+    // Deactivate the coordinator routing would pick first, so only the filter keeps it from the ticket.
+    const [firstCoordinator] = await db
+      .select({
+        id: hubCoordinator.id,
+        archivedAt: hubCoordinator.archivedAt,
+        droppedOut: hubCoordinator.droppedOut,
+      })
+      .from(hubCoordinator)
+      .where(inArray(hubCoordinator.id, [hub.coordinatorId, hub.otherCoordinatorId]))
+      .orderBy(hubCoordinator.createdAt, hubCoordinator.id)
+      .limit(1);
+    required(firstCoordinator, "the hub's first coordinator");
+    await db.update(hubCoordinator).set(inactive).where(eq(hubCoordinator.id, firstCoordinator.id));
+    undo(() =>
+      db
+        .update(hubCoordinator)
+        .set({ archivedAt: firstCoordinator.archivedAt, droppedOut: firstCoordinator.droppedOut })
+        .where(eq(hubCoordinator.id, firstCoordinator.id)),
+    );
+
+    await signIn(context, hub.supervisorEmail);
+    await createTicket(page, "/sc/tickets", subject, "TECH");
+
+    const activeEmail =
+      firstCoordinator.id === hub.coordinatorId ? hub.otherCoordinatorEmail : hub.coordinatorEmail;
+    await signIn(context, activeEmail);
+    // Resolve shows only to the holder, so this proves routing skipped the inactive coordinator.
+    const menu = await ticketMenu(page, "/hc/tickets", subject);
+    await expect(menu.getByText("Resolve ticket")).toBeVisible();
+  });
+}
+
+test("a ticket reopened after its resolver dropped out goes to an active hub coordinator", async ({
   page,
   context,
   undo,
 }) => {
-  const subject = `${subjectPrefix} archived`;
+  const subject = `${subjectPrefix} reopen after dropout`;
+  await signIn(context, hub.supervisorEmail);
+  await createTicket(page, "/sc/tickets", subject, "TECH");
+
+  const {
+    rows: [resolver],
+  } = await db.execute<{ coordinatorId: string; droppedOut: boolean | null }>(sql`
+    select hc.id as "coordinatorId", hc.dropped_out as "droppedOut"
+    from tickets t
+    join implementer_members m on m.user_id = t.holder_id and m.role = 'HUB_COORDINATOR'
+    join hub_coordinators hc on hc.id = m.identifier
+    where t.subject = ${subject}`);
+  required(resolver, "the hub coordinator holding the ticket");
+  await db
+    .update(tickets)
+    .set({ status: "RESOLVED", resolvedAt: new Date() })
+    .where(eq(tickets.subject, subject));
   await db
     .update(hubCoordinator)
-    .set({ archivedAt: new Date() })
-    .where(eq(hubCoordinator.id, hub.otherCoordinatorId));
+    .set({ droppedOut: true })
+    .where(eq(hubCoordinator.id, resolver.coordinatorId));
   undo(() =>
     db
       .update(hubCoordinator)
-      .set({ archivedAt: null })
-      .where(eq(hubCoordinator.id, hub.otherCoordinatorId)),
+      .set({ droppedOut: resolver.droppedOut })
+      .where(eq(hubCoordinator.id, resolver.coordinatorId)),
   );
-  await signIn(context, hub.supervisorEmail);
-  await createTicket(page, "/sc/tickets", subject, "CARE");
 
-  await signIn(context, hub.coordinatorEmail);
-  const reassign = await act(page, "/hc/tickets", subject, "Reassign ticket", "On leave.");
-  await reassign.getByRole("combobox").click();
-  await page.getByPlaceholder("Search coordinators...").fill(hub.otherCoordinatorName);
-  await expect(page.getByText("No eligible", { exact: false })).toBeVisible();
+  await page.goto(getUrl("/sc/tickets"));
+  await chooseRowAction(page, await searchRows(page, subject), "Reopen ticket");
+  const reopen = page.getByRole("dialog", { name: "Reopen ticket" });
+  await reopen.getByLabel("Reason").fill("Still broken.");
+  await reopen.getByRole("button", { name: "Reopen ticket" }).click();
+  await expect(reopen).toBeHidden();
+
+  const activeEmail =
+    resolver.coordinatorId === hub.coordinatorId ? hub.otherCoordinatorEmail : hub.coordinatorEmail;
+  await signIn(context, activeEmail);
+  // Start shows only to the holder of an open ticket, so the new coordinator now holds it.
+  const menu = await ticketMenu(page, "/hc/tickets", subject);
+  await expect(menu.getByText("Start ticket")).toBeVisible();
 });
 
 test("a hub coordinator's ticket goes to the implementer's first super admin, not a newer one", async ({

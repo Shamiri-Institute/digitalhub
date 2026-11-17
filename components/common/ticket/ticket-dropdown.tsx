@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,13 +8,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "#/components/ui/dropdown-menu";
-import { getTicketEscalationStatus } from "#/lib/actions/ticket";
-import {
-  ESCALATION_RECIPIENT_ROLES,
-  REASSIGNMENT_INITIATOR_ROLES,
-  type ReassignmentInitiatorRole,
-  type TicketEscalationStatus,
-} from "#/lib/actions/ticket/types";
+import { toast } from "#/components/ui/use-toast";
+import { getTicketEscalationStatus, startTicket } from "#/lib/actions/ticket";
+import type { TicketEscalationStatus } from "#/lib/actions/ticket/types";
 
 import type { TicketData, TicketTableState } from "./columns";
 import { RowActionsTrigger } from "#/components/common/row-actions-menu";
@@ -34,13 +30,14 @@ export function TicketDropdown({ ticket, state }: { ticket: TicketData; state: T
   const showReassign = status?.canReassign ?? false;
   const hasReassignment = status?.hasReassignment ?? false;
   const hasResolution = status?.hasResolution ?? false;
-  const isEscalationRecipient = ESCALATION_RECIPIENT_ROLES.includes(
-    state.role as (typeof ESCALATION_RECIPIENT_ROLES)[number],
-  );
-  const showResolve = canResolve && isEscalationRecipient && ticket.currentTier === state.role;
-  const isReassignmentInitiator = REASSIGNMENT_INITIATOR_ROLES.includes(
-    state.role as ReassignmentInitiatorRole,
-  );
+
+  const [isStarting, startTransition] = useTransition();
+  const start = () =>
+    startTransition(async () => {
+      const result = await startTicket(ticket.id);
+      toast({ variant: result.success ? "default" : "destructive", description: result.message });
+    });
+  const showResolve = canResolve && ticket.currentTier === state.role;
 
   return (
     <DropdownMenu
@@ -59,6 +56,16 @@ export function TicketDropdown({ ticket, state }: { ticket: TicketData; state: T
         <DropdownMenuItem onClick={() => state.openDialog("view", ticket)}>
           View ticket
         </DropdownMenuItem>
+        {status?.canStart && (
+          <DropdownMenuItem disabled={isStarting} onClick={start}>
+            Start ticket
+          </DropdownMenuItem>
+        )}
+        {status?.canChangePriority && (
+          <DropdownMenuItem onClick={() => state.openDialog("changePriority", ticket)}>
+            Change priority
+          </DropdownMenuItem>
+        )}
         {(showResolve || hasResolution) && (
           <DropdownMenuItem
             onClick={() => state.openDialog(showResolve ? "resolve" : "viewResolution", ticket)}
@@ -66,7 +73,7 @@ export function TicketDropdown({ ticket, state }: { ticket: TicketData; state: T
             {showResolve ? "Resolve ticket" : "View resolution"}
           </DropdownMenuItem>
         )}
-        {showReassign && isReassignmentInitiator && (
+        {showReassign && (
           <DropdownMenuItem onClick={() => state.openDialog("reassign", ticket)}>
             Reassign ticket
           </DropdownMenuItem>
@@ -79,6 +86,16 @@ export function TicketDropdown({ ticket, state }: { ticket: TicketData; state: T
         {showEscalate && (
           <DropdownMenuItem onClick={() => state.openDialog("escalate", ticket)}>
             Escalate ticket
+          </DropdownMenuItem>
+        )}
+        {status?.canReopen && (
+          <DropdownMenuItem onClick={() => state.openDialog("reopen", ticket)}>
+            Reopen ticket
+          </DropdownMenuItem>
+        )}
+        {status?.canCancel && (
+          <DropdownMenuItem onClick={() => state.openDialog("cancel", ticket)}>
+            Cancel ticket
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

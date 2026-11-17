@@ -7,6 +7,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function enumLabel(value: string) {
+  return value.toLowerCase().replaceAll("_", " ");
+}
+
 export function getInitials(name: string): string {
   const words = name.split(" ");
   const firstInitial = words[0]?.charAt(0).toUpperCase() ?? "";

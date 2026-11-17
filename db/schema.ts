@@ -3514,6 +3514,8 @@ export const tickets = pgTable(
     priority: ticketPriorityLevelEnum().default("MEDIUM").notNull(),
     category: ticketCategoryEnum().notNull(),
     status: ticketStatusEnum().default("OPEN").notNull(),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true, mode: "date" }),
+    closedAt: timestamp("closed_at", { withTimezone: true, mode: "date" }),
     archivedAt: timestamp("archived_at", { precision: 3, mode: "date" }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
@@ -3534,6 +3536,9 @@ export const tickets = pgTable(
       .onUpdate("cascade")
       .onDelete("restrict"),
     index("tickets_holder_id_idx").on(table.holderId),
+    index("tickets_resolved_at_idx")
+      .on(table.resolvedAt)
+      .where(sql`${table.status} = 'RESOLVED'`),
     foreignKey({
       columns: [table.holderId],
       foreignColumns: [user.id],
@@ -3554,8 +3559,11 @@ export const ticketEvents = pgTable(
       .$defaultFn(() => objectId("ticketevent")),
     ticketId: varchar("ticket_id", { length: 255 }).notNull(),
     kind: ticketEventKindEnum().notNull(),
-    actorId: varchar("actor_id", { length: 255 }).notNull(),
+    // Null only when the system acted, as when a resolved ticket closes after its reopen window.
+    actorId: varchar("actor_id", { length: 255 }),
     assigneeId: varchar("assignee_id", { length: 255 }),
+    fromValue: text("from_value"),
+    toValue: text("to_value"),
     reason: text(),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
@@ -3567,11 +3575,15 @@ export const ticketEvents = pgTable(
     index("ticket_events_assignee_id_idx").on(table.assigneeId),
     check(
       "ticket_events_assignee_check",
-      sql`(${table.kind} in ('CREATED', 'ESCALATED', 'REASSIGNED')) = (${table.assigneeId} is not null)`,
+      sql`${table.kind}::text = 'REOPENED' or (${table.kind}::text in ('CREATED', 'ESCALATED', 'REASSIGNED')) = (${table.assigneeId} is not null)`,
     ),
     check(
       "ticket_events_reason_check",
-      sql`${table.kind} = 'CREATED' or ${table.reason} is not null`,
+      sql`${table.kind}::text in ('CREATED', 'STARTED', 'CLOSED') or ${table.reason} is not null`,
+    ),
+    check(
+      "ticket_events_actor_check",
+      sql`${table.kind}::text = 'CLOSED' or ${table.actorId} is not null`,
     ),
     foreignKey({
       columns: [table.ticketId],

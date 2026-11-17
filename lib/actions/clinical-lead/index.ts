@@ -37,10 +37,11 @@ export async function fetchClinicalLeads(
     }
 
     const clinicalLeads = await db.query.clinicalLead.findMany({
-      where: (cl, { and, eq, ne, or, ilike }) =>
+      where: (cl, { and, eq, ne, or, ilike, isNull }) =>
         and(
           eq(cl.assignedHubId, validatedData.hubId),
           eq(cl.implementerId, implementerId),
+          or(eq(cl.droppedOut, false), isNull(cl.droppedOut)),
           identifier ? ne(cl.id, identifier) : undefined,
           term
             ? or(ilike(cl.clinicalLeadName, `%${term}%`), ilike(cl.clinicalLeadEmail, `%${term}%`))

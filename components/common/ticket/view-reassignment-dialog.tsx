@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/u
 import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
 import { getTicketReassignments } from "#/lib/actions/ticket";
+import { enumLabel } from "#/lib/utils";
 
 const formatSafeDate = (date: Date | string | null | undefined) => {
   if (!date) return "—";
@@ -17,8 +18,7 @@ const formatSafeDate = (date: Date | string | null | undefined) => {
   return Number.isNaN(d.getTime()) ? "—" : format(d, "dd MMM yyyy");
 };
 
-const formatRole = (role: string | null) =>
-  role ? role.toLowerCase().replace("_", " ") : "unknown";
+const formatRole = (role: string | null) => (role ? enumLabel(role) : "unknown");
 
 export function ViewReassignmentDialog({
   reassignments,
