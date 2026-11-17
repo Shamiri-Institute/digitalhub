@@ -3575,7 +3575,7 @@ export const ticketEvents = pgTable(
     index("ticket_events_assignee_id_idx").on(table.assigneeId),
     check(
       "ticket_events_assignee_check",
-      sql`(${table.kind} in ('CREATED', 'ESCALATED', 'REASSIGNED')) = (${table.assigneeId} is not null)`,
+      sql`${table.kind}::text = 'REOPENED' or (${table.kind}::text in ('CREATED', 'ESCALATED', 'REASSIGNED')) = (${table.assigneeId} is not null)`,
     ),
     check(
       "ticket_events_reason_check",

@@ -1,0 +1,2 @@
+ALTER TABLE "ticket_events" DROP CONSTRAINT "ticket_events_assignee_check";--> statement-breakpoint
+ALTER TABLE "ticket_events" ADD CONSTRAINT "ticket_events_assignee_check" CHECK ("ticket_events"."kind"::text = 'REOPENED' or ("ticket_events"."kind"::text in ('CREATED', 'ESCALATED', 'REASSIGNED')) = ("ticket_events"."assignee_id" is not null));

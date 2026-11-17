@@ -15,7 +15,8 @@ import {
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { Skeleton } from "#/components/ui/skeleton";
-import { getEscalationsPerTicket } from "#/lib/actions/ticket";
+import { getEscalationsPerTicket, getTicketChanges } from "#/lib/actions/ticket";
+import type { TicketChange } from "#/lib/actions/ticket/types";
 import type { TicketData } from "./columns";
 import { enumLabel } from "#/lib/utils";
 
@@ -28,10 +29,12 @@ const formatSafeDate = (date: Date | string | null | undefined) => {
 export function ViewTicketDialog({
   ticket,
   escalations,
+  changes,
   onOpenChange,
 }: {
   ticket: TicketData;
   escalations: ReturnType<typeof getEscalationsPerTicket>;
+  changes: ReturnType<typeof getTicketChanges>;
   onOpenChange: (open: boolean) => void;
 }) {
   return (
@@ -100,6 +103,15 @@ export function ViewTicketDialog({
                 }
               >
                 <EscalationHistory escalations={escalations} />
+              </Suspense>
+            </LoadErrorBoundary>
+          </div>
+          <Separator />
+          <div>
+            <div className="text-sm font-medium text-shamiri-text-grey uppercase mb-3">Changes</div>
+            <LoadErrorBoundary message="Could not load the changes.">
+              <Suspense fallback={<Skeleton className="h-16 w-full" />}>
+                <ChangeHistory changes={changes} />
               </Suspense>
             </LoadErrorBoundary>
           </div>
@@ -179,6 +191,48 @@ function EscalationHistory({
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function describeChange(change: TicketChange) {
+  switch (change.kind) {
+    case "PRIORITY_CHANGED":
+      return `Priority changed from ${enumLabel(change.fromValue ?? "")} to ${enumLabel(change.toValue ?? "")}`;
+    case "REOPENED":
+      return "Reopened";
+    case "CANCELLED":
+      return "Cancelled";
+  }
+}
+
+function ChangeHistory({
+  changes: changesPromise,
+}: {
+  changes: ReturnType<typeof getTicketChanges>;
+}) {
+  const result = use(changesPromise);
+  const changes = result.data ?? [];
+  if (!result.success || changes.length === 0) {
+    return <div className="text-sm text-shamiri-text-grey">No changes</div>;
+  }
+
+  return (
+    <div className="space-y-3">
+      {[...changes].reverse().map((change) => (
+        <div
+          key={change.id}
+          className="rounded-md border border-shamiri-light-grey bg-background p-3"
+        >
+          <div className="flex flex-col gap-1">
+            <span className="text-sm font-medium">{describeChange(change)}</span>
+            <span className="text-xs text-shamiri-text-grey">
+              {change.actorName ?? "Unknown"} · {formatSafeDate(change.createdAt)}
+            </span>
+            <span className="text-sm text-shamiri-text-dark-grey">{change.reason}</span>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import type { ImplementerRole } from "#/db/enums";
+import type { ImplementerRole, TicketEventKind } from "#/db/enums";
 import {
   TicketCategory as TicketCategoryValues,
   TicketPriorityLevel as TicketPriorityLevelValues,
@@ -149,6 +149,22 @@ export interface TicketResolution {
   id: string;
   resolvedByRole: string | null;
   resolutionReason: string;
+  createdAt: Date;
+}
+
+export const TICKET_CHANGE_KINDS = [
+  "PRIORITY_CHANGED",
+  "REOPENED",
+  "CANCELLED",
+] as const satisfies TicketEventKind[];
+
+export interface TicketChange {
+  id: string;
+  kind: (typeof TICKET_CHANGE_KINDS)[number];
+  actorName: string | null;
+  fromValue: string | null;
+  toValue: string | null;
+  reason: string;
   createdAt: Date;
 }
 

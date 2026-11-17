@@ -4,7 +4,12 @@ import { and, asc, desc, eq, exists, inArray, isNull, or, sql } from "drizzle-or
 import { refresh } from "next/cache";
 
 import { db, type Transaction } from "#/db/client";
-import { ImplementerRole, type TicketEventKind, type TicketStatus } from "#/db/enums";
+import {
+  ImplementerRole,
+  type TicketCategory,
+  type TicketEventKind,
+  type TicketStatus,
+} from "#/db/enums";
 import {
   adminUser,
   clinicalLead,
@@ -37,6 +42,8 @@ import {
   REASSIGNMENT_INITIATOR_ROLES,
   type ReassignmentInitiatorRole,
   ROLE_NAME_CONFIG,
+  TICKET_CHANGE_KINDS,
+  type TicketChange,
   type TicketEscalation,
   type TicketEscalationStatus,
   type TicketFilters,
@@ -133,6 +140,7 @@ async function findViewableTicket(ticketId: string, userId: string) {
       holderId: tickets.holderId,
       createdById: tickets.createdById,
       resolvedAt: tickets.resolvedAt,
+      category: tickets.category,
     })
     .from(tickets)
     .where(and(eq(tickets.id, ticketId), canViewTicket(userId)));
@@ -210,6 +218,7 @@ async function lockTicket(tx: Transaction, ticketId: string) {
       priority: tickets.priority,
       createdById: tickets.createdById,
       resolvedAt: tickets.resolvedAt,
+      category: tickets.category,
     })
     .from(tickets)
     .where(eq(tickets.id, ticketId))
@@ -244,6 +253,13 @@ function assertActiveTicket(status: TicketStatus, outcome: string) {
   if (!isActiveTicketStatus(status)) {
     throw new Error(`Only an open, in-progress or escalated ticket can ${outcome}`);
   }
+}
+
+// A clinical ticket is in a clinician's hands once started, so its creator may withdraw it only before.
+function mayCancelTicket(ticket: { status: TicketStatus; category: TicketCategory }) {
+  return ticket.category === "CLINICAL"
+    ? ticket.status === "OPEN"
+    : isActiveTicketStatus(ticket.status);
 }
 
 function assertTicketHolder(holderId: string | null, callerUserId: string, action: string) {
@@ -390,8 +406,14 @@ export async function changeTicketPriority(
 
 export async function reopenTicket(ticketId: string, reason: string): Promise<ActionResponse> {
   return runTicketAction("Ticket reopened", async () => {
-    const { userId: callerUserId } = await requireAuthRole(...ESCALATION_INITIATOR_ROLES);
+    const {
+      userId: callerUserId,
+      role,
+      implementerId: activeImplementerId,
+    } = await requireAuthRole(...ESCALATION_INITIATOR_ROLES);
     const reopenReason = TicketReasonSchema.parse(reason);
+
+    if (!isEscalationInitiatorRole(role)) throw new Error("The role cannot reopen tickets");
 
     await db.transaction(async (tx) => {
       const lockedTicket = await lockTicket(tx, ticketId);
@@ -405,12 +427,29 @@ export async function reopenTicket(ticketId: string, reason: string): Promise<Ac
         );
       }
 
-      // The ticket returns to its holder, who resolved it.
+      // The ticket returns to its holder, who resolved it, unless they have since left; then it is
+      // routed afresh, as a new ticket is, so it is never left with no one able to act on it.
+      const holderIsActive =
+        lockedTicket.holderId !== null &&
+        (await isActiveHolder(tx, lockedTicket.holderId, activeImplementerId));
+      const newHolderId = holderIsActive
+        ? undefined
+        : await fetchEscalationRecipientHandlers[
+            ESCALATION_RECIPIENT_FROM_INITIATOR[role](lockedTicket.category)
+          ]({ userId: callerUserId, implementerId: activeImplementerId });
+
       await recordTicketEvent(
         tx,
         lockedTicket,
-        { ticketId, kind: "REOPENED", actorId: callerUserId, reason: reopenReason },
-        { status: "IN_PROGRESS", resolvedAt: null },
+        {
+          ticketId,
+          kind: "REOPENED",
+          actorId: callerUserId,
+          assigneeId: newHolderId,
+          reason: reopenReason,
+        },
+        // A new holder has not picked the ticket up, so it must be startable.
+        { status: newHolderId ? "OPEN" : "IN_PROGRESS", resolvedAt: null },
         "status",
       );
     });
@@ -426,6 +465,9 @@ export async function cancelTicket(ticketId: string, reason: string): Promise<Ac
       const lockedTicket = await lockTicket(tx, ticketId);
       assertTicketCreator(lockedTicket.createdById, callerUserId, "cancel");
       assertActiveTicket(lockedTicket.status, "be cancelled");
+      if (!mayCancelTicket(lockedTicket)) {
+        throw new Error("A clinical ticket can only be cancelled before it is started");
+      }
 
       await recordTicketEvent(
         tx,
@@ -480,6 +522,27 @@ export async function reassignTicket(
       );
     });
   });
+}
+
+// The same archived and dropped-out rules the escalation routing applies to each role.
+async function isActiveHolder(tx: Transaction, holderId: string, implementerId: string) {
+  const { rows } = await tx.execute(sql`
+    SELECT 1
+    FROM implementer_members m
+    LEFT JOIN supervisors s ON m.role = 'SUPERVISOR' AND s.id = m.identifier
+    LEFT JOIN hub_coordinators hc ON m.role = 'HUB_COORDINATOR' AND hc.id = m.identifier
+    LEFT JOIN clinical_leads cl ON m.role = 'CLINICAL_LEAD' AND cl.id = m.identifier
+    WHERE m.user_id = ${holderId}
+      AND m.implementer_id = ${implementerId}
+      AND (
+        m.role = 'ADMIN'
+        OR (s.archived_at IS NULL AND s.dropped_out IS NOT TRUE AND s.id IS NOT NULL)
+        OR (hc.archived_at IS NULL AND hc.dropped_out IS NOT TRUE AND hc.id IS NOT NULL)
+        OR (cl.dropped_out IS NOT TRUE AND cl.id IS NOT NULL)
+      )
+    LIMIT 1
+  `);
+  return rows.length > 0;
 }
 
 async function assertReassignmentEligible(
@@ -591,7 +654,7 @@ export async function getTicketEscalationStatus(
           callerCreatedTicket &&
           ticket.status === "RESOLVED" &&
           mayReopenTicket(ticket.resolvedAt, new Date()),
-        canCancel: callerCreatedTicket && ticketIsActive,
+        canCancel: callerCreatedTicket && mayCancelTicket(ticket),
         hasReassignment,
         hasResolution:
           RESOLVED_TICKET_STATUSES.includes(ticket.status) &&
@@ -642,6 +705,43 @@ export async function getTicketResolution(
         resolutionReason: resolution.reason ?? "",
         createdAt: resolution.createdAt,
       },
+    };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function getTicketChanges(ticketId: string): Promise<ActionResponse<TicketChange[]>> {
+  try {
+    const { userId: callerUserId, implementerId } = await requireAuthRole(
+      ...Object.values(ImplementerRole),
+    );
+
+    const viewableTicket = await findViewableTicket(ticketId, callerUserId);
+    if (!viewableTicket) throw new Error("You are not authorized to view this ticket's changes");
+
+    const changes = await db.query.ticketEvents.findMany({
+      where: (e, { and, eq, inArray }) =>
+        and(eq(e.ticketId, ticketId), inArray(e.kind, [...TICKET_CHANGE_KINDS])),
+      orderBy: (e, { asc }) => [asc(e.createdAt), asc(e.id)],
+    });
+    const nameMap = await getUserNamesAndRolesById(
+      changes.flatMap((e) => (e.actorId ? [e.actorId] : [])),
+      implementerId,
+    );
+
+    return {
+      success: true,
+      message: "Ticket changes retrieved",
+      data: changes.map((e): TicketChange => ({
+        id: e.id,
+        kind: e.kind as TicketChange["kind"],
+        actorName: (e.actorId && nameMap.get(e.actorId)?.name) || null,
+        fromValue: e.fromValue,
+        toValue: e.toValue,
+        reason: e.reason ?? "",
+        createdAt: e.createdAt,
+      })),
     };
   } catch (error) {
     return { success: false, message: error instanceof Error ? error.message : "Unknown error" };

@@ -22,6 +22,7 @@ import { ViewTicketDialog } from "#/components/common/ticket/view-ticket-dialog"
 import DataTable from "#/components/data-table";
 import {
   getEscalationsPerTicket,
+  getTicketChanges,
   getTicketReassignments,
   getTicketResolution,
 } from "#/lib/actions/ticket";
@@ -31,7 +32,12 @@ import {
 } from "#/lib/actions/ticket/types";
 
 type OpenTicketDialog =
-  | { kind: "view"; ticketId: string; escalations: ReturnType<typeof getEscalationsPerTicket> }
+  | {
+      kind: "view";
+      ticketId: string;
+      escalations: ReturnType<typeof getEscalationsPerTicket>;
+      changes: ReturnType<typeof getTicketChanges>;
+    }
   | { kind: "viewResolution"; ticketId: string; resolution: ReturnType<typeof getTicketResolution> }
   | {
       kind: "viewReassignment";
@@ -57,7 +63,12 @@ export default function TicketsDatatable({
   const openDialog = (kind: TicketDialogKind, { id: ticketId }: TicketData) => {
     switch (kind) {
       case "view":
-        return setDialog({ kind, ticketId, escalations: getEscalationsPerTicket(ticketId) });
+        return setDialog({
+          kind,
+          ticketId,
+          escalations: getEscalationsPerTicket(ticketId),
+          changes: getTicketChanges(ticketId),
+        });
       case "viewResolution":
         return setDialog({ kind, ticketId, resolution: getTicketResolution(ticketId) });
       case "viewReassignment":
@@ -86,6 +97,7 @@ export default function TicketsDatatable({
         <ViewTicketDialog
           ticket={ticket}
           escalations={dialog.escalations}
+          changes={dialog.changes}
           onOpenChange={closeDialog}
         />
       )}

@@ -302,6 +302,54 @@ for (const [state, inactive] of [
   });
 }
 
+test("a ticket reopened after its resolver dropped out goes to an active hub coordinator", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const subject = `${subjectPrefix} reopen after dropout`;
+  await signIn(context, hub.supervisorEmail);
+  await createTicket(page, "/sc/tickets", subject, "TECH");
+
+  const {
+    rows: [resolver],
+  } = await db.execute<{ coordinatorId: string; droppedOut: boolean | null }>(sql`
+    select hc.id as "coordinatorId", hc.dropped_out as "droppedOut"
+    from tickets t
+    join implementer_members m on m.user_id = t.holder_id and m.role = 'HUB_COORDINATOR'
+    join hub_coordinators hc on hc.id = m.identifier
+    where t.subject = ${subject}`);
+  required(resolver, "the hub coordinator holding the ticket");
+  await db
+    .update(tickets)
+    .set({ status: "RESOLVED", resolvedAt: new Date() })
+    .where(eq(tickets.subject, subject));
+  await db
+    .update(hubCoordinator)
+    .set({ droppedOut: true })
+    .where(eq(hubCoordinator.id, resolver.coordinatorId));
+  undo(() =>
+    db
+      .update(hubCoordinator)
+      .set({ droppedOut: resolver.droppedOut })
+      .where(eq(hubCoordinator.id, resolver.coordinatorId)),
+  );
+
+  await page.goto(getUrl("/sc/tickets"));
+  await chooseRowAction(page, await searchRows(page, subject), "Reopen ticket");
+  const reopen = page.getByRole("dialog", { name: "Reopen ticket" });
+  await reopen.getByLabel("Reason").fill("Still broken.");
+  await reopen.getByRole("button", { name: "Reopen ticket" }).click();
+  await expect(reopen).toBeHidden();
+
+  const activeEmail =
+    resolver.coordinatorId === hub.coordinatorId ? hub.otherCoordinatorEmail : hub.coordinatorEmail;
+  await signIn(context, activeEmail);
+  // Start shows only to the holder of an open ticket, so the new coordinator now holds it.
+  const menu = await ticketMenu(page, "/hc/tickets", subject);
+  await expect(menu.getByText("Start ticket")).toBeVisible();
+});
+
 test("a hub coordinator's ticket goes to the implementer's first super admin, not a newer one", async ({
   page,
   context,

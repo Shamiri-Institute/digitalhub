@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { ticketEvents, tickets } from "#/db/schema";
@@ -93,7 +93,7 @@ test("the holder starts, reprioritises and resolves a ticket, and its creator re
   test.slow();
   const fellowAndSupervisor = await pickFellowAndSupervisor();
   required(fellowAndSupervisor, "a fellow and their supervisor who can both sign in");
-  const { ticketId, ticketSubject } = await insertHeldTicket(fellowAndSupervisor, undo);
+  const { ticketSubject } = await insertHeldTicket(fellowAndSupervisor, undo);
 
   await signInWithEmail(context, fellowAndSupervisor.supervisorEmail);
   await page.goto(getUrl("/sc/tickets"));
@@ -123,28 +123,18 @@ test("the holder starts, reprioritises and resolves a ticket, and its creator re
   await giveReason(page, "Reopen ticket", "The device still drops the connection.");
   await expectRowAfterReload(page, ticketSubject, /in progress/i);
 
-  // No page shows the event log, so the database is where the logged reasons can be seen.
-  const lifecycleEvents = await db
-    .select({ kind: ticketEvents.kind, reason: ticketEvents.reason })
-    .from(ticketEvents)
-    .where(
-      and(
-        eq(ticketEvents.ticketId, ticketId),
-        inArray(ticketEvents.kind, ["STARTED", "PRIORITY_CHANGED", "REOPENED"]),
-      ),
-    )
-    .orderBy(ticketEvents.createdAt);
-  expect(lifecycleEvents).toEqual([
-    { kind: "STARTED", reason: null },
-    { kind: "PRIORITY_CHANGED", reason: "A whole school is affected." },
-    { kind: "REOPENED", reason: "The device still drops the connection." },
-  ]);
+  await chooseRowAction(page, await searchRows(page, ticketSubject), "View ticket");
+  const details = page.getByRole("dialog", { name: "Ticket Details" });
+  await expect(details).toContainText("Priority changed from medium to urgent");
+  await expect(details).toContainText("A whole school is affected.");
+  await expect(details).toContainText("Reopened");
+  await expect(details).toContainText("The device still drops the connection.");
 });
 
 test("the creator cancels an open ticket with a reason", async ({ page, context, undo }) => {
   const fellowAndSupervisor = await pickFellowAndSupervisor();
   required(fellowAndSupervisor, "a fellow and their supervisor who can both sign in");
-  const { ticketId, ticketSubject } = await insertHeldTicket(fellowAndSupervisor, undo);
+  const { ticketSubject } = await insertHeldTicket(fellowAndSupervisor, undo);
 
   await signInWithEmail(context, fellowAndSupervisor.fellowEmail);
   await page.goto(getUrl("/fel/tickets"));
@@ -163,11 +153,10 @@ test("the creator cancels an open ticket with a reason", async ({ page, context,
     "Reassign ticket",
   ]);
 
-  const [cancellation] = await db
-    .select({ reason: ticketEvents.reason })
-    .from(ticketEvents)
-    .where(and(eq(ticketEvents.ticketId, ticketId), eq(ticketEvents.kind, "CANCELLED")));
-  expect(cancellation?.reason).toBe("Raised by mistake.");
+  await chooseRowAction(page, await searchRows(page, ticketSubject), "View ticket");
+  const details = page.getByRole("dialog", { name: "Ticket Details" });
+  await expect(details).toContainText("Cancelled");
+  await expect(details).toContainText("Raised by mistake.");
 });
 
 test("the creator can't reopen a ticket once the reopen window has passed", async ({
@@ -187,4 +176,25 @@ test("the creator can't reopen a ticket once the reopen window has passed", asyn
   await signInWithEmail(context, fellowAndSupervisor.fellowEmail);
   await page.goto(getUrl("/fel/tickets"));
   await expectNoActions(page, ticketSubject, ["Reopen ticket", "Cancel ticket"]);
+});
+
+test("the creator can cancel a clinical ticket only until it is started", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fellowAndSupervisor = await pickFellowAndSupervisor();
+  required(fellowAndSupervisor, "a fellow and their supervisor who can both sign in");
+  const { ticketId, ticketSubject } = await insertHeldTicket(fellowAndSupervisor, undo);
+  await db.update(tickets).set({ category: "CLINICAL" }).where(eq(tickets.id, ticketId));
+
+  await signInWithEmail(context, fellowAndSupervisor.fellowEmail);
+  await page.goto(getUrl("/fel/tickets"));
+  await (await searchRows(page, ticketSubject)).getByRole("cell").last().click();
+  await expect(page.getByRole("menu").getByText("Cancel ticket", { exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await db.update(tickets).set({ status: "IN_PROGRESS" }).where(eq(tickets.id, ticketId));
+  await page.reload();
+  await expectNoActions(page, ticketSubject, ["Cancel ticket"]);
 });
