@@ -163,7 +163,6 @@ test("the creator cancels an open ticket with a reason", async ({ page, context,
     "Reassign ticket",
   ]);
 
-  // No page shows the event log, so the database is where the cancel reason can be seen.
   const [cancellation] = await db
     .select({ reason: ticketEvents.reason })
     .from(ticketEvents)

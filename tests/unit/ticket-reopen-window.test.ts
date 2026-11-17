@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import { mayReopenTicket } from "#/lib/ticket-reopen-window";
 
 const resolvedAt = new Date("2026-03-20T09:30:00.000Z");
-// 7 days of 24 hours after the ticket was resolved.
 const deadline = new Date("2026-03-27T09:30:00.000Z");
 
 describe("mayReopenTicket", () => {
