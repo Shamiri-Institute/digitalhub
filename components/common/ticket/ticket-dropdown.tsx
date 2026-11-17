@@ -10,12 +10,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { toast } from "#/components/ui/use-toast";
 import { getTicketEscalationStatus, startTicket } from "#/lib/actions/ticket";
-import {
-  ESCALATION_RECIPIENT_ROLES,
-  REASSIGNMENT_INITIATOR_ROLES,
-  type ReassignmentInitiatorRole,
-  type TicketEscalationStatus,
-} from "#/lib/actions/ticket/types";
+import type { TicketEscalationStatus } from "#/lib/actions/ticket/types";
 
 import type { TicketData, TicketTableState } from "./columns";
 import { RowActionsTrigger } from "#/components/common/row-actions-menu";
@@ -42,13 +37,7 @@ export function TicketDropdown({ ticket, state }: { ticket: TicketData; state: T
       const result = await startTicket(ticket.id);
       toast({ variant: result.success ? "default" : "destructive", description: result.message });
     });
-  const isEscalationRecipient = ESCALATION_RECIPIENT_ROLES.includes(
-    state.role as (typeof ESCALATION_RECIPIENT_ROLES)[number],
-  );
-  const showResolve = canResolve && isEscalationRecipient && ticket.currentTier === state.role;
-  const isReassignmentInitiator = REASSIGNMENT_INITIATOR_ROLES.includes(
-    state.role as ReassignmentInitiatorRole,
-  );
+  const showResolve = canResolve && ticket.currentTier === state.role;
 
   return (
     <DropdownMenu
@@ -84,7 +73,7 @@ export function TicketDropdown({ ticket, state }: { ticket: TicketData; state: T
             {showResolve ? "Resolve ticket" : "View resolution"}
           </DropdownMenuItem>
         )}
-        {showReassign && isReassignmentInitiator && (
+        {showReassign && (
           <DropdownMenuItem onClick={() => state.openDialog("reassign", ticket)}>
             Reassign ticket
           </DropdownMenuItem>

@@ -514,6 +514,7 @@ async function assertReassignmentEligible(
         and(
           eq(hubCoordinator.id, targetMember.identifier),
           isNull(hubCoordinator.archivedAt),
+          or(eq(hubCoordinator.droppedOut, false), isNull(hubCoordinator.droppedOut)),
           inArray(hubCoordinator.assignedHubId, actorHubs),
         ),
       );
@@ -537,6 +538,7 @@ async function assertReassignmentEligible(
       .where(
         and(
           eq(clinicalLead.id, targetMember.identifier),
+          or(eq(clinicalLead.droppedOut, false), isNull(clinicalLead.droppedOut)),
           inArray(clinicalLead.assignedHubId, actorHubs),
         ),
       );
@@ -568,6 +570,9 @@ export async function getTicketEscalationStatus(
     const hasReassignment = pastKinds.some((e) => e.kind === "REASSIGNED");
     const ticketIsActive = isActiveTicketStatus(ticket.status);
     const callerHoldsTicket = ticketIsActive && ticket.holderId === callerUserId;
+    // Each action's own role guard, so the menu never offers one that would be refused.
+    const callerHoldsTicketAs = (roles: readonly ImplementerRole[]) =>
+      callerHoldsTicket && roles.includes(role);
     // Reopen and cancel run under an initiator role, so another membership must not offer them.
     const callerCreatedTicket =
       ticket.createdById === callerUserId && isEscalationInitiatorRole(role);
@@ -576,12 +581,12 @@ export async function getTicketEscalationStatus(
       success: true,
       message: "Ticket escalation status retrieved",
       data: {
-        canStart: callerHoldsTicket && ticket.status !== "IN_PROGRESS",
-        canChangePriority: callerHoldsTicket,
-        // Admins are the last tier, so there is no one above them to escalate to.
-        canEscalate: callerHoldsTicket && role !== ImplementerRole.ADMIN,
-        canReassign: callerHoldsTicket,
-        canResolve: callerHoldsTicket,
+        canStart:
+          callerHoldsTicketAs(ESCALATION_RECIPIENT_ROLES) && ticket.status !== "IN_PROGRESS",
+        canChangePriority: callerHoldsTicketAs(ESCALATION_RECIPIENT_ROLES),
+        canEscalate: callerHoldsTicketAs(ESCALATION_INITIATOR_ROLES),
+        canReassign: callerHoldsTicketAs(REASSIGNMENT_INITIATOR_ROLES),
+        canResolve: callerHoldsTicketAs(ESCALATION_RECIPIENT_ROLES),
         canReopen:
           callerCreatedTicket &&
           ticket.status === "RESOLVED" &&

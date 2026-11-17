@@ -228,31 +228,41 @@ test("a hub coordinator reassigns to an active coordinator of the hub, who may p
   await expect(history).toContainText(/admin/i);
 });
 
-test("an archived hub coordinator cannot receive a reassigned ticket", async ({
-  page,
-  context,
-  undo,
-}) => {
-  const subject = `${subjectPrefix} archived`;
-  await db
-    .update(hubCoordinator)
-    .set({ archivedAt: new Date() })
-    .where(eq(hubCoordinator.id, hub.otherCoordinatorId));
-  undo(() =>
-    db
+for (const [state, inactive] of [
+  ["An archived", { archivedAt: new Date() }],
+  ["A dropped-out", { droppedOut: true }],
+] as const) {
+  test(`${state} hub coordinator cannot receive a reassigned ticket`, async ({
+    page,
+    context,
+    undo,
+  }) => {
+    const subject = `${subjectPrefix} ${state.toLowerCase()} reassign`;
+    const [otherCoordinator] = await db
+      .select({ archivedAt: hubCoordinator.archivedAt, droppedOut: hubCoordinator.droppedOut })
+      .from(hubCoordinator)
+      .where(eq(hubCoordinator.id, hub.otherCoordinatorId));
+    required(otherCoordinator, "the hub's other coordinator");
+    await db
       .update(hubCoordinator)
-      .set({ archivedAt: null })
-      .where(eq(hubCoordinator.id, hub.otherCoordinatorId)),
-  );
-  await signIn(context, hub.supervisorEmail);
-  await createTicket(page, "/sc/tickets", subject, "CARE");
+      .set(inactive)
+      .where(eq(hubCoordinator.id, hub.otherCoordinatorId));
+    undo(() =>
+      db
+        .update(hubCoordinator)
+        .set(otherCoordinator)
+        .where(eq(hubCoordinator.id, hub.otherCoordinatorId)),
+    );
+    await signIn(context, hub.supervisorEmail);
+    await createTicket(page, "/sc/tickets", subject, "CARE");
 
-  await signIn(context, hub.coordinatorEmail);
-  const reassign = await act(page, "/hc/tickets", subject, "Reassign ticket", "On leave.");
-  await reassign.getByRole("combobox").click();
-  await page.getByPlaceholder("Search coordinators...").fill(hub.otherCoordinatorName);
-  await expect(page.getByText("No eligible", { exact: false })).toBeVisible();
-});
+    await signIn(context, hub.coordinatorEmail);
+    const reassign = await act(page, "/hc/tickets", subject, "Reassign ticket", "On leave.");
+    await reassign.getByRole("combobox").click();
+    await page.getByPlaceholder("Search coordinators...").fill(hub.otherCoordinatorName);
+    await expect(page.getByText("No eligible", { exact: false })).toBeVisible();
+  });
+}
 
 for (const [state, inactive] of [
   ["an archived", { archivedAt: new Date() }],
