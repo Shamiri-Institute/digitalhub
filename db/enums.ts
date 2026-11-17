@@ -178,6 +178,14 @@ export const TranscriptionStatus = {
 } as const;
 export type TranscriptionStatus = (typeof TranscriptionStatus)[keyof typeof TranscriptionStatus];
 
+export const FidelityRatingStatus = {
+  QUEUED: "QUEUED",
+  PROCESSING: "PROCESSING",
+  COMPLETED: "COMPLETED",
+  FAILED: "FAILED",
+} as const;
+export type FidelityRatingStatus = (typeof FidelityRatingStatus)[keyof typeof FidelityRatingStatus];
+
 export const TicketPriorityLevel = {
   LOW: "LOW",
   MEDIUM: "MEDIUM",

@@ -3,9 +3,16 @@ import "server-only";
 import * as Sentry from "@sentry/nextjs";
 import { and, asc, eq, inArray, lt, or, sql } from "drizzle-orm";
 
-import { db } from "#/db/client";
-import { type RecordingProcessingStatus, TranscriptionStatus } from "#/db/enums";
-import { sessionRecording, transcription } from "#/db/schema";
+import { db, errorMessageWithoutQuery } from "#/db/client";
+import { RecordingProcessingStatus, TranscriptionStatus } from "#/db/enums";
+import {
+  fidelityRating,
+  interventionSession,
+  sessionName,
+  sessionRecording,
+  transcription,
+} from "#/db/schema";
+import { ratedSessionLine } from "#/lib/fidelity-rating/sessions";
 import { getPresignedUrl } from "#/lib/s3/s3.service";
 import {
   UnusableAudioError,
@@ -24,7 +31,8 @@ const MAX_ATTEMPTS = 3;
 const LEASE_MINUTES = 25;
 const RUN_DEADLINE_MS = 700_000;
 
-// The recording's own status mirrors its transcription until a feedback stage extends it.
+// The recording's own status mirrors its transcription, except that a completed transcription with a
+// rating queued after it leaves the recording processing until the rating finishes.
 const recordingStatusFor = {
   QUEUED: "PENDING",
   PROCESSING: "PROCESSING",
@@ -88,8 +96,9 @@ export async function claimTranscriptions(limit = RUNS_PER_TICK) {
 }
 
 /**
- * Moves a claimed run out of PROCESSING, only if no later claim has taken it over. Returns false
- * when the run lost its claim and the write was dropped.
+ * Moves a claimed run out of PROCESSING, only if no later claim has taken it over, and queues a
+ * fidelity rating of a completed transcript of a session the judge has a checklist for. Returns
+ * false when the run lost its claim and the write was dropped.
  */
 export async function finishTranscription(
   run: ClaimedTranscription,
@@ -101,6 +110,15 @@ export async function finishTranscription(
       >),
 ) {
   return db.transaction(async (tx) => {
+    // The recording is locked first, as a session edit locks it, so the session read here is the
+    // one the recording has when the rating is queued.
+    const [current] = await tx
+      .select({ sessionName: sessionName.sessionName })
+      .from(sessionRecording)
+      .innerJoin(interventionSession, eq(interventionSession.id, sessionRecording.sessionId))
+      .leftJoin(sessionName, eq(sessionName.id, interventionSession.sessionId))
+      .where(eq(sessionRecording.id, run.recordingId))
+      .for("update", { of: sessionRecording });
     const [finished] = await tx
       .update(transcription)
       .set(result)
@@ -113,10 +131,20 @@ export async function finishTranscription(
       )
       .returning({ id: transcription.id });
     if (!finished) return false;
+    const ratingQueued =
+      result.status === TranscriptionStatus.COMPLETED &&
+      ratedSessionLine(current?.sessionName) !== null;
+    if (ratingQueued) {
+      await tx
+        .insert(fidelityRating)
+        .values({ recordingId: run.recordingId, transcriptionId: run.id });
+    }
     await tx
       .update(sessionRecording)
       .set({
-        status: recordingStatusFor[result.status],
+        status: ratingQueued
+          ? RecordingProcessingStatus.PROCESSING
+          : recordingStatusFor[result.status],
         processedAt: result.status === "QUEUED" ? null : new Date(),
         errorMessage: result.status === "COMPLETED" ? null : result.errorMessage,
       })
@@ -182,7 +210,7 @@ async function runTranscription(run: ClaimedTranscription) {
       report(run, "gaps", `Transcription completed with ${transcript.gaps.length} gaps`, "warning");
     }
   } catch (error) {
-    const errorMessage = (error instanceof Error ? error.message : String(error)).slice(0, 500);
+    const errorMessage = errorMessageWithoutQuery(error).slice(0, 500);
     const unusable = error instanceof UnusableAudioError;
     const status =
       unusable || run.attempts >= MAX_ATTEMPTS

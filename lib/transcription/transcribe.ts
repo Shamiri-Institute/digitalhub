@@ -156,11 +156,23 @@ type ChunkResult = { segments: TranscriptSegment[] } | { gap: TranscriptGap["rea
 
 // The SDK retries HTTP errors and timeouts but not a failed connection, which fetch reports as a
 // TypeError ("fetch failed"). The eval lost 136 of 170 sessions to connect timeouts.
-async function request(ai: GoogleGenAI, audio: Buffer, signal: AbortSignal) {
+export async function retryFailedConnection<T>(call: () => Promise<T>, signal: AbortSignal) {
   for (let attempt = 1; ; attempt++) {
     try {
       // oxlint-disable-next-line eslint/no-await-in-loop -- each retry waits for the one before
-      return await ai.models.generateContent({
+      return await call();
+    } catch (error) {
+      if (!(error instanceof TypeError) || signal.aborted || attempt === 3) throw error;
+      // oxlint-disable-next-line eslint/no-await-in-loop -- backoff before the next attempt
+      await setTimeout(2000 * 2 ** attempt, undefined, { signal });
+    }
+  }
+}
+
+function request(ai: GoogleGenAI, audio: Buffer, signal: AbortSignal) {
+  return retryFailedConnection(
+    () =>
+      ai.models.generateContent({
         model: TRANSCRIPTION_MODEL,
         contents: [
           { inlineData: { mimeType: "audio/mpeg", data: audio.toString("base64") } },
@@ -173,13 +185,9 @@ async function request(ai: GoogleGenAI, audio: Buffer, signal: AbortSignal) {
           thinkingConfig: { thinkingBudget: 1024 },
           abortSignal: signal,
         },
-      });
-    } catch (error) {
-      if (!(error instanceof TypeError) || signal.aborted || attempt === 3) throw error;
-      // oxlint-disable-next-line eslint/no-await-in-loop -- backoff before the next attempt
-      await setTimeout(2000 * 2 ** attempt, undefined, { signal });
-    }
-  }
+      }),
+    signal,
+  );
 }
 
 async function generate(ai: GoogleGenAI, audio: Buffer, signal: AbortSignal): Promise<ChunkResult> {

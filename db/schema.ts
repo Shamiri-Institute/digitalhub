@@ -59,6 +59,7 @@ import {
   TicketPriorityLevel,
   TicketStatus,
   TranscriptionStatus,
+  FidelityRatingStatus,
   TriageActionTaken,
   caseStatusOptions,
   referralStatusOptions,
@@ -93,6 +94,10 @@ export const recordingProcessingStatusEnum = pgEnum(
 export const transcriptionStatusEnum = pgEnum(
   "transcription_status",
   enumValues(TranscriptionStatus),
+);
+export const fidelityRatingStatusEnum = pgEnum(
+  "fidelity_rating_status",
+  enumValues(FidelityRatingStatus),
 );
 export const referralStatusOptionsEnum = pgEnum(
   "referralStatusOptions",
@@ -3879,6 +3884,72 @@ export const transcription = pgTable(
     ),
     check(
       "transcriptions_failed_check",
+      sql`${table.status} <> 'FAILED' OR ${table.errorMessage} IS NOT NULL`,
+    ),
+  ],
+);
+
+// One judge run over one completed transcription. The feedback itself is written onto the recording,
+// where the supervisor's dialog and Metabase read it; this row keeps the run's state and provenance.
+export const fidelityRating = pgTable(
+  "fidelity_ratings",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("frt")),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+    recordingId: varchar("recording_id", { length: 255 }).notNull(),
+    transcriptionId: text("transcription_id").notNull(),
+    status: fidelityRatingStatusEnum().default(FidelityRatingStatus.QUEUED).notNull(),
+    attempts: integer().default(0).notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true, mode: "date" }),
+    completedAt: timestamp("completed_at", { withTimezone: true, mode: "date" }),
+    errorMessage: text("error_message"),
+    model: text(),
+    promptVersion: text("prompt_version"),
+    promptSha256: text("prompt_sha256"),
+  },
+  (table) => [
+    index("fidelity_ratings_recording_id_created_at_idx").on(
+      table.recordingId,
+      table.createdAt.desc(),
+    ),
+    index("fidelity_ratings_transcription_id_idx").on(table.transcriptionId),
+    uniqueIndex("fidelity_ratings_one_active_per_recording_key")
+      .on(table.recordingId)
+      .where(sql`${table.status} IN ('QUEUED', 'PROCESSING')`),
+    foreignKey({
+      columns: [table.recordingId],
+      foreignColumns: [sessionRecording.id],
+      name: "fidelity_ratings_recording_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+    foreignKey({
+      columns: [table.transcriptionId],
+      foreignColumns: [transcription.id],
+      name: "fidelity_ratings_transcription_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+    check("fidelity_ratings_attempts_check", sql`${table.attempts} >= 0`),
+    check(
+      "fidelity_ratings_processing_check",
+      sql`${table.status} <> 'PROCESSING' OR ${table.startedAt} IS NOT NULL`,
+    ),
+    check(
+      "fidelity_ratings_completed_check",
+      sql`${table.status} <> 'COMPLETED' OR (${table.completedAt} IS NOT NULL AND ${table.model} IS NOT NULL AND ${table.promptVersion} IS NOT NULL AND ${table.promptSha256} IS NOT NULL)`,
+    ),
+    check(
+      "fidelity_ratings_failed_check",
       sql`${table.status} <> 'FAILED' OR ${table.errorMessage} IS NOT NULL`,
     ),
   ],
