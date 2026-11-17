@@ -3,7 +3,7 @@
 import { SupportType } from "#/db/enums";
 import type * as React from "react";
 import { type Dispatch, type SetStateAction, useRef, useState } from "react";
-import { type Control, useForm } from "react-hook-form";
+import { type Control, type UseFormReturn, useForm } from "react-hook-form";
 import {
   ADAPTATION_TYPE_OPTIONS,
   CHALLENGE_IMPACT_OPTIONS,
@@ -24,10 +24,12 @@ import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -252,9 +254,6 @@ export default function FellowGroupReportForm({
   };
 
   const requestClose = () => {
-    if (form.formState.isSubmitting) {
-      return;
-    }
     if (form.formState.isDirty) {
       setShowDiscard(true);
       return;
@@ -298,11 +297,7 @@ export default function FellowGroupReportForm({
               </div>
             </DialogHeader>
 
-            <form
-              noValidate
-              onSubmit={toastOnError(form.handleSubmit(onSubmit))}
-              className="flex min-h-0 flex-1 flex-col"
-            >
+            <ReportFormBody form={form} onSubmit={onSubmit}>
               <div
                 onScroll={handleScroll}
                 className="relative flex-1 divide-y overflow-y-auto px-6"
@@ -594,21 +589,7 @@ export default function FellowGroupReportForm({
                   ) : null}
                 </SectionShell>
               </div>
-
-              <DialogFooter className="flex items-center justify-end gap-2 border-t px-6 py-4">
-                <Button type="button" variant="ghost" onClick={requestClose}>
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="brand"
-                  disabled={!form.formState.isValid || form.formState.isSubmitting}
-                  loading={form.formState.isSubmitting}
-                >
-                  Submit Report
-                </Button>
-              </DialogFooter>
-            </form>
+            </ReportFormBody>
           </DialogContent>
         </Dialog>
       </Form>
@@ -632,5 +613,41 @@ export default function FellowGroupReportForm({
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+function ReportFormBody({
+  form,
+  onSubmit,
+  children,
+}: {
+  form: UseFormReturn<FellowGroupReportFormData>;
+  onSubmit: (data: FellowGroupReportFormData) => Promise<void>;
+  children: React.ReactNode;
+}) {
+  const { isSaving, save } = useDialogSave();
+  return (
+    <form
+      noValidate
+      onSubmit={toastOnError(form.handleSubmit((data) => save(() => onSubmit(data))))}
+      className="flex min-h-0 flex-1 flex-col"
+    >
+      {children}
+      <DialogFooter className="flex items-center justify-end gap-2 border-t px-6 py-4">
+        <DialogClose asChild>
+          <Button type="button" variant="ghost">
+            Cancel
+          </Button>
+        </DialogClose>
+        <Button
+          type="submit"
+          variant="brand"
+          disabled={!form.formState.isValid || isSaving}
+          loading={isSaving}
+        >
+          Submit Report
+        </Button>
+      </DialogFooter>
+    </form>
   );
 }
