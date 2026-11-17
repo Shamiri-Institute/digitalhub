@@ -25,14 +25,14 @@ const s3EndpointOrigin = (() => {
   }
 })();
 
-// The regions of the buckets the browser uploads to; each defaults to af-south-1, as in env.ts.
+// The regions of the buckets the browser uploads to.
 const s3RegionOrigins = [
   ...new Set(
     [
       process.env.S3_RECORDINGS_REGION,
       process.env.S3_STUDENT_ATTENDANCE_REGION,
       process.env.S3_SURVEY_SCANS_REGION,
-    ].map((region) => region ?? "af-south-1"),
+    ].filter(Boolean),
   ),
 ]
   .map((region) => `https://*.s3.${region}.amazonaws.com`)

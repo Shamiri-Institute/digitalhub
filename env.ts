@@ -12,19 +12,19 @@ const schema = z.object({
   S3_UPLOAD_SECRET: z.string(),
 
   S3_RECORDINGS_BUCKET: z.string(),
-  S3_RECORDINGS_REGION: z.string().default("af-south-1"),
+  S3_RECORDINGS_REGION: z.string(),
 
   // TODO: make this required once S3_STUDENT_ATTENDANCE_BUCKET is set in all environments
   S3_STUDENT_ATTENDANCE_BUCKET: z.string().default(""),
-  S3_STUDENT_ATTENDANCE_REGION: z.string().default("af-south-1"),
+  S3_STUDENT_ATTENDANCE_REGION: z.string(),
 
   // Print run PDFs, written by the server and downloaded through presigned links.
   S3_SURVEY_PRINT_FILES_BUCKET: z.string().default(""),
-  S3_SURVEY_PRINT_FILES_REGION: z.string().default("af-south-1"),
+  S3_SURVEY_PRINT_FILES_REGION: z.string(),
 
   // Scanned questionnaires, uploaded by the browser through presigned PUTs. Needs CORS.
   S3_SURVEY_SCANS_BUCKET: z.string().default(""),
-  S3_SURVEY_SCANS_REGION: z.string().default("af-south-1"),
+  S3_SURVEY_SCANS_REGION: z.string(),
 
   // Vercel Cron sends it as a bearer token. Unset, the cron routes refuse every request.
   CRON_SECRET: z.string().min(16).optional(),

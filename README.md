@@ -153,11 +153,11 @@ S3_UPLOAD_SECRET="your-s3-upload-secret"
 
 # S3 Recordings Bucket (Session Recordings)
 S3_RECORDINGS_BUCKET="your-recordings-bucket"
-S3_RECORDINGS_REGION="your-aws-region"  # defaults to af-south-1
+S3_RECORDINGS_REGION="your-aws-region"
 
 # S3 Student Attendance Bucket (attendance documents)
 S3_STUDENT_ATTENDANCE_BUCKET="your-student-attendance-bucket"
-S3_STUDENT_ATTENDANCE_REGION="your-aws-region"  # defaults to af-south-1
+S3_STUDENT_ATTENDANCE_REGION="your-aws-region"
 
 # ====================================
 # APPLICATION SETTINGS

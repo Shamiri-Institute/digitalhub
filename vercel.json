@@ -1,5 +1,5 @@
 {
-  "regions": ["cpt1"],
+  "buildCommand": "pnpm run build:deploy",
   "crons": [
     { "path": "/api/cron/transcriptions", "schedule": "* * * * *" },
     { "path": "/api/cron/survey-print-files", "schedule": "* * * * *" }
