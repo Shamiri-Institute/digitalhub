@@ -92,7 +92,7 @@ Conventional Commits (`fix(scope): ...`). The message explains why.
 
 ## Deploy
 
-Vercel, with preview deployments per branch. `vercel:build` runs production migrations.
+Vercel runs `build:deploy` (set in `vercel.json`). Production and staging get `DATABASE_URL` and only migrate. A preview gets `PREVIEW_DATABASE_URL` instead: its build recreates, migrates and seeds the branch's own database, named by `previewDatabaseName` in `db/url.ts`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

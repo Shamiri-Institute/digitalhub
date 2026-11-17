@@ -7,8 +7,11 @@
 #   S3_RECORDINGS_BUCKET=recordings
 #   S3_RECORDINGS_REGION=af-south-1
 #   S3_SURVEY_PRINT_FILES_BUCKET=survey-print-files
+#   S3_SURVEY_PRINT_FILES_REGION=af-south-1
 #   S3_SURVEY_SCANS_BUCKET=survey-scans
+#   S3_SURVEY_SCANS_REGION=af-south-1
 #   S3_STUDENT_ATTENDANCE_BUCKET=student-attendance
+#   S3_STUDENT_ATTENDANCE_REGION=af-south-1
 set -eu
 
 dir="${SEAWEEDFS_DIR:-$(pwd)/.seaweedfs}"

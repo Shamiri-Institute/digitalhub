@@ -10,9 +10,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "vercel:build": "if [ -n \"$VERCEL_ENV\" ] && [ \"$VERCEL_ENV\" != \"production\" ]; then pnpm run vercel:seeded:build; else pnpm run vercel:prod:build; fi",
-    "vercel:prod:build": "drizzle-kit migrate && next build",
-    "vercel:seeded:build": "tsx scripts/db/reset.ts && drizzle-kit migrate && pnpm run db:seed && next build",
+    "build:deploy": "if [ -n \"$PREVIEW_DATABASE_URL\" ]; then tsx scripts/db/reset.ts && drizzle-kit migrate && tsx db/seed/seed.ts; else drizzle-kit migrate; fi && next build",
     "start": "next start",
     "format": "oxfmt",
     "stylecheck": "oxfmt --check && oxlint --type-aware",
