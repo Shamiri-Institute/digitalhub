@@ -68,7 +68,7 @@ export function ReassignTicketDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
+          <DialogTitle className="text-xl font-semibold">
             Reassign Ticket to {searcherLabelOf(role)}
           </DialogTitle>
         </DialogHeader>

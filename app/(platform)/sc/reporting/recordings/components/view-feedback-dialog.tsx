@@ -89,7 +89,7 @@ export default function ViewFeedbackDialog({
             <div className="flex items-center gap-3">
               <Badge
                 variant="outline"
-                className={cn("px-4 py-2 text-lg font-semibold", getScoreColor(overallScore))}
+                className={cn("px-4 py-2 text-xl font-semibold", getScoreColor(overallScore))}
               >
                 {overallScore ?? "N/A"}
               </Badge>

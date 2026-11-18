@@ -139,7 +139,7 @@ function SessionRatingsForm({
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="text-xl font-bold">Weekly session report</DialogTitle>
+        <DialogTitle className="text-xl font-semibold">Weekly session report</DialogTitle>
       </DialogHeader>
       {children}
       {mode === "view" && sessionRatings.length === 0 ? (

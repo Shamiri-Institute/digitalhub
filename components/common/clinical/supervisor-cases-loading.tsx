@@ -19,7 +19,7 @@ export default function SupervisorTableSkeleton() {
 
   return (
     <div className="space-y-3 px-6 py-10">
-      <h1 className="text-2xl font-bold">Supervisors</h1>
+      <h1 className="text-2xl font-semibold">Supervisors</h1>
       <Separator />
       <DataTable
         columns={loadingColumns}

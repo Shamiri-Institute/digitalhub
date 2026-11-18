@@ -118,7 +118,7 @@ function DropoutSupervisorSteps({
   return (
     <Form {...form}>
       <DialogHeader>
-        <DialogTitle className="text-lg font-bold">Drop out supervisor</DialogTitle>
+        <DialogTitle className="text-xl font-semibold">Drop out supervisor</DialogTitle>
       </DialogHeader>
       {children}
       <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">

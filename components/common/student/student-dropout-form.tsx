@@ -116,7 +116,7 @@ function StudentDropoutSteps({
   return (
     <Form {...form}>
       <DialogHeader>
-        <DialogTitle className="text-lg font-bold">
+        <DialogTitle className="text-xl font-semibold">
           {student.droppedOut ? "Undo student drop out?" : "Drop out student"}
         </DialogTitle>
       </DialogHeader>

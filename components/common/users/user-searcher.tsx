@@ -162,7 +162,7 @@ export function UserSearcher({
                     <span className="text-xs text-muted-foreground">{user.email}</span>
                   )}
                   {user.visibleId && (
-                    <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                    <span className="text-xs uppercase tracking-caps text-muted-foreground">
                       {user.visibleId}
                     </span>
                   )}

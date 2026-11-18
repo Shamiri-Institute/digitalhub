@@ -17,9 +17,9 @@ export default function PlatformError({ error, retry }: { error: unknown; retry:
 
   return (
     <div className="flex w-full items-start justify-center px-4 py-16">
-      <div className="w-full max-w-md overflow-hidden rounded-2xl border bg-background shadow-xl">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl border bg-background shadow-lg">
         <div className="space-y-3 px-4 py-6 text-center sm:px-16">
-          <h1 className="text-lg font-semibold">Oops! Something went wrong!</h1>
+          <h1 className="text-xl font-semibold">Oops! Something went wrong!</h1>
           <p className="text-sm text-muted-foreground">
             This page could not load. Try again. If the problem continues, email{" "}
             <Link

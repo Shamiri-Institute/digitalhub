@@ -27,7 +27,7 @@ function Answer({ question, value }: { question: string; value: string }) {
 function SectionBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col space-y-1 py-4">
-      <span className="text-lg font-semibold text-shamiri-text-dark-grey">{title}</span>
+      <span className="text-xl font-semibold text-shamiri-text-dark-grey">{title}</span>
       {children}
     </div>
   );
@@ -52,7 +52,7 @@ export default function FellowGroupReportView({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col gap-0 p-0">
         <DialogHeader className="flex flex-col border-b px-6 py-4 text-left">
-          <DialogTitle className="text-xl font-bold">Group Report</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Group Report</DialogTitle>
           <span className="text-sm text-shamiri-text-grey">
             {groupName} · Submitted {format(report.submittedAt, "dd MMM yyyy")}
           </span>

@@ -46,7 +46,7 @@ export default function UndropSupervisor({
     <Dialog open={undropDialog} onOpenChange={setUndropDialog}>
       <DialogContent className="p-5 text-base font-medium leading-6">
         <DialogHeader>
-          <DialogTitle className="text-lg font-bold">Undo drop out supervisor?</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Undo drop out supervisor?</DialogTitle>
         </DialogHeader>
         {children}
         <div className="space-y-5">

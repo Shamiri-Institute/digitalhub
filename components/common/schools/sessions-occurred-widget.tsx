@@ -59,7 +59,7 @@ export default function SessionsOccurredWidget({
               )}
             >
               <div
-                className={cn("flex gap-1 text-[0.825rem] font-semibold", {
+                className={cn("flex gap-1 text-sm font-semibold", {
                   "text-green-base": occurredStatus,
                   "text-blue-base": !occurredStatus,
                   "text-red-base": cancelledStatus,

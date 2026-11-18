@@ -47,7 +47,7 @@ export function DropoutConfirmStep({
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="text-lg font-bold">Confirm drop out</DialogTitle>
+        <DialogTitle className="text-xl font-semibold">Confirm drop out</DialogTitle>
       </DialogHeader>
       {children}
       <div className="space-y-4">

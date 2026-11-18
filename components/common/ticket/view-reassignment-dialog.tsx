@@ -31,7 +31,7 @@ export function ViewReassignmentDialog({
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+          <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
             Reassignment History
           </DialogTitle>
         </DialogHeader>
@@ -75,7 +75,7 @@ function ReassignmentHistory({
             const stepNumber = reassignments.length - index;
             return (
               <div key={reassignment.id} className="relative flex gap-3 pl-10">
-                <div className="absolute left-2 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-shamiri-new-blue text-white text-xs font-bold z-10">
+                <div className="absolute left-2 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-shamiri-new-blue text-white text-xs font-semibold z-10">
                   {stepNumber}
                 </div>
                 <div className="flex-1 rounded-md border border-shamiri-light-grey bg-background p-3">

@@ -15,7 +15,7 @@ export function SettingsSection({
       className="grid gap-4 border-b py-8 first:pt-2 last:border-b-0 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-10"
     >
       <div className="space-y-1">
-        <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+        <h3 className="text-xl font-semibold text-foreground">{title}</h3>
         <p className="text-sm text-shamiri-text-dark-grey">{description}</p>
       </div>
       <div className="min-w-0 space-y-6">{children}</div>
@@ -41,7 +41,7 @@ export function SessionGroupHeading({
     <div className="flex items-center justify-between gap-3">
       <h4 className="text-sm font-semibold text-foreground">
         {label}{" "}
-        <span className="font-normal tabular-nums text-shamiri-text-dark-grey">{count}</span>
+        <span className="font-medium tabular-nums text-shamiri-text-dark-grey">{count}</span>
       </h4>
       {children}
     </div>

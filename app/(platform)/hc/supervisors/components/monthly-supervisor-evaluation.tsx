@@ -312,7 +312,7 @@ function MonthlySupervisorEvaluationForm({
   return (
     <Form {...form}>
       <DialogHeader>
-        <DialogTitle className="text-lg font-bold">
+        <DialogTitle className="text-xl font-semibold">
           {isViewMode ? "View supervisor evaluations" : "Monthly supervisor evaluation"}
         </DialogTitle>
       </DialogHeader>
@@ -387,7 +387,7 @@ function MonthlySupervisorEvaluationForm({
             return (
               <div key={input.section} className="flex flex-col space-y-2 py-4">
                 <div>
-                  <span className="text-bold text-lg">{input.section}</span>
+                  <span className="font-semibold text-xl">{input.section}</span>
                 </div>
                 <div className="flex flex-col space-y-3 text-sm">
                   {input.fields.map((inputField) => (

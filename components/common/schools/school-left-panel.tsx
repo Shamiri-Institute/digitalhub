@@ -55,10 +55,10 @@ export default function SchoolLeftPanel({
             className={cn("py-0 lg:py-6", !open ? "flex-row-reverse justify-between" : "")}
           >
             <div className="flex items-center gap-x-4 2xl:items-center">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-shamiri-new-light-blue text-lg font-semibold text-shamiri-new-blue lg:h-16 lg:w-16 lg:p-[18px] lg:text-xl">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-shamiri-new-light-blue text-xl font-semibold text-shamiri-new-blue lg:h-16 lg:w-16 lg:p-[18px] lg:text-xl">
                 {getSchoolInitials(school.schoolName)}
               </div>
-              <span className="text-xl font-semibold text-black lg:text-left lg:text-[28px]">
+              <span className="text-xl font-semibold text-shamiri-black lg:text-left lg:text-2xl">
                 {school.schoolName}
               </span>
             </div>

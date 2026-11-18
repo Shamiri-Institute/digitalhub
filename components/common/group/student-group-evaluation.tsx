@@ -213,7 +213,7 @@ function StudentGroupEvaluationForm({
   return (
     <Form {...form}>
       <DialogHeader>
-        <DialogTitle className="text-xl font-bold">Student group evaluation</DialogTitle>
+        <DialogTitle className="text-xl font-semibold">Student group evaluation</DialogTitle>
       </DialogHeader>
       {children}
       {mode === "view" && evaluations.length === 0 ? (
@@ -298,7 +298,7 @@ function StudentGroupEvaluationForm({
               return (
                 <div key={input.section} className="flex flex-col space-y-2 py-4">
                   <div>
-                    <span className="text-bold text-lg">{input.section}</span>{" "}
+                    <span className="font-semibold text-xl">{input.section}</span>{" "}
                     <span aria-hidden="true" className="text-shamiri-light-red">
                       *
                     </span>

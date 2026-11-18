@@ -150,7 +150,7 @@ function EscalationHistory({
           const stepNumber = escalations.length - index;
           return (
             <div key={escalation.id} className="relative flex gap-3 pl-10">
-              <div className="absolute left-2 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-shamiri-new-blue text-white text-xs font-bold z-10">
+              <div className="absolute left-2 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-shamiri-new-blue text-white text-xs font-semibold z-10">
                 {stepNumber}
               </div>
               <div className="flex-1 rounded-md border border-shamiri-light-grey bg-background p-3">

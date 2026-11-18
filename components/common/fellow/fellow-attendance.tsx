@@ -121,7 +121,7 @@ function FellowAttendanceContent({
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="text-xl font-bold">
+        <DialogTitle className="text-xl font-semibold">
           {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
             ? "View fellow attendance"
             : role === ImplementerRole.SUPERVISOR

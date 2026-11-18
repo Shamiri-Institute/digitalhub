@@ -113,7 +113,7 @@ function MarkSessionOccurrenceSteps({
     return (
       <>
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Mark session occurrence</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Mark session occurrence</DialogTitle>
         </DialogHeader>
         {children}
         <div className="flex flex-col gap-y-4">
@@ -154,7 +154,7 @@ function MarkSessionOccurrenceSteps({
   return (
     <Form {...form}>
       <DialogHeader>
-        <DialogTitle className="text-lg font-bold">Mark session occurrence</DialogTitle>
+        <DialogTitle className="text-xl font-semibold">Mark session occurrence</DialogTitle>
       </DialogHeader>
       {children}
       {previousUnmarkedSessions.length === 0 ? (

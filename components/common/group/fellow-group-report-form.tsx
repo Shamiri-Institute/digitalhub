@@ -192,7 +192,7 @@ function SectionShell({
 }) {
   return (
     <div ref={innerRef} className="flex flex-col space-y-4 py-5">
-      <div className="text-lg font-semibold text-shamiri-text-dark-grey">
+      <div className="text-xl font-semibold text-shamiri-text-dark-grey">
         Section {index + 1} — {SECTION_TITLES[index]}
       </div>
       {children}
@@ -290,7 +290,7 @@ export default function FellowGroupReportForm({
           <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col gap-0 p-0">
             <DialogHeader className="flex flex-row items-center justify-between border-b px-6 py-4">
               <div className="flex flex-col text-left">
-                <DialogTitle className="text-xl font-bold">Group Report</DialogTitle>
+                <DialogTitle className="text-xl font-semibold">Group Report</DialogTitle>
                 <span className="text-sm text-shamiri-text-grey">
                   {groupName} · Section {currentSection + 1} of {SECTION_TITLES.length}
                 </span>
@@ -597,7 +597,7 @@ export default function FellowGroupReportForm({
       <Dialog open={showDiscard} onOpenChange={setShowDiscard}>
         <DialogContent className="max-w-sm p-6">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Close without saving?</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">Close without saving?</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-shamiri-text-dark-grey">
             Your answers will not be saved. Are you sure you want to close?

@@ -74,7 +74,7 @@ function SubmitComplaintForm({ supervisorId, children, setIsOpen }: SubmitCompla
   return (
     <Form {...form}>
       <DialogHeader>
-        <DialogTitle className="text-lg font-bold">Submit complaint</DialogTitle>
+        <DialogTitle className="text-xl font-semibold">Submit complaint</DialogTitle>
       </DialogHeader>
       {children}
       <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">

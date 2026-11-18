@@ -81,7 +81,7 @@ export function TicketReasonDialog({ ticket, kind, onOpenChange }: TicketReasonD
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">{REASON_DIALOGS[kind].title}</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">{REASON_DIALOGS[kind].title}</DialogTitle>
         </DialogHeader>
         <TicketReasonForm ticket={ticket} kind={kind} onDone={() => onOpenChange(false)} />
       </DialogContent>

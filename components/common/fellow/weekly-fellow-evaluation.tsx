@@ -141,7 +141,7 @@ function WeeklyFellowEvaluationForm({
   return (
     <Form {...form}>
       <DialogHeader>
-        <DialogTitle className="text-lg font-bold">Weekly fellow evaluation</DialogTitle>
+        <DialogTitle className="text-xl font-semibold">Weekly fellow evaluation</DialogTitle>
       </DialogHeader>
       {children}
       {mode === "view" && evaluations.length === 0 ? (

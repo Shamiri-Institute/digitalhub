@@ -67,7 +67,7 @@ function UnarchiveGroupConfirm({
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="text-xl font-bold">Confirm group unarchive</DialogTitle>
+        <DialogTitle className="text-xl font-semibold">Confirm group unarchive</DialogTitle>
       </DialogHeader>
       {children}
       <div className="space-y-4 pt-2">

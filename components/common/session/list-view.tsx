@@ -73,7 +73,7 @@ export function ListView({
                   >
                     <div
                       className={cn(
-                        "flex items-center gap-2 text-lg",
+                        "flex items-center gap-2 text-xl",
                         groupDate === today ? "text-shamiri-new-blue" : "",
                       )}
                     >
@@ -154,7 +154,7 @@ export function ListView({
                               )}
                             >
                               <div
-                                className={cn("text-[0.825rem] font-semibold", {
+                                className={cn("text-sm font-semibold", {
                                   "text-green-base": completed,
                                   "text-blue-base": !completed,
                                   "text-red-base": cancelled,

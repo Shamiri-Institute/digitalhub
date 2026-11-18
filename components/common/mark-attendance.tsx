@@ -184,7 +184,7 @@ function MarkAttendanceContent({
   return (
     <Form {...form}>
       <DialogHeader>
-        <DialogTitle className="text-lg font-bold">{title}</DialogTitle>
+        <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>
       </DialogHeader>
       {children}
       <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">

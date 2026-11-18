@@ -163,7 +163,7 @@ function AdminAccessForm({ admin, onDone }: { admin?: ImplementerAdmin; onDone: 
                     className="h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
                   />
                 </FormControl>
-                <FormLabel className="font-normal">Is super admin?</FormLabel>
+                <FormLabel className="font-medium">Is super admin?</FormLabel>
               </FormItem>
             )}
           />

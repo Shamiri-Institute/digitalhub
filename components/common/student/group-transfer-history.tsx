@@ -59,7 +59,7 @@ export default function GroupTransferHistory({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="lg:w-3/5 lg:max-w-none">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">View group transfer history</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">View group transfer history</DialogTitle>
         </DialogHeader>
         {children}
         <DataTable

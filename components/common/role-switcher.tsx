@@ -100,7 +100,7 @@ export function RoleSwitcher({ loading, setLoading, user, implementerMembers }: 
                       )?.label
                     }
                   </span>
-                  <span className="text-xs uppercase tracking-widest text-shamiri-new-blue">
+                  <span className="text-xs uppercase tracking-caps text-shamiri-new-blue">
                     {" - "}
                     {activeMembership.role.replace("_", " ")}
                   </span>
@@ -115,7 +115,7 @@ export function RoleSwitcher({ loading, setLoading, user, implementerMembers }: 
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
         <Command>
-          <span className="px-4 pb-1 pt-2 text-xs uppercase tracking-widest text-muted-foreground">
+          <span className="px-4 pb-1 pt-2 text-xs uppercase tracking-caps text-muted-foreground">
             select member to impersonate
           </span>
           <CommandSeparator />
@@ -168,11 +168,11 @@ export function RoleSwitcher({ loading, setLoading, user, implementerMembers }: 
               >
                 <div className="flex flex-col">
                   <div className="flex flex-col">
-                    <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                    <span className="text-xs uppercase tracking-caps text-muted-foreground">
                       <span className="text-shamiri-new-blue">{member.role.replace("_", " ")}</span>
                     </span>
                     <span className="font-medium">{member.label}</span>
-                    <span className="min-h-4 text-xs uppercase tracking-widest text-muted-foreground">
+                    <span className="min-h-4 text-xs uppercase tracking-caps text-muted-foreground">
                       {member.hub ? `${member.hub}` : ""}
                     </span>
                   </div>

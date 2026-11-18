@@ -83,7 +83,7 @@ export default function SubmitComplaint({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="p-5 text-base font-medium leading-6">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Submit complaint</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">Submit complaint</DialogTitle>
           </DialogHeader>
           {children}
           <form
