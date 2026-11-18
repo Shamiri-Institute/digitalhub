@@ -15,7 +15,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { SERIES_COLORS } from "#/components/charts/constants";
+import { foldIntoOther, SERIES_COLORS } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 
 export default function StudentsDataBreakdown({
@@ -32,8 +32,6 @@ export default function StudentsDataBreakdown({
     value: number;
   }[];
 }) {
-  const dropoutColors = dropoutData.map((_, index) => SERIES_COLORS[index % SERIES_COLORS.length]);
-
   return (
     <div className="grid grid-cols-1 gap-5 py-2 sm:grid-cols-2 xl:grid-cols-4">
       <ChartCard title="Attendance" showCardFooter={false}>
@@ -55,7 +53,7 @@ export default function StudentsDataBreakdown({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={dropoutData.map((entry, index) => ({ ...entry, fill: dropoutColors[index] }))}
+                data={foldIntoOther(dropoutData)}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}

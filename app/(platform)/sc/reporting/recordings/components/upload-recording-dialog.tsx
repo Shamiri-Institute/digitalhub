@@ -466,8 +466,8 @@ function UploadRecordingForm({
                   className={cn(
                     "flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors",
                     fileInputDisabled
-                      ? "cursor-not-allowed border-gray-200 bg-gray-50"
-                      : "border-gray-300 hover:border-shamiri-new-blue",
+                      ? "cursor-not-allowed border-grey-border bg-background-secondary"
+                      : "border-grey-border hover:border-shamiri-new-blue",
                     audioFile.status === "invalid" && "border-red-border",
                   )}
                 >
@@ -475,16 +475,18 @@ function UploadRecordingForm({
                     <div className="flex items-center gap-2 text-sm">
                       <Icons.check className="h-4 w-4 text-shamiri-green" />
                       <span>{audioFile.file.name}</span>
-                      <span className="text-gray-500">({formatBytes(audioFile.file.size)})</span>
+                      <span className="text-shamiri-text-grey">
+                        ({formatBytes(audioFile.file.size)})
+                      </span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center gap-2 text-center">
-                      <Icons.uploadCloudIcon className="h-8 w-8 text-gray-400" />
+                      <Icons.uploadCloudIcon className="h-8 w-8 text-shamiri-text-grey" />
                       <div className="text-sm">
                         <span className="font-medium text-shamiri-new-blue">Click to upload</span>
                         {" or drag and drop"}
                       </div>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-shamiri-text-grey">
                         {ALLOWED_EXTENSIONS.join(", ")} (max 500MB)
                       </span>
                     </div>
@@ -502,7 +504,7 @@ function UploadRecordingForm({
                   <p className="text-sm text-red-base">{audioFile.error}</p>
                 )}
                 {audioFile.status === "validating" && (
-                  <p className="text-sm text-gray-500">Validating file...</p>
+                  <p className="text-sm text-shamiri-text-grey">Validating file...</p>
                 )}
               </div>
             </>
@@ -514,7 +516,7 @@ function UploadRecordingForm({
                 <span>Uploading...</span>
                 <span>{uploadProgress}%</span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-shamiri-light-grey">
                 <div
                   className="h-full bg-shamiri-new-blue transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}

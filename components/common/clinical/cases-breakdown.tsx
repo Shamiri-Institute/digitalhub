@@ -19,7 +19,7 @@ const RISK_STATUS_COLORS = {
   No: "var(--color-shamiri-graph-green)",
   Low: "var(--color-shamiri-graph-yellow)",
   Medium: "var(--color-shamiri-light-orange)",
-  High: "var(--color-shamiri-light-red)",
+  High: "var(--color-shamiri-graph-red)",
 };
 
 export default function CasesBreakdown({
@@ -114,7 +114,7 @@ export default function CasesBreakdown({
               <XAxis dataKey="name" />
               <YAxis allowDecimals={false} />
               <Tooltip />
-              <Bar dataKey="total" name="Sessions" fill="var(--color-shamiri-new-blue)" />
+              <Bar dataKey="total" name="Sessions" fill="var(--color-shamiri-graph-blue)" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
@@ -133,7 +133,7 @@ export default function CasesBreakdown({
               <XAxis dataKey="name" />
               <YAxis allowDecimals={false} />
               <Tooltip />
-              <Bar dataKey="total" name="Cases" fill="var(--color-shamiri-new-blue)" />
+              <Bar dataKey="total" name="Cases" fill="var(--color-shamiri-graph-blue)" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}

@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { SERIES_COLORS } from "#/components/charts/constants";
+import { foldIntoOther, SERIES_COLORS } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 
 export default function ClinicalStats({
@@ -46,10 +46,7 @@ export default function ClinicalStats({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={casesByStatus.map((entry, index) => ({
-                  ...entry,
-                  fill: SERIES_COLORS[index % SERIES_COLORS.length],
-                }))}
+                data={foldIntoOther(casesByStatus)}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -103,10 +100,7 @@ export default function ClinicalStats({
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={casesByInitialContact.map((entry, index) => ({
-                  ...entry,
-                  fill: SERIES_COLORS[index % SERIES_COLORS.length],
-                }))}
+                data={foldIntoOther(casesByInitialContact)}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}

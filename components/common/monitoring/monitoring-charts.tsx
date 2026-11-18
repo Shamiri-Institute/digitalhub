@@ -16,7 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { SERIES_COLORS, orderedSeriesColor } from "#/components/charts/constants";
+import { foldIntoOther, orderedSeriesColor, SERIES_COLORS } from "#/components/charts/constants";
 import {
   formatCell,
   pivotRowsBySeries,
@@ -27,10 +27,6 @@ import type { CardRow, CardView, ChartSeries } from "#/lib/monitoring/types";
 
 const MUTED_OPACITY = 0.35;
 const MAX_BARS_WITH_LABELS = 24;
-
-function seriesColor(index: number) {
-  return SERIES_COLORS[index % SERIES_COLORS.length];
-}
 
 type DrawnSeries = ChartSeries & { colorIndex: number; muted?: boolean; stackId?: string };
 
@@ -180,12 +176,53 @@ export function CartesianChart({
 }) {
   const { chartRows, drawnSeries } = drawnChart(rows, view, emphasis);
   const colorCount = Math.max(...drawnSeries.map(({ colorIndex }) => colorIndex)) + 1;
+  if (!view.ordered && colorCount > SERIES_COLORS.length) {
+    // More categories (hubs grow every term) than distinct hues: one small chart per category.
+    const groups: DrawnSeries[][] = [];
+    for (const series of drawnSeries) (groups[series.colorIndex] ??= []).push(series);
+    return (
+      <div className="grid gap-x-6 gap-y-4 md:grid-cols-2">
+        {groups.map((group) => {
+          const [firstSeries] = group;
+          if (!firstSeries) return null;
+          const groupLabel = group.find(({ muted }) => !muted)?.label ?? firstSeries.label;
+          return (
+            <section key={firstSeries.key}>
+              <h4 className="text-sm font-semibold text-shamiri-black">{groupLabel}</h4>
+              <CartesianPlot
+                title={`${title}: ${groupLabel}`}
+                view={view}
+                chartRows={chartRows}
+                coloredSeries={group.map((series) => ({ ...series, color: SERIES_COLORS[0] }))}
+              />
+            </section>
+          );
+        })}
+      </div>
+    );
+  }
   const coloredSeries = drawnSeries.map((series) => ({
     ...series,
     color: view.ordered
       ? orderedSeriesColor(series.colorIndex, colorCount)
-      : seriesColor(series.colorIndex),
+      : SERIES_COLORS[series.colorIndex],
   }));
+  return (
+    <CartesianPlot title={title} view={view} chartRows={chartRows} coloredSeries={coloredSeries} />
+  );
+}
+
+function CartesianPlot({
+  title,
+  view,
+  chartRows,
+  coloredSeries,
+}: {
+  title: string;
+  view: Extract<CardView, { kind: "bar" | "line" }>;
+  chartRows: CardRow[];
+  coloredSeries: (DrawnSeries & { color: string | undefined })[];
+}) {
   const formatValue = (value: unknown) =>
     view.percent
       ? `${(Number(value) * 100).toLocaleString("en", { maximumFractionDigits: 1 })}%`
@@ -194,7 +231,7 @@ export function CartesianChart({
     value === null || value === undefined ? "" : formatValue(value);
   // Recharts drops crowded ticks, which could be the viewer's own bar. A chart per fellow has too
   // many bars to name, so its colour and tooltip identify them.
-  const barsMarkOwn = drawnSeries.some(({ key }) => key.startsWith("own:"));
+  const barsMarkOwn = coloredSeries.some(({ key }) => key.startsWith("own:"));
   const axisForOwnBars = !barsMarkOwn
     ? {}
     : view.x === "fellowName"
@@ -224,7 +261,11 @@ export function CartesianChart({
       <Tooltip formatter={formatValue} />
       {coloredSeries.length > 1 && <Legend content={<ChartLegend items={coloredSeries} />} />}
       {view.goal !== undefined && (
-        <ReferenceLine y={view.goal} stroke="var(--color-shamiri-red)" strokeDasharray="4 4" />
+        <ReferenceLine
+          y={view.goal}
+          stroke="var(--color-shamiri-graph-red)"
+          strokeDasharray="4 4"
+        />
       )}
     </>
   );
@@ -281,11 +322,12 @@ export function PieCard({
   name: string;
   value: string;
 }) {
-  const pieRows = rows.map((row, index) => ({
-    name: row[name] === null ? "Not recorded" : formatCell(row[name]),
-    value: Number(row[value] ?? 0),
-    fill: seriesColor(index),
-  }));
+  const pieRows = foldIntoOther(
+    rows.map((row) => ({
+      name: row[name] === null ? "Not recorded" : formatCell(row[name]),
+      value: Number(row[value] ?? 0),
+    })),
+  );
   return (
     <div className="h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">

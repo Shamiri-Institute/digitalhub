@@ -243,7 +243,7 @@ export default function SchoolLeftPanel({
                                       <Icons.flagTriangleLeft className="h-5 w-5 text-shamiri-red" />
                                       <div className="text-left">
                                         <span>Dropped out</span>
-                                        <span className="flex text-sm text-gray-400">
+                                        <span className="flex text-sm text-shamiri-text-grey">
                                           {history.user.name}
                                         </span>
                                       </div>
@@ -266,14 +266,14 @@ export default function SchoolLeftPanel({
                                   <Icons.flagTriangleRight className="h-5 w-5 text-shamiri-green" />
                                   <div className="flex flex-col">
                                     <p>Dropout undone</p>
-                                    <span className="flex items-baseline text-sm text-gray-400">
+                                    <span className="flex items-baseline text-sm text-shamiri-text-grey">
                                       {history.user.name}
                                     </span>
                                   </div>
                                 </div>
                               )}
                             </div>
-                            <span className="text-gray-400">
+                            <span className="text-shamiri-text-grey">
                               {format(history.createdAt, DISPLAY_DATE)}
                             </span>
                           </div>
@@ -282,7 +282,7 @@ export default function SchoolLeftPanel({
                     </AccordionContent>
                   ) : (
                     <AccordionContent>
-                      <span className="text-gray-400">No drop out records available</span>
+                      <span className="text-shamiri-text-grey">No drop out records available</span>
                     </AccordionContent>
                   )}
                 </AccordionItem>

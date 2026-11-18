@@ -55,7 +55,7 @@ const ChartArea = memo(function ChartArea({
               <Bar
                 dataKey="count_attendance_marked"
                 stackId="a"
-                fill="var(--color-shamiri-new-blue)"
+                fill="var(--color-shamiri-graph-blue)"
                 name="Attendance marked"
               />
               <Bar
@@ -105,7 +105,7 @@ const ChartArea = memo(function ChartArea({
                   ...entry,
                   fill:
                     entry.name === "actual"
-                      ? "var(--color-shamiri-new-blue)"
+                      ? "var(--color-shamiri-graph-blue)"
                       : "var(--color-shamiri-new-light-blue)",
                 }))}
                 dataKey="value"
@@ -137,7 +137,7 @@ const ChartArea = memo(function ChartArea({
               <Legend />
               <Line
                 dataKey="student_behavior"
-                stroke="var(--color-shamiri-new-blue)"
+                stroke="var(--color-shamiri-graph-blue)"
                 name="Student behaviour"
               />
               <Line

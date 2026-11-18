@@ -400,7 +400,7 @@ export function ScheduleNewSession({
             <Button
               variant="ghost"
               type="button"
-              className="text-shamiri-new-blue hover:text-shamiri-blue"
+              className="text-shamiri-new-blue hover:text-shamiri-dark-blue"
               onClick={() => toggleDialog(false)}
             >
               Cancel
