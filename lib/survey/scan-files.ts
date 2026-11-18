@@ -57,3 +57,7 @@ export async function fileSha256(file: Blob, signal?: AbortSignal): Promise<stri
   /* oxlint-enable eslint/no-await-in-loop */
   return bytesToHex(hash.digest());
 }
+
+export function scanPageImageKey(uploadId: string, attempt: number, pageIndex: number) {
+  return `pages/${uploadId}/${attempt}/${pageIndex}.jpg`;
+}

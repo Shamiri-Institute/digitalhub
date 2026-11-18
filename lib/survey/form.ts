@@ -148,6 +148,10 @@ export function isQuestion(item: SurveyItem): item is QuestionItem {
   return "key" in item;
 }
 
+export function gridRowField(questionKey: string, rowKey: string) {
+  return `${questionKey}.${rowKey}`;
+}
+
 export const EMPTY_FORM: SurveyForm = { format: 1, pages: [] };
 
 /** The pages and answerable questions of a form, as the versions table shows them. */
