@@ -172,7 +172,7 @@ function TriageEventForm({
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="text-xl font-bold">
+        <DialogTitle className="text-xl font-semibold">
           {readOnly ? "View triage" : "Document triage"}
         </DialogTitle>
         <p className="text-sm text-shamiri-text-grey">

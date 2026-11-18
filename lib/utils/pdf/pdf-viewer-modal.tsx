@@ -21,7 +21,7 @@ interface PdfViewerModalProps {
 export default function PdfViewerModal({ open, onOpenChange, url, fileName }: PdfViewerModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col rounded-lg border-0 bg-white p-0 shadow-xl [&>button:last-child]:hidden">
+      <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col rounded-lg border-0 bg-white p-0 shadow-lg [&>button:last-child]:hidden">
         <DialogTitle className="sr-only">{fileName ?? "PDF Viewer"}</DialogTitle>
         <DialogDescription className="sr-only">
           View PDF document{fileName ? `: ${fileName}` : ""}

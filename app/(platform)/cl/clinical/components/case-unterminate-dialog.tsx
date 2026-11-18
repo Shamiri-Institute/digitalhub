@@ -34,7 +34,9 @@ export default function CaseUnterminateDialog({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="w-1/3 max-w-none">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Un-terminate case - {pseudonym}</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">
+            Un-terminate case - {pseudonym}
+          </DialogTitle>
         </DialogHeader>
         <CaseUnterminateForm caseId={caseId} close={() => setOpen(false)} />
       </DialogContent>

@@ -218,7 +218,7 @@ export default function UploadStudentAttendanceDocument({
             <img
               src={photos[lightboxIndex].previewUrl}
               alt={photos[lightboxIndex].file.name}
-              className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+              className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-lg"
             />
             <button
               type="button"

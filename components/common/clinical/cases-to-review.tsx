@@ -12,7 +12,7 @@ import { DISPLAY_DATE_TIME } from "#/lib/date-utils";
 export function CasesToReview({ reviews }: { reviews: CaseToReview[] }) {
   return (
     <section className="w-full space-y-2">
-      <h2 className="text-sm font-medium">Cases to review ({reviews.length})</h2>
+      <h2 className="text-sm font-semibold">Cases to review ({reviews.length})</h2>
       {reviews.length > 0 && (
         <ul className="space-y-2">
           {reviews.map((review) => (

@@ -183,7 +183,7 @@ function StudentDetailsFormContent({
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="text-xl font-bold">
+        <DialogTitle className="text-xl font-semibold">
           {mode === "view"
             ? "View student information"
             : mode === "edit"
@@ -396,7 +396,7 @@ function StudentDetailsFormContent({
       >
         <DialogContent className="lg:w-3/5 lg:max-w-none">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Confirm transfer student</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">Confirm transfer student</DialogTitle>
           </DialogHeader>
           <DialogAlertWidget>
             <div className="flex flex-wrap items-center gap-2">

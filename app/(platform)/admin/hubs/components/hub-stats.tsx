@@ -164,7 +164,7 @@ export function StatCell({
 export function Figure({ value, unit }: { value: React.ReactNode; unit?: string }) {
   return (
     <p className="text-shamiri-black">
-      <span className="text-3xl font-semibold tabular-nums">{value}</span>
+      <span className="text-2xl font-semibold tabular-nums">{value}</span>
       {unit && <span className="ml-1.5 text-sm">{unit}</span>}
     </p>
   );

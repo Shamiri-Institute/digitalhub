@@ -243,13 +243,13 @@ function CartesianPlot({
       <CartesianGrid vertical={false} strokeDasharray="3 3" />
       <XAxis
         dataKey={(row: CardRow) => formatCell(row[view.x])}
-        tick={{ fontSize: 11 }}
+        tick={{ fontSize: 12 }}
         {...axisForOwnBars}
       >
         {view.xLabel && <Label value={view.xLabel} position="insideBottom" offset={-4} />}
       </XAxis>
       <YAxis
-        tick={{ fontSize: 11 }}
+        tick={{ fontSize: 12 }}
         tickFormatter={formatValue}
         allowDecimals={Boolean(view.percent)}
         domain={view.percent ? [0, 1] : undefined}
@@ -286,7 +286,7 @@ function CartesianPlot({
                 stackId={stackId}
                 label={
                   showsBarLabels
-                    ? { position: "top", fontSize: 11, formatter: formatBarLabel }
+                    ? { position: "top", fontSize: 12, formatter: formatBarLabel }
                     : undefined
                 }
               />

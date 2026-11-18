@@ -64,7 +64,7 @@ export default function AttendanceHistory({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="lg:w-3/4 lg:max-w-none">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Session attendance history</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Session attendance history</DialogTitle>
         </DialogHeader>
         {children}
         <DataTable

@@ -222,7 +222,7 @@ function QuestionSettings({
         <AccordionItem value="review">
           <AccordionTrigger className="gap-2 py-3 hover:no-underline">
             <span className="font-semibold">Scan review</span>
-            <span className="font-normal text-shamiri-text-grey">{reviewSummary(review)}</span>
+            <span className="font-medium text-shamiri-text-grey">{reviewSummary(review)}</span>
           </AccordionTrigger>
           <AccordionContent className="space-y-4 pb-4">
             <p className="text-xs text-muted-foreground">

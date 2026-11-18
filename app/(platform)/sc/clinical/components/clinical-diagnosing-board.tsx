@@ -160,7 +160,7 @@ export function ClinicalDiagnosingBoard({ currentcase }: { currentcase: Clinical
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-medium">{isBaseline ? "Baseline" : "Endpoint"}</h3>
+        <h3 className="text-sm font-semibold">{isBaseline ? "Baseline" : "Endpoint"}</h3>
         <div className="flex flex-col gap-4">
           <EmergencyPresentingIssues
             selectedSeverities={emergencyIssues}

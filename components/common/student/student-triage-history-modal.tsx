@@ -98,7 +98,7 @@ export default function StudentTriageHistoryModal({
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-lg font-bold">Student triage history</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Student triage history</DialogTitle>
           {studentName && (
             <p className="text-sm text-shamiri-text-grey capitalize">{studentName.toLowerCase()}</p>
           )}

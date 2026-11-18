@@ -13,7 +13,7 @@ async function GapStats() {
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
       <div className="rounded-lg border p-4">
         <p className="text-xs text-shamiri-text-grey">Total escalations</p>
-        <p className="mt-1 text-2xl font-bold">{stats.totalEscalations}</p>
+        <p className="mt-1 text-2xl font-semibold">{stats.totalEscalations}</p>
       </div>
       <div
         className={cn(
@@ -22,7 +22,7 @@ async function GapStats() {
         )}
       >
         <p className="text-xs text-shamiri-text-grey">No case opened</p>
-        <p className={cn("mt-1 text-2xl font-bold", stats.totalGaps > 0 && "text-red-base")}>
+        <p className={cn("mt-1 text-2xl font-semibold", stats.totalGaps > 0 && "text-red-base")}>
           {stats.totalGaps}
         </p>
       </div>
@@ -33,13 +33,13 @@ async function GapStats() {
         )}
       >
         <p className="text-xs text-shamiri-text-grey">Overdue (&gt;3 days)</p>
-        <p className={cn("mt-1 text-2xl font-bold", stats.overdueCount > 0 && "text-red-base")}>
+        <p className={cn("mt-1 text-2xl font-semibold", stats.overdueCount > 0 && "text-red-base")}>
           {stats.overdueCount}
         </p>
       </div>
       <div className="rounded-lg border p-4">
         <p className="text-xs text-shamiri-text-grey">Case conversion rate</p>
-        <p className="mt-1 text-2xl font-bold">{stats.conversionRate}%</p>
+        <p className="mt-1 text-2xl font-semibold">{stats.conversionRate}%</p>
       </div>
     </div>
   );

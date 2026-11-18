@@ -24,7 +24,7 @@ const riskBadgeVariant = {
 export function CasesReferredToMe({ cases }: { cases: CaseReferredToMe[] }) {
   return (
     <section className="w-full space-y-2">
-      <h2 className="text-sm font-medium">Cases referred to you ({cases.length})</h2>
+      <h2 className="text-sm font-semibold">Cases referred to you ({cases.length})</h2>
       {cases.length > 0 && (
         <ul className="space-y-2">
           {cases.map((referredCase) => (

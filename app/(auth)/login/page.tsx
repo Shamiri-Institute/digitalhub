@@ -17,7 +17,7 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="relative z-10 mx-6 h-fit w-full max-w-md overflow-hidden rounded-2xl border border-border sm:shadow-xl lg:mx-0">
+    <div className="relative z-10 mx-6 h-fit w-full max-w-md overflow-hidden rounded-2xl border border-border sm:shadow-lg lg:mx-0">
       <div className="flex flex-col items-center justify-center space-y-3 border-b border-grey-border bg-white px-4 py-6 pt-8 text-center sm:px-16">
         <Icons.logo className="h-9 text-shamiri-new-blue lg:h-10" />
         <p className="text-sm text-muted-foreground">

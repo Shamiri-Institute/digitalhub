@@ -16,7 +16,7 @@ export default function ChartCard({
 }) {
   return (
     <Card>
-      <CardHeader className="border-b border-dashed px-4 py-[14px] text-lg">
+      <CardHeader className="border-b border-dashed px-4 py-[14px] text-base">
         <CardTitle as="h2" className="font-semibold leading-6 text-shamiri-black">
           {title}
         </CardTitle>

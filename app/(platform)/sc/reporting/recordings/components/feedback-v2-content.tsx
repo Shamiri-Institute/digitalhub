@@ -62,7 +62,7 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
 
             {feedback.session_participation.participation_distribution && (
               <div className="rounded-md border p-4">
-                <h5 className="font-medium mb-2">Participation Distribution</h5>
+                <h5 className="font-semibold mb-2">Participation Distribution</h5>
                 <p className="text-sm text-muted-foreground">
                   <MarkdownText>
                     {feedback.session_participation.participation_distribution}
@@ -73,7 +73,7 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
 
             {feedback.session_participation.prosodic_observations && (
               <div className="rounded-md border p-4">
-                <h5 className="font-medium mb-2">Prosodic Observations</h5>
+                <h5 className="font-semibold mb-2">Prosodic Observations</h5>
                 <p className="text-sm text-muted-foreground">
                   <MarkdownText>
                     {feedback.session_participation.prosodic_observations}
@@ -113,7 +113,7 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
 
             {feedback.fidelity_scores.overall_fidelity_summary && (
               <div className="rounded-md border border-blue-border bg-blue-bg p-4">
-                <h5 className="font-medium mb-2">Overall Assessment</h5>
+                <h5 className="font-semibold mb-2">Overall Assessment</h5>
                 <p className="text-sm">
                   <MarkdownText>{feedback.fidelity_scores.overall_fidelity_summary}</MarkdownText>
                 </p>
@@ -202,7 +202,7 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
           <div className="space-y-4">
             {supervisionBrief.strengths_to_acknowledge?.length > 0 && (
               <div>
-                <h5 className="font-medium text-shamiri-green mb-2">Strengths to Acknowledge</h5>
+                <h5 className="font-semibold text-shamiri-green mb-2">Strengths to Acknowledge</h5>
                 <div className="space-y-3">
                   {supervisionBrief.strengths_to_acknowledge.map((item) => (
                     <div key={item.strength} className="rounded-md border p-4">
@@ -221,7 +221,7 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
 
             {supervisionBrief.areas_for_growth?.length > 0 && (
               <div>
-                <h5 className="font-medium text-shamiri-dark-orange mb-2">Areas for Growth</h5>
+                <h5 className="font-semibold text-shamiri-dark-orange mb-2">Areas for Growth</h5>
                 <div className="space-y-3">
                   {supervisionBrief.areas_for_growth.map((item, idx) => (
                     // oxlint-disable-next-line react/no-array-index-key -- read-only server feedback list; composite key disambiguates potential duplicate text
@@ -253,7 +253,7 @@ export default function FeedbackV2Content({ feedback }: FeedbackV2ContentProps) 
 
             {supervisionBrief.reflective_questions_for_supervision?.length > 0 && (
               <div>
-                <h5 className="font-medium mb-2">Reflective Questions for Supervision</h5>
+                <h5 className="font-semibold mb-2">Reflective Questions for Supervision</h5>
                 <ul className="space-y-2">
                   {supervisionBrief.reflective_questions_for_supervision.map((question, idx) => (
                     // oxlint-disable-next-line react/no-array-index-key -- read-only server feedback list; composite key disambiguates potential duplicate text

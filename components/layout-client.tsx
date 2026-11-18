@@ -231,7 +231,7 @@ export function LayoutClient({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] max-w-sm">
-                    <DropdownMenuLabel className="flex items-center gap-4 px-4 font-normal">
+                    <DropdownMenuLabel className="flex items-center gap-4 px-4 font-medium">
                       {avatar}
                       <span className="text-muted-foreground min-w-0 truncate text-base">
                         {displayName}

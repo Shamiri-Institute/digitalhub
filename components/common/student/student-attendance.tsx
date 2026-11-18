@@ -77,7 +77,7 @@ export default function StudentAttendance({
     <Dialog open={isOpen} onOpenChange={setIsOpen} modal={true}>
       <DialogContent className="lg:w-3/4 lg:max-w-none">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
+          <DialogTitle className="text-xl font-semibold">
             {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
               ? "View student attendance"
               : role === ImplementerRole.SUPERVISOR || role === ImplementerRole.FELLOW

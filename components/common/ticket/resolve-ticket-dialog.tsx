@@ -55,7 +55,7 @@ export function ResolveTicketDialog({ ticket, open, onOpenChange }: ResolveTicke
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Resolve Ticket</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Resolve Ticket</DialogTitle>
         </DialogHeader>
         <ResolveTicketForm ticketId={ticket.id} close={() => onOpenChange(false)} />
       </DialogContent>

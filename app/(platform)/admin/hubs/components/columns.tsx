@@ -57,7 +57,7 @@ const sessionsColumn: ColumnDef<AdminHub> = {
         >
           <Info aria-hidden className="h-3.5 w-3.5" />
         </TooltipTrigger>
-        <TooltipContent className="max-w-64 space-y-2 font-normal">
+        <TooltipContent className="max-w-64 space-y-2 font-medium">
           <SessionStatesLegend className="flex flex-wrap items-center gap-x-3 gap-y-1" />
           <p>
             Unmarked: the session date has passed, but nobody has marked it attended or cancelled.

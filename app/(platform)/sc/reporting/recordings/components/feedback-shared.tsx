@@ -18,7 +18,7 @@ export function getScoreColor(score: string | number | undefined): string {
 export function FeedbackSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-lg border p-4">
-      <h4 className="mb-3 font-medium text-shamiri-text-dark-grey">{title}</h4>
+      <h4 className="mb-3 font-semibold text-shamiri-text-dark-grey">{title}</h4>
       {children}
     </div>
   );

@@ -44,7 +44,7 @@ export default function AttendanceHistory({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="lg:w-3/5 lg:max-w-none">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
+          <DialogTitle className="text-xl font-semibold">
             Student session attendance history
           </DialogTitle>
         </DialogHeader>

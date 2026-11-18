@@ -73,7 +73,7 @@ export default function SupervisorAttendance({
         <DialogPortal>
           <DialogContent className="w-5/6 max-w-none lg:w-4/5">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold">
+              <DialogTitle className="text-xl font-semibold">
                 {role === ImplementerRole.ADMIN
                   ? "View supervisor attendance"
                   : "Mark supervisor attendance"}

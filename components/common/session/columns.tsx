@@ -75,7 +75,7 @@ export const columns = (state: {
             )}
           >
             <div
-              className={cn("text-[0.825rem] font-semibold", {
+              className={cn("text-sm font-semibold", {
                 "text-green-base": completed,
                 "text-blue-base": !completed,
                 "text-red-base": cancelled,

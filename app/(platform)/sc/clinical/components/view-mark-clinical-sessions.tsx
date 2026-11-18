@@ -133,7 +133,7 @@ export default function ViewMarkClinicalSessions({ currentcase }: { currentcase:
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal",
+                        "w-full justify-start text-left font-medium",
                         !dates[sessionType.key] && "text-muted-foreground",
                       )}
                     >

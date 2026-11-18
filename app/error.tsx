@@ -35,10 +35,10 @@ export default function AppError({
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background-secondary px-6">
-      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-border bg-white shadow-xl">
+      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-border bg-white shadow-lg">
         <div className="flex flex-col items-center justify-center space-y-3 border-b border-grey-border bg-white px-4 py-6 pt-8 text-center sm:px-16">
           <Icons.logo className="h-9 text-shamiri-new-blue lg:h-10" />
-          <h2 className="text-lg font-semibold text-shamiri-black">Oops! Something went wrong!</h2>
+          <h2 className="text-xl font-semibold text-shamiri-black">Oops! Something went wrong!</h2>
           <p className="text-sm text-muted-foreground">
             We couldn&apos;t complete your request. Please try refreshing the page or clearing your
             browser cache.

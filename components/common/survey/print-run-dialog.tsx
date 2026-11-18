@@ -479,7 +479,7 @@ function SchoolCopiesRow({ index }: { index: number }) {
       name={`schools.${index}.copies`}
       render={({ field }) => (
         <FormItem className="flex items-center justify-between gap-4 space-y-0 px-3 py-2">
-          <FormLabel className="font-normal">{schoolName}</FormLabel>
+          <FormLabel className="font-medium">{schoolName}</FormLabel>
           <div className="flex flex-col items-end">
             <FormControl>
               <Input
@@ -553,7 +553,7 @@ function SchoolStudentsRow({
                   onCheckedChange={(checked) => field.onChange(checked === true)}
                 />
               </FormControl>
-              <FormLabel className="font-normal">
+              <FormLabel className="font-medium">
                 {schoolName}{" "}
                 <span className="text-shamiri-text-grey">({activeStudents} active students)</span>
               </FormLabel>
@@ -594,7 +594,7 @@ function SchoolStudentsRow({
                         }
                       />
                     </FormControl>
-                    <FormLabel className="text-sm font-normal">
+                    <FormLabel className="text-sm font-medium">
                       {s.studentName ?? "Unnamed student"}
                       {s.admissionNumber && (
                         <span className="text-shamiri-text-grey"> · {s.admissionNumber}</span>

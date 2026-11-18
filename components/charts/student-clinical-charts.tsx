@@ -99,7 +99,7 @@ export default function HubStudentClinicalDataCharts({
             aria-label="Clinical sessions"
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="session" tick={{ fontSize: 11 }} interval="preserveStartEnd" />
+            <XAxis dataKey="session" tick={{ fontSize: 12 }} interval="preserveStartEnd" />
             <YAxis dataKey="count" tick={{ fontSize: 12 }} width={35} allowDecimals={false} />
             <Tooltip />
             <Bar

@@ -11,7 +11,28 @@
   }
 }
 
+/*
+  Figma "Shamiri Hub Redesign" type and elevation. Paragraphs are Inter Medium, headings Figtree
+  SemiBold, and no style uses another weight. Sizes stay on Tailwind's scale, which matches Figma's
+  P3 14/20, P2 16/24, H4 20/28, H3 24/32; only H2 36 needs its 48px line height.
+*/
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-figtree), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
 @theme {
+  --text-4xl--line-height: 3rem;
+  --tracking-caps: 0.04em;
+
+  --shadow-xs: 0 1px 1px 0 rgb(0 0 0 / 0.06);
+  --shadow-sm:
+    0 1px 1px 0 rgb(0 0 0 / 0.08), 0 2px 1px 0 rgb(0 0 0 / 0.06), 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  --shadow-md:
+    0 6px 10px 0 rgb(0 0 0 / 0.08), 0 1px 18px 0 rgb(0 0 0 / 0.06), 0 3px 5px 0 rgb(0 0 0 / 0.1);
+  --shadow-lg:
+    0 24px 38px 0 rgb(0 0 0 / 0.04), 0 9px 46px 0 rgb(0 0 0 / 0.06), 0 11px 15px 0 rgb(0 0 0 / 0.1);
+
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
@@ -272,7 +293,7 @@
   }
 
   & .form-toggle-button[data-state="on"] {
-    @apply border bg-white text-black drop-shadow-xl;
+    @apply border bg-white text-shamiri-black drop-shadow-xl;
   }
 }
 
@@ -282,7 +303,7 @@
   }
 
   .form-toggle &[data-state="on"] {
-    @apply border bg-white text-black drop-shadow-xl;
+    @apply border bg-white text-shamiri-black drop-shadow-xl;
   }
 }
 
@@ -380,7 +401,7 @@
   }
 
   &:disabled {
-    @apply pointer-events-none opacity-50 shadow-none hover:bg-transparent hover:text-black;
+    @apply pointer-events-none opacity-50 shadow-none hover:bg-transparent hover:text-shamiri-black;
   }
 }
 
@@ -438,7 +459,16 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background font-sans font-medium text-foreground;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading font-semibold;
   }
 
   label {

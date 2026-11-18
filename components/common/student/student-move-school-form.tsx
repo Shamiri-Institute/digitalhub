@@ -107,7 +107,7 @@ function StudentMoveSchoolFormForm({
   return (
     <Form {...form}>
       <DialogHeader>
-        <DialogTitle className="text-lg font-bold">Move student to another school</DialogTitle>
+        <DialogTitle className="text-xl font-semibold">Move student to another school</DialogTitle>
       </DialogHeader>
       {children}
       <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">

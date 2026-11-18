@@ -31,7 +31,7 @@ function CardTitle({
   return (
     <Heading
       data-slot="card-title"
-      className={cn("font-medium leading-none tracking-tight", className)}
+      className={cn("leading-none tracking-tight", className)}
       {...props}
     >
       {children}

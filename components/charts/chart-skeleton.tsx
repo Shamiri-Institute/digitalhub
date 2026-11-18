@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 export default function ChartSkeleton() {
   return (
     <Card>
-      <CardHeader className="border-b border-dashed px-4 py-[14px] text-lg">
+      <CardHeader className="border-b border-dashed px-4 py-[14px] text-base">
         <CardTitle>
           <div className="h-2.5 w-32 rounded-full bg-shamiri-light-grey" />
         </CardTitle>
