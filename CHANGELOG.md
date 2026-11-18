@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.13.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.12.0...v2.13.0) (2026-11-18)
+
+### Features
+
+- **recordings:** rate completed transcripts and write fidelity feedback in the SDH ([#1075](https://github.com/Shamiri-Institute/digitalhub/issues/1075)) ([9eee797](https://github.com/Shamiri-Institute/digitalhub/commit/9eee797026baa15bd9e6d5da10b5d4012634b9a3))
+- **tickets:** add in-progress, urgent, reopen, cancel and auto-close ([#1074](https://github.com/Shamiri-Institute/digitalhub/issues/1074)) ([4a1a442](https://github.com/Shamiri-Institute/digitalhub/commit/4a1a4426ffae046916a4d18fc8447400cf6e84f1))
+
+### Bug Fixes
+
+- keep the attendance and group report dialogs open while they save ([#1082](https://github.com/Shamiri-Institute/digitalhub/issues/1082)) ([a9ef9ba](https://github.com/Shamiri-Institute/digitalhub/commit/a9ef9bac670fe1da43e2b85deecf1f221ea6b546))
+
 ## [2.12.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.11.1...v2.12.0) (2026-11-16)
 
 ### Features
