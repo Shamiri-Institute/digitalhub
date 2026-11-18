@@ -59,7 +59,7 @@ export default async function TicketPage({
         next={next ?? undefined}
         scope={holdsThis ? "you hold" : undefined}
       />
-      <h1 className="max-w-4xl text-2xl font-semibold leading-8 text-balance text-black sm:text-4xl sm:leading-[48px]">
+      <h1 className="max-w-4xl text-2xl font-semibold text-balance text-shamiri-black sm:text-4xl">
         {ticket.subject}
       </h1>
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22.5rem]">
