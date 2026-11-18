@@ -148,7 +148,6 @@ function CreateTicketForm({
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value);
-                      // Start from whoever the routing would pick.
                       form.setValue(
                         "assigneeId",
                         assignees?.[value as TicketCategory]?.[0]?.userId ?? "",

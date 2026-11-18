@@ -225,7 +225,6 @@ export function TicketNextStep({
         id="next-step"
         className="border-b border-shamiri-new-lighter-blue bg-shamiri-new-light-blue px-4 py-2.5 font-semibold text-shamiri-new-blue"
       >
-        {/* A creator who doesn't hold the ticket can only reopen or cancel their own request. */}
         {hasHolderActions(actions) ? "Your next step" : "Your ticket"}
       </h2>
       <ul className="divide-y">

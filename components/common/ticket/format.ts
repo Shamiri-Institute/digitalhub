@@ -34,7 +34,6 @@ export function personName(person: TicketPerson, viewerId?: string | null) {
   return person.name ?? "Unknown";
 }
 
-/** Whether the viewer holds the ticket and can act on it, so it shows them a next step. */
 export const hasHolderActions = (actions: TicketActions) =>
   actions.canStart ||
   actions.canResolve ||
