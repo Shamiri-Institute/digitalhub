@@ -58,7 +58,9 @@ export const columns = (
     id: "Priority",
     header: "Priority",
     sortingFn: sortBy((ticket) => prioritiesLowToHigh.indexOf(ticket.priority)),
-    cell: ({ row }) => <PriorityBadge priority={row.original.priority} />,
+    cell: ({ row }) => (
+      <PriorityBadge priority={row.original.priority} status={row.original.status} />
+    ),
   },
   {
     accessorKey: "status",

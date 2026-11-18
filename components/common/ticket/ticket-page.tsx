@@ -46,7 +46,6 @@ export default async function TicketPage({
     recipients,
     reassignRecipients,
   } = detailsResult.data;
-  const lastPriorityChange = events.findLast((e) => e.kind === "PRIORITY_CHANGED");
   const isClosed = RESOLVED_TICKET_STATUSES.includes(ticket.status);
 
   const holdsThis = ticket.holder.userId === viewerId;
@@ -79,10 +78,7 @@ export default async function TicketPage({
               </Badge>
             </Detail>
             <Detail label="Priority">
-              <PriorityBadge priority={ticket.priority} />
-              {lastPriorityChange?.fromValue && (
-                <Muted>from {sentenceLabel(lastPriorityChange.fromValue)}</Muted>
-              )}
+              <PriorityBadge priority={ticket.priority} status={ticket.status} />
             </Detail>
             <Detail
               label={
@@ -97,6 +93,7 @@ export default async function TicketPage({
             <Detail label="Category">{sentenceLabel(ticket.category)}</Detail>
             <Detail label="Opened">
               {timeZone && formatDateIn(ticket.createdAt, timeZone)}
+              <Muted aria-hidden>·</Muted>
               <Muted>
                 {formatDistanceToNowStrict(ticket.createdAt, {
                   addSuffix: true,
@@ -142,6 +139,10 @@ function Detail({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function Muted({ children }: { children: ReactNode }) {
-  return <span className="text-shamiri-text-dark-grey">{children}</span>;
+function Muted({ children, ...props }: { children: ReactNode; "aria-hidden"?: boolean }) {
+  return (
+    <span className="text-shamiri-text-dark-grey" {...props}>
+      {children}
+    </span>
+  );
 }
