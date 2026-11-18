@@ -263,7 +263,7 @@ export function RescheduleSessionForm({
             <Button
               variant="ghost"
               type="button"
-              className="text-shamiri-new-blue hover:text-shamiri-blue"
+              className="text-shamiri-new-blue hover:text-shamiri-dark-blue"
             >
               Cancel
             </Button>

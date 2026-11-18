@@ -437,14 +437,20 @@ function StudentDetailsFormContent({
                   />
                   <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
                     <span className="capitalize">{student.studentName?.toLowerCase()}</span>
-                    <span className="hidden h-1 w-1 rounded-full bg-gray-900 lg:block">{""}</span>
+                    <span className="hidden h-1 w-1 rounded-full bg-shamiri-black lg:block">
+                      {""}
+                    </span>
                     <span>Admission no. {student.admissionNumber}</span>
-                    <span className="hidden h-1 w-1 rounded-full bg-gray-900 lg:block">{""}</span>
+                    <span className="hidden h-1 w-1 rounded-full bg-shamiri-black lg:block">
+                      {""}
+                    </span>
                     <div className="flex gap-1">
                       <span>Form {student.form}</span>
                       <span>{student.stream}</span>
                     </div>
-                    <span className="hidden h-1 w-1 rounded-full bg-gray-900 lg:block">{""}</span>
+                    <span className="hidden h-1 w-1 rounded-full bg-shamiri-black lg:block">
+                      {""}
+                    </span>
                     <span>Group {student.assignedGroup?.groupName}</span>
                   </div>
                 </label>

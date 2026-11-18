@@ -104,7 +104,7 @@ export default function HubStudentClinicalDataCharts({
             <Tooltip />
             <Bar
               dataKey="count"
-              fill="var(--color-shamiri-new-blue)"
+              fill="var(--color-shamiri-graph-blue)"
               name="Sessions"
               radius={[4, 4, 0, 0]}
             />
@@ -132,7 +132,7 @@ export default function HubStudentClinicalDataCharts({
               <Tooltip formatter={(value) => [`${value} cases`, "Cases"]} />
               <Bar
                 dataKey="count"
-                fill="var(--color-shamiri-new-blue)"
+                fill="var(--color-shamiri-graph-blue)"
                 name="Cases"
                 radius={[0, 4, 4, 0]}
               />

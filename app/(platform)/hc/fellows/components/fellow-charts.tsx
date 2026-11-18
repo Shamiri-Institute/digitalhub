@@ -63,7 +63,7 @@ export default function FellowsCharts({
               <Tooltip labelFormatter={(value) => `Session: ${sessionLabel(String(value))}`} />
               <Bar
                 dataKey="attendance"
-                fill="var(--color-shamiri-new-blue)"
+                fill="var(--color-shamiri-graph-blue)"
                 name="Attendance count"
               />
             </BarChart>
@@ -107,7 +107,7 @@ export default function FellowsCharts({
                   ...entry,
                   fill:
                     entry.name === "actual"
-                      ? "var(--color-shamiri-new-blue)"
+                      ? "var(--color-shamiri-graph-blue)"
                       : "var(--color-shamiri-new-light-blue)",
                 }))}
                 dataKey="value"
@@ -139,7 +139,7 @@ export default function FellowsCharts({
               <Legend />
               <Line
                 dataKey="behaviour_rating"
-                stroke="var(--color-shamiri-new-blue)"
+                stroke="var(--color-shamiri-graph-blue)"
                 name="Behaviour"
               />
               <Line

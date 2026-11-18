@@ -24,7 +24,7 @@ export default function PlatformError({ error, retry }: { error: unknown; retry:
             This page could not load. Try again. If the problem continues, email{" "}
             <Link
               href="mailto:tech-support@shamiri.institute"
-              className="text-shamiri-blue-darker hover:underline"
+              className="text-shamiri-new-blue hover:underline"
             >
               tech-support@shamiri.institute
             </Link>

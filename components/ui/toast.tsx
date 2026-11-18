@@ -71,7 +71,7 @@ function ToastClose({ className, ...props }: React.ComponentProps<typeof ToastPr
     <ToastPrimitives.Close
       data-slot="toast-close"
       className={cn(
-        "absolute right-1 top-1 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-hidden focus:ring-1 group-hover:opacity-100 group-[.destructive]:text-red-300 hover:group-[.destructive]:text-red-50 focus:group-[.destructive]:ring-red-400 focus:group-[.destructive]:ring-offset-red-600",
+        "absolute right-1 top-1 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-hidden focus:ring-1 group-hover:opacity-100 group-[.destructive]:text-white/80 hover:group-[.destructive]:text-white focus:group-[.destructive]:ring-white focus:group-[.destructive]:ring-offset-destructive",
         className,
       )}
       toast-close=""

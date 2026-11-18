@@ -30,7 +30,7 @@ export default function PdfViewerModal({ open, onOpenChange, url, fileName }: Pd
           <DialogClose asChild>
             <button
               type="button"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-shamiri-light-grey text-shamiri-text-dark-grey hover:bg-shamiri-light-grey"
             >
               <Icons.xIcon className="h-4 w-4" />
             </button>
