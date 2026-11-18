@@ -583,7 +583,18 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
 
     const canReassign = callerHoldsTicketAs(REASSIGNMENT_INITIATOR_ROLES);
 
-    const [routedIds, events, holderIsActive, reassignIds] = await Promise.all([
+    // Previous and next follow the list's order, newest first, through the tickets the caller
+    // holds when they hold this one, so a holder can work through their queue. The comparison stays
+    // in SQL because created_at keeps microseconds that a Date would drop.
+    const neighbourScope = and(
+      canViewTicket(callerUserId),
+      holderId === callerUserId ? eq(tickets.holderId, callerUserId) : undefined,
+    );
+    const position = sql`(${tickets.createdAt}, ${tickets.id})`;
+    const thisTicket = sql`(SELECT ${tickets.createdAt}, ${tickets.id} FROM ${tickets} WHERE ${tickets.id} = ${ticketId})`;
+    const sibling = { id: tickets.id, visibleId: tickets.visibleId };
+
+    const [routedIds, events, holderIsActive, reassignIds, [previous], [next]] = await Promise.all([
       (callerHoldsTicket || canReopen) && recipientRole
         ? listEscalationRecipients[recipientRole]({ userId: callerUserId, implementerId })
         : [],
@@ -595,6 +606,18 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
       canReassign
         ? listReassignmentRecipients(db, { userId: callerUserId, role, implementerId, identifier })
         : [],
+      db
+        .select(sibling)
+        .from(tickets)
+        .where(and(neighbourScope, sql`${position} > ${thisTicket}`))
+        .orderBy(asc(tickets.createdAt), asc(tickets.id))
+        .limit(1),
+      db
+        .select(sibling)
+        .from(tickets)
+        .where(and(neighbourScope, sql`${position} < ${thisTicket}`))
+        .orderBy(desc(tickets.createdAt), desc(tickets.id))
+        .limit(1),
     ]);
     // A reopened ticket goes back to whoever resolved it unless the creator picks someone else.
     const recipientIds = holderIsActive
@@ -636,6 +659,8 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
         ),
         reassignRecipients: reassignIds.map((id) => ({ ...personOf(id, people), role })),
         ticket,
+        previous: previous ?? null,
+        next: next ?? null,
         actions,
         reopenableUntil:
           reopenable && resolvedAt ? new Date(resolvedAt.getTime() + REOPEN_WINDOW_MS) : null,
@@ -683,11 +708,11 @@ function personOf(userId: string, people: UserRoleNameMap): TicketPerson {
 }
 
 function toFullTicket(
-  { createdById, holderId, ...row }: TicketRow,
+  { createdById, holderId, ...ticketFields }: TicketRow,
   people: UserRoleNameMap,
 ): FullTicket {
   return {
-    ...row,
+    ...ticketFields,
     createdBy: personOf(createdById, people),
     holder: personOf(holderId, people),
   };
@@ -702,7 +727,7 @@ async function fetchTicketsForUser(
     .where(
       and(canViewTicket(userId), filters.status ? eq(tickets.status, filters.status) : undefined),
     )
-    .orderBy(desc(tickets.createdAt));
+    .orderBy(desc(tickets.createdAt), desc(tickets.id));
 
   const people = await getUserNamesAndRolesById(
     Array.from(new Set(rows.flatMap((r) => [r.createdById, r.holderId]))),

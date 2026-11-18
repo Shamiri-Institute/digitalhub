@@ -119,6 +119,34 @@ test("the holder starts, reprioritises and resolves a ticket, and its creator re
   await expect(activity(page)).toContainText("The device still drops the connection.");
 });
 
+test("previous and next step through the tickets the holder holds, newest first", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fellowAndSupervisor = await pickFellowAndSupervisor();
+  required(fellowAndSupervisor, "a fellow and their supervisor who can both sign in");
+  const older = await insertHeldTicket(fellowAndSupervisor, undo);
+  const newer = await insertHeldTicket(fellowAndSupervisor, undo);
+  // A microsecond apart, which a Date can't hold, and far enough back that no other ticket falls
+  // between them.
+  for (const [ticket, createdAt] of [
+    [older, "2001-01-01 00:00:00.000001+00"],
+    [newer, "2001-01-01 00:00:00.000002+00"],
+  ] as const)
+    await db
+      .update(tickets)
+      .set({ createdAt: sql`${createdAt}::timestamptz` })
+      .where(eq(tickets.id, ticket.ticketId));
+
+  await signInWithEmail(context, fellowAndSupervisor.supervisorEmail);
+  await openTicket(page, "/sc/tickets", older.ticketSubject);
+  await page.getByRole("link", { name: /^Previous ticket you hold/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: newer.ticketSubject })).toBeVisible();
+  await page.getByRole("link", { name: /^Next ticket you hold/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: older.ticketSubject })).toBeVisible();
+});
+
 test("the creator cancels an open ticket with a reason", async ({ page, context, undo }) => {
   const fellowAndSupervisor = await pickFellowAndSupervisor();
   required(fellowAndSupervisor, "a fellow and their supervisor who can both sign in");

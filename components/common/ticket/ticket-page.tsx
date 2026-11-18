@@ -6,7 +6,7 @@ import type { ImplementerRole } from "#/db/enums";
 import { ViewerTimeZoneCookie } from "#/components/common/viewer-time-zone";
 import { Badge } from "#/components/ui/badge";
 import PageFooter from "#/components/ui/page-footer";
-import { getAllTickets, getTicketDetails } from "#/lib/actions/ticket";
+import { getTicketDetails } from "#/lib/actions/ticket";
 import { RESOLVED_TICKET_STATUSES } from "#/lib/actions/ticket/types";
 import { formatDateIn } from "#/lib/date-utils";
 import { cn } from "#/lib/utils";
@@ -30,31 +30,34 @@ export default async function TicketPage({
   /** Leave out the container and footer, for a layout that already has them. */
   bare?: boolean;
 }) {
-  const [detailsResult, timeZone, listResult] = await Promise.all([
+  const [detailsResult, timeZone] = await Promise.all([
     getTicketDetails(ticketId),
     viewerTimeZone(),
-    getAllTickets({}),
   ]);
   if (!detailsResult.success || !detailsResult.data) notFound();
-  const { ticket, events, actions, reopenableUntil, viewerId, recipients, reassignRecipients } =
-    detailsResult.data;
+  const {
+    ticket,
+    previous,
+    next,
+    events,
+    actions,
+    reopenableUntil,
+    viewerId,
+    recipients,
+    reassignRecipients,
+  } = detailsResult.data;
   const lastPriorityChange = events.findLast((e) => e.kind === "PRIORITY_CHANGED");
   const isClosed = RESOLVED_TICKET_STATUSES.includes(ticket.status);
 
-  // Previous and next follow the list's default order, newest first, through the tickets the
-  // viewer holds when they hold this one, so a holder can work through their queue.
-  const listed = listResult.data ?? [];
   const holdsThis = ticket.holder.userId === viewerId;
-  const queue = holdsThis ? listed.filter((t) => t.holder.userId === viewerId) : listed;
-  const position = queue.findIndex((t) => t.id === ticket.id);
 
   const body = (
     <main className={cn("w-full space-y-6", !bare && "container grow py-10")}>
       <TicketBreadcrumb
         basePath={basePath}
         visibleId={ticket.visibleId}
-        previous={position > 0 ? queue[position - 1] : undefined}
-        next={position >= 0 ? queue[position + 1] : undefined}
+        previous={previous ?? undefined}
+        next={next ?? undefined}
         scope={holdsThis ? "you hold" : undefined}
       />
       <h1 className="max-w-4xl text-2xl font-semibold leading-8 text-balance text-black sm:text-4xl sm:leading-[48px]">

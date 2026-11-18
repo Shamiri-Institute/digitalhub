@@ -113,18 +113,21 @@ export const columns = (
     ),
   },
   {
-    accessorKey: "resolvedAt",
+    // Undefined, not null, so tickets not yet resolved or closed stay last in either direction.
+    accessorFn: (ticket) => ticket.resolvedAt ?? undefined,
     id: "Resolved",
     header: "Resolved",
     enableGlobalFilter: false,
+    sortUndefined: "last",
     cell: ({ row }) =>
       timeZone && row.original.resolvedAt && formatDateIn(row.original.resolvedAt, timeZone),
   },
   {
-    accessorKey: "closedAt",
+    accessorFn: (ticket) => ticket.closedAt ?? undefined,
     id: "Closed",
     header: "Closed",
     enableGlobalFilter: false,
+    sortUndefined: "last",
     cell: ({ row }) =>
       timeZone && row.original.closedAt && formatDateIn(row.original.closedAt, timeZone),
   },

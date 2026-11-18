@@ -170,6 +170,9 @@ export interface TicketDetails {
   /** Who the holder may hand the ticket to at their own tier; empty when they cannot reassign. */
   reassignRecipients: TicketPerson[];
   ticket: FullTicket;
+  /** The tickets either side of this one in the list, newest first; only those the viewer holds when they hold this one. */
+  previous: { id: string; visibleId: number } | null;
+  next: { id: string; visibleId: number } | null;
   events: TicketEvent[];
   actions: TicketActions;
   /** When the creator's chance to reopen a resolved ticket ends, or null when it has none. */

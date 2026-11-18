@@ -149,17 +149,12 @@ test("someone with no part in a ticket cannot open it by its address", async ({
   const subject = `${subjectPrefix} guessed id`;
   await signIn(context, hub.supervisorEmail);
   await createTicket(page, "/sc/tickets", subject, "TECH");
-  const ticket = await db.query.tickets.findFirst({
-    where: (t, { eq }) => eq(t.subject, subject),
-    columns: { id: true },
-  });
-  required(ticket, "the ticket just created");
-  await page.goto(getUrl(`/sc/tickets/${ticket.id}`));
-  await expect(page.getByRole("heading", { level: 1, name: subject })).toBeVisible();
+  await openTicket(page, "/sc/tickets", subject);
+  const address = page.url();
 
   // The page streams behind its loading state, so the status is already 200; check what shows.
   await signIn(context, hub.bystanderEmail);
-  await page.goto(getUrl(`/sc/tickets/${ticket.id}`));
+  await page.goto(address);
   await expect(page.getByRole("heading", { level: 1, name: "Page not found" })).toBeVisible();
   await expect(page.getByRole("heading", { level: 1, name: subject })).toHaveCount(0);
 });
