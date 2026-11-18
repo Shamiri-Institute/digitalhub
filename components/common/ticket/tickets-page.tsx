@@ -2,13 +2,7 @@ import { differenceInCalendarDays, formatDistanceToNowStrict, parseISO } from "d
 import { formatInTimeZone } from "date-fns-tz";
 
 import type { ImplementerRole } from "#/db/enums";
-import {
-  Figure,
-  formatCount,
-  Note,
-  Notice,
-  StatCell,
-} from "#/app/(platform)/admin/hubs/components/hub-stats";
+import { Figure, formatCount, Note, Notice, StatCell } from "#/components/common/stats";
 import { ViewerTimeZoneCookie } from "#/components/common/viewer-time-zone";
 import { TicketViewTabs } from "#/components/common/ticket/ticket-view-tabs";
 import TicketsDatatable from "#/components/common/ticket/tickets-datatable";
@@ -31,12 +25,10 @@ export function ticketsView(view: string | string[] | undefined): TicketsView {
   return views.find((v) => v === view) ?? "all";
 }
 
-// A ticket held longer than this is flagged as waiting too long.
 const STALE_DAYS = 7;
 
 const notStarted = (t: FullTicket) => t.status === "OPEN" || t.status === "ESCALATED";
 
-/** The tickets list every role shares, at `basePath`. */
 export default async function TicketsPage({
   role,
   userId,
@@ -68,11 +60,11 @@ export default async function TicketsPage({
   const canRaise = isEscalationInitiatorRole(role);
 
   const tabs = [
-    { view: "all", label: "All tickets", count: tickets.length, shown: true },
-    { view: "held", label: "Held by you", count: held.length, shown: canHold },
-    { view: "raised", label: "Raised by you", count: raised.length, shown: canRaise },
-  ] as const;
-  const shown = view === "held" ? held : view === "raised" ? raised : tickets;
+    { view: "all", label: "All tickets", count: tickets.length },
+    ...(canHold ? [{ view: "held", label: "Held by you", count: held.length }] : []),
+    ...(canRaise ? [{ view: "raised", label: "Raised by you", count: raised.length }] : []),
+  ];
+  const viewTickets = view === "held" ? held : view === "raised" ? raised : tickets;
 
   const body = (
     <div className={cn("w-full space-y-6", !bare && "container grow py-10")}>
@@ -85,26 +77,14 @@ export default async function TicketsPage({
         )}
       >
         {canHold ? (
-          <HolderStats held={held.filter(isActive)} tickets={tickets} timeZone={timeZone} />
+          <HolderStats tickets={tickets.filter(isActive)} timeZone={timeZone} />
         ) : (
           <CreatorStats raised={raised.filter(isActive)} />
         )}
       </section>
-      {(canHold || canRaise) && (
-        <TicketViewTabs
-          basePath={basePath}
-          tabs={tabs
-            .filter((tab) => tab.shown)
-            .map(({ view: tabView, label, count }) => ({
-              view: tabView,
-              label,
-              count,
-              active: tabView === view,
-            }))}
-        />
-      )}
+      {(canHold || canRaise) && <TicketViewTabs basePath={basePath} tabs={tabs} current={view} />}
       <TicketsDatatable
-        tickets={shown}
+        tickets={viewTickets}
         role={role}
         assignees={assignees}
         basePath={basePath}
@@ -132,17 +112,15 @@ export default async function TicketsPage({
 }
 
 function HolderStats({
-  held,
   tickets,
   timeZone,
 }: {
-  held: FullTicket[];
   tickets: FullTicket[];
   /** Null until the browser has sent it; the stale flag is left off until then. */
   timeZone: string | null;
 }) {
-  const urgent = held.filter((t) => t.priority === "URGENT" || t.priority === "HIGH");
-  const oldest = held.toSorted((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
+  const urgent = tickets.filter((t) => t.priority === "URGENT" || t.priority === "HIGH");
+  const oldest = tickets.toSorted((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
   const waiting = tickets.filter(notStarted);
   const escalated = waiting.filter((t) => t.status === "ESCALATED");
   const dayIn = (date: Date, zone: string) => parseISO(formatInTimeZone(date, zone, "yyyy-MM-dd"));
@@ -154,15 +132,21 @@ function HolderStats({
 
   return (
     <>
-      <StatCell label="Urgent or high" info="Tickets you hold at high or urgent priority.">
+      <StatCell
+        label="Urgent or high"
+        info="Active tickets you can see at high or urgent priority."
+      >
         <Figure value={formatCount(urgent.length)} />
         {urgent.length > 0 ? (
-          <Notice tone="attention">Held by you</Notice>
+          <Notice tone="attention">Needs attention</Notice>
         ) : (
-          <Note>None held by you</Note>
+          <Note>None urgent</Note>
         )}
       </StatCell>
-      <StatCell label="Oldest you hold" info="How long ago the oldest ticket you hold was raised.">
+      <StatCell
+        label="Oldest open"
+        info="How long ago the oldest active ticket you can see was raised."
+      >
         <Figure value={oldest ? formatDistanceToNowStrict(oldest.createdAt) : "–"} />
         {oldestIsStale ? (
           <Notice tone="attention">
@@ -170,13 +154,11 @@ function HolderStats({
           </Notice>
         ) : (
           <Note>
-            <span className="block truncate">
-              {oldest ? oldest.subject : "You hold no tickets"}
-            </span>
+            <span className="block truncate">{oldest ? oldest.subject : "No open tickets"}</span>
           </Note>
         )}
       </StatCell>
-      <StatCell label="Not started" info="Open or escalated tickets that no one has started yet.">
+      <StatCell label="Not started" info="Active tickets you can see that no one has started yet.">
         <Figure value={formatCount(waiting.length)} />
         {escalated.length > 0 ? (
           <Notice tone="attention">{formatCount(escalated.length)} escalated</Notice>

@@ -142,6 +142,28 @@ test("a supervisor's ticket goes to the hub role its category names", async ({ p
   await expect(await searchRows(page, subjectPrefix)).toHaveCount(0);
 });
 
+test("someone with no part in a ticket cannot open it by its address", async ({
+  page,
+  context,
+}) => {
+  const subject = `${subjectPrefix} guessed id`;
+  await signIn(context, hub.supervisorEmail);
+  await createTicket(page, "/sc/tickets", subject, "TECH");
+  const ticket = await db.query.tickets.findFirst({
+    where: (t, { eq }) => eq(t.subject, subject),
+    columns: { id: true },
+  });
+  required(ticket, "the ticket just created");
+  await page.goto(getUrl(`/sc/tickets/${ticket.id}`));
+  await expect(page.getByRole("heading", { level: 1, name: subject })).toBeVisible();
+
+  // The page streams behind its loading state, so the status is already 200; check what shows.
+  await signIn(context, hub.bystanderEmail);
+  await page.goto(getUrl(`/sc/tickets/${ticket.id}`));
+  await expect(page.getByRole("heading", { level: 1, name: "Page not found" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: subject })).toHaveCount(0);
+});
+
 test("a supervisor can assign a new ticket to any coordinator of their hub", async ({
   page,
   context,

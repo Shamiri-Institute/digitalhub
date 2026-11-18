@@ -134,6 +134,8 @@ export interface FullTicket {
   status: TicketStatus;
   priority: TicketPriorityLevel;
   createdAt: Date;
+  resolvedAt: Date | null;
+  closedAt: Date | null;
   createdBy: TicketPerson;
   holder: TicketPerson;
 }

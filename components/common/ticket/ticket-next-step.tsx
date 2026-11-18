@@ -53,7 +53,7 @@ import { formatDateTimeIn } from "#/lib/date-utils";
 import { cn, stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { ActionResponse } from "#/types/actions.types";
-import { capitalise, holdsTicket, personName, roleLabel } from "./format";
+import { sentenceLabel, hasHolderActions, personName, roleLabel } from "./format";
 
 const ReasonFormSchema = z.object({
   reason: stringValidation("A reason is required"),
@@ -75,15 +75,14 @@ type NextStepAction = ReasonAction & {
   icon: LucideIcon;
   // Matches the colour of the event the action adds to the activity.
   tone: string;
-  outcome: (
-    ticket: FullTicket,
-    role: ImplementerRole,
-    recipients: TicketPerson[],
-    reopenableUntil: string | null,
-  ) => string;
+  outcome: (context: {
+    ticket: FullTicket;
+    role: ImplementerRole;
+    recipients: TicketPerson[];
+    reopenableUntil: string | null;
+  }) => string;
 };
 
-// The holder's actions, then the creator's.
 const nextStepActions: NextStepAction[] = [
   {
     kind: "resolve",
@@ -101,11 +100,11 @@ const nextStepActions: NextStepAction[] = [
     label: "Escalate",
     icon: ArrowUpFromLine,
     tone: "text-shamiri-light-red",
-    outcome: (_, __, recipients) => {
-      const [only] = recipients;
-      if (!only) return "No one is available to take it";
-      if (recipients.length === 1) return `Send it to ${personName(only)}`;
-      const label = only.role ? roleLabel(only.role).toLowerCase() : "person";
+    outcome: ({ recipients }) => {
+      const [first] = recipients;
+      if (!first) return "No one is available to take it";
+      if (recipients.length === 1) return `Send it to ${personName(first)}`;
+      const label = first.role ? roleLabel(first.role).toLowerCase() : "person";
       return `Choose ${/^[aeiou]/.test(label) ? "an" : "a"} ${label} to send it to`;
     },
     placeholder: "Why does this need to go up a tier?",
@@ -117,7 +116,7 @@ const nextStepActions: NextStepAction[] = [
     label: "Reassign",
     icon: ArrowLeftRight,
     tone: "text-shamiri-text-dark-grey",
-    outcome: (_, role) => `Hand it to another ${roleLabel(role).toLowerCase()}`,
+    outcome: ({ role }) => `Hand it to another ${roleLabel(role).toLowerCase()}`,
     placeholder: "Why should they take it over?",
     submit: (ticketId, { reason, recipientId }) =>
       reassignTicket({ ticketId, reassignedTo: recipientId, reassignmentReason: reason }),
@@ -128,7 +127,7 @@ const nextStepActions: NextStepAction[] = [
     label: "Change priority",
     icon: Flag,
     tone: "text-shamiri-dark-orange",
-    outcome: (ticket) => `Currently ${capitalise(ticket.priority).toLowerCase()}`,
+    outcome: ({ ticket }) => `Currently ${sentenceLabel(ticket.priority).toLowerCase()}`,
     placeholder: "Why is the priority changing?",
     submit: (ticketId, { reason, priority }) =>
       changeTicketPriority(ticketId, { priority, reason }),
@@ -139,7 +138,7 @@ const nextStepActions: NextStepAction[] = [
     label: "Reopen",
     icon: RotateCcw,
     tone: "text-shamiri-dark-orange",
-    outcome: (_, __, ___, reopenableUntil) =>
+    outcome: ({ reopenableUntil }) =>
       reopenableUntil ? `You can reopen until ${reopenableUntil}` : "Send it back to be worked on",
     placeholder: "What still needs to be done?",
     submit: (ticketId, { reason, recipientId }) => reopenTicket(ticketId, reason, recipientId),
@@ -174,7 +173,6 @@ const focusTrigger = (kind: string | null) =>
     )?.focus(),
   );
 
-/** The viewer's actions, each saying what it does and opening its form in place. */
 export function TicketNextStep({
   ticket,
   actions,
@@ -228,7 +226,7 @@ export function TicketNextStep({
         className="border-b border-shamiri-new-lighter-blue bg-shamiri-new-light-blue px-4 py-2.5 font-semibold text-shamiri-new-blue"
       >
         {/* A creator who doesn't hold the ticket can only reopen or cancel their own request. */}
-        {holdsTicket(actions) ? "Your next step" : "Your ticket"}
+        {hasHolderActions(actions) ? "Your next step" : "Your ticket"}
       </h2>
       <ul className="divide-y">
         {actions.canStart && (
@@ -282,12 +280,13 @@ export function TicketNextStep({
                 icon={action.icon}
                 tone={action.tone}
                 label={action.label}
-                outcome={action.outcome(
+                outcome={action.outcome({
                   ticket,
                   role,
                   recipients,
-                  reopenableUntil && timeZone && formatDateTimeIn(reopenableUntil, timeZone),
-                )}
+                  reopenableUntil:
+                    reopenableUntil && timeZone && formatDateTimeIn(reopenableUntil, timeZone),
+                })}
                 expanded={openKind === action.kind}
                 onClick={() => toggle(action.kind)}
               />
@@ -310,7 +309,6 @@ export function TicketNextStep({
   );
 }
 
-/** An action row whose content grows open beneath it, on the same grey while open. */
 function Drawer({
   kind,
   isOpen,
@@ -325,37 +323,22 @@ function Drawer({
   return (
     <li className={cn("transition-colors", isOpen && "bg-background-secondary")}>
       {row}
-      <Collapse kind={kind} isOpen={isOpen}>
-        <div className="px-4 pb-4 pl-12">{children}</div>
-      </Collapse>
+      <div
+        id={`ticket-form-${kind}`}
+        inert={!isOpen}
+        className={cn(
+          "grid duration-200 ease-out motion-reduce:transition-none",
+          // Shown at once on opening so its field can take focus; hidden only once it has shrunk shut.
+          isOpen
+            ? "visible grid-rows-[1fr] opacity-100 transition-[grid-template-rows,opacity]"
+            : "invisible grid-rows-[0fr] opacity-0 transition-[grid-template-rows,opacity,visibility]",
+        )}
+      >
+        <div className="overflow-hidden">
+          <div className="px-4 pb-4 pl-12">{children}</div>
+        </div>
+      </div>
     </li>
-  );
-}
-
-/** Content that grows open and shut, keeping its draft while shut. */
-function Collapse({
-  kind,
-  isOpen,
-  children,
-}: {
-  kind: string;
-  isOpen: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <div
-      id={`ticket-form-${kind}`}
-      inert={!isOpen}
-      className={cn(
-        "grid duration-200 ease-out motion-reduce:transition-none",
-        // Shown at once on opening so its field can take focus; hidden only once it has shrunk shut.
-        isOpen
-          ? "visible grid-rows-[1fr] opacity-100 transition-[grid-template-rows,opacity]"
-          : "invisible grid-rows-[0fr] opacity-0 transition-[grid-template-rows,opacity,visibility]",
-      )}
-    >
-      <div className="overflow-hidden">{children}</div>
-    </div>
   );
 }
 
@@ -373,8 +356,7 @@ function ActionRow({
   tone: string;
   label: string;
   outcome: string;
-  /** Set for a row that opens a form; Start has none. */
-  expanded?: boolean;
+  expanded: boolean;
   onClick: () => void;
 }) {
   const outcomeId = useId();
@@ -385,7 +367,7 @@ function ActionRow({
       aria-label={label}
       aria-describedby={outcomeId}
       aria-expanded={expanded}
-      aria-controls={expanded === undefined ? undefined : `ticket-form-${kind}`}
+      aria-controls={`ticket-form-${kind}`}
       onClick={onClick}
       className={cn(
         "group flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-shamiri-new-blue",
@@ -517,7 +499,7 @@ function ReasonForm({
                   <SelectContent position="popper">
                     {Object.values(TicketPriorityLevel).map((priority) => (
                       <SelectItem key={priority} value={priority}>
-                        {capitalise(priority)}
+                        {sentenceLabel(priority)}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -16,11 +16,10 @@ export const statusBadgeVariant: Record<TicketStatus, BadgeProps["variant"]> = {
 
 // Everyone who runs a hub has the hub coordinator role, and the UI calls them all hub managers.
 export function roleLabel(role: ImplementerRole) {
-  const label = role === "HUB_COORDINATOR" ? "hub manager" : enumLabel(role);
-  return label.charAt(0).toUpperCase() + label.slice(1);
+  return role === "HUB_COORDINATOR" ? "Hub manager" : sentenceLabel(role);
 }
 
-export function capitalise(value: string) {
+export function sentenceLabel(value: string) {
   const label = enumLabel(value);
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
@@ -30,14 +29,13 @@ export const priorityBadgeVariant: Partial<Record<TicketPriorityLevel, BadgeProp
   URGENT: "destructive",
 };
 
-/** The person's name, or "You" when they are the viewer. */
-export function personName(person: TicketPerson, viewerId?: string) {
+export function personName(person: TicketPerson, viewerId?: string | null) {
   if (viewerId && person.userId === viewerId) return "You";
   return person.name ?? "Unknown";
 }
 
 /** Whether the viewer holds the ticket and can act on it, so it shows them a next step. */
-export const holdsTicket = (actions: TicketActions) =>
+export const hasHolderActions = (actions: TicketActions) =>
   actions.canStart ||
   actions.canResolve ||
   actions.canEscalate ||

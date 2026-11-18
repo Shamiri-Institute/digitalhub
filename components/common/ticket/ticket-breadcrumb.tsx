@@ -8,7 +8,6 @@ import { Icons } from "#/components/icons";
 
 type Sibling = { id: string; visibleId: number };
 
-/** The hub page's breadcrumb, with the tickets list in place of the hubs list. */
 export function TicketBreadcrumb({
   basePath,
   visibleId,

@@ -1,29 +1,37 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import { formatDistanceToNowStrict } from "date-fns";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "#/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import type { FullTicket } from "#/lib/actions/ticket/types";
 import { formatDateIn } from "#/lib/date-utils";
 import { sortBy } from "#/lib/table-view";
 import { Person } from "./person";
-import {
-  capitalise,
-  personName,
-  prioritiesLowToHigh,
-  priorityBadgeVariant,
-  statusBadgeVariant,
-} from "./format";
+import { PriorityBadge } from "./priority-badge";
+import { sentenceLabel, personName, prioritiesLowToHigh, statusBadgeVariant } from "./format";
 
-export type TicketData = FullTicket;
+export const hiddenTicketColumns = {
+  "Ticket #": false,
+  "Raised by": false,
+  Resolved: false,
+  Closed: false,
+};
 
 export const columns = (
   basePath: string,
   viewerId: string | null,
   timeZone: string | null,
-): ColumnDef<TicketData>[] => [
+): ColumnDef<FullTicket>[] => [
+  {
+    accessorFn: (ticket) => `#${ticket.visibleId}`,
+    id: "Ticket #",
+    header: "Ticket #",
+    sortingFn: sortBy((ticket) => ticket.visibleId),
+  },
   {
     accessorKey: "subject",
     id: "Subject",
@@ -43,24 +51,14 @@ export const columns = (
     accessorKey: "category",
     id: "Category",
     header: "Category",
-    cell: ({ row }) => capitalise(row.original.category),
+    cell: ({ row }) => sentenceLabel(row.original.category),
   },
   {
     accessorKey: "priority",
     id: "Priority",
     header: "Priority",
     sortingFn: sortBy((ticket) => prioritiesLowToHigh.indexOf(ticket.priority)),
-    cell: ({ row }) => {
-      const variant = priorityBadgeVariant[row.original.priority];
-      const label = capitalise(row.original.priority);
-      return variant ? (
-        <Badge variant={variant} className="select-none">
-          {label}
-        </Badge>
-      ) : (
-        label
-      );
-    },
+    cell: ({ row }) => <PriorityBadge priority={row.original.priority} />,
   },
   {
     accessorKey: "status",
@@ -68,7 +66,7 @@ export const columns = (
     header: "Status",
     cell: ({ row }) => (
       <Badge variant={statusBadgeVariant[row.original.status]} className="select-none">
-        {capitalise(row.original.status)}
+        {sentenceLabel(row.original.status)}
       </Badge>
     ),
   },
@@ -85,7 +83,50 @@ export const columns = (
     id: "Opened",
     header: "Opened",
     enableGlobalFilter: false,
-    cell: ({ row }) => timeZone && formatDateIn(row.original.createdAt, timeZone),
+    cell: ({ row }) => {
+      const age = (
+        // The age is worked out again in the browser, which may cross a unit since the server render.
+        <span suppressHydrationWarning>
+          {formatDistanceToNowStrict(row.original.createdAt, {
+            addSuffix: true,
+            roundingMethod: "floor",
+          })}
+        </span>
+      );
+      if (!timeZone) return age;
+      return (
+        <Tooltip>
+          <TooltipTrigger className="cursor-default rounded-sm focus-visible:outline-2 focus-visible:outline-shamiri-new-blue">
+            {age}
+          </TooltipTrigger>
+          <TooltipContent>{formatDateIn(row.original.createdAt, timeZone)}</TooltipContent>
+        </Tooltip>
+      );
+    },
+  },
+  {
+    accessorFn: (ticket) => personName(ticket.createdBy),
+    id: "Raised by",
+    header: "Raised by",
+    cell: ({ row }) => (
+      <Person person={row.original.createdBy} viewerId={viewerId} emphasis={false} />
+    ),
+  },
+  {
+    accessorKey: "resolvedAt",
+    id: "Resolved",
+    header: "Resolved",
+    enableGlobalFilter: false,
+    cell: ({ row }) =>
+      timeZone && row.original.resolvedAt && formatDateIn(row.original.resolvedAt, timeZone),
+  },
+  {
+    accessorKey: "closedAt",
+    id: "Closed",
+    header: "Closed",
+    enableGlobalFilter: false,
+    cell: ({ row }) =>
+      timeZone && row.original.closedAt && formatDateIn(row.original.closedAt, timeZone),
   },
   {
     id: "button",

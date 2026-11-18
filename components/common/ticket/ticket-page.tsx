@@ -11,13 +11,13 @@ import { RESOLVED_TICKET_STATUSES } from "#/lib/actions/ticket/types";
 import { formatDateIn } from "#/lib/date-utils";
 import { cn } from "#/lib/utils";
 import { viewerTimeZone } from "#/lib/viewer-time-zone";
-import { capitalise, holdsTicket, priorityBadgeVariant, statusBadgeVariant } from "./format";
+import { sentenceLabel, hasHolderActions, statusBadgeVariant } from "./format";
 import { Person } from "./person";
+import { PriorityBadge } from "./priority-badge";
 import { TicketActivity } from "./ticket-activity";
 import { TicketBreadcrumb } from "./ticket-breadcrumb";
 import { TicketNextStep } from "./ticket-next-step";
 
-/** One ticket's page, which every role shares under its own `basePath`. */
 export default async function TicketPage({
   ticketId,
   role,
@@ -30,32 +30,31 @@ export default async function TicketPage({
   /** Leave out the container and footer, for a layout that already has them. */
   bare?: boolean;
 }) {
-  const [result, timeZone, listedResult] = await Promise.all([
+  const [detailsResult, timeZone, listResult] = await Promise.all([
     getTicketDetails(ticketId),
     viewerTimeZone(),
     getAllTickets({}),
   ]);
-  if (!result.success || !result.data) notFound();
+  if (!detailsResult.success || !detailsResult.data) notFound();
   const { ticket, events, actions, reopenableUntil, viewerId, recipients, reassignRecipients } =
-    result.data;
+    detailsResult.data;
   const lastPriorityChange = events.findLast((e) => e.kind === "PRIORITY_CHANGED");
-  const priorityVariant = priorityBadgeVariant[ticket.priority];
   const isClosed = RESOLVED_TICKET_STATUSES.includes(ticket.status);
 
   // Previous and next follow the list's default order, newest first, through the tickets the
   // viewer holds when they hold this one, so a holder can work through their queue.
-  const listed = listedResult.data ?? [];
+  const listed = listResult.data ?? [];
   const holdsThis = ticket.holder.userId === viewerId;
-  const siblings = holdsThis ? listed.filter((t) => t.holder.userId === viewerId) : listed;
-  const index = siblings.findIndex((t) => t.id === ticket.id);
+  const queue = holdsThis ? listed.filter((t) => t.holder.userId === viewerId) : listed;
+  const position = queue.findIndex((t) => t.id === ticket.id);
 
   const body = (
     <main className={cn("w-full space-y-6", !bare && "container grow py-10")}>
       <TicketBreadcrumb
         basePath={basePath}
         visibleId={ticket.visibleId}
-        previous={index > 0 ? siblings[index - 1] : undefined}
-        next={index >= 0 ? siblings[index + 1] : undefined}
+        previous={position > 0 ? queue[position - 1] : undefined}
+        next={position >= 0 ? queue[position + 1] : undefined}
         scope={holdsThis ? "you hold" : undefined}
       />
       <h1 className="max-w-4xl text-2xl font-semibold leading-8 text-balance text-black sm:text-4xl sm:leading-[48px]">
@@ -73,19 +72,13 @@ export default async function TicketPage({
           <dl className="grid grid-cols-[7rem_minmax(0,1fr)] text-sm [&>*]:border-b [&>*]:py-2 [&>*:nth-last-child(-n+2)]:border-b-0 [&>dd]:pr-4 [&>dt]:pl-4">
             <Detail label="Status">
               <Badge variant={statusBadgeVariant[ticket.status]} className="select-none">
-                {capitalise(ticket.status)}
+                {sentenceLabel(ticket.status)}
               </Badge>
             </Detail>
             <Detail label="Priority">
-              {priorityVariant ? (
-                <Badge variant={priorityVariant} className="select-none">
-                  {capitalise(ticket.priority)}
-                </Badge>
-              ) : (
-                capitalise(ticket.priority)
-              )}
+              <PriorityBadge priority={ticket.priority} />
               {lastPriorityChange?.fromValue && (
-                <Muted>from {capitalise(lastPriorityChange.fromValue)}</Muted>
+                <Muted>from {sentenceLabel(lastPriorityChange.fromValue)}</Muted>
               )}
             </Detail>
             <Detail
@@ -98,7 +91,7 @@ export default async function TicketPage({
             <Detail label="Raised by">
               <Person person={ticket.createdBy} viewerId={viewerId} />
             </Detail>
-            <Detail label="Category">{capitalise(ticket.category)}</Detail>
+            <Detail label="Category">{sentenceLabel(ticket.category)}</Detail>
             <Detail label="Opened">
               {timeZone && formatDateIn(ticket.createdAt, timeZone)}
               <Muted>
@@ -109,7 +102,7 @@ export default async function TicketPage({
               </Muted>
             </Detail>
           </dl>
-          {(holdsTicket(actions) || actions.canReopen || actions.canCancel) && (
+          {(hasHolderActions(actions) || actions.canReopen || actions.canCancel) && (
             <TicketNextStep
               ticket={ticket}
               actions={actions}

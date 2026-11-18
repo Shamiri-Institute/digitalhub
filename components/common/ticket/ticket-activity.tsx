@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { Badge, type BadgeProps } from "#/components/ui/badge";
 import type { FullTicket, TicketEvent, TicketPerson } from "#/lib/actions/ticket/types";
 import { cn } from "#/lib/utils";
-import { capitalise } from "./format";
+import { sentenceLabel } from "./format";
 import { Person } from "./person";
 
 const eventBadge: Record<
@@ -44,14 +44,13 @@ function changeOf(event: TicketEvent, events: TicketEvent[], viewerId: string): 
       );
     case "PRIORITY_CHANGED":
       return event.fromValue && event.toValue
-        ? `${capitalise(event.fromValue)} to ${capitalise(event.toValue)}`
+        ? `${sentenceLabel(event.fromValue)} to ${sentenceLabel(event.toValue)}`
         : null;
     default:
       return null;
   }
 }
 
-/** The ticket's story in one panel: the report, then every event, oldest first. */
 export function TicketActivity({
   ticket,
   events,
@@ -130,7 +129,7 @@ function EventBody({
       <p className="leading-6 text-shamiri-text-dark-grey">
         {event.kind === "CLOSED"
           ? "Closed automatically when the reopen window ended"
-          : capitalise(event.kind)}
+          : sentenceLabel(event.kind)}
       </p>
     );
   }

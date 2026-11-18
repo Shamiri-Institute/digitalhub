@@ -253,7 +253,6 @@ export async function createEscalation(
       { userId: callerUserId, implementerId: activeImplementerId },
       recipientId,
     );
-    const escalationRecipientId = recipientId;
 
     await db.transaction(async (tx) => {
       const lockedTicket = await lockTicket(tx, ticketId);
@@ -268,7 +267,7 @@ export async function createEscalation(
           ticketId,
           kind: "ESCALATED",
           actorId: callerUserId,
-          assigneeId: escalationRecipientId,
+          assigneeId: recipientId,
           reason: escalationReason,
         },
         { status: "ESCALATED" },
@@ -671,9 +670,12 @@ function selectTickets() {
       createdById: tickets.createdById,
       holderId: tickets.holderId,
       resolvedAt: tickets.resolvedAt,
+      closedAt: tickets.closedAt,
     })
     .from(tickets);
 }
+
+export type TicketRow = Awaited<ReturnType<ReturnType<typeof selectTickets>["where"]>>[number];
 
 function personOf(userId: string, people: UserRoleNameMap): TicketPerson {
   const person = people.get(userId);
@@ -681,12 +683,7 @@ function personOf(userId: string, people: UserRoleNameMap): TicketPerson {
 }
 
 function toFullTicket(
-  {
-    createdById,
-    holderId,
-    resolvedAt: _resolvedAt,
-    ...row
-  }: Awaited<ReturnType<ReturnType<typeof selectTickets>["where"]>>[number],
+  { createdById, holderId, ...row }: TicketRow,
   people: UserRoleNameMap,
 ): FullTicket {
   return {

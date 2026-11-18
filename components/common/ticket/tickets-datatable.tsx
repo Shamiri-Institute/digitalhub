@@ -1,10 +1,14 @@
 "use client";
 
 import type { ImplementerRole } from "#/db/enums";
-import { columns, type TicketData } from "#/components/common/ticket/columns";
+import { columns, hiddenTicketColumns } from "#/components/common/ticket/columns";
 import CreateTicketDialog from "#/components/common/ticket/create-ticket-dialog";
 import DataTable from "#/components/data-table";
-import { isEscalationInitiatorRole, type TicketAssignees } from "#/lib/actions/ticket/types";
+import {
+  type FullTicket,
+  isEscalationInitiatorRole,
+  type TicketAssignees,
+} from "#/lib/actions/ticket/types";
 
 export default function TicketsDatatable({
   tickets,
@@ -15,7 +19,7 @@ export default function TicketsDatatable({
   timeZone,
   emptyStateMessage,
 }: {
-  tickets: TicketData[];
+  tickets: FullTicket[];
   role: ImplementerRole;
   assignees?: TicketAssignees;
   basePath: string;
@@ -27,6 +31,7 @@ export default function TicketsDatatable({
     <DataTable
       urlState
       columns={columns(basePath, viewerId, timeZone)}
+      columnVisibilityState={hiddenTicketColumns}
       data={tickets}
       className="data-table data-table-action bg-white lg:mt-4"
       emptyStateMessage={emptyStateMessage}
