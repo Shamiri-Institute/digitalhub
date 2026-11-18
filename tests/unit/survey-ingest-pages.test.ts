@@ -7,6 +7,7 @@ import { and, asc, eq, inArray, isNull, ne, sql, TransactionRollbackError } from
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { db, pool, type Transaction } from "#/db/client";
+import type { SurveyUploadStatus } from "#/db/enums";
 import {
   hub,
   type JsonValue,
@@ -133,7 +134,11 @@ async function issueCopy() {
 }
 type IssuedPage = Awaited<ReturnType<typeof issueCopy>>["pages"][number];
 
-async function createUpload(hubId = scope.hubId, pageCount: number | null = null) {
+async function createUpload(
+  hubId = scope.hubId,
+  pageCount: number | null = null,
+  status: SurveyUploadStatus = "PROCESSING",
+) {
   const uploadId = objectId("surveyupload");
   await db.insert(surveyUpload).values({
     id: uploadId,
@@ -145,8 +150,9 @@ async function createUpload(hubId = scope.hubId, pageCount: number | null = null
     contentType: "application/pdf",
     byteSize: 1000,
     pageCount,
-    status: "PROCESSING",
-    uploadedAt: new Date(),
+    status,
+    error: status === "FAILED" ? "The pipeline gave up" : null,
+    uploadedAt: status === "PENDING" ? null : new Date(),
   });
   createdUploadIds.push(uploadId);
   return uploadId;
@@ -163,7 +169,7 @@ const CLEAN_READS: Record<number, FieldRead[]> = {
     ok("age", "14"),
     ok("dob", "2011-02-28"),
   ],
-  3: [{ field: "notes", value: null, status: "blank" }, ok("sign", true)],
+  3: [{ field: "notes", value: null, status: "blank", confidence: null }, ok("sign", true)],
 };
 
 function readPost(
@@ -331,7 +337,7 @@ describe("ingesting pages", () => {
     expect(
       await ingest(uploadId, [
         readPost(first, 0, { qrs: [] }),
-        readPost(first, 1, { qrs: ["SAMPLE-QR"] }),
+        readPost(first, 1, { qrs: [pageQrText(objectId("surveyquestionnairepage"))] }),
         readPost(first, 2, { qrs: [first.qr, second.qr] }),
         { pageIndex: 3, error: "no image" },
         readPost(first, 4, { aligned: "yes" }),
@@ -389,7 +395,10 @@ describe("ingesting pages", () => {
         imageS3Key: null,
       },
     ]);
-    expect(scans[0]?.postedResult).toEqual(readPost(first, 0, { qrs: [] }));
+    expect(scans[0]?.postedResult).toEqual({
+      ...readPost(first, 0, { qrs: [] }),
+      fields: [ok("home", "1"), ok("mood", "3"), ok("sport", ["football"])],
+    });
     expect(scans[3]?.postedResult).toEqual({ pageIndex: 3, error: "no image" });
     expect(await auditOf(scans[3]?.id ?? "")).toEqual([
       expect.objectContaining({
@@ -519,6 +528,97 @@ describe("ingesting pages", () => {
     });
     expect(await scansOf(uploadId)).toEqual([]);
   });
+
+  it("refuses a post to an upload that is not queued, processing or processed", async () => {
+    const copy = await issueCopy();
+    for (const status of ["PENDING", "UPLOADED", "FAILED"] as const) {
+      const uploadId = await createUpload(scope.hubId, null, status);
+      expect(await ingest(uploadId, [readPost(copy.pages[0], 0)])).toEqual({
+        kind: "upload-not-accepting",
+        status,
+      });
+      expect(await scansOf(uploadId)).toEqual([]);
+    }
+    expect(await answersOf(copy.questionnaireId)).toEqual([]);
+  });
+
+  it("answers a retried post after the upload is processed with what it stored", async () => {
+    const copy = await issueCopy();
+    const uploadId = await createUpload();
+    const posted = [readPost(copy.pages[0], 0), { pageIndex: 1, error: "no image" }];
+    await ingest(uploadId, posted);
+    await db.update(surveyUpload).set({ status: "PROCESSED" }).where(eq(surveyUpload.id, uploadId));
+    expect(await ingest(uploadId, posted)).toEqual({
+      kind: "ingested",
+      pages: [
+        { pageIndex: 0, result: "unchanged", status: "MATCHED" },
+        { pageIndex: 1, result: "unchanged", status: "REJECTED" },
+      ],
+    });
+  });
+
+  it("once the upload is processed, refuses a page it would store, storing nothing", async () => {
+    const copy = await issueCopy();
+    const uploadId = await createUpload();
+    await ingest(uploadId, [readPost(copy.pages[0], 0), { pageIndex: 1, error: "no image" }]);
+    await db.update(surveyUpload).set({ status: "PROCESSED" }).where(eq(surveyUpload.id, uploadId));
+    const scansBefore = await scansOf(uploadId);
+    const answersBefore = await answersOf(copy.questionnaireId);
+
+    const processed = (pageIndex: number) => ({
+      pageIndex,
+      result: "conflict",
+      reason: "the upload is already processed",
+    });
+    expect(
+      await ingest(uploadId, [
+        readPost(copy.pages[0], 0),
+        readPost(copy.pages[1], 1),
+        readPost(copy.pages[2], 2),
+      ]),
+    ).toEqual({
+      kind: "ingested",
+      pages: [{ pageIndex: 0, result: "unchanged", status: "MATCHED" }, processed(1), processed(2)],
+    });
+    expect(await scansOf(uploadId)).toEqual(scansBefore);
+    expect(await answersOf(copy.questionnaireId)).toEqual(answersBefore);
+    expect(await copyStatus(copy.questionnaireId)).toBe("PARTIAL");
+  });
+
+  it("stores free text with what Postgres can't store taken out, and refuses a page index it can't", async () => {
+    const copy = await issueCopy();
+    const uploadId = await createUpload();
+    const results = await ingest(uploadId, [
+      readPost(copy.pages[0], 0),
+      readPost(copy.pages[1], 2147483648),
+      { pageIndex: 2147483649, error: "no image" },
+      readPost(copy.pages[2], 1, {
+        qrs: [copy.pages[2].qr, `${copy.pages[2].qr}\u0000`],
+        fields: { notes: { ...ok("notes", "I like\u0000 school\ud800"), raw: "I\u0000" } },
+      }),
+      { pageIndex: 2, error: "no\u0000 image" },
+    ]);
+    expect(results).toEqual({
+      kind: "ingested",
+      pages: [
+        { pageIndex: 0, result: "stored", status: "MATCHED" },
+        { pageIndex: 2147483648, result: "invalid", reason: expect.stringMatching(/^pageIndex: /) },
+        { pageIndex: 2147483649, result: "invalid", reason: expect.stringMatching(/^pageIndex: /) },
+        { pageIndex: 1, result: "stored", status: "MATCHED" },
+        { pageIndex: 2, result: "stored", status: "REJECTED" },
+      ],
+    });
+    const scans = await scansOf(uploadId);
+    expect(scans.map(({ pageIndex }) => pageIndex)).toEqual([0, 1, 2]);
+    expect(scans[1]?.postedResult).toMatchObject({
+      qrs: [copy.pages[2].qr, copy.pages[2].qr],
+      fields: [{ field: "notes", value: "I like school\ufffd", raw: "I" }, ok("sign", true)],
+    });
+    expect(scans[2]?.postedResult).toEqual({ pageIndex: 2, error: "no image" });
+    expect(
+      (await answersOf(copy.questionnaireId)).find((answer) => answer.field === "notes")?.value,
+    ).toBe("I like school\ufffd");
+  });
 });
 
 describe("re-posting a page", () => {
@@ -534,6 +634,37 @@ describe("re-posting a page", () => {
     expect(await ingest(uploadId, [reordered])).toEqual({
       kind: "ingested",
       pages: [{ pageIndex: 0, result: "unchanged", status: "MATCHED" }],
+    });
+    const readsReordered = { ...posted, fields: (posted.fields as FieldRead[]).toReversed() };
+    expect(await ingest(uploadId, [readsReordered])).toEqual({
+      kind: "ingested",
+      pages: [{ pageIndex: 0, result: "unchanged", status: "MATCHED" }],
+    });
+    const marked = (codes: string[]): FieldRead => ({
+      ...ok("sport", codes),
+      marks: codes.map((code, index) => ({ code, fill: 0.5 + index / 10 })),
+    });
+    const multiChoiceUploadId = await createUpload();
+    await ingest(multiChoiceUploadId, [
+      readPost(copy.pages[0], 0, { fields: { sport: marked(["football", "netball"]) } }),
+    ]);
+    expect(
+      await ingest(multiChoiceUploadId, [
+        readPost(copy.pages[0], 0, {
+          fields: {
+            sport: {
+              ...ok("sport", ["netball", "football"]),
+              marks: [
+                { code: "netball", fill: 0.6 },
+                { code: "football", fill: 0.5 },
+              ],
+            },
+          },
+        }),
+      ]),
+    ).toEqual({
+      kind: "ingested",
+      pages: [{ pageIndex: 0, result: "unchanged", status: "DUPLICATE" }],
     });
     expect(
       await ingest(uploadId, [readPost(copy.pages[0], 0, { fields: { mood: ok("mood", "1") } })]),
@@ -551,115 +682,235 @@ describe("re-posting a page", () => {
     expect(await auditOf(scan?.id ?? "")).toHaveLength(1);
   });
 
-  it("from a new attempt replaces the page's answers in place", async () => {
+  it("that it could not read replaces it with the page read cleanly", async () => {
+    const copy = await issueCopy();
+    const uploadId = await createUpload();
+    await ingest(uploadId, [{ pageIndex: 0, error: "no image" }]);
+    const [failed] = await scansOf(uploadId);
+
+    expect(await ingest(uploadId, [readPost(copy.pages[1], 0)])).toEqual({
+      kind: "ingested",
+      pages: [{ pageIndex: 0, result: "stored", status: "MATCHED" }],
+    });
+    expect(await scansOf(uploadId)).toEqual([
+      expect.objectContaining({
+        id: failed?.id,
+        attempt: 1,
+        status: "MATCHED",
+        rejectedReason: null,
+        questionnairePageId: copy.pages[1].id,
+      }),
+    ]);
+    expect([
+      ...new Set((await answersOf(copy.questionnaireId)).map(({ scanPageId }) => scanPageId)),
+    ]).toEqual([failed?.id]);
+  });
+
+  it("with a confidence left out changes nothing after one posted as null", async () => {
+    const copy = await issueCopy();
+    const uploadId = await createUpload();
+    const blankNotes = (read: Record<string, unknown>) =>
+      readPost(copy.pages[2], 0, { fields: { notes: read as FieldRead } });
+    await ingest(uploadId, [
+      blankNotes({ field: "notes", value: null, status: "blank", confidence: null }),
+    ]);
+    expect(
+      await ingest(uploadId, [blankNotes({ field: "notes", value: null, status: "blank" })]),
+    ).toEqual({
+      kind: "ingested",
+      pages: [{ pageIndex: 0, result: "unchanged", status: "MATCHED" }],
+    });
+  });
+});
+
+describe("re-running an upload", () => {
+  async function rerun(uploadId: string) {
+    await db.update(surveyUpload).set({ attempt: 2 }).where(eq(surveyUpload.id, uploadId));
+  }
+  const unchanged = (pageIndex: number, status: string) => ({
+    pageIndex,
+    result: "unchanged",
+    status,
+  });
+
+  it("replaces a page the earlier attempt failed to read with the page it now reads", async () => {
+    const copy = await issueCopy();
+    const uploadId = await createUpload();
+    await ingest(uploadId, [
+      readPost(copy.pages[0], 0),
+      readPost(copy.pages[1], 1),
+      { pageIndex: 2, error: "no image" },
+    ]);
+    const [failed] = (await scansOf(uploadId)).filter(({ pageIndex }) => pageIndex === 2);
+    expect(failed).toMatchObject({ status: "REJECTED", rejectedReason: "UNREADABLE" });
+    expect(await copyStatus(copy.questionnaireId)).toBe("PARTIAL");
+
+    await rerun(uploadId);
+    expect(await ingest(uploadId, [readPost(copy.pages[2], 2)], 2)).toEqual({
+      kind: "ingested",
+      pages: [{ pageIndex: 2, result: "stored", status: "MATCHED" }],
+    });
+    const [replaced] = (await scansOf(uploadId)).filter(({ pageIndex }) => pageIndex === 2);
+    expect(replaced).toEqual({
+      id: failed?.id,
+      pageIndex: 2,
+      attempt: 2,
+      status: "MATCHED",
+      rejectedReason: null,
+      questionnairePageId: copy.pages[2].id,
+      duplicateOfId: null,
+      imageS3Key: `pages/${uploadId}/2/2.jpg`,
+      aligned: true,
+      postedResult: readPost(copy.pages[2], 2),
+    });
+    expect(
+      (await answersOf(copy.questionnaireId))
+        .filter(({ field }) => field === "notes" || field === "sign")
+        .map(({ field, scanPageId }) => ({ field, scanPageId })),
+    ).toEqual([
+      { field: "notes", scanPageId: failed?.id },
+      { field: "sign", scanPageId: failed?.id },
+    ]);
+    expect(await copyStatus(copy.questionnaireId)).toBe("READY");
+    expect(
+      (await auditOf(failed?.id ?? "")).map(({ before, after }) => ({ before, after })),
+    ).toEqual([
+      expect.objectContaining({ before: null }),
+      {
+        before: { attempt: 1, status: "REJECTED", rejectedReason: "UNREADABLE" },
+        after: expect.objectContaining({ attempt: 2, status: "MATCHED" }),
+      },
+    ]);
+  });
+
+  it("replaces a page the earlier attempt could not place once it reads the page's code", async () => {
+    const copy = await issueCopy();
+    const uploadId = await createUpload();
+    await ingest(uploadId, [readPost(copy.pages[0], 0, { qrs: [] })]);
+    const [unplaced] = await scansOf(uploadId);
+    expect(unplaced?.status).toBe("UNIDENTIFIED");
+
+    await rerun(uploadId);
+    expect(await ingest(uploadId, [readPost(copy.pages[0], 0)], 2)).toEqual({
+      kind: "ingested",
+      pages: [{ pageIndex: 0, result: "stored", status: "MATCHED" }],
+    });
+    expect(await scansOf(uploadId)).toEqual([
+      expect.objectContaining({
+        id: unplaced?.id,
+        attempt: 2,
+        status: "MATCHED",
+        questionnairePageId: copy.pages[0].id,
+      }),
+    ]);
+    expect(await copyStatus(copy.questionnaireId)).toBe("PARTIAL");
+  });
+
+  it("changes nothing when it reads a stored page the same, whatever it stored", async () => {
+    const copy = await issueCopy();
+    const uploadId = await createUpload();
+    const posted = [
+      readPost(copy.pages[0], 0),
+      readPost(copy.pages[0], 1, { qrs: [] }),
+      { pageIndex: 2, error: "no image" },
+    ];
+    await ingest(uploadId, posted);
+    const scansBefore = await scansOf(uploadId);
+
+    await rerun(uploadId);
+    expect(await ingest(uploadId, posted, 2)).toEqual({
+      kind: "ingested",
+      pages: [unchanged(0, "MATCHED"), unchanged(1, "UNIDENTIFIED"), unchanged(2, "REJECTED")],
+    });
+    expect(await scansOf(uploadId)).toEqual(scansBefore);
+  });
+
+  it("never replaces a page it stored against a printed page", async () => {
     const copy = await issueCopy();
     const uploadId = await createUpload();
     await ingest(uploadId, [readPost(copy.pages[0], 0)]);
-    const [firstScan] = await scansOf(uploadId);
+    const scansBefore = await scansOf(uploadId);
+    const answersBefore = await answersOf(copy.questionnaireId);
 
-    await db.update(surveyUpload).set({ attempt: 2 }).where(eq(surveyUpload.id, uploadId));
+    await rerun(uploadId);
     expect(
       await ingest(
         uploadId,
         [readPost(copy.pages[0], 0, { fields: { mood: ok("mood", "1") } })],
         2,
       ),
-    ).toEqual({ kind: "ingested", pages: [{ pageIndex: 0, result: "stored", status: "MATCHED" }] });
-    const [secondScan] = await scansOf(uploadId);
-    expect(secondScan).toMatchObject({
-      id: firstScan?.id,
-      attempt: 2,
-      imageS3Key: `pages/${uploadId}/2/0.jpg`,
+    ).toEqual({
+      kind: "ingested",
+      pages: [{ pageIndex: 0, result: "conflict", reason: "already stored by attempt 1" }],
     });
-    expect(
-      (await answersOf(copy.questionnaireId)).map(({ field, value, scanPageId }) => ({
-        field,
-        value,
-        scanPageId,
-      })),
-    ).toEqual([
-      { field: "home", value: "1", scanPageId: firstScan?.id },
-      { field: "mood", value: "1", scanPageId: firstScan?.id },
-      { field: "sport", value: ["football"], scanPageId: firstScan?.id },
-    ]);
-    expect((await auditOf(firstScan?.id ?? ""))[1]?.before).toEqual({
-      attempt: 1,
-      status: "MATCHED",
-    });
+    expect(await scansOf(uploadId)).toEqual(scansBefore);
+    expect(await answersOf(copy.questionnaireId)).toEqual(answersBefore);
+    expect(await auditOf(scansBefore[0]?.id ?? "")).toHaveLength(1);
   });
 
-  it("from a new attempt that finds no code unmatches the page and its answers", async () => {
+  it("stores the pages the earlier attempt never stored, as this attempt's", async () => {
     const copy = await issueCopy();
     const uploadId = await createUpload();
-    await ingest(uploadId, [readPost(copy.pages[0], 0)]);
-    expect(await copyStatus(copy.questionnaireId)).toBe("PARTIAL");
+    await ingest(uploadId, [readPost(copy.pages[0], 0), readPost(copy.pages[1], 1, { qrs: 7 })]);
+    expect((await scansOf(uploadId)).map(({ pageIndex }) => pageIndex)).toEqual([0]);
 
-    await db.update(surveyUpload).set({ attempt: 2 }).where(eq(surveyUpload.id, uploadId));
-    expect(await ingest(uploadId, [readPost(copy.pages[0], 0, { qrs: [] })], 2)).toEqual({
+    await rerun(uploadId);
+    expect(
+      await ingest(uploadId, [readPost(copy.pages[0], 0), readPost(copy.pages[1], 1)], 2),
+    ).toEqual({
       kind: "ingested",
-      pages: [{ pageIndex: 0, result: "stored", status: "UNIDENTIFIED" }],
+      pages: [unchanged(0, "MATCHED"), { pageIndex: 1, result: "stored", status: "MATCHED" }],
     });
-    expect(await answersOf(copy.questionnaireId)).toEqual([]);
-    expect(await copyStatus(copy.questionnaireId)).toBe("ISSUED");
+    expect(
+      (await scansOf(uploadId)).map(({ pageIndex, attempt, imageS3Key }) => ({
+        pageIndex,
+        attempt,
+        imageS3Key,
+      })),
+    ).toEqual([
+      { pageIndex: 0, attempt: 1, imageS3Key: `pages/${uploadId}/1/0.jpg` },
+      { pageIndex: 1, attempt: 2, imageS3Key: `pages/${uploadId}/2/1.jpg` },
+    ]);
   });
 
-  it("from a new attempt is refused once a person has worked on the page", async () => {
-    const reviewedCopy = async (review: (questionnaireId: string) => Promise<unknown>) => {
-      const copy = await issueCopy();
-      const uploadId = await createUpload();
-      await ingest(uploadId, [readPost(copy.pages[0], 0)]);
-      await review(copy.questionnaireId);
-      await db.update(surveyUpload).set({ attempt: 2 }).where(eq(surveyUpload.id, uploadId));
-      const answersBefore = await answersOf(copy.questionnaireId);
-      const result = await ingest(
-        uploadId,
-        [readPost(copy.pages[0], 0, { fields: { mood: ok("mood", "1") } })],
-        2,
-      );
-      expect(await answersOf(copy.questionnaireId)).toEqual(answersBefore);
-      return result;
-    };
-    const atField = (questionnaireId: string, field: string) =>
-      and(eq(surveyAnswer.questionnaireId, questionnaireId), eq(surveyAnswer.field, field));
-    const refused = (reason: string) => ({
-      kind: "ingested",
-      pages: [{ pageIndex: 0, result: "conflict", reason }],
-    });
+  it("leaves both pages as they were when it reads them swapped", async () => {
+    const copy = await issueCopy();
+    const uploadId = await createUpload();
+    await ingest(uploadId, [readPost(copy.pages[0], 0), readPost(copy.pages[1], 1)]);
+    const scansBefore = await scansOf(uploadId);
+    const answersBefore = await answersOf(copy.questionnaireId);
 
+    await rerun(uploadId);
     expect(
-      await reviewedCopy((questionnaireId) =>
-        db
-          .update(surveyAnswer)
-          .set({ reviewStatus: "VERIFIED", reviewedBy: scope.userId, reviewedAt: new Date() })
-          .where(atField(questionnaireId, "home")),
-      ),
-    ).toEqual(refused("this page's answers are already reviewed"));
-    expect(
-      await reviewedCopy((questionnaireId) =>
-        db
-          .update(surveyAnswer)
-          .set({
-            source: "MANUAL",
-            recognizedValue: null,
-            confidence: null,
-            readStatus: null,
-            readDetail: null,
-            value: "2",
-            reviewStatus: "CORRECTED",
-            reviewedBy: scope.userId,
-            reviewedAt: new Date(),
-          })
-          .where(atField(questionnaireId, "sport")),
-      ),
-    ).toEqual(refused("this page's answers are already reviewed"));
-    expect(
-      await reviewedCopy((questionnaireId) =>
-        db
-          .update(surveyQuestionnaire)
-          .set({ status: "VERIFIED" })
-          .where(eq(surveyQuestionnaire.id, questionnaireId)),
-      ),
-    ).toEqual(refused("this page's answers are already reviewed"));
+      await ingest(uploadId, [readPost(copy.pages[1], 0), readPost(copy.pages[0], 1)], 2),
+    ).toEqual({
+      kind: "ingested",
+      pages: [0, 1].map((pageIndex) => ({
+        pageIndex,
+        result: "conflict",
+        reason: "already stored by attempt 1",
+      })),
+    });
+    expect(await scansOf(uploadId)).toEqual(scansBefore);
+    expect(await answersOf(copy.questionnaireId)).toEqual(answersBefore);
+  });
+
+  it("leaves a page scanned twice and its duplicate as they were when it reads them again", async () => {
+    const copy = await issueCopy();
+    const uploadId = await createUpload();
+    const posted = [readPost(copy.pages[0], 0), readPost(copy.pages[0], 1)];
+    await ingest(uploadId, posted);
+    const scansBefore = await scansOf(uploadId);
+    const answersBefore = await answersOf(copy.questionnaireId);
+
+    await rerun(uploadId);
+    expect(await ingest(uploadId, posted, 2)).toEqual({
+      kind: "ingested",
+      pages: [unchanged(0, "MATCHED"), unchanged(1, "DUPLICATE")],
+    });
+    expect(scansBefore.map(({ status }) => status)).toEqual(["MATCHED", "DUPLICATE"]);
+    expect(await scansOf(uploadId)).toEqual(scansBefore);
+    expect(await answersOf(copy.questionnaireId)).toEqual(answersBefore);
   });
 });
 
@@ -723,8 +974,8 @@ describe("a matched page's answers", () => {
       readPost(copy.pages[0], 0, {
         fields: {
           mood: ok("mood", "9"),
-          home: { field: "home", value: null, status: "uncertain" },
-          sport: { field: "sport", value: null, status: "blank" },
+          home: { field: "home", value: null, status: "uncertain", confidence: null },
+          sport: { field: "sport", value: null, status: "blank", confidence: null },
         },
       }),
       readPost(copy.pages[1], 1, {
@@ -787,8 +1038,8 @@ describe("a matched page's answers", () => {
   });
 });
 
-describe("a copy's status", () => {
-  it("leaves a VERIFIED copy VERIFIED when another scan of its page comes in", async () => {
+describe("a verified copy", () => {
+  it("rejects another scan of its page, leaving its answers and status", async () => {
     const copy = await issueCopy();
     const uploadId = await createUpload();
     await ingest(
@@ -800,11 +1051,22 @@ describe("a copy's status", () => {
       .update(surveyQuestionnaire)
       .set({ status: "VERIFIED" })
       .where(eq(surveyQuestionnaire.id, copy.questionnaireId));
+    const answersBefore = await answersOf(copy.questionnaireId);
     const laterUploadId = await createUpload();
-    expect(await ingest(laterUploadId, [readPost(copy.pages[0], 0)])).toEqual({
+    expect(
+      await ingest(laterUploadId, [
+        readPost(copy.pages[0], 0, { fields: { mood: ok("mood", "1") } }),
+      ]),
+    ).toEqual({
       kind: "ingested",
-      pages: [{ pageIndex: 0, result: "stored", status: "DUPLICATE" }],
+      pages: [{ pageIndex: 0, result: "stored", status: "REJECTED" }],
     });
+    expect((await scansOf(laterUploadId))[0]).toMatchObject({
+      rejectedReason: "VERIFIED_COPY",
+      questionnairePageId: copy.pages[0].id,
+      duplicateOfId: null,
+    });
+    expect(await answersOf(copy.questionnaireId)).toEqual(answersBefore);
     expect(await copyStatus(copy.questionnaireId)).toBe("VERIFIED");
   });
 });
@@ -834,17 +1096,21 @@ async function ingestWhileFirstHoldsLocks(
     secondPid.resolve(await backendPid(tx));
     return ingestPages(tx, { uploadId: secondUploadId, attempt: 1 }, secondPages);
   });
-  const pid = await secondPid.promise;
-  await expect
-    .poll(async () => {
-      const { rows } = await pool.query<{ waitEventType: string | null }>(
-        `select wait_event_type as "waitEventType" from pg_stat_activity where pid = $1`,
-        [pid],
-      );
-      return rows[0]?.waitEventType;
-    })
-    .toBe("Lock");
-  releaseFirst.resolve();
+  try {
+    const pid = await secondPid.promise;
+    await expect
+      .poll(async () => {
+        const { rows } = await pool.query<{ waitEventType: string | null }>(
+          `select wait_event_type as "waitEventType" from pg_stat_activity where pid = $1`,
+          [pid],
+        );
+        return rows[0]?.waitEventType;
+      })
+      .toBe("Lock");
+  } finally {
+    releaseFirst.resolve();
+    await Promise.allSettled([first, second]);
+  }
   return Promise.all([first, second]);
 }
 
@@ -886,6 +1152,41 @@ describe("two ingests at once", () => {
     ]);
     const [matched] = await scansOf(firstUploadId);
     expect((await scansOf(secondUploadId))[0]?.duplicateOfId).toBe(matched?.id);
+  });
+
+  it("one of them a replay, which takes no lock on a copy it stores nothing for", async () => {
+    const copy = await issueCopy();
+    const uploadId = await createUpload();
+    const posted = [readPost(copy.pages[0], 0)];
+    await ingest(uploadId, posted);
+
+    const holderLocksCopy = Promise.withResolvers<void>();
+    const releaseHolder = Promise.withResolvers<void>();
+    const holder = db.transaction(async (tx) => {
+      await tx
+        .select({ id: surveyQuestionnaire.id })
+        .from(surveyQuestionnaire)
+        .where(eq(surveyQuestionnaire.id, copy.questionnaireId))
+        .for("update");
+      holderLocksCopy.resolve();
+      await releaseHolder.promise;
+    });
+    holder.catch(holderLocksCopy.reject);
+    await holderLocksCopy.promise;
+    try {
+      expect(
+        await db.transaction(async (tx) => {
+          await tx.execute(sql`set local lock_timeout = '2s'`);
+          return ingestPages(tx, { uploadId, attempt: 1 }, posted);
+        }),
+      ).toEqual({
+        kind: "ingested",
+        pages: [{ pageIndex: 0, result: "unchanged", status: "MATCHED" }],
+      });
+    } finally {
+      releaseHolder.resolve();
+      await holder;
+    }
   });
 
   it("of pages of the same copies in opposite orders both finish", async () => {

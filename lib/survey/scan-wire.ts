@@ -17,14 +17,37 @@ export type PostedPage = z.output<typeof PagePostBodySchema>["pages"][number];
 const WIRE_READ_STATUSES = ["ok", "uncertain", "blank", "no_prediction"] as const;
 type WireReadStatus = (typeof WIRE_READ_STATUSES)[number];
 
+// Postgres keeps no U+0000 or lone surrogate in text or jsonb, and stores the page index as int4.
+// A field name is an id, so one it can't store is refused; free text is stored without them.
+const StoredText = z.string().refine((text) => text.isWellFormed() && !text.includes("\u0000"), {
+  error: "text must be well-formed Unicode without U+0000",
+});
+const storable = (text: string) => text.toWellFormed().replaceAll("\u0000", "");
+const FreeText = z.string().transform(storable);
+const StoredPageIndex = z.int32().min(0);
+
 const FieldReadSchema = z
   .object({
-    field: z.string().min(1).max(200),
-    value: z.union([z.string(), z.array(z.string()).min(1), z.literal(true)]).nullable(),
-    raw: z.string().max(2000).optional(),
-    confidence: z.number().min(0).max(1).nullable().optional(),
+    field: StoredText.min(1).max(200),
+    value: z
+      .union([FreeText, z.array(FreeText).min(1), z.literal(true)])
+      .nullable()
+      .transform((value) => (Array.isArray(value) ? value.toSorted() : value)),
+    raw: z.string().max(2000).transform(storable).optional(),
+    confidence: z
+      .number()
+      .min(0)
+      .max(1)
+      .nullish()
+      .transform((confidence) => confidence ?? null),
     status: z.enum(WIRE_READ_STATUSES),
-    marks: z.array(z.object({ code: z.string(), fill: z.number().min(0).max(1) })).optional(),
+    marks: z
+      .array(z.object({ code: FreeText, fill: z.number().min(0).max(1) }))
+      .refine((marks) => new Set(marks.map((mark) => mark.code)).size === marks.length, {
+        error: "a code is marked twice",
+      })
+      .transform((marks) => marks.toSorted((a, b) => (a.code < b.code ? -1 : 1)))
+      .optional(),
   })
   .refine((read) => (read.value !== null) === (read.status === "ok"), {
     error: "value is set exactly when status is ok",
@@ -32,8 +55,8 @@ const FieldReadSchema = z
 
 const ReadPageSchema = z
   .object({
-    pageIndex: z.int().min(0),
-    qrs: z.array(z.string().max(512)).max(8),
+    pageIndex: StoredPageIndex,
+    qrs: z.array(z.string().max(512).transform(storable)).max(8),
     rotation: z.union([z.literal(0), z.literal(90), z.literal(180), z.literal(270)]),
     aligned: z.boolean(),
     quality: z.number().min(0).max(1),
@@ -41,11 +64,16 @@ const ReadPageSchema = z
   })
   .refine((page) => new Set(page.fields.map((read) => read.field)).size === page.fields.length, {
     error: "a field is posted twice",
-  });
+  })
+  .transform((page) => ({
+    ...page,
+    qrs: page.qrs.toSorted(),
+    fields: page.fields.toSorted((a, b) => (a.field < b.field ? -1 : 1)),
+  }));
 
 const FailedPageSchema = z.object({
-  pageIndex: z.int().min(0),
-  error: z.string().min(1).max(2000),
+  pageIndex: StoredPageIndex,
+  error: z.string().min(1).max(2000).transform(storable),
 });
 
 export type ReadPage = z.output<typeof ReadPageSchema>;

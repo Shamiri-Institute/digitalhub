@@ -12,7 +12,7 @@ import {
   identifyPage,
   planAnswers,
   type PrintedPage,
-  type PriorScan,
+  type StoredScan,
 } from "#/lib/survey/ingest-rules";
 import { pageQrText } from "#/lib/survey/print-qr";
 import { type FieldRead, parsePostedPage, type ReadPage } from "#/lib/survey/scan-wire";
@@ -112,6 +112,40 @@ describe("a posted page", () => {
     expect(second.parsed).toEqual({ kind: "read", page: posted });
   });
 
+  it("hashes and stores its codes and its field reads as sets, not in the order posted", () => {
+    const posted = {
+      pageIndex: 2,
+      qrs: ["B", "A"],
+      rotation: 0,
+      aligned: true,
+      quality: 0.8,
+      fields: [ok("mood", "3"), ok("home", "1")],
+    };
+    const reordered = { ...posted, qrs: ["A", "B"], fields: [ok("home", "1"), ok("mood", "3")] };
+    const [first, second] = [posted, reordered].map(parsePostedPage);
+    if (!first?.ok || !second?.ok) throw new Error("Not parsed");
+    expect(second.postedSha256).toBe(first.postedSha256);
+    expect(first.parsed).toEqual({ kind: "read", page: reordered });
+  });
+
+  it("hashes and stores a multiple choice and its marks as sets, not in the order posted", () => {
+    const sportRead = (codes: string[]) => ({
+      ...ok("sport", codes),
+      marks: codes.map((code) => ({ code, fill: code === "football" ? 0.9 : 0.6 })),
+    });
+    const page = { pageIndex: 0, qrs: [], rotation: 0, aligned: true, quality: 1 };
+    const [first, second] = [
+      { ...page, fields: [sportRead(["netball", "football"])] },
+      { ...page, fields: [sportRead(["football", "netball"])] },
+    ].map(parsePostedPage);
+    if (!first?.ok || !second?.ok) throw new Error("Not parsed");
+    expect(second.postedSha256).toBe(first.postedSha256);
+    expect(first.parsed).toEqual({
+      kind: "read",
+      page: { ...page, fields: [sportRead(["football", "netball"])] },
+    });
+  });
+
   it("is a failed page when it carries an error", () => {
     expect(parsePostedPage({ pageIndex: 3, error: "no image", qrs: [] })).toEqual({
       ok: true,
@@ -147,6 +181,86 @@ describe("a posted page", () => {
     expect(reasonOf({ fields: [], quality: 2 })).toMatch(/^quality: /);
     expect(reasonOf({})).toMatch(/^fields: /);
   });
+
+  it("is refused when its page index or a field name is one Postgres could not store", () => {
+    const page = { pageIndex: 0, qrs: [], rotation: 0, aligned: true, quality: 1, fields: [] };
+    const reasonOf = (posted: Record<string, unknown>) => {
+      const parsed = parsePostedPage({ ...page, ...posted });
+      return parsed.ok ? undefined : parsed.reason;
+    };
+    expect(reasonOf({ pageIndex: 2147483647 })).toBeUndefined();
+    expect(reasonOf({ pageIndex: 2147483648 })).toMatch(/^pageIndex: /);
+    expect(parsePostedPage({ pageIndex: 2147483648, error: "no image" })).toMatchObject({
+      ok: false,
+      reason: expect.stringMatching(/^pageIndex: /),
+    });
+    expect(reasonOf({ fields: [ok("mood\u0000", "3")] })).toBe(
+      "fields.0.field: text must be well-formed Unicode without U+0000",
+    );
+    expect(reasonOf({ fields: [ok("mood\ud800", "3")] })).toBe(
+      "fields.0.field: text must be well-formed Unicode without U+0000",
+    );
+  });
+
+  it("stores and hashes its free text with what Postgres can't store taken out", () => {
+    const page = { pageIndex: 0, rotation: 0, aligned: true, quality: 1 };
+    const posted = parsePostedPage({
+      ...page,
+      qrs: ["A\u0000"],
+      fields: [
+        { ...ok("notes", "hi\u0000 x\ud800"), raw: "h\u0000i" },
+        {
+          ...ok("sport", ["foot\u0000ball", "net\udc00"]),
+          marks: [{ code: "foot\u0000ball", fill: 1 }],
+        },
+      ],
+    });
+    const cleaned = parsePostedPage({
+      ...page,
+      qrs: ["A"],
+      fields: [
+        { ...ok("notes", "hi x\ufffd"), raw: "hi" },
+        { ...ok("sport", ["football", "net\ufffd"]), marks: [{ code: "football", fill: 1 }] },
+      ],
+    });
+    if (!posted.ok || !cleaned.ok) throw new Error("Not parsed");
+    expect(posted).toEqual(cleaned);
+    expect(parsePostedPage({ pageIndex: 0, error: "no\u0000 image\ud800" })).toEqual({
+      ok: true,
+      parsed: { kind: "failed", page: { pageIndex: 0, error: "no image\ufffd" } },
+      postedSha256: expect.stringMatching(/^[0-9a-f]{64}$/),
+    });
+  });
+
+  it("is refused when a field marks one code twice", () => {
+    const parsed = parsePostedPage({
+      pageIndex: 0,
+      qrs: [],
+      rotation: 0,
+      aligned: true,
+      quality: 1,
+      fields: [
+        {
+          ...ok("sport", ["football"]),
+          marks: [
+            { code: "football", fill: 0.9 },
+            { code: "football", fill: 0.4 },
+          ],
+        },
+      ],
+    });
+    expect(parsed).toEqual({ ok: false, reason: "fields.0.marks: a code is marked twice" });
+  });
+
+  it("reads a confidence left out as no confidence", () => {
+    const page = { pageIndex: 0, qrs: [], rotation: 0, aligned: true, quality: 1 };
+    const [left, nulled] = [
+      { field: "mood", value: null, status: "blank" },
+      { field: "mood", value: null, status: "blank", confidence: null },
+    ].map((read) => parsePostedPage({ ...page, fields: [read] }));
+    if (!left?.ok || !nulled?.ok) throw new Error("Not parsed");
+    expect(left).toEqual(nulled);
+  });
 });
 
 function printedPage(copy: Partial<PrintedPage["copy"]> = {}): PrintedPage {
@@ -174,18 +288,19 @@ describe("identifying a page", () => {
     identifyPage({ kind: "read", page: readPage([], { qrs }) }, printedPagesById);
   const qrOf = (printed: PrintedPage) => pageQrText(printed.questionnairePageId);
 
-  it("names the page its codes agree on", () => {
+  it("names the page its codes agree on, past a code that isn't a page's", () => {
     expect(identify([qrOf(page), qrOf(page)])).toEqual({ kind: "printed", page });
     expect(identify([qrOf(page)])).toEqual({ kind: "printed", page });
+    expect(identify([qrOf(page), "SCHOOL-STAMP", qrOf(page)])).toEqual({ kind: "printed", page });
   });
 
   it("never guesses between codes that name different pages, or a code that is no page's", () => {
     expect(identify([])).toEqual({ kind: "no-code" });
+    expect(identify(["SCHOOL-STAMP"])).toEqual({ kind: "no-code" });
     expect(identify([qrOf(page), qrOf(otherPage)])).toEqual({ kind: "codes-disagree" });
-    expect(identify([qrOf(page), "SAMPLE-QR"])).toEqual({ kind: "unknown-code" });
-    expect(identify([pageQrText(objectId("surveyquestionnairepage"))])).toEqual({
-      kind: "unknown-code",
-    });
+    const unprintedQr = pageQrText(objectId("surveyquestionnairepage"));
+    expect(identify([unprintedQr])).toEqual({ kind: "unknown-code" });
+    expect(identify([qrOf(page), unprintedQr])).toEqual({ kind: "unknown-code" });
     expect(
       identifyPage({ kind: "failed", page: { pageIndex: 0, error: "no image" } }, printedPagesById),
     ).toEqual({ kind: "failed" });
@@ -196,6 +311,8 @@ describe("a page's outcome", () => {
   it("is REJECTED before UNIDENTIFIED, DUPLICATE or MATCHED", () => {
     const voidPage = printedPage({ status: "VOID" });
     const otherHubPage = printedPage({ hubId: "other hub" });
+    const verifiedPage = printedPage({ status: "VERIFIED" });
+    const verifiedOtherHubPage = printedPage({ status: "VERIFIED", hubId: "other hub" });
     const page = printedPage();
     expect(decideOutcome({ kind: "printed", page: voidPage }, "hub", "matched scan")).toEqual({
       status: "REJECTED",
@@ -206,6 +323,16 @@ describe("a page's outcome", () => {
       status: "REJECTED",
       rejectedReason: "OTHER_HUB",
       page: otherHubPage,
+    });
+    expect(decideOutcome({ kind: "printed", page: verifiedPage }, "hub", "matched scan")).toEqual({
+      status: "REJECTED",
+      rejectedReason: "VERIFIED_COPY",
+      page: verifiedPage,
+    });
+    expect(decideOutcome({ kind: "printed", page: verifiedOtherHubPage }, "hub")).toEqual({
+      status: "REJECTED",
+      rejectedReason: "OTHER_HUB",
+      page: verifiedOtherHubPage,
     });
     expect(decideOutcome({ kind: "failed" }, "hub")).toEqual({
       status: "REJECTED",
@@ -224,6 +351,7 @@ describe("a page's outcome", () => {
     });
     expect(decideOutcome({ kind: "no-code" }, "hub")).toEqual({
       status: "UNIDENTIFIED",
+      page: null,
     });
     expect(decideOutcome({ kind: "printed", page }, "hub", "matched scan")).toEqual({
       status: "DUPLICATE",
@@ -238,47 +366,48 @@ describe("a page's outcome", () => {
 });
 
 describe("a re-post", () => {
-  const prior: PriorScan = {
-    id: "scan",
+  const matched: StoredScan = {
     attempt: 1,
     postedSha256: "a".repeat(64),
     status: "MATCHED",
     questionnairePageId: "page",
-    questionnaireId: "copy",
-    hasReviewedAnswers: false,
-    hasDuplicates: false,
-    copyStatus: "PARTIAL",
+  };
+  const unplaced: StoredScan = {
+    attempt: 1,
+    postedSha256: "a".repeat(64),
+    status: "REJECTED",
+    questionnairePageId: null,
   };
 
-  it("of the same attempt changes nothing, and other content is a conflict", () => {
+  it("of the same attempt changes nothing, and other content replaces only a page that names no printed page", () => {
     expect(decideRepost(undefined, 1, "a".repeat(64))).toEqual({ kind: "new" });
-    expect(decideRepost(prior, 1, "a".repeat(64))).toEqual({
-      kind: "unchanged",
-      status: "MATCHED",
-    });
-    expect(decideRepost(prior, 1, "b".repeat(64))).toEqual({
+    for (const storedScan of [matched, unplaced]) {
+      expect(decideRepost(storedScan, 1, "a".repeat(64))).toEqual({
+        kind: "unchanged",
+        status: storedScan.status,
+      });
+    }
+    expect(decideRepost(unplaced, 1, "b".repeat(64))).toEqual({ kind: "replace" });
+    expect(decideRepost(matched, 1, "b".repeat(64))).toEqual({
       kind: "conflict",
       reason: "this page was already posted with other content",
     });
   });
 
-  it("of a later attempt replaces the page unless a person worked on it or a scan duplicates it", () => {
-    expect(decideRepost(prior, 2, "b".repeat(64))).toEqual({ kind: "replace", prior });
-    expect(decideRepost({ ...prior, hasReviewedAnswers: true }, 2, "b".repeat(64))).toEqual({
+  it("of another attempt changes nothing when it reads the page the same", () => {
+    for (const storedScan of [matched, unplaced]) {
+      expect(decideRepost(storedScan, 2, "a".repeat(64))).toEqual({
+        kind: "unchanged",
+        status: storedScan.status,
+      });
+    }
+  });
+
+  it("of another attempt reading it otherwise replaces only a page that names no printed page", () => {
+    expect(decideRepost(unplaced, 2, "b".repeat(64))).toEqual({ kind: "replace" });
+    expect(decideRepost(matched, 2, "b".repeat(64))).toEqual({
       kind: "conflict",
-      reason: "this page's answers are already reviewed",
-    });
-    expect(decideRepost({ ...prior, copyStatus: "VERIFIED" }, 2, "b".repeat(64))).toEqual({
-      kind: "conflict",
-      reason: "this page's answers are already reviewed",
-    });
-    expect(decideRepost({ ...prior, hasDuplicates: true }, 2, "b".repeat(64))).toEqual({
-      kind: "conflict",
-      reason: "another scan duplicates this page",
-    });
-    expect(decideRepost({ ...prior, attempt: 3 }, 2, "b".repeat(64))).toEqual({
-      kind: "conflict",
-      reason: "a later attempt of this page is stored",
+      reason: "already stored by attempt 1",
     });
   });
 });
@@ -333,8 +462,8 @@ describe("a matched page's answers", () => {
   it("keep what the pipeline saw of a field", () => {
     const planned = plan([
       { ...ok("mood", "3"), raw: "3?", marks: [{ code: "3", fill: 0.8 }] },
-      { field: "home", value: null, status: "uncertain", raw: "" },
-      { field: "sport", value: null, status: "blank" },
+      { field: "home", value: null, status: "uncertain", confidence: null, raw: "" },
+      { field: "sport", value: null, status: "blank", confidence: null },
     ]);
     if (!planned.ok) throw new Error(planned.reason);
     expect(
@@ -433,7 +562,7 @@ describe("a matched page's answers", () => {
       flagsOf(
         plan(
           [
-            { field: "age", value: null, status: "uncertain" },
+            { field: "age", value: null, status: "uncertain", confidence: null },
             { ...ok("dob", "2011-02-28"), confidence: 0.85 },
             { ...ok("phq.1", "0"), confidence: null },
           ],
@@ -483,8 +612,8 @@ describe("a matched page's answers", () => {
 
   it("accept a blank optional answer, but not a blank required one or a blank on a misaligned page", () => {
     const blankPage = [
-      { field: "notes", value: null, status: "blank" as const },
-      { field: "sign", value: null, status: "blank" as const },
+      { field: "notes", value: null, status: "blank" as const, confidence: null },
+      { field: "sign", value: null, status: "blank" as const, confidence: null },
     ];
     expect(flagsOf(plan(blankPage, { printedFields: PAGE_THREE_FIELDS }))).toEqual({
       notes: [],

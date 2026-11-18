@@ -552,6 +552,10 @@ describe("scanned pages", () => {
     expect(
       (await scanError({ status: "REJECTED", rejectedReason: "UNKNOWN_CODE" }, 1))?.constraint,
     ).toBe("survey_scan_pages_identified_check");
+    expect(await scanError({ status: "REJECTED", rejectedReason: "VERIFIED_COPY" }, 1)).toBeNull();
+    expect(
+      (await scanError({ ...coverSheet, rejectedReason: "VERIFIED_COPY" }, 1))?.constraint,
+    ).toBe("survey_scan_pages_identified_check");
     const unreadable = { ...coverSheet, rejectedReason: "UNREADABLE" as const };
     expect(await scanError({ ...unreadable, imageS3Key: null, aligned: null }, 1)).toBeNull();
     expect((await scanError(unreadable, 1))?.constraint).toBe("survey_scan_pages_rejected_check");

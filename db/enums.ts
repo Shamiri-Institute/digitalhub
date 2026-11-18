@@ -357,8 +357,16 @@ export const SurveyScanRejection = {
   CODES_DISAGREE: "CODES_DISAGREE",
   VOID_COPY: "VOID_COPY",
   OTHER_HUB: "OTHER_HUB",
+  VERIFIED_COPY: "VERIFIED_COPY",
 } as const;
 export type SurveyScanRejection = (typeof SurveyScanRejection)[keyof typeof SurveyScanRejection];
+
+export const SCAN_REJECTIONS_NAMING_A_PAGE = [
+  SurveyScanRejection.VOID_COPY,
+  SurveyScanRejection.OTHER_HUB,
+  SurveyScanRejection.VERIFIED_COPY,
+] as const satisfies readonly SurveyScanRejection[];
+export type ScanRejectionNamingAPage = (typeof SCAN_REJECTIONS_NAMING_A_PAGE)[number];
 
 export const SurveyAnswerReadStatus = {
   OK: "OK",

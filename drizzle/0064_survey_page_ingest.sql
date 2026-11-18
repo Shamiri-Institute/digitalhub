@@ -1,6 +1,6 @@
 SET LOCAL lock_timeout = '5s';--> statement-breakpoint
 CREATE TYPE "public"."survey_answer_read_status" AS ENUM('OK', 'UNCERTAIN', 'BLANK', 'NO_PREDICTION');--> statement-breakpoint
-CREATE TYPE "public"."survey_scan_rejection" AS ENUM('UNREADABLE', 'UNKNOWN_CODE', 'CODES_DISAGREE', 'VOID_COPY', 'OTHER_HUB');--> statement-breakpoint
+CREATE TYPE "public"."survey_scan_rejection" AS ENUM('UNREADABLE', 'UNKNOWN_CODE', 'CODES_DISAGREE', 'VOID_COPY', 'OTHER_HUB', 'VERIFIED_COPY');--> statement-breakpoint
 CREATE TABLE "survey_field_kind_reviews" (
 	"kind" "survey_field_kind" PRIMARY KEY NOT NULL,
 	"created_at" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -31,7 +31,7 @@ ALTER TABLE "survey_scan_pages" ADD CONSTRAINT "survey_scan_pages_rejected_check
         AND ("survey_scan_pages"."image_s3_key" IS NULL) = ("survey_scan_pages"."aligned" IS NULL));--> statement-breakpoint
 ALTER TABLE "survey_scan_pages" ADD CONSTRAINT "survey_scan_pages_identified_check" CHECK (CASE "survey_scan_pages"."status"
         WHEN 'UNIDENTIFIED' THEN "survey_scan_pages"."questionnaire_page_id" IS NULL
-        WHEN 'REJECTED' THEN ("survey_scan_pages"."rejected_reason" IN ('VOID_COPY', 'OTHER_HUB')) = ("survey_scan_pages"."questionnaire_page_id" IS NOT NULL)
+        WHEN 'REJECTED' THEN ("survey_scan_pages"."rejected_reason" IN ('VOID_COPY', 'OTHER_HUB', 'VERIFIED_COPY')) = ("survey_scan_pages"."questionnaire_page_id" IS NOT NULL)
         ELSE "survey_scan_pages"."questionnaire_page_id" IS NOT NULL
       END);--> statement-breakpoint
 ALTER TABLE "survey_uploads" ADD CONSTRAINT "survey_uploads_attempt_check" CHECK ("survey_uploads"."attempt" >= 1);

@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import type { Transaction } from "#/db/client";
 import {
@@ -8,6 +8,8 @@ import {
   SurveyAuditActor,
   type SurveyFieldKind,
   SurveyScanPageStatus,
+  type SurveyScanRejection,
+  SurveyUploadStatus,
 } from "#/db/enums";
 import {
   surveyAnswer,
@@ -32,9 +34,10 @@ import {
   type PlannedAnswer,
   type PrintedField,
   type PrintedPage,
-  type PriorScan,
+  type RepostDecision,
   reviewStatusOf,
   type ScanOutcome,
+  type StoredScan,
 } from "#/lib/survey/ingest-rules";
 import { pageIdFromQrText } from "#/lib/survey/print-qr";
 import { scanPageImageKey } from "#/lib/survey/scan-files";
@@ -48,7 +51,14 @@ export type PageIngestResult = { pageIndex: number } & (
 export type IngestPagesResult =
   | { kind: "upload-not-found" }
   | { kind: "stale-attempt"; currentAttempt: number }
+  | { kind: "upload-not-accepting"; status: SurveyUploadStatus }
   | { kind: "ingested"; pages: PageIngestResult[] };
+
+const UPLOAD_STATUSES_ACCEPTING_PAGES: ReadonlySet<SurveyUploadStatus> = new Set([
+  SurveyUploadStatus.QUEUED,
+  SurveyUploadStatus.PROCESSING,
+  SurveyUploadStatus.PROCESSED,
+]);
 
 type Copy = PrintedPage["copy"];
 
@@ -65,9 +75,15 @@ export async function ingestPages(
   { uploadId, attempt }: { uploadId: string; attempt: number },
   pages: readonly PostedPage[],
 ): Promise<IngestPagesResult> {
+  const postedPages = pages.map((posted) => ({
+    pageIndex: posted.pageIndex,
+    parsing: parsePostedPage(posted),
+  }));
+
   const [upload] = await tx
     .select({
       hubId: surveyUpload.hubId,
+      status: surveyUpload.status,
       attempt: surveyUpload.attempt,
       pageCount: surveyUpload.pageCount,
     })
@@ -80,42 +96,50 @@ export async function ingestPages(
   if (upload.attempt !== attempt) {
     return { kind: "stale-attempt", currentAttempt: upload.attempt };
   }
+  if (!UPLOAD_STATUSES_ACCEPTING_PAGES.has(upload.status)) {
+    return { kind: "upload-not-accepting", status: upload.status };
+  }
 
-  const postedPages = pages.map((posted) => ({
-    pageIndex: posted.pageIndex,
-    parsing: parsePostedPage(posted),
-  }));
-  const namedPageIds = [
+  const storedScans = await loadStoredScans(tx, uploadId, [
     ...new Set(
-      postedPages.flatMap(({ parsing }) =>
-        parsing.ok && parsing.parsed.kind === "read"
-          ? parsing.parsed.page.qrs
-              .map(pageIdFromQrText)
-              .filter((pageId): pageId is string => pageId !== undefined)
-          : [],
-      ),
+      postedPages.flatMap(({ parsing }) => (parsing.ok ? [parsing.parsed.page.pageIndex] : [])),
     ),
-  ];
-  const priorRows = await loadPriorRows(tx, uploadId, [
-    ...new Set(pages.map((posted) => posted.pageIndex)),
   ]);
-  const namedPages = await loadQuestionnairePages(tx, namedPageIds);
+  const storedScanByIndex = new Map<number, StoredScans[number]>(
+    storedScans.map((storedScan) => [storedScan.pageIndex, storedScan]),
+  );
+  const repostOf = (storedScan: StoredScan | undefined, postedSha256: string): RepostDecision => {
+    const repost = decideRepost(storedScan, attempt, postedSha256);
+    return upload.status === SurveyUploadStatus.PROCESSED &&
+      (repost.kind === "new" || repost.kind === "replace")
+      ? { kind: "conflict", reason: "the upload is already processed" }
+      : repost;
+  };
+
+  const indexesToStore = new Set<number>();
+  const namedPageIds = new Set<string>();
+  for (const { pageIndex, parsing } of postedPages) {
+    if (!parsing.ok || (upload.pageCount !== null && pageIndex >= upload.pageCount)) continue;
+    // A page at an index an earlier page of this post stores is decided against that page.
+    if (!indexesToStore.has(pageIndex)) {
+      const repost = repostOf(storedScanByIndex.get(pageIndex), parsing.postedSha256);
+      if (repost.kind !== "new" && repost.kind !== "replace") continue;
+      indexesToStore.add(pageIndex);
+    }
+    if (parsing.parsed.kind === "failed") continue;
+    for (const qrText of parsing.parsed.page.qrs) {
+      const pageId = pageIdFromQrText(qrText);
+      if (pageId !== undefined) namedPageIds.add(pageId);
+    }
+  }
+  const namedPages = await loadQuestionnairePages(tx, [...namedPageIds]);
   const copiesById = await lockCopies(tx, [
-    ...new Set([
-      ...namedPages.map((page) => page.questionnaireId),
-      ...priorRows.flatMap((prior) => (prior.questionnaireId ? [prior.questionnaireId] : [])),
-    ]),
+    ...new Set(namedPages.map((page) => page.questionnaireId)),
   ]);
-  const priorsByIndex = await completePriors(tx, priorRows, copiesById);
   const context = await loadIngestContext(tx, {
     namedPages,
     copiesById,
-    pageIdsToMatch: [
-      ...namedPageIds,
-      ...priorRows.flatMap((prior) =>
-        prior.questionnairePageId ? [prior.questionnairePageId] : [],
-      ),
-    ],
+    namedPageIds: [...namedPageIds],
   });
 
   const results: PageIngestResult[] = [];
@@ -134,7 +158,8 @@ export async function ingestPages(
       });
       continue;
     }
-    const repost = decideRepost(priorsByIndex.get(pageIndex), attempt, parsing.postedSha256);
+    const storedScan = storedScanByIndex.get(pageIndex);
+    const repost = repostOf(storedScan, parsing.postedSha256);
     if (repost.kind === "unchanged") {
       results.push({ pageIndex, result: "unchanged", status: repost.status });
       continue;
@@ -143,15 +168,15 @@ export async function ingestPages(
       results.push({ pageIndex, result: "conflict", reason: repost.reason });
       continue;
     }
-    const replacing = repost.kind === "replace" ? repost.prior : undefined;
 
     const identity = identifyPage(parsing.parsed, context.printedPagesById);
-    const pageMatchedScanId =
+    const outcome = decideOutcome(
+      identity,
+      upload.hubId,
       identity.kind === "printed"
         ? context.matchedScanByPage.get(identity.page.questionnairePageId)
-        : undefined;
-    const otherMatchedScanId = pageMatchedScanId === replacing?.id ? undefined : pageMatchedScanId;
-    const outcome = decideOutcome(identity, upload.hubId, otherMatchedScanId);
+        : undefined,
+    );
 
     let plannedAnswers: PlannedAnswer[] = [];
     if (
@@ -175,61 +200,57 @@ export async function ingestPages(
       plannedAnswers = planned.answers;
     }
 
-    const scanPageId = await writeScanPage(tx, {
+    const replacedScan = repost.kind === "replace" ? storedScan : undefined;
+    const questionnairePageId = outcome.page?.questionnairePageId ?? null;
+    const rejectedReason =
+      outcome.status === SurveyScanPageStatus.REJECTED ? outcome.rejectedReason : null;
+    const scanPageId = await storeScanPage(tx, {
       uploadId,
       attempt,
       pageIndex,
       parsed: parsing.parsed,
       postedSha256: parsing.postedSha256,
       outcome,
-      replacing,
+      questionnairePageId,
+      rejectedReason,
+      replacedScanId: replacedScan?.id,
     });
     const answerCounts =
       outcome.status === SurveyScanPageStatus.MATCHED
         ? await writeAnswers(tx, { scanPageId, copy: outcome.page.copy, answers: plannedAnswers })
         : undefined;
-
-    if (
-      replacing?.questionnairePageId &&
-      context.matchedScanByPage.get(replacing.questionnairePageId) === replacing.id
-    ) {
-      context.matchedScanByPage.delete(replacing.questionnairePageId);
-    }
     if (outcome.status === SurveyScanPageStatus.MATCHED) {
       context.matchedScanByPage.set(outcome.page.questionnairePageId, scanPageId);
       touchedCopyIds.add(outcome.page.copy.id);
     }
-    if (replacing?.status === SurveyScanPageStatus.MATCHED && replacing.questionnaireId) {
-      touchedCopyIds.add(replacing.questionnaireId);
-    }
-    const outcomePage = "page" in outcome ? outcome.page : null;
-    priorsByIndex.set(pageIndex, {
+    storedScanByIndex.set(pageIndex, {
       id: scanPageId,
+      pageIndex,
       attempt,
       postedSha256: parsing.postedSha256,
       status: outcome.status,
-      questionnairePageId: outcomePage?.questionnairePageId ?? null,
-      questionnaireId: outcomePage?.copy.id ?? null,
-      hasReviewedAnswers: false,
-      hasDuplicates: false,
-      copyStatus: outcomePage?.copy.status ?? null,
+      questionnairePageId,
+      rejectedReason,
     });
 
     await recordSurveyEvent(tx, {
       actor: { kind: SurveyAuditActor.PIPELINE },
-      surveyId: outcomePage?.copy.surveyId,
+      surveyId: outcome.page?.copy.surveyId,
       entityType: SurveyAuditEntity.SCAN_PAGE,
       entityId: scanPageId,
       action: SurveyAuditAction.SCAN_PAGE_INGESTED,
-      before: replacing ? { attempt: replacing.attempt, status: replacing.status } : undefined,
+      before: replacedScan && {
+        attempt: replacedScan.attempt,
+        status: replacedScan.status,
+        rejectedReason: replacedScan.rejectedReason ?? undefined,
+      },
       after: {
         uploadId,
         pageIndex,
         attempt,
         status: outcome.status,
-        rejectedReason:
-          outcome.status === SurveyScanPageStatus.REJECTED ? outcome.rejectedReason : undefined,
-        questionnaireId: outcomePage?.copy.id,
+        rejectedReason: rejectedReason ?? undefined,
+        questionnaireId: outcome.page?.copy.id,
         answers: answerCounts,
       },
     });
@@ -241,7 +262,7 @@ export async function ingestPages(
   return { kind: "ingested", pages: results };
 }
 
-async function loadPriorRows(tx: Transaction, uploadId: string, pageIndexes: number[]) {
+async function loadStoredScans(tx: Transaction, uploadId: string, pageIndexes: number[]) {
   if (pageIndexes.length === 0) {
     return [];
   }
@@ -253,17 +274,14 @@ async function loadPriorRows(tx: Transaction, uploadId: string, pageIndexes: num
       postedSha256: surveyScanPage.postedSha256,
       status: surveyScanPage.status,
       questionnairePageId: surveyScanPage.questionnairePageId,
-      questionnaireId: surveyQuestionnairePage.questionnaireId,
+      rejectedReason: surveyScanPage.rejectedReason,
     })
     .from(surveyScanPage)
-    .leftJoin(
-      surveyQuestionnairePage,
-      eq(surveyQuestionnairePage.id, surveyScanPage.questionnairePageId),
-    )
     .where(
       and(eq(surveyScanPage.uploadId, uploadId), inArray(surveyScanPage.pageIndex, pageIndexes)),
     );
 }
+export type StoredScans = Awaited<ReturnType<typeof loadStoredScans>>;
 
 async function loadQuestionnairePages(tx: Transaction, pageIds: string[]) {
   if (pageIds.length === 0) {
@@ -278,6 +296,7 @@ async function loadQuestionnairePages(tx: Transaction, pageIds: string[]) {
     .from(surveyQuestionnairePage)
     .where(inArray(surveyQuestionnairePage.id, pageIds));
 }
+export type QuestionnairePages = Awaited<ReturnType<typeof loadQuestionnairePages>>;
 
 // Postgres locks the rows in the order the sort returns them.
 async function lockCopies(tx: Transaction, copyIds: string[]) {
@@ -299,92 +318,16 @@ async function lockCopies(tx: Transaction, copyIds: string[]) {
   return new Map(copies.map((copy) => [copy.id, copy]));
 }
 
-async function completePriors(
-  tx: Transaction,
-  priorRows: Awaited<ReturnType<typeof loadPriorRows>>,
-  copiesById: ReadonlyMap<string, Copy>,
-) {
-  const matchedPriorIds = priorRows
-    .filter((prior) => prior.status === SurveyScanPageStatus.MATCHED)
-    .map((prior) => prior.id);
-  const duplicatedIds = new Set<string>();
-  const reviewedIds = new Set<string>();
-  if (matchedPriorIds.length > 0) {
-    const duplicated = await tx
-      .selectDistinct({ id: surveyScanPage.duplicateOfId })
-      .from(surveyScanPage)
-      .where(inArray(surveyScanPage.duplicateOfId, matchedPriorIds));
-    for (const { id } of duplicated) if (id) duplicatedIds.add(id);
-    const reviewed = await tx
-      .selectDistinct({ id: surveyScanPage.id })
-      .from(surveyScanPage)
-      .innerJoin(
-        surveyQuestionnairePage,
-        eq(surveyQuestionnairePage.id, surveyScanPage.questionnairePageId),
-      )
-      .innerJoin(
-        surveyQuestionnaire,
-        eq(surveyQuestionnaire.id, surveyQuestionnairePage.questionnaireId),
-      )
-      .innerJoin(
-        surveyVersionField,
-        and(
-          eq(surveyVersionField.versionId, surveyQuestionnaire.versionId),
-          eq(surveyVersionField.pageNumber, surveyQuestionnairePage.pageNumber),
-        ),
-      )
-      .innerJoin(
-        surveyAnswer,
-        and(
-          eq(surveyAnswer.questionnaireId, surveyQuestionnaire.id),
-          eq(surveyAnswer.versionId, surveyQuestionnaire.versionId),
-          eq(surveyAnswer.field, surveyVersionField.field),
-        ),
-      )
-      .where(
-        and(
-          inArray(surveyScanPage.id, matchedPriorIds),
-          or(
-            eq(surveyAnswer.source, SurveyAnswerSource.MANUAL),
-            inArray(surveyAnswer.reviewStatus, [
-              SurveyAnswerReviewStatus.VERIFIED,
-              SurveyAnswerReviewStatus.CORRECTED,
-            ]),
-          ),
-        ),
-      );
-    for (const { id } of reviewed) reviewedIds.add(id);
-  }
-  return new Map<number, PriorScan>(
-    priorRows.map((prior) => [
-      prior.pageIndex,
-      {
-        id: prior.id,
-        attempt: prior.attempt,
-        postedSha256: prior.postedSha256,
-        status: prior.status,
-        questionnairePageId: prior.questionnairePageId,
-        questionnaireId: prior.questionnaireId,
-        hasReviewedAnswers: reviewedIds.has(prior.id),
-        hasDuplicates: duplicatedIds.has(prior.id),
-        copyStatus: prior.questionnaireId
-          ? (copiesById.get(prior.questionnaireId)?.status ?? null)
-          : null,
-      },
-    ]),
-  );
-}
-
 async function loadIngestContext(
   tx: Transaction,
   {
     namedPages,
     copiesById,
-    pageIdsToMatch,
+    namedPageIds,
   }: {
-    namedPages: Awaited<ReturnType<typeof loadQuestionnairePages>>;
+    namedPages: QuestionnairePages;
     copiesById: ReadonlyMap<string, Copy>;
-    pageIdsToMatch: string[];
+    namedPageIds: string[];
   },
 ): Promise<IngestContext> {
   const printedPagesById = new Map<string, PrintedPage>();
@@ -426,14 +369,15 @@ async function loadIngestContext(
   }
 
   const matchedScanByPage = new Map<string, string>();
-  if (pageIdsToMatch.length > 0) {
+  if (namedPageIds.length > 0) {
+    // Under READ COMMITTED this read, after the copy lock, sees a page a concurrent ingest matched.
     const matched = await tx
       .select({ id: surveyScanPage.id, questionnairePageId: surveyScanPage.questionnairePageId })
       .from(surveyScanPage)
       .where(
         and(
           eq(surveyScanPage.status, SurveyScanPageStatus.MATCHED),
-          inArray(surveyScanPage.questionnairePageId, pageIdsToMatch),
+          inArray(surveyScanPage.questionnairePageId, namedPageIds),
         ),
       );
     for (const scan of matched) {
@@ -453,7 +397,7 @@ async function loadIngestContext(
   };
 }
 
-async function writeScanPage(
+async function storeScanPage(
   tx: Transaction,
   {
     uploadId,
@@ -462,7 +406,9 @@ async function writeScanPage(
     parsed,
     postedSha256,
     outcome,
-    replacing,
+    questionnairePageId,
+    rejectedReason,
+    replacedScanId,
   }: {
     uploadId: string;
     attempt: number;
@@ -470,49 +416,39 @@ async function writeScanPage(
     parsed: ParsedPage;
     postedSha256: string;
     outcome: ScanOutcome;
-    replacing: PriorScan | undefined;
+    questionnairePageId: string | null;
+    rejectedReason: SurveyScanRejection | null;
+    replacedScanId: string | undefined;
   },
 ) {
   const readPage = parsed.kind === "read" ? parsed.page : undefined;
-  const row = {
+  const scan = {
     attempt,
     imageS3Key: readPage ? scanPageImageKey(uploadId, attempt, pageIndex) : null,
     aligned: readPage ? readPage.aligned : null,
-    questionnairePageId: "page" in outcome ? (outcome.page?.questionnairePageId ?? null) : null,
+    questionnairePageId,
     status: outcome.status,
-    rejectedReason:
-      outcome.status === SurveyScanPageStatus.REJECTED ? outcome.rejectedReason : null,
+    rejectedReason,
     duplicateOfId: outcome.status === SurveyScanPageStatus.DUPLICATE ? outcome.duplicateOfId : null,
     postedResult: parsed.page,
     postedSha256,
   };
-  if (replacing) {
-    await tx
-      .delete(surveyAnswer)
-      .where(
-        and(
-          eq(surveyAnswer.scanPageId, replacing.id),
-          eq(surveyAnswer.source, SurveyAnswerSource.PIPELINE),
-        ),
-      );
-    const [replaced] = await tx
-      .update(surveyScanPage)
-      .set(row)
-      .where(eq(surveyScanPage.id, replacing.id))
-      .returning({ id: surveyScanPage.id });
-    if (!replaced)
-      throw new Error(`Scan page ${replacing.id} disappeared while its upload was locked`);
-    return replaced.id;
-  }
-  const [inserted] = await tx
-    .insert(surveyScanPage)
-    .values({ uploadId, pageIndex, ...row })
-    .returning({ id: surveyScanPage.id });
-  if (!inserted) throw new Error("The scan page was not stored");
-  return inserted.id;
+  const [stored] =
+    replacedScanId === undefined
+      ? await tx
+          .insert(surveyScanPage)
+          .values({ uploadId, pageIndex, ...scan })
+          .returning({ id: surveyScanPage.id })
+      : await tx
+          .update(surveyScanPage)
+          .set(scan)
+          .where(
+            and(eq(surveyScanPage.id, replacedScanId), isNull(surveyScanPage.questionnairePageId)),
+          )
+          .returning({ id: surveyScanPage.id });
+  if (!stored) throw new Error("The scan page was not stored");
+  return stored.id;
 }
-
-const excluded = (column: { name: string }) => sql.raw(`excluded."${column.name}"`);
 
 async function writeAnswers(
   tx: Transaction,
@@ -539,26 +475,8 @@ async function writeAnswers(
               flags: answer.flags,
             })),
           )
-          .onConflictDoUpdate({
+          .onConflictDoNothing({
             target: [surveyAnswer.questionnaireId, surveyAnswer.versionId, surveyAnswer.field],
-            set: {
-              scanPageId: excluded(surveyAnswer.scanPageId),
-              recognizedValue: excluded(surveyAnswer.recognizedValue),
-              confidence: excluded(surveyAnswer.confidence),
-              readStatus: excluded(surveyAnswer.readStatus),
-              readDetail: excluded(surveyAnswer.readDetail),
-              value: excluded(surveyAnswer.value),
-              reviewStatus: excluded(surveyAnswer.reviewStatus),
-              flags: excluded(surveyAnswer.flags),
-              updatedAt: new Date(),
-            },
-            setWhere: and(
-              eq(surveyAnswer.source, SurveyAnswerSource.PIPELINE),
-              inArray(surveyAnswer.reviewStatus, [
-                SurveyAnswerReviewStatus.AUTO_ACCEPTED,
-                SurveyAnswerReviewStatus.NEEDS_REVIEW,
-              ]),
-            ),
           })
           .returning({ field: surveyAnswer.field });
   const writtenFields = new Set(written.map(({ field }) => field));

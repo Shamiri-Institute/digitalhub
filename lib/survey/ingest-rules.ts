@@ -1,4 +1,5 @@
 import {
+  type ScanRejectionNamingAPage,
   SurveyAnswerFlag,
   SurveyAnswerReadStatus,
   SurveyAnswerReviewStatus,
@@ -43,11 +44,12 @@ export function identifyPage(
   printedPagesById: ReadonlyMap<string, PrintedPage>,
 ): PageIdentity {
   if (parsed.kind === "failed") return { kind: "failed" };
-  if (parsed.page.qrs.length === 0) return { kind: "no-code" };
-  const namedPages = parsed.page.qrs.map((qrText) => {
-    const pageId = pageIdFromQrText(qrText);
-    return pageId === undefined ? undefined : printedPagesById.get(pageId);
-  });
+  // A code that isn't in our page-id format is someone else's, such as a school's stamp.
+  const namedPages = parsed.page.qrs
+    .map(pageIdFromQrText)
+    .filter((pageId) => pageId !== undefined)
+    .map((pageId) => printedPagesById.get(pageId));
+  if (namedPages.length === 0) return { kind: "no-code" };
   if (namedPages.includes(undefined)) return { kind: "unknown-code" };
   const [namedPage] = namedPages;
   if (
@@ -62,10 +64,15 @@ export function identifyPage(
 export type ScanOutcome =
   | {
       status: typeof SurveyScanPageStatus.REJECTED;
-      rejectedReason: SurveyScanRejection;
-      page: PrintedPage | null;
+      rejectedReason: ScanRejectionNamingAPage;
+      page: PrintedPage;
     }
-  | { status: typeof SurveyScanPageStatus.UNIDENTIFIED }
+  | {
+      status: typeof SurveyScanPageStatus.REJECTED;
+      rejectedReason: Exclude<SurveyScanRejection, ScanRejectionNamingAPage>;
+      page: null;
+    }
+  | { status: typeof SurveyScanPageStatus.UNIDENTIFIED; page: null }
   | { status: typeof SurveyScanPageStatus.DUPLICATE; page: PrintedPage; duplicateOfId: string }
   | { status: typeof SurveyScanPageStatus.MATCHED; page: PrintedPage };
 
@@ -74,27 +81,25 @@ export function decideOutcome(
   uploadHubId: string,
   otherMatchedScanId?: string,
 ): ScanOutcome {
-  const rejected = (rejectedReason: SurveyScanRejection, page: PrintedPage | null = null) => ({
+  const unplaced = (rejectedReason: Exclude<SurveyScanRejection, ScanRejectionNamingAPage>) => ({
     status: SurveyScanPageStatus.REJECTED,
     rejectedReason,
-    page,
+    page: null,
   });
   switch (identity.kind) {
     case "failed":
-      return rejected(SurveyScanRejection.UNREADABLE);
+      return unplaced(SurveyScanRejection.UNREADABLE);
     case "unknown-code":
-      return rejected(SurveyScanRejection.UNKNOWN_CODE);
+      return unplaced(SurveyScanRejection.UNKNOWN_CODE);
     case "codes-disagree":
-      return rejected(SurveyScanRejection.CODES_DISAGREE);
+      return unplaced(SurveyScanRejection.CODES_DISAGREE);
     case "no-code":
-      return { status: SurveyScanPageStatus.UNIDENTIFIED };
+      return { status: SurveyScanPageStatus.UNIDENTIFIED, page: null };
     case "printed": {
       const { page } = identity;
-      if (page.copy.status === SurveyQuestionnaireStatus.VOID) {
-        return rejected(SurveyScanRejection.VOID_COPY, page);
-      }
-      if (page.copy.hubId !== uploadHubId) {
-        return rejected(SurveyScanRejection.OTHER_HUB, page);
+      const rejectedReason = rejectionOfPrintedPage(page, uploadHubId);
+      if (rejectedReason) {
+        return { status: SurveyScanPageStatus.REJECTED, rejectedReason, page };
       }
       return otherMatchedScanId === undefined
         ? { status: SurveyScanPageStatus.MATCHED, page }
@@ -103,45 +108,45 @@ export function decideOutcome(
   }
 }
 
-export type PriorScan = {
-  id: string;
+function rejectionOfPrintedPage(
+  page: PrintedPage,
+  uploadHubId: string,
+): ScanRejectionNamingAPage | undefined {
+  if (page.copy.status === SurveyQuestionnaireStatus.VOID) return SurveyScanRejection.VOID_COPY;
+  if (page.copy.hubId !== uploadHubId) return SurveyScanRejection.OTHER_HUB;
+  if (page.copy.status === SurveyQuestionnaireStatus.VERIFIED) {
+    return SurveyScanRejection.VERIFIED_COPY;
+  }
+  return undefined;
+}
+
+export type StoredScan = {
   attempt: number;
   postedSha256: string;
   status: SurveyScanPageStatus;
   questionnairePageId: string | null;
-  questionnaireId: string | null;
-  hasReviewedAnswers: boolean;
-  hasDuplicates: boolean;
-  copyStatus: SurveyQuestionnaireStatus | null;
 };
 
 export type RepostDecision =
   | { kind: "new" }
   | { kind: "unchanged"; status: SurveyScanPageStatus }
-  | { kind: "conflict"; reason: string }
-  | { kind: "replace"; prior: PriorScan };
+  | { kind: "replace" }
+  | { kind: "conflict"; reason: string };
 
+// Nothing points at a stored page that names no printed page, so any later post may replace it.
 export function decideRepost(
-  prior: PriorScan | undefined,
+  storedScan: StoredScan | undefined,
   attempt: number,
   postedSha256: string,
 ): RepostDecision {
-  if (!prior) return { kind: "new" };
-  if (prior.attempt === attempt) {
-    return prior.postedSha256 === postedSha256
-      ? { kind: "unchanged", status: prior.status }
-      : { kind: "conflict", reason: "this page was already posted with other content" };
+  if (!storedScan) return { kind: "new" };
+  if (storedScan.postedSha256 === postedSha256) {
+    return { kind: "unchanged", status: storedScan.status };
   }
-  if (prior.attempt > attempt) {
-    return { kind: "conflict", reason: "a later attempt of this page is stored" };
-  }
-  if (prior.copyStatus === SurveyQuestionnaireStatus.VERIFIED || prior.hasReviewedAnswers) {
-    return { kind: "conflict", reason: "this page's answers are already reviewed" };
-  }
-  if (prior.hasDuplicates) {
-    return { kind: "conflict", reason: "another scan duplicates this page" };
-  }
-  return { kind: "replace", prior };
+  if (storedScan.questionnairePageId === null) return { kind: "replace" };
+  return storedScan.attempt === attempt
+    ? { kind: "conflict", reason: "this page was already posted with other content" }
+    : { kind: "conflict", reason: `already stored by attempt ${storedScan.attempt}` };
 }
 
 export const DEFAULT_CONFIDENCE_THRESHOLD = 0.9;
@@ -261,7 +266,7 @@ export function planAnswers({
       field,
       readStatus: READ_STATUS_OF_WIRE[read.status],
       recognizedValue: read.value,
-      confidence: read.confidence ?? null,
+      confidence: read.confidence,
       readDetail:
         read.raw === undefined && read.marks === undefined
           ? null

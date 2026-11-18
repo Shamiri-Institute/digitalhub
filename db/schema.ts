@@ -41,6 +41,7 @@ import {
   RecordingProcessingStatus,
   RiskNotCompletedReason,
   RiskScreenOutcome,
+  SCAN_REJECTIONS_NAMING_A_PAGE,
   SessionStatus,
   SupervisorHandoffStatus,
   SupportType,
@@ -3363,7 +3364,7 @@ export const surveyScanPage = pgTable(
       "survey_scan_pages_identified_check",
       sql`CASE ${table.status}
         WHEN 'UNIDENTIFIED' THEN ${table.questionnairePageId} IS NULL
-        WHEN 'REJECTED' THEN (${table.rejectedReason} IN ('VOID_COPY', 'OTHER_HUB')) = (${table.questionnairePageId} IS NOT NULL)
+        WHEN 'REJECTED' THEN (${table.rejectedReason} IN (${sql.raw(SCAN_REJECTIONS_NAMING_A_PAGE.map((reason) => `'${reason}'`).join(", "))})) = (${table.questionnairePageId} IS NOT NULL)
         ELSE ${table.questionnairePageId} IS NOT NULL
       END`,
     ),
