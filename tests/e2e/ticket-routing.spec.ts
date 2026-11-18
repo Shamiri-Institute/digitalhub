@@ -11,7 +11,8 @@ import {
   signInWithEmail,
   uniqueSuffix,
 } from "#/tests/helpers";
-import { cellUnder, chooseRowAction, getUrl, searchRows } from "#/tests/pages/helpers";
+import { cellUnder, getUrl, searchRows } from "#/tests/pages/helpers";
+import { activity, fillAction, openTicket, submitAction, takeAction } from "#/tests/pages/tickets";
 
 // Hub coordinators reassign to each other and the sign-ins share people, so the tests take turns.
 test.describe.configure({ mode: "serial" });
@@ -87,7 +88,13 @@ async function signIn(context: BrowserContext, email: string) {
   await signInWithEmail(context, email);
 }
 
-async function createTicket(page: Page, path: string, subject: string, category: string) {
+async function createTicket(
+  page: Page,
+  path: string,
+  subject: string,
+  category: string,
+  assignee?: string,
+) {
   await page.goto(getUrl(path));
   await page.getByRole("button", { name: "New ticket" }).click();
   const dialog = page.getByRole("dialog", { name: "Create new ticket" });
@@ -95,38 +102,22 @@ async function createTicket(page: Page, path: string, subject: string, category:
   await dialog.getByPlaceholder("Describe the issue").fill("Raised by the ticket routing spec.");
   await dialog.getByRole("combobox").first().click();
   await page.getByRole("option", { name: category, exact: true }).click();
+  if (assignee) {
+    await dialog.getByRole("combobox", { name: "Assign to" }).click();
+    await page.getByRole("option", { name: assignee }).click();
+  }
   await dialog.getByRole("button", { name: "Submit" }).click();
   await expect(dialog).toBeHidden();
 }
 
-async function currentTier(page: Page, path: string, subject: string) {
+async function heldBy(page: Page, path: string, subject: string) {
   await page.goto(getUrl(path));
-  return cellUnder(page, await searchRows(page, subject), "Current Tier");
-}
-
-async function ticketMenu(page: Page, path: string, subject: string) {
-  await page.goto(getUrl(path));
-  const row = await searchRows(page, subject);
-  await row.getByRole("cell").last().click();
-  const menu = page.getByRole("menu");
-  // The holder's actions arrive with a status request the menu makes as it opens; reopening the
-  // menu while that request runs would start it again.
-  await expect(menu.getByText("View ticket")).toBeVisible();
-  await page.waitForLoadState("networkidle");
-  return menu;
+  return cellUnder(page, await searchRows(page, subject), "Held by");
 }
 
 async function act(page: Page, path: string, subject: string, action: string, reason: string) {
-  const menu = await ticketMenu(page, path, subject);
-  await menu.getByText(action, { exact: true }).click();
-  // "Resolve ticket" opens "Resolve Ticket", "Reassign ticket" opens "Reassign Ticket to …".
-  const dialog = page.getByRole("dialog", { name: new RegExp(`^${action}`, "i") });
-  if (action !== "Reassign ticket") {
-    await dialog.getByRole("combobox").click();
-    await page.getByRole("option", { name: "Yes" }).click();
-  }
-  await dialog.getByRole("textbox").last().fill(reason);
-  return dialog;
+  await openTicket(page, path, subject);
+  return fillAction(page, action, reason);
 }
 
 test("a supervisor's ticket goes to the hub role its category names", async ({ page, context }) => {
@@ -137,17 +128,30 @@ test("a supervisor's ticket goes to the hub role its category names", async ({ p
   await createTicket(page, "/sc/tickets", clinicalSubject, "CLINICAL");
 
   await signIn(context, hub.coordinatorEmail);
-  await expect(await currentTier(page, "/hc/tickets", techSubject)).toHaveText("hub coordinator");
+  // Each lands with the one active holder of its role, who sees it as theirs.
+  await expect(await heldBy(page, "/hc/tickets", techSubject)).toHaveText("You");
   await expect(await searchRows(page, clinicalSubject)).toHaveCount(0);
 
   await signIn(context, hub.leadEmail);
-  await expect(await currentTier(page, "/cl/tickets", clinicalSubject)).toHaveText("clinical lead");
+  await expect(await heldBy(page, "/cl/tickets", clinicalSubject)).toHaveText("You");
   await expect(await searchRows(page, techSubject)).toHaveCount(0);
 
   // A supervisor who took no part in either ticket sees neither.
   await signIn(context, hub.bystanderEmail);
   await page.goto(getUrl("/sc/tickets"));
   await expect(await searchRows(page, subjectPrefix)).toHaveCount(0);
+});
+
+test("a supervisor can assign a new ticket to any coordinator of their hub", async ({
+  page,
+  context,
+}) => {
+  const subject = `${subjectPrefix} assigned`;
+  await signIn(context, hub.supervisorEmail);
+  await createTicket(page, "/sc/tickets", subject, "TECH", hub.otherCoordinatorName);
+
+  await signIn(context, hub.otherCoordinatorEmail);
+  await expect(await heldBy(page, "/hc/tickets", subject)).toHaveText("You");
 });
 
 test("only the holder escalates or resolves, and a resolution is shown to the creator", async ({
@@ -157,24 +161,20 @@ test("only the holder escalates or resolves, and a resolution is shown to the cr
   const subject = `${subjectPrefix} resolve`;
   await signIn(context, hub.supervisorEmail);
   await createTicket(page, "/sc/tickets", subject, "TECH");
-  let menu = await ticketMenu(page, "/sc/tickets", subject);
-  await expect(menu.getByText("Escalate ticket")).toHaveCount(0);
-  await expect(menu.getByText("Resolve ticket")).toHaveCount(0);
+  let step = await openTicket(page, "/sc/tickets", subject);
+  await expect(step.getByRole("button", { name: "Escalate" })).toHaveCount(0);
+  await expect(step.getByRole("button", { name: "Resolve" })).toHaveCount(0);
 
   await signIn(context, hub.coordinatorEmail);
-  const resolve = await act(page, "/hc/tickets", subject, "Resolve ticket", "Fixed the laptop.");
-  await resolve.getByRole("button", { name: "Resolve Ticket" }).click();
-  await expect(resolve).toBeHidden();
-  menu = await ticketMenu(page, "/hc/tickets", subject);
-  await expect(menu.getByText("Escalate ticket")).toHaveCount(0);
-  await expect(menu.getByText("Resolve ticket")).toHaveCount(0);
+  await act(page, "/hc/tickets", subject, "Resolve", "Fixed the laptop.");
+  await submitAction(page, "Resolve");
+  step = await openTicket(page, "/hc/tickets", subject);
+  await expect(step.getByRole("button", { name: "Escalate" })).toHaveCount(0);
+  await expect(step.getByRole("button", { name: "Resolve" })).toHaveCount(0);
 
   await signIn(context, hub.supervisorEmail);
-  menu = await ticketMenu(page, "/sc/tickets", subject);
-  await menu.getByText("View resolution").click();
-  await expect(page.getByRole("dialog", { name: "Resolution Details" })).toContainText(
-    "Fixed the laptop.",
-  );
+  await openTicket(page, "/sc/tickets", subject);
+  await expect(activity(page)).toContainText("Fixed the laptop.");
 });
 
 test("a hub coordinator reassigns to an active coordinator of the hub, who may pass it on again", async ({
@@ -186,46 +186,34 @@ test("a hub coordinator reassigns to an active coordinator of the hub, who may p
   await createTicket(page, "/sc/tickets", subject, "OPERATIONS");
 
   await signIn(context, hub.coordinatorEmail);
-  const reassign = await act(page, "/hc/tickets", subject, "Reassign ticket", "On leave.");
+  const reassign = await act(page, "/hc/tickets", subject, "Reassign", "On leave.");
   await reassign.getByRole("combobox").click();
-  await page.getByPlaceholder("Search coordinators...").fill(hub.otherCoordinatorName);
   await page.getByRole("option", { name: new RegExp(hub.otherCoordinatorName) }).click();
-  await reassign.getByRole("button", { name: /Reassign/ }).click();
-  await expect(reassign).toBeHidden();
+  await submitAction(page, "Reassign");
 
-  // The earlier holder can still see the ticket, and its history names both holders.
-  const earlierMenu = await ticketMenu(page, "/hc/tickets", subject);
-  await earlierMenu.getByText("View reassignment").click();
-  const handover = page.getByRole("dialog", { name: "Reassignment History" });
-  await expect(handover).toContainText(hub.coordinatorName);
-  await expect(handover).toContainText(hub.otherCoordinatorName);
+  // The earlier holder can still see the ticket, and its history names the new holder.
+  await openTicket(page, "/hc/tickets", subject);
+  await expect(activity(page)).toContainText(`Sent to ${hub.otherCoordinatorName}`);
 
   await signIn(context, hub.otherCoordinatorEmail);
-  await expect(await currentTier(page, "/hc/tickets", subject)).toHaveText("hub coordinator");
+  await expect(await heldBy(page, "/hc/tickets", subject)).toHaveText("You");
   // A reassign is a handover at the same tier, not an escalation.
-  await expect(await cellUnder(page, await searchRows(page, subject), "Status")).toHaveText("open");
+  await expect(await cellUnder(page, await searchRows(page, subject), "Status")).toHaveText("Open");
   // Reassigns are not limited, so a wrong one can be passed on, and the history stays in reach.
-  const menu = await ticketMenu(page, "/hc/tickets", subject);
-  await expect(menu.getByText("Reassign ticket")).toBeVisible();
-  await expect(menu.getByText("View reassignment")).toBeVisible();
-  await menu.getByText("View reassignment").click();
-  await expect(page.getByRole("dialog")).toContainText("On leave.");
+  const step = await openTicket(page, "/hc/tickets", subject);
+  await expect(step.getByRole("button", { name: "Reassign" })).toBeVisible();
+  await expect(activity(page)).toContainText("On leave.");
 
   // The new holder escalates to an admin, so the admin may reassign this new escalation.
-  await page.keyboard.press("Escape");
-  const escalate = await act(page, "/hc/tickets", subject, "Escalate ticket", "Needs an admin.");
-  await escalate.getByRole("button", { name: "Escalate Ticket" }).click();
-  await expect(escalate).toBeHidden();
-  await expect(await currentTier(page, "/hc/tickets", subject)).toHaveText("admin");
+  await takeAction(page, "Escalate", "Needs an admin.");
+  await expect(await heldBy(page, "/hc/tickets", subject)).toContainText("Admin");
 
   // Each escalation keeps its reason and the roles it went between, for every participant.
   await signIn(context, hub.supervisorEmail);
-  await page.goto(getUrl("/sc/tickets"));
-  await chooseRowAction(page, await searchRows(page, subject), "View ticket");
-  const history = page.getByRole("dialog");
-  await expect(history).toContainText("Needs an admin.");
-  await expect(history).toContainText(/hub_coordinator/i);
-  await expect(history).toContainText(/admin/i);
+  await openTicket(page, "/sc/tickets", subject);
+  await expect(activity(page)).toContainText("Needs an admin.");
+  await expect(activity(page)).toContainText("Hub manager");
+  await expect(activity(page)).toContainText("Admin");
 });
 
 for (const [state, inactive] of [
@@ -257,10 +245,9 @@ for (const [state, inactive] of [
     await createTicket(page, "/sc/tickets", subject, "CARE");
 
     await signIn(context, hub.coordinatorEmail);
-    const reassign = await act(page, "/hc/tickets", subject, "Reassign ticket", "On leave.");
-    await reassign.getByRole("combobox").click();
-    await page.getByPlaceholder("Search coordinators...").fill(hub.otherCoordinatorName);
-    await expect(page.getByText("No eligible", { exact: false })).toBeVisible();
+    const reassign = await act(page, "/hc/tickets", subject, "Reassign", "On leave.");
+    // The hub's only other coordinator is inactive, so no one is offered.
+    await expect(reassign).toContainText("No one is available to take this ticket");
   });
 }
 
@@ -297,8 +284,8 @@ for (const [state, inactive] of [
       firstCoordinator.id === hub.coordinatorId ? hub.otherCoordinatorEmail : hub.coordinatorEmail;
     await signIn(context, activeEmail);
     // Resolve shows only to the holder, so this proves routing skipped the inactive coordinator.
-    const menu = await ticketMenu(page, "/hc/tickets", subject);
-    await expect(menu.getByText("Resolve ticket")).toBeVisible();
+    const step = await openTicket(page, "/hc/tickets", subject);
+    await expect(step.getByRole("button", { name: "Resolve" })).toBeVisible();
   });
 }
 
@@ -335,19 +322,73 @@ test("a ticket reopened after its resolver dropped out goes to an active hub coo
       .where(eq(hubCoordinator.id, resolver.coordinatorId)),
   );
 
-  await page.goto(getUrl("/sc/tickets"));
-  await chooseRowAction(page, await searchRows(page, subject), "Reopen ticket");
-  const reopen = page.getByRole("dialog", { name: "Reopen ticket" });
-  await reopen.getByLabel("Reason").fill("Still broken.");
-  await reopen.getByRole("button", { name: "Reopen ticket" }).click();
-  await expect(reopen).toBeHidden();
+  await openTicket(page, "/sc/tickets", subject);
+  await takeAction(page, "Reopen", "Still broken.");
 
   const activeEmail =
     resolver.coordinatorId === hub.coordinatorId ? hub.otherCoordinatorEmail : hub.coordinatorEmail;
   await signIn(context, activeEmail);
   // Start shows only to the holder of an open ticket, so the new coordinator now holds it.
-  const menu = await ticketMenu(page, "/hc/tickets", subject);
-  await expect(menu.getByText("Start ticket")).toBeVisible();
+  const step = await openTicket(page, "/hc/tickets", subject);
+  await expect(step.getByRole("button", { name: "Start", exact: true })).toBeVisible();
+});
+
+test("the creator can reopen a ticket to a different coordinator", async ({ page, context }) => {
+  const subject = `${subjectPrefix} reopen elsewhere`;
+  await signIn(context, hub.supervisorEmail);
+  await createTicket(page, "/sc/tickets", subject, "TECH", hub.coordinatorName);
+  await db
+    .update(tickets)
+    .set({ status: "RESOLVED", resolvedAt: new Date() })
+    .where(eq(tickets.subject, subject));
+
+  await openTicket(page, "/sc/tickets", subject);
+  const form = await fillAction(page, "Reopen", "Needs someone else.");
+  await form.getByRole("combobox", { name: "Send to" }).click();
+  await page.getByRole("option", { name: hub.otherCoordinatorName }).click();
+  await submitAction(page, "Reopen");
+
+  await signIn(context, hub.otherCoordinatorEmail);
+  // Start shows only to the holder of an open ticket, so the other coordinator now holds it.
+  const step = await openTicket(page, "/hc/tickets", subject);
+  await expect(step.getByRole("button", { name: "Start", exact: true })).toBeVisible();
+});
+
+test("an admin reassigns a ticket to another admin", async ({ page, context, undo }) => {
+  const subject = `${subjectPrefix} admin reassign`;
+  const [holder, other] = await Promise.all([
+    createAdminCopy(hub.adminUserId),
+    createAdminCopy(hub.adminUserId),
+  ]);
+  undo(holder.remove);
+  undo(other.remove);
+  // Runs before the removals above, since the ticket's events point at both admins.
+  undo(async () => {
+    const created = db.select({ id: tickets.id }).from(tickets).where(eq(tickets.subject, subject));
+    await db.delete(ticketEvents).where(inArray(ticketEvents.ticketId, created));
+    await db.delete(tickets).where(eq(tickets.subject, subject));
+  });
+  const holderName = `E2E Holder ${uniqueSuffix()}`;
+  const otherName = `E2E Other ${uniqueSuffix()}`;
+  // Only super admins receive tickets, so the holder must be one to be offered on a new ticket.
+  await db
+    .update(adminUser)
+    .set({ adminName: holderName, isSuperAdmin: true })
+    .where(eq(adminUser.email, holder.email));
+  await db.update(adminUser).set({ adminName: otherName }).where(eq(adminUser.email, other.email));
+
+  await signIn(context, hub.coordinatorEmail);
+  await createTicket(page, "/hc/tickets", subject, "TECH", holderName);
+
+  await signIn(context, holder.email);
+  const reassign = await act(page, "/admin/tickets", subject, "Reassign", "Out this week.");
+  await expect(reassign).toContainText("Reassign to another admin");
+  await reassign.getByRole("combobox").click();
+  await page.getByRole("option", { name: new RegExp(otherName) }).click();
+  await submitAction(page, "Reassign");
+
+  await signIn(context, other.email);
+  await expect(await heldBy(page, "/admin/tickets", subject)).toHaveText("You");
 });
 
 test("a hub coordinator's ticket goes to the implementer's first super admin, not a newer one", async ({
@@ -365,7 +406,7 @@ test("a hub coordinator's ticket goes to the implementer's first super admin, no
 
   await signIn(context, hub.coordinatorEmail);
   await createTicket(page, "/hc/tickets", subject, "TECH");
-  await expect(await currentTier(page, "/hc/tickets", subject)).toHaveText("admin");
+  await expect(await heldBy(page, "/hc/tickets", subject)).toContainText("Admin");
 
   await signIn(context, newerSuperAdmin.email);
   await page.goto(getUrl("/admin/tickets"));

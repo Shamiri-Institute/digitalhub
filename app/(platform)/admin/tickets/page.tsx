@@ -1,27 +1,20 @@
 import { ImplementerRole } from "#/db/enums";
 import { redirect } from "next/navigation";
 import { currentAdminUser } from "#/app/auth";
-import TicketsDatatable from "#/components/common/ticket/tickets-datatable";
-import { getAllTickets } from "#/lib/actions/ticket";
-import PageHeading from "#/components/ui/page-heading";
-import { Separator } from "#/components/ui/separator";
-export default async function TicketsPage() {
+import TicketsPage, { ticketsView } from "#/components/common/ticket/tickets-page";
+
+export default async function Page(props: { searchParams: Promise<{ view?: string | string[] }> }) {
   const admin = await currentAdminUser();
   if (admin === null) {
     redirect("/login");
   }
 
-  const result = await getAllTickets({});
-  const tickets = result.success ? (result.data ?? []) : [];
-
   return (
-    <div className="space-y-3 px-6 py-5">
-      <PageHeading title="Tickets" />
-      <Separator />
-      <TicketsDatatable
-        tickets={tickets}
-        role={admin?.session?.user.activeMembership?.role ?? ImplementerRole.ADMIN}
-      />
-    </div>
+    <TicketsPage
+      role={admin.session.user.activeMembership?.role ?? ImplementerRole.ADMIN}
+      userId={admin.session.user.id}
+      basePath="/admin/tickets"
+      view={ticketsView((await props.searchParams).view)}
+    />
   );
 }

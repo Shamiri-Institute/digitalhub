@@ -16,6 +16,7 @@ export const CreateTicketSchema = z.object({
   description: stringValidation("Description is required"),
   category: TicketCategoryEnum,
   priority: TicketPriorityLevelEnum.default("MEDIUM"),
+  assigneeId: stringValidation("Choose who should take it"),
 });
 
 export const ACTIVE_TICKET_STATUSES: TicketStatus[] = ["OPEN", "IN_PROGRESS", "ESCALATED"];
@@ -72,10 +73,11 @@ export const REASSIGNMENT_INITIATOR_ROLES: ReassignmentInitiatorRole[] = [
   "CLINICAL_LEAD",
 ];
 
-export type FetchEscalationRecipientHandler = (initiator: {
+/** Everyone who may receive a ticket from the initiator, the default recipient first. */
+export type ListEscalationRecipientsHandler = (initiator: {
   userId: string;
   implementerId: string;
-}) => Promise<string>;
+}) => Promise<string[]>;
 
 export const ESCALATION_RECIPIENT_FROM_CATEGORY: Record<TicketCategory, EscalationRecipientRole> = {
   TECH: "HUB_COORDINATOR",
@@ -104,7 +106,10 @@ export interface CreateTicketPayload {
   category: TicketCategory;
 }
 
-export type CreateTicketInput = Omit<CreateTicketPayload, "createdById">;
+export type CreateTicketInput = Omit<CreateTicketPayload, "createdById"> & { assigneeId: string };
+
+/** Who a new ticket can go to, by category, for the caller. */
+export type TicketAssignees = Record<TicketCategory, TicketPerson[]>;
 
 export interface TicketFilters {
   status?: TicketStatus;
@@ -112,28 +117,41 @@ export interface TicketFilters {
   limit?: number;
 }
 
+/** A person on a ticket, named as they are in the ticket's implementer. */
+export interface TicketPerson {
+  userId: string;
+  name: string | null;
+  role: ImplementerRole | null;
+}
+
 export interface FullTicket {
   id: string;
+  /** The ticket's number, which people quote instead of its id. */
+  visibleId: number;
   subject: string;
   description: string;
   category: TicketCategory;
   status: TicketStatus;
   priority: TicketPriorityLevel;
   createdAt: Date;
-  currentTier: ImplementerRole | null;
+  createdBy: TicketPerson;
+  holder: TicketPerson;
 }
 
-export interface TicketEscalation {
+export interface TicketEvent {
   id: string;
-  escalationReason: string;
+  kind: TicketEventKind;
+  /** Null for what the system does on its own, such as closing a resolved ticket. */
+  actor: TicketPerson | null;
+  assignee: TicketPerson | null;
+  fromValue: string | null;
+  toValue: string | null;
+  reason: string | null;
   createdAt: Date;
-  escalatedByName: string;
-  escalatedToName: string;
-  escalatedByRole: EscalationInitiatorRole;
-  escalatedToRole: EscalationRecipientRole;
 }
 
-export interface TicketEscalationStatus {
+/** What the viewer may do to a ticket, so the page never offers an action that would be refused. */
+export interface TicketActions {
   canStart: boolean;
   canChangePriority: boolean;
   canEscalate: boolean;
@@ -141,31 +159,19 @@ export interface TicketEscalationStatus {
   canResolve: boolean;
   canReopen: boolean;
   canCancel: boolean;
-  hasReassignment: boolean;
-  hasResolution: boolean;
 }
 
-export interface TicketResolution {
-  id: string;
-  resolvedByRole: string | null;
-  resolutionReason: string;
-  createdAt: Date;
-}
-
-export const TICKET_CHANGE_KINDS = [
-  "PRIORITY_CHANGED",
-  "REOPENED",
-  "CANCELLED",
-] as const satisfies TicketEventKind[];
-
-export interface TicketChange {
-  id: string;
-  kind: (typeof TICKET_CHANGE_KINDS)[number];
-  actorName: string | null;
-  fromValue: string | null;
-  toValue: string | null;
-  reason: string;
-  createdAt: Date;
+export interface TicketDetails {
+  viewerId: string;
+  /** Who the viewer may escalate or reopen to, the default first; empty when they can do neither. */
+  recipients: TicketPerson[];
+  /** Who the holder may hand the ticket to at their own tier; empty when they cannot reassign. */
+  reassignRecipients: TicketPerson[];
+  ticket: FullTicket;
+  events: TicketEvent[];
+  actions: TicketActions;
+  /** When the creator's chance to reopen a resolved ticket ends, or null when it has none. */
+  reopenableUntil: Date | null;
 }
 
 export type UserRoleNameMap = Map<string, { role: ImplementerRole; name: string | null } | null>;
@@ -191,13 +197,3 @@ export const CreateTicketReassignmentSchema = z.object({
 });
 
 export type CreateTicketReassignmentInput = z.infer<typeof CreateTicketReassignmentSchema>;
-
-export interface FullTicketReassignment {
-  id: string;
-  reassignmentReason: string;
-  createdAt: Date;
-  reassignedFromName: string;
-  reassignedToName: string;
-  reassignedFromRole: ReassignmentInitiatorRole | null;
-  reassignedToRole: ReassignmentInitiatorRole | null;
-}

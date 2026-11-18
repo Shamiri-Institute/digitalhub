@@ -116,7 +116,13 @@ function InfoTip({
   );
 }
 
-function Notice({ tone, children }: { tone: "attention" | "done"; children: React.ReactNode }) {
+export function Notice({
+  tone,
+  children,
+}: {
+  tone: "attention" | "done";
+  children: React.ReactNode;
+}) {
   const Icon = tone === "attention" ? TriangleAlert : CircleCheck;
   return (
     <p className="flex items-center gap-2 text-sm font-medium text-shamiri-black">
