@@ -351,6 +351,37 @@ export const SurveyScanPageStatus = {
 } as const;
 export type SurveyScanPageStatus = (typeof SurveyScanPageStatus)[keyof typeof SurveyScanPageStatus];
 
+export const SurveyScanRejection = {
+  UNREADABLE: "UNREADABLE",
+  UNKNOWN_CODE: "UNKNOWN_CODE",
+  CODES_DISAGREE: "CODES_DISAGREE",
+  VOID_COPY: "VOID_COPY",
+  OTHER_HUB: "OTHER_HUB",
+} as const;
+export type SurveyScanRejection = (typeof SurveyScanRejection)[keyof typeof SurveyScanRejection];
+
+export const SurveyAnswerReadStatus = {
+  OK: "OK",
+  UNCERTAIN: "UNCERTAIN",
+  BLANK: "BLANK",
+  NO_PREDICTION: "NO_PREDICTION",
+} as const;
+export type SurveyAnswerReadStatus =
+  (typeof SurveyAnswerReadStatus)[keyof typeof SurveyAnswerReadStatus];
+
+export const SurveyAnswerFlag = {
+  UNCERTAIN: "UNCERTAIN",
+  NO_PREDICTION: "NO_PREDICTION",
+  BLANK_REQUIRED: "BLANK_REQUIRED",
+  BREAKS_FORM_RULE: "BREAKS_FORM_RULE",
+  NOT_ALIGNED: "NOT_ALIGNED",
+  VERIFY_ALWAYS: "VERIFY_ALWAYS",
+  HANDWRITING: "HANDWRITING",
+  LOW_CONFIDENCE: "LOW_CONFIDENCE",
+  KIND_UNDER_REVIEW: "KIND_UNDER_REVIEW",
+} as const;
+export type SurveyAnswerFlag = (typeof SurveyAnswerFlag)[keyof typeof SurveyAnswerFlag];
+
 export const SurveyAnswerSource = { PIPELINE: "PIPELINE", MANUAL: "MANUAL" } as const;
 export type SurveyAnswerSource = (typeof SurveyAnswerSource)[keyof typeof SurveyAnswerSource];
 

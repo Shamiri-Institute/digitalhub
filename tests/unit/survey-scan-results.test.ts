@@ -403,7 +403,21 @@ async function createUpload(tx: Transaction) {
 }
 
 function scanOf(uploadId: string, pageIndex: number) {
-  return { uploadId, pageIndex, imageS3Key: `pages/${uploadId}/${pageIndex}.png` };
+  return {
+    uploadId,
+    pageIndex,
+    imageS3Key: `pages/${uploadId}/${pageIndex}.png`,
+    aligned: true,
+    postedResult: {
+      pageIndex,
+      qrs: [],
+      rotation: 0 as const,
+      aligned: true,
+      quality: 1,
+      fields: [],
+    },
+    postedSha256: createHash("sha256").update(`${uploadId}:${pageIndex}`).digest("hex"),
+  };
 }
 
 describe("scanned pages", () => {
@@ -519,7 +533,34 @@ describe("scanned pages", () => {
       "survey_scan_pages_identified_check",
     );
     // A page that is no printed page's, such as a cover sheet.
-    expect(await scanError({ status: "REJECTED", questionnairePageId: null }, 1)).toBeNull();
+    const coverSheet = {
+      status: "REJECTED" as const,
+      rejectedReason: "UNKNOWN_CODE" as const,
+      questionnairePageId: null,
+    };
+    expect(await scanError(coverSheet, 1)).toBeNull();
+    expect((await scanError({ ...coverSheet, rejectedReason: null }, 1))?.constraint).toBe(
+      "survey_scan_pages_rejected_check",
+    );
+    expect((await scanError({ rejectedReason: "OTHER_HUB" }, 1))?.constraint).toBe(
+      "survey_scan_pages_rejected_check",
+    );
+    expect(await scanError({ status: "REJECTED", rejectedReason: "OTHER_HUB" }, 1)).toBeNull();
+    expect((await scanError({ ...coverSheet, rejectedReason: "VOID_COPY" }, 1))?.constraint).toBe(
+      "survey_scan_pages_identified_check",
+    );
+    expect(
+      (await scanError({ status: "REJECTED", rejectedReason: "UNKNOWN_CODE" }, 1))?.constraint,
+    ).toBe("survey_scan_pages_identified_check");
+    const unreadable = { ...coverSheet, rejectedReason: "UNREADABLE" as const };
+    expect(await scanError({ ...unreadable, imageS3Key: null, aligned: null }, 1)).toBeNull();
+    expect((await scanError(unreadable, 1))?.constraint).toBe("survey_scan_pages_rejected_check");
+    expect((await scanError({ imageS3Key: null, aligned: null }, 1))?.constraint).toBe(
+      "survey_scan_pages_rejected_check",
+    );
+    expect((await scanError({ aligned: null }, 1))?.constraint).toBe(
+      "survey_scan_pages_rejected_check",
+    );
   });
 });
 
@@ -544,6 +585,7 @@ describe("answers", () => {
           scanPageId: scan?.id,
           recognizedValue: "3",
           confidence: 0.97,
+          readStatus: "OK",
           value: "3",
           source: "PIPELINE",
           reviewStatus: "AUTO_ACCEPTED",
@@ -582,6 +624,7 @@ describe("answers", () => {
           scanPageId: scan?.id,
           recognizedValue: "3",
           confidence: 0.97,
+          readStatus: "OK" as const,
           value: "3",
           source: "PIPELINE" as const,
           reviewStatus: "AUTO_ACCEPTED" as const,
@@ -605,7 +648,25 @@ describe("answers", () => {
     expect((await answerError({ reviewedBy: scope.userId }))?.constraint).toBe(
       "survey_answers_reviewed_check",
     );
-    const typedIn = { source: "MANUAL" as const, recognizedValue: null, confidence: null };
+    expect((await answerError({ readStatus: null }))?.constraint).toBe(
+      "survey_answers_pipeline_check",
+    );
+    expect(await answerError({ confidence: null })).toBeNull();
+    expect((await answerError({ readStatus: "BLANK" }))?.constraint).toBe(
+      "survey_answers_read_status_check",
+    );
+    expect(
+      await answerError({ readStatus: "BLANK", recognizedValue: null, value: null }),
+    ).toBeNull();
+    expect((await answerError({ recognizedValue: null }))?.constraint).toBe(
+      "survey_answers_read_status_check",
+    );
+    const typedIn = {
+      source: "MANUAL" as const,
+      recognizedValue: null,
+      confidence: null,
+      readStatus: null,
+    };
     expect((await answerError(typedIn))?.constraint).toBe("survey_answers_manual_check");
     expect(
       await answerError({
