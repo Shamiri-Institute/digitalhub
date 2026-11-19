@@ -139,7 +139,7 @@ export function ScheduleNewSession({
     return (
       <>
         <DialogHeader className="border-b">
-          <DialogTitle className="pb-4 text-xl font-bold">Reschedule session</DialogTitle>
+          <DialogTitle className="pb-4 text-xl font-semibold">Reschedule session</DialogTitle>
         </DialogHeader>
         <SessionDetail
           state={{ session: clashingSession }}
@@ -159,7 +159,7 @@ export function ScheduleNewSession({
   return (
     <>
       <DialogHeader className="border-b">
-        <DialogTitle className="pb-4 text-xl font-bold">Schedule a session</DialogTitle>
+        <DialogTitle className="pb-4 text-xl font-semibold">Schedule a session</DialogTitle>
       </DialogHeader>
       <Form {...form}>
         <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-4">
@@ -259,7 +259,7 @@ export function ScheduleNewSession({
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "mt-1.5 w-full justify-start px-3 text-left font-normal active:scale-100",
+                          "mt-1.5 w-full justify-start px-3 text-left font-medium active:scale-100",
                           !field.value && "text-muted-foreground",
                         )}
                       >
@@ -292,7 +292,7 @@ export function ScheduleNewSession({
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "mt-1.5 w-full justify-start px-3 text-left font-normal active:scale-100",
+                          "mt-1.5 w-full justify-start px-3 text-left font-medium active:scale-100",
                           !field.value && "text-muted-foreground",
                         )}
                       >
@@ -400,7 +400,7 @@ export function ScheduleNewSession({
             <Button
               variant="ghost"
               type="button"
-              className="text-shamiri-new-blue hover:text-shamiri-blue"
+              className="text-shamiri-new-blue hover:text-shamiri-dark-blue"
               onClick={() => toggleDialog(false)}
             >
               Cancel

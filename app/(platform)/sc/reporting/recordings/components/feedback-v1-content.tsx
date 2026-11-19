@@ -37,7 +37,7 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
 
             {feedback.fidelity_scores.overall_assessment && (
               <div className="rounded-md border border-blue-border bg-blue-bg p-4">
-                <h5 className="font-medium mb-2">Overall Assessment</h5>
+                <h5 className="font-semibold mb-2">Overall Assessment</h5>
                 <p className="text-sm">
                   <MarkdownText>{feedback.fidelity_scores.overall_assessment}</MarkdownText>
                 </p>
@@ -68,7 +68,7 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
           <div className="space-y-4">
             {feedback.qualitative_feedback.strengths && (
               <div>
-                <h5 className="font-medium text-shamiri-green mb-2">Strengths</h5>
+                <h5 className="font-semibold text-shamiri-green mb-2">Strengths</h5>
                 <ul className="list-disc pl-5 space-y-1">
                   {feedback.qualitative_feedback.strengths.map((strength, idx) => (
                     // oxlint-disable-next-line react/no-array-index-key -- read-only server feedback list; composite key disambiguates potential duplicate text
@@ -82,7 +82,7 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
 
             {feedback.qualitative_feedback.session_summary && (
               <div>
-                <h5 className="font-medium mb-2">Session Summary</h5>
+                <h5 className="font-semibold mb-2">Session Summary</h5>
                 <p className="text-sm text-muted-foreground">
                   <MarkdownText>{feedback.qualitative_feedback.session_summary}</MarkdownText>
                 </p>
@@ -91,7 +91,9 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
 
             {feedback.qualitative_feedback.areas_for_improvement && (
               <div>
-                <h5 className="font-medium text-shamiri-dark-orange mb-2">Areas for Improvement</h5>
+                <h5 className="font-semibold text-shamiri-dark-orange mb-2">
+                  Areas for Improvement
+                </h5>
                 <ul className="list-disc pl-5 space-y-1">
                   {feedback.qualitative_feedback.areas_for_improvement.map((area, idx) => (
                     // oxlint-disable-next-line react/no-array-index-key -- read-only server feedback list; composite key disambiguates potential duplicate text
@@ -105,7 +107,7 @@ export default function FeedbackV1Content({ feedback }: FeedbackV1ContentProps) 
 
             {feedback.qualitative_feedback.session_flow_and_engagement && (
               <div>
-                <h5 className="font-medium mb-2">Session Flow and Engagement</h5>
+                <h5 className="font-semibold mb-2">Session Flow and Engagement</h5>
                 <p className="text-sm text-muted-foreground">
                   <MarkdownText>
                     {feedback.qualitative_feedback.session_flow_and_engagement}

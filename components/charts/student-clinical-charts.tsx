@@ -99,12 +99,12 @@ export default function HubStudentClinicalDataCharts({
             aria-label="Clinical sessions"
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="session" tick={{ fontSize: 11 }} interval="preserveStartEnd" />
+            <XAxis dataKey="session" tick={{ fontSize: 12 }} interval="preserveStartEnd" />
             <YAxis dataKey="count" tick={{ fontSize: 12 }} width={35} allowDecimals={false} />
             <Tooltip />
             <Bar
               dataKey="count"
-              fill="var(--color-shamiri-new-blue)"
+              fill="var(--color-shamiri-graph-blue)"
               name="Sessions"
               radius={[4, 4, 0, 0]}
             />
@@ -132,7 +132,7 @@ export default function HubStudentClinicalDataCharts({
               <Tooltip formatter={(value) => [`${value} cases`, "Cases"]} />
               <Bar
                 dataKey="count"
-                fill="var(--color-shamiri-new-blue)"
+                fill="var(--color-shamiri-graph-blue)"
                 name="Cases"
                 radius={[0, 4, 4, 0]}
               />

@@ -229,7 +229,7 @@ function TreatmentPlanFields({
                               }}
                             />
                           </FormControl>
-                          <FormLabel className="font-normal">{intervention}</FormLabel>
+                          <FormLabel className="font-medium">{intervention}</FormLabel>
                         </FormItem>
                       )}
                     />

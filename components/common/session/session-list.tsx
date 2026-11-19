@@ -192,7 +192,7 @@ export function SessionDetail({
     >
       <div
         className={cn("font-semibold", {
-          "text-[0.825rem]": withDropdown,
+          "text-sm": withDropdown,
           "text-base": !withDropdown,
           "text-green-base": completed,
           "text-blue-base": !completed,

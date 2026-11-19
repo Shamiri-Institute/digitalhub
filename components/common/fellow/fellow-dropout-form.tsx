@@ -188,7 +188,7 @@ function FellowDropoutSteps({
     return (
       <>
         <DialogHeader>
-          <DialogTitle className="text-lg font-bold">Replace fellow</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Replace fellow</DialogTitle>
         </DialogHeader>
         {alertWidget}
         <div className="space-y-4">
@@ -230,9 +230,9 @@ function FellowDropoutSteps({
     <Form {...form}>
       <DialogHeader>
         {fellow.droppedOut ? (
-          <h2 className="text-lg font-bold">Undo student drop out?</h2>
+          <h2 className="text-xl font-semibold">Undo student drop out?</h2>
         ) : (
-          <h2 className="text-lg font-bold">Drop out fellow</h2>
+          <h2 className="text-xl font-semibold">Drop out fellow</h2>
         )}
       </DialogHeader>
       {alertWidget}

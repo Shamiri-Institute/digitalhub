@@ -376,7 +376,7 @@ function CaseNotesContent({
                               }}
                             />
                           </FormControl>
-                          <FormLabel className="font-normal capitalize">{level}</FormLabel>
+                          <FormLabel className="font-medium capitalize">{level}</FormLabel>
                         </FormItem>
                       )}
                     />
@@ -434,7 +434,7 @@ function CaseNotesContent({
                               }}
                             />
                           </FormControl>
-                          <FormLabel className="font-normal">{intervention}</FormLabel>
+                          <FormLabel className="font-medium">{intervention}</FormLabel>
                         </FormItem>
                       )}
                     />
@@ -526,7 +526,7 @@ function CaseNotesContent({
                           }}
                         />
                       </FormControl>
-                      <FormLabel className="font-normal">Individual Session</FormLabel>
+                      <FormLabel className="font-medium">Individual Session</FormLabel>
                     </FormItem>
 
                     <FormItem className="flex flex-row items-center space-x-3 space-y-0">
@@ -541,7 +541,7 @@ function CaseNotesContent({
                           }}
                         />
                       </FormControl>
-                      <FormLabel className="font-normal">Group Session</FormLabel>
+                      <FormLabel className="font-medium">Group Session</FormLabel>
                     </FormItem>
                   </div>
                 </FormItem>

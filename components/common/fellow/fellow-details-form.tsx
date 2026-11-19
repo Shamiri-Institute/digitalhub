@@ -239,7 +239,7 @@ function FellowDetailsFormContent({ fellow, onOpenChange, mode }: FellowDetailsF
                           <Button
                             variant={"outline"}
                             className={cn(
-                              "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                              "mt-1.5 w-full justify-start px-3 text-left font-medium",
                               !field.value && "text-muted-foreground",
                             )}
                           >

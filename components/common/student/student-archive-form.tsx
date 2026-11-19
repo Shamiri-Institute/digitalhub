@@ -53,7 +53,7 @@ export default function StudentArchiveForm({
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="p-5 text-base font-medium leading-6">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Archive student</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">Archive student</DialogTitle>
           </DialogHeader>
           {children}
           <form

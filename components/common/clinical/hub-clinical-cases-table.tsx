@@ -19,7 +19,7 @@ export default function AllHubClinicalCasesTable({
 }) {
   return (
     <>
-      <h2 className="text-lg font-medium">
+      <h2 className="text-xl font-semibold">
         {title} ({cases.length})
       </h2>
       <DataTable

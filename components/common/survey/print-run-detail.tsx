@@ -39,7 +39,7 @@ export function PrintRunDetailView({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <h2 className="text-lg font-semibold">Print run</h2>
+        <h2 className="text-xl font-semibold">Print run</h2>
         <PrintStatusBadge status={run.status} />
       </div>
       <dl className="grid grid-cols-1 gap-x-8 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">

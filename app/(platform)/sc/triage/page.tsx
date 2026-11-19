@@ -26,7 +26,7 @@ async function TriageStats() {
         )}
       >
         <p className="text-xs text-shamiri-text-grey">Requires my action</p>
-        <p className={cn("text-2xl font-bold", stats.unactionedCount > 0 && "text-red-base")}>
+        <p className={cn("text-2xl font-semibold", stats.unactionedCount > 0 && "text-red-base")}>
           {stats.unactionedCount}
         </p>
       </div>
@@ -37,13 +37,13 @@ async function TriageStats() {
         )}
       >
         <p className="text-xs text-shamiri-text-grey">Overdue (&gt;3 days)</p>
-        <p className={cn("text-2xl font-bold", stats.overdueCount > 0 && "text-red-base")}>
+        <p className={cn("text-2xl font-semibold", stats.overdueCount > 0 && "text-red-base")}>
           {stats.overdueCount}
         </p>
       </div>
       <div className="rounded-lg border p-4 space-y-1">
         <p className="text-xs text-shamiri-text-grey">Triage events this week</p>
-        <p className="text-2xl font-bold">{stats.triageThisWeek}</p>
+        <p className="text-2xl font-semibold">{stats.triageThisWeek}</p>
       </div>
       <div
         className={cn(
@@ -55,7 +55,7 @@ async function TriageStats() {
         <p className="text-xs text-shamiri-text-grey">Risk positive this week</p>
         <p
           className={cn(
-            "text-2xl font-bold",
+            "text-2xl font-semibold",
             stats.riskPositiveThisWeek > 0 && "text-shamiri-dark-orange",
           )}
         >

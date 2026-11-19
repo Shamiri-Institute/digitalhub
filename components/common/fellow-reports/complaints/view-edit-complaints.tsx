@@ -95,7 +95,7 @@ export default function ViewEditFellowComplaints({
               <label htmlFor="date" className="text-sm font-medium">
                 Date of Complaint
               </label>
-              <p className="text-gray-600">{fellowComplaints.date}</p>
+              <p className="text-shamiri-text-grey">{fellowComplaints.date}</p>
             </div>
           </div>
 

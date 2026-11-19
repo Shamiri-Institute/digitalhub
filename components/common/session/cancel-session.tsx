@@ -76,7 +76,7 @@ function CancelSessionConfirm({
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="text-xl font-bold">Cancel session</DialogTitle>
+        <DialogTitle className="text-xl font-semibold">Cancel session</DialogTitle>
       </DialogHeader>
       {children}
       <div className="flex flex-col gap-y-4 pt-4">

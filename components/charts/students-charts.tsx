@@ -84,7 +84,7 @@ export default function HubStudentsDetailsCharts({
               <XAxis dataKey="sessionType" tickFormatter={sessionLabel} />
               <YAxis dataKey="attendance" allowDecimals={false} />
               <Tooltip labelFormatter={(value) => `Session: ${sessionLabel(String(value))}`} />
-              <Bar dataKey="attendance" name="Sessions" fill="var(--color-shamiri-new-blue)" />
+              <Bar dataKey="attendance" name="Sessions" fill="var(--color-shamiri-graph-blue)" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
@@ -126,7 +126,7 @@ export default function HubStudentsDetailsCharts({
                   ...entry,
                   fill:
                     entry.name === "actual"
-                      ? "var(--color-shamiri-new-blue)"
+                      ? "var(--color-shamiri-graph-blue)"
                       : "var(--color-shamiri-new-light-blue)",
                 }))}
                 dataKey="value"
@@ -169,7 +169,7 @@ export default function HubStudentsDetailsCharts({
                 type="monotone"
                 dataKey="value"
                 name="Avg rating"
-                stroke="var(--color-shamiri-new-blue)"
+                stroke="var(--color-shamiri-graph-blue)"
               />
             </LineChart>
           </ResponsiveContainer>

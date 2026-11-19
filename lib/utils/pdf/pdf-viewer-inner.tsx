@@ -56,7 +56,7 @@ export default function PdfViewerInner({ url, className }: PdfViewerInnerProps) 
         }
         error={
           <div className="flex flex-col items-center justify-center py-16 text-shamiri-light-red">
-            <p className="text-lg font-medium">Failed to load PDF</p>
+            <p className="text-xl font-medium">Failed to load PDF</p>
             <p className="text-sm mt-1 text-shamiri-text-grey">
               Check the file path and try again.
             </p>

@@ -55,7 +55,7 @@ export function EscalateTicketDialog({ ticket, open, onOpenChange }: EscalateTic
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Escalate Ticket</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Escalate Ticket</DialogTitle>
         </DialogHeader>
         <EscalateTicketForm ticketId={ticket.id} close={() => onOpenChange(false)} />
       </DialogContent>

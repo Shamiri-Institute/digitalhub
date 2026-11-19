@@ -46,7 +46,7 @@ export default function StudentsInGroup({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="lg:w-2/3 lg:max-w-none">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Students in group</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">Students in group</DialogTitle>
           </DialogHeader>
           {children}
           <DataTable

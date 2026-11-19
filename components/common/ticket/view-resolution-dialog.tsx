@@ -33,7 +33,7 @@ export function ViewResolutionDialog({
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Resolution Details</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Resolution Details</DialogTitle>
         </DialogHeader>
 
         {isResolved ? (

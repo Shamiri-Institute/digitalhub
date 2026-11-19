@@ -52,7 +52,7 @@ export default function RescheduleSession({
         <DialogPortal>
           <DialogContent className="flex w-1/3 max-w-none flex-col gap-4">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold">Reschedule session</DialogTitle>
+              <DialogTitle className="text-xl font-semibold">Reschedule session</DialogTitle>
             </DialogHeader>
             {children}
             <RescheduleSessionForm key={session.id} session={session} onOpenChange={onOpenChange} />
@@ -124,7 +124,7 @@ export function RescheduleSessionForm({
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                        "mt-1.5 w-full justify-start px-3 text-left font-medium",
                         !field.value && "text-muted-foreground",
                       )}
                     >
@@ -156,7 +156,7 @@ export function RescheduleSessionForm({
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "mt-1.5 w-full justify-start px-3 text-left font-normal active:scale-100",
+                        "mt-1.5 w-full justify-start px-3 text-left font-medium active:scale-100",
                         !field.value && "text-muted-foreground",
                       )}
                     >
@@ -263,7 +263,7 @@ export function RescheduleSessionForm({
             <Button
               variant="ghost"
               type="button"
-              className="text-shamiri-new-blue hover:text-shamiri-blue"
+              className="text-shamiri-new-blue hover:text-shamiri-dark-blue"
             >
               Cancel
             </Button>

@@ -167,7 +167,7 @@ function PublishSteps({
               <span className="block text-sm font-semibold">
                 {SURVEY_VERSION_PREFILL_LABELS[option]}
               </span>
-              <span className="block text-sm font-normal text-shamiri-text-grey">
+              <span className="block text-sm font-medium text-shamiri-text-grey">
                 {PREFILL_DESCRIPTIONS[option]}
               </span>
             </span>

@@ -204,7 +204,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
               />
             </div>
           )}
-          <p className="text-wrap text-[20px] font-semibold text-shamiri-text-dark-grey">
+          <p className="text-wrap text-xl font-semibold text-shamiri-text-dark-grey">
             <span>
               {personnelProfile &&
                 ("coordinatorName" in personnelProfile
@@ -220,7 +220,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                           : session?.user?.name)}
             </span>
             {hubName && (
-              <span className="text-[20px] font-semibold text-shamiri-text-dark-grey">
+              <span className="text-xl font-semibold text-shamiri-text-dark-grey">
                 {" "}
                 - <span className="capitalize">{hubName}</span>
               </span>
@@ -350,7 +350,7 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                         <Button
                           variant={"outline"}
                           className={cn(
-                            "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                            "mt-1.5 w-full justify-start px-3 text-left font-medium",
                             !field.value && "text-muted-foreground",
                           )}
                           disabled={isFellow}

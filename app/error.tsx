@@ -34,11 +34,11 @@ export default function AppError({
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-6">
-      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-border bg-white shadow-xl">
-        <div className="flex flex-col items-center justify-center space-y-3 border-b border-gray-200 bg-white px-4 py-6 pt-8 text-center sm:px-16">
-          <Icons.logo className="h-9 text-sky-600 lg:h-10" />
-          <h2 className="text-lg font-semibold text-gray-900">Oops! Something went wrong!</h2>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background-secondary px-6">
+      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-border bg-white shadow-lg">
+        <div className="flex flex-col items-center justify-center space-y-3 border-b border-grey-border bg-white px-4 py-6 pt-8 text-center sm:px-16">
+          <Icons.logo className="h-9 text-shamiri-new-blue lg:h-10" />
+          <h2 className="text-xl font-semibold text-shamiri-black">Oops! Something went wrong!</h2>
           <p className="text-sm text-muted-foreground">
             We couldn&apos;t complete your request. Please try refreshing the page or clearing your
             browser cache.
@@ -46,13 +46,13 @@ export default function AppError({
             Need assistance? Our support team is ready to help!{" "}
             <Link
               href="mailto:tech-support@shamiri.institute"
-              className="text-shamiri-blue-darker hover:underline"
+              className="text-shamiri-new-blue hover:underline"
             >
               tech-support@shamiri.institute
             </Link>
           </p>
         </div>
-        <div className="flex flex-col space-y-3 bg-gray-50 px-4 py-8 sm:px-16">
+        <div className="flex flex-col space-y-3 bg-background-secondary px-4 py-8 sm:px-16">
           <Button onClick={retry}>Try again</Button>
           <Button onClick={toastOnError(handleRedirectToLogin)} variant="outline">
             Sign out and clear saved data

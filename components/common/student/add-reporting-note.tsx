@@ -71,7 +71,7 @@ function AddReportingNoteForm({ setIsOpen, student, children }: AddReportingNote
   return (
     <Form {...form}>
       <DialogHeader>
-        <DialogTitle className="text-lg font-bold">Add reporting note</DialogTitle>
+        <DialogTitle className="text-xl font-semibold">Add reporting note</DialogTitle>
       </DialogHeader>
       {children}
       <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">

@@ -58,7 +58,7 @@ export default function SupervisorCharts({
               <XAxis dataKey="supervisor_name" />
               <YAxis dataKey="attended" allowDecimals={false} />
               <Tooltip />
-              <Bar dataKey="attended" fill="var(--color-shamiri-new-blue)" name="Attended" />
+              <Bar dataKey="attended" fill="var(--color-shamiri-graph-blue)" name="Attended" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
@@ -100,7 +100,7 @@ export default function SupervisorCharts({
                   ...entry,
                   fill:
                     entry.name === "actual"
-                      ? "var(--color-shamiri-new-blue)"
+                      ? "var(--color-shamiri-graph-blue)"
                       : "var(--color-shamiri-new-light-blue)",
                 }))}
                 dataKey="value"
@@ -137,7 +137,7 @@ export default function SupervisorCharts({
               <Legend />
               <Line
                 dataKey="student_behaviour"
-                stroke="var(--color-shamiri-new-blue)"
+                stroke="var(--color-shamiri-graph-blue)"
                 name="Student behaviour"
               />
               <Line

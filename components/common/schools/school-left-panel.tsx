@@ -55,10 +55,10 @@ export default function SchoolLeftPanel({
             className={cn("py-0 lg:py-6", !open ? "flex-row-reverse justify-between" : "")}
           >
             <div className="flex items-center gap-x-4 2xl:items-center">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-shamiri-new-light-blue text-lg font-semibold text-shamiri-new-blue lg:h-16 lg:w-16 lg:p-[18px] lg:text-xl">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-shamiri-new-light-blue text-xl font-semibold text-shamiri-new-blue lg:h-16 lg:w-16 lg:p-[18px] lg:text-xl">
                 {getSchoolInitials(school.schoolName)}
               </div>
-              <span className="text-xl font-semibold text-black lg:text-left lg:text-[28px]">
+              <span className="text-xl font-semibold text-shamiri-black lg:text-left lg:text-2xl">
                 {school.schoolName}
               </span>
             </div>
@@ -243,7 +243,7 @@ export default function SchoolLeftPanel({
                                       <Icons.flagTriangleLeft className="h-5 w-5 text-shamiri-red" />
                                       <div className="text-left">
                                         <span>Dropped out</span>
-                                        <span className="flex text-sm text-gray-400">
+                                        <span className="flex text-sm text-shamiri-text-grey">
                                           {history.user.name}
                                         </span>
                                       </div>
@@ -266,14 +266,14 @@ export default function SchoolLeftPanel({
                                   <Icons.flagTriangleRight className="h-5 w-5 text-shamiri-green" />
                                   <div className="flex flex-col">
                                     <p>Dropout undone</p>
-                                    <span className="flex items-baseline text-sm text-gray-400">
+                                    <span className="flex items-baseline text-sm text-shamiri-text-grey">
                                       {history.user.name}
                                     </span>
                                   </div>
                                 </div>
                               )}
                             </div>
-                            <span className="text-gray-400">
+                            <span className="text-shamiri-text-grey">
                               {format(history.createdAt, DISPLAY_DATE)}
                             </span>
                           </div>
@@ -282,7 +282,7 @@ export default function SchoolLeftPanel({
                     </AccordionContent>
                   ) : (
                     <AccordionContent>
-                      <span className="text-gray-400">No drop out records available</span>
+                      <span className="text-shamiri-text-grey">No drop out records available</span>
                     </AccordionContent>
                   )}
                 </AccordionItem>

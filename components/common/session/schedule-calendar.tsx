@@ -630,7 +630,7 @@ function NavigationButtons({
   nextProps: AriaButtonProps;
 }) {
   return (
-    <div className="inline-flex shrink-0 divide-x divide-gray-300 overflow-auto rounded-lg border border-gray-300 shadow-xs">
+    <div className="inline-flex shrink-0 divide-x divide-grey-border overflow-auto rounded-lg border border-grey-border shadow-xs">
       <NavigationButton aria-label="Previous Month" {...prevProps}>
         <Icons.chevronLeft className="h-5 w-5" />
       </NavigationButton>
@@ -652,7 +652,7 @@ function NavigationButton({ children, ...props }: { children: React.ReactNode })
     <button
       {...mergeProps(buttonProps, focusProps)}
       ref={ref}
-      className={`inline-flex h-9 items-center bg-white px-2 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-0 ${
+      className={`inline-flex h-9 items-center bg-white px-2 py-1.5 text-sm font-medium text-shamiri-text-grey hover:bg-background-secondary focus:outline-0 ${
         isFocusVisible ? "ring-2 ring-blue-base ring-offset-2" : ""
       }`}
     >

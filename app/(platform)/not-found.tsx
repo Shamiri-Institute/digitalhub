@@ -9,9 +9,9 @@ export default async function PlatformNotFound() {
 
   return (
     <div className="flex w-full items-start justify-center px-4 py-16">
-      <div className="w-full max-w-md overflow-hidden rounded-2xl border bg-background shadow-xl">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl border bg-background shadow-lg">
         <div className="space-y-3 px-4 py-6 text-center sm:px-16">
-          <h1 className="text-lg font-semibold">Page not found</h1>
+          <h1 className="text-xl font-semibold">Page not found</h1>
           <p className="text-sm text-muted-foreground">
             This page could not be found. Check the address, or go back to your home page.
           </p>

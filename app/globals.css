@@ -11,38 +11,58 @@
   }
 }
 
+/*
+  Figma "Shamiri Hub Redesign" type and elevation. Paragraphs are Inter Medium, headings Figtree
+  SemiBold, and no style uses another weight. Sizes stay on Tailwind's scale, which matches Figma's
+  P3 14/20, P2 16/24, H4 20/28, H3 24/32; only H2 36 needs its 48px line height.
+*/
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-figtree), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
 @theme {
+  --text-4xl--line-height: 3rem;
+  --tracking-caps: 0.04em;
+
+  --shadow-xs: 0 1px 1px 0 rgb(0 0 0 / 0.06);
+  --shadow-sm:
+    0 1px 1px 0 rgb(0 0 0 / 0.08), 0 2px 1px 0 rgb(0 0 0 / 0.06), 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  --shadow-md:
+    0 6px 10px 0 rgb(0 0 0 / 0.08), 0 1px 18px 0 rgb(0 0 0 / 0.06), 0 3px 5px 0 rgb(0 0 0 / 0.1);
+  --shadow-lg:
+    0 24px 38px 0 rgb(0 0 0 / 0.04), 0 9px 46px 0 rgb(0 0 0 / 0.06), 0 11px 15px 0 rgb(0 0 0 / 0.1);
+
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
-  --color-muted-green: hsl(var(--muted-green));
-  --color-muted-yellow: hsl(var(--muted-yellow));
-  --color-muted-pink: hsl(var(--muted-pink));
-  --color-muted-sky: hsl(var(--muted-sky));
 
   --color-brand: hsl(var(--brand));
   --color-brand-foreground: hsl(var(--brand-foreground));
 
+  /*
+    Figma "Shamiri Hub Redesign" variables. The Light/<hue>/Base values fail WCAG AA as text, so
+    fills, chart marks, borders and tints use them exactly, and text (and fills under white text)
+    uses the darker AA step of the same hue: new-blue, green, light-red, text-grey, dark-orange.
+  */
   --color-background-secondary: #f7f7f7;
   --color-shamiri-light-red: #cb1515;
   --color-shamiri-light-red-background-base: #ff3b3b;
-  --color-shamiri-blue: #0474bc;
   --color-shamiri-new-blue: #0069cc;
   --color-shamiri-new-light-blue: #e5f3ff;
   --color-shamiri-new-lighter-blue: #cce7ff;
-  --color-shamiri-blue-darker: #045e96;
-  --color-shamiri-light-blue: #b0d5ea;
   --color-shamiri-dark-blue: #002244;
   --color-shamiri-text-grey: #686868;
   --color-shamiri-text-dark-grey: #585757;
   --color-shamiri-light-grey: #e8e8e8;
-  --color-shamiri-graph-green: var(--color-shamiri-green);
-  --color-shamiri-graph-yellow: #d5ac02;
+  --color-shamiri-graph-blue: #0085ff;
+  --color-shamiri-graph-green: #00ba34;
+  --color-shamiri-graph-yellow: #facc15;
   --color-shamiri-graph-purple: #8b2ce9;
-  --color-shamiri-graph-light-blue: #4cace3;
-  --color-shamiri-red: #cb2a37;
+  --color-shamiri-graph-red: #e92c2c;
+  --color-shamiri-red: var(--color-shamiri-light-red);
   --color-shamiri-black: #1c1c1c;
   --color-shamiri-light-green: #e5f8eb;
   --color-shamiri-green: #008024;
@@ -72,14 +92,9 @@
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
 
-  --color-active-card: hsl(var(--active-card));
-  --color-active-card-foreground: hsl(var(--active-card-foreground));
-  --color-active-card-foreground-accent: hsl(var(--active-card-foreground-accent));
-
-  --color-grey: rgba(173, 173, 173, 1);
   --color-grey-c3: var(--color-shamiri-text-grey);
   --color-grey-border: var(--color-shamiri-light-grey);
-  --color-grey-bg: rgba(252, 252, 252, 1);
+  --color-grey-bg: #fcfcfc;
   --color-green-border: var(--color-shamiri-border-green);
   --color-green-bg: var(--color-shamiri-light-green);
   --color-green-base: var(--color-shamiri-green);
@@ -140,7 +155,7 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
+    border-color: var(--color-grey-border, currentcolor);
   }
 }
 
@@ -278,7 +293,7 @@
   }
 
   & .form-toggle-button[data-state="on"] {
-    @apply border bg-white text-black drop-shadow-xl;
+    @apply border bg-white text-shamiri-black drop-shadow-xl;
   }
 }
 
@@ -288,7 +303,7 @@
   }
 
   .form-toggle &[data-state="on"] {
-    @apply border bg-white text-black drop-shadow-xl;
+    @apply border bg-white text-shamiri-black drop-shadow-xl;
   }
 }
 
@@ -386,7 +401,7 @@
   }
 
   &:disabled {
-    @apply pointer-events-none opacity-50 shadow-none hover:bg-transparent hover:text-black;
+    @apply pointer-events-none opacity-50 shadow-none hover:bg-transparent hover:text-shamiri-black;
   }
 }
 
@@ -403,50 +418,40 @@
 
 @layer base {
   :root {
+    /* Figma Light/Grayscale: Content 1 #1c1c1c, Border #e8e8e8, Background Secondary #f7f7f7 */
     --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --foreground: 0 0% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-
-    --active-card: 210 100% 13%;
-    --active-card-foreground: 0 0% 100%;
-    --active-card-foreground-accent: 202 58% 80%;
+    --card-foreground: 0 0% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover-foreground: 0 0% 11%;
 
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 0 0% 11%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+    --secondary: 0 0% 97%;
+    --secondary-foreground: 0 0% 11%;
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: 0 0% 97%;
+    --muted-foreground: 0 0% 41%;
 
-    --accent: 208, 100%, 95%, 1;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: 208 100% 95%;
+    --accent-foreground: 0 0% 11%;
 
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 221 83% 53%;
+    --border: 0 0% 91%;
+    --input: 0 0% 91%;
+    --ring: 209 100% 50%;
 
     --radius: 0.5rem;
 
     --brand: 210 100% 13%;
-    --brand-foreground: 240 10% 0%;
+    --brand-foreground: 0 0% 0%;
 
-    --canvas: 0 0% 98%;
-
-    --muted-green: 99 22% 53%;
-    --muted-yellow: 42 95% 57%;
-    --muted-pink: 319 40% 70%;
-    --muted-sky: 202 58% 80%;
-
-    --brand-light-gray: 0 4% 51%;
+    --canvas: 0 0% 99%;
   }
 
   * {
@@ -454,7 +459,16 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background font-sans font-medium text-foreground;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading font-semibold;
   }
 
   label {

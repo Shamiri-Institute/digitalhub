@@ -68,7 +68,7 @@ export default function SessionHistoryWidget({
             <PopoverTrigger
               aria-label={`${sessionLabel}: ${label}`}
               className={cn(
-                "flex select-none items-center gap-1 rounded-lg border px-1.5 py-0.5 text-[0.825rem] font-semibold focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue focus-visible:ring-offset-2",
+                "flex select-none items-center gap-1 rounded-lg border px-1.5 py-0.5 text-sm font-semibold focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue focus-visible:ring-offset-2",
                 tone,
               )}
             >

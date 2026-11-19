@@ -184,7 +184,7 @@ function MarkAttendanceContent({
   return (
     <Form {...form}>
       <DialogHeader>
-        <DialogTitle className="text-lg font-bold">{title}</DialogTitle>
+        <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>
       </DialogHeader>
       {children}
       <form noValidate onSubmit={toastOnError(form.handleSubmit(onSubmit))} className="space-y-5">
@@ -255,7 +255,7 @@ function MarkAttendanceContent({
                     aria-label="Attended"
                     value="attended"
                     id="mark_attended"
-                    className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
+                    className="custom-radio border-grey-border data-[state=checked]:border-shamiri-green"
                   />
                 </div>
                 <div className="relative">
@@ -264,7 +264,7 @@ function MarkAttendanceContent({
                     aria-label="Missed"
                     value="missed"
                     id="mark_missed"
-                    className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-red"
+                    className="custom-radio border-grey-border  data-[state=checked]:border-shamiri-red"
                   />
                 </div>
                 <div className="relative">
@@ -273,7 +273,7 @@ function MarkAttendanceContent({
                     aria-label="Unmarked"
                     value="unmarked"
                     id="Unmarked_"
-                    className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-new-blue"
+                    className="custom-radio border-grey-border  data-[state=checked]:border-shamiri-new-blue"
                   />
                 </div>
               </RadioGroup>
@@ -379,7 +379,7 @@ export function CustomIndicator({ className, label }: { className: string; label
       <div className="flex items-center gap-3">
         <div
           className={cn(
-            "indicator h-4 w-4 rounded-full border border-gray-300 bg-white shadow-sm",
+            "indicator h-4 w-4 rounded-full border border-grey-border bg-white shadow-sm",
             className,
           )}
         />

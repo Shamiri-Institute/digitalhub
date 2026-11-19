@@ -68,7 +68,7 @@ function ArchiveGroupConfirm({
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="text-xl font-bold">Confirm group archive</DialogTitle>
+        <DialogTitle className="text-xl font-semibold">Confirm group archive</DialogTitle>
       </DialogHeader>
       {children}
       <div className="space-y-4">

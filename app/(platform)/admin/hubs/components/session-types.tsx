@@ -447,7 +447,7 @@ export function HubConfirmDialog({
             <p className="text-sm font-medium">
               {changesHeading}
               {changes.length > 3 && (
-                <span className="font-normal text-shamiri-text-dark-grey">
+                <span className="font-medium text-shamiri-text-dark-grey">
                   {" "}
                   · scroll to see all
                 </span>

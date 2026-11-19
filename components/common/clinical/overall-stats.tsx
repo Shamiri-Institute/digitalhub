@@ -22,7 +22,7 @@ export default function OverallStudentsClinicalStats({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{totalStudents}</div>
+          <div className="text-2xl font-semibold">{totalStudents}</div>
         </CardContent>
       </Card>
 
@@ -33,7 +33,7 @@ export default function OverallStudentsClinicalStats({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{groupSessions}</div>
+          <div className="text-2xl font-semibold">{groupSessions}</div>
         </CardContent>
       </Card>
 
@@ -44,7 +44,7 @@ export default function OverallStudentsClinicalStats({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{clinicalCases}</div>
+          <div className="text-2xl font-semibold">{clinicalCases}</div>
         </CardContent>
       </Card>
 
@@ -55,7 +55,7 @@ export default function OverallStudentsClinicalStats({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{clinicalSessions}</div>
+          <div className="text-2xl font-semibold">{clinicalSessions}</div>
         </CardContent>
       </Card>
     </div>

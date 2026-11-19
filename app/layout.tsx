@@ -1,11 +1,12 @@
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
-import { Figtree } from "next/font/google";
+import { Figtree, Inter } from "next/font/google";
 import { Providers } from "#/components/providers";
 import { cn } from "#/lib/utils";
 import "./globals.css";
 
-const figtree = Figtree({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], weight: ["500", "600"], variable: "--font-inter" });
+const figtree = Figtree({ subsets: ["latin"], weight: ["600"], variable: "--font-figtree" });
 
 export const metadata: Metadata = {
   title: {
@@ -17,11 +18,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="h-full">
-      <body
-        className={cn(figtree.className, "flex min-h-full antialiased")}
-        suppressHydrationWarning
-      >
+    <html lang="en" className={cn("h-full", inter.variable, figtree.variable)}>
+      <body className="flex min-h-full antialiased" suppressHydrationWarning>
         <Providers>
           <div className="w-full">{children}</div>
         </Providers>

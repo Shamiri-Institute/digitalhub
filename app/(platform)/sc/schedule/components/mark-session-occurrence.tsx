@@ -113,7 +113,7 @@ function MarkSessionOccurrenceSteps({
     return (
       <>
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Mark session occurrence</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Mark session occurrence</DialogTitle>
         </DialogHeader>
         {children}
         <div className="flex flex-col gap-y-4">
@@ -154,7 +154,7 @@ function MarkSessionOccurrenceSteps({
   return (
     <Form {...form}>
       <DialogHeader>
-        <DialogTitle className="text-lg font-bold">Mark session occurrence</DialogTitle>
+        <DialogTitle className="text-xl font-semibold">Mark session occurrence</DialogTitle>
       </DialogHeader>
       {children}
       {previousUnmarkedSessions.length === 0 ? (
@@ -179,7 +179,7 @@ function MarkSessionOccurrenceSteps({
                       aria-label="Attended"
                       value="attended"
                       id="mark_attended"
-                      className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
+                      className="custom-radio border-grey-border data-[state=checked]:border-shamiri-green"
                     />
                   </div>
                   <div className="relative">
@@ -188,7 +188,7 @@ function MarkSessionOccurrenceSteps({
                       aria-label="Unmarked"
                       value="unmarked"
                       id="Unmarked_"
-                      className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-new-blue"
+                      className="custom-radio border-grey-border  data-[state=checked]:border-shamiri-new-blue"
                     />
                   </div>
                 </RadioGroup>

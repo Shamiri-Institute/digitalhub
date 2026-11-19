@@ -21,7 +21,7 @@ export default function ClinicalTableSkeleton() {
 
   return (
     <div className="space-y-3 px-6 py-10">
-      <h1 className="text-2xl font-bold">Fellows</h1>
+      <h1 className="text-2xl font-semibold">Fellows</h1>
       <Separator />
       <DataTable
         key="skeleton-clinical-cases-table"
