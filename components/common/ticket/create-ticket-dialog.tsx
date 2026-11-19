@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
+import { Combobox } from "#/components/ui/combobox";
 import {
   Dialog,
   DialogClose,
@@ -37,7 +38,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { createTicket } from "#/lib/actions/ticket";
 import { CreateTicketSchema, type TicketAssignees } from "#/lib/actions/ticket/types";
-import { RecipientOptions } from "./recipient-options";
+import { personName } from "./format";
 import { zodResolver } from "#/lib/zod-resolver";
 
 export default function CreateTicketDialog({
@@ -208,26 +209,19 @@ function CreateTicketForm({
                     No one is available to take this ticket. Ask an administrator for help.
                   </p>
                 ) : (
-                  <Select
-                    // Remount per category: Radix clears a value missing from its old options.
-                    key={category}
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    disabled={!category}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={
-                            category ? "Choose who should take it" : "Pick a category first"
-                          }
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <RecipientOptions people={categoryAssignees} />
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <Combobox
+                      items={categoryAssignees.map((person) => ({
+                        id: person.userId,
+                        label: personName(person),
+                      }))}
+                      activeItemId={field.value}
+                      onSelectItem={field.onChange}
+                      placeholder={category ? "Choose who should take it" : "Pick a category first"}
+                      inputPlaceholder="Search by name"
+                      disabled={!category}
+                    />
+                  </FormControl>
                 )}
                 <FormMessage />
               </FormItem>

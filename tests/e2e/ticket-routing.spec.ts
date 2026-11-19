@@ -116,7 +116,9 @@ async function createTicket(
   await dialog.getByRole("combobox").first().click();
   await page.getByRole("option", { name: category, exact: true }).click();
   if (assignee) {
-    await dialog.getByRole("combobox", { name: "Assign to" }).click();
+    // The searchable picker's trigger is the dialog's only popover button.
+    await dialog.locator('button[aria-haspopup="dialog"]').click();
+    await page.getByPlaceholder("Search by name").fill(assignee);
     await page.getByRole("option", { name: assignee }).click();
   }
   await dialog.getByRole("button", { name: "Submit" }).click();
