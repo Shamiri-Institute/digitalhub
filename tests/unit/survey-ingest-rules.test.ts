@@ -154,6 +154,15 @@ describe("a posted page", () => {
     });
   });
 
+  it("is a read page when it sends error as null, read the same as without it", () => {
+    const page = readPage([]);
+    const withNullError = parsePostedPage({ ...page, error: null });
+    const withoutError = parsePostedPage(page);
+    if (!withNullError.ok || !withoutError.ok) throw new Error("Not parsed");
+    expect(withNullError.parsed).toEqual({ kind: "read", page });
+    expect(withNullError.postedSha256).toBe(withoutError.postedSha256);
+  });
+
   it("is refused, with the reason, when it breaks the wire's rules", () => {
     const page = { pageIndex: 0, qrs: [], rotation: 0, aligned: true, quality: 1 };
     const reasonOf = (posted: Record<string, unknown>) => {
@@ -376,44 +385,112 @@ describe("a re-post", () => {
     attempt: 1,
     postedSha256: "a".repeat(64),
     status: "MATCHED",
+    rejectedReason: null,
     questionnairePageId: "page",
   };
   const unplaced: StoredScan = {
     attempt: 1,
     postedSha256: "a".repeat(64),
     status: "REJECTED",
+    rejectedReason: "UNKNOWN_CODE",
     questionnairePageId: null,
   };
+  const repost = (
+    storedScan: StoredScan | undefined,
+    attempt: number,
+    postedSha256: string,
+    { postedFailed = false, uploadProcessed = false } = {},
+  ) => decideRepost(storedScan, { attempt, postedSha256, postedFailed, uploadProcessed });
 
   it("of the same attempt changes nothing, and other content replaces only a page that names no printed page", () => {
-    expect(decideRepost(undefined, 1, "a".repeat(64))).toEqual({ kind: "new" });
+    expect(repost(undefined, 1, "a".repeat(64))).toEqual({ kind: "new" });
     for (const storedScan of [matched, unplaced]) {
-      expect(decideRepost(storedScan, 1, "a".repeat(64))).toEqual({
+      expect(repost(storedScan, 1, "a".repeat(64))).toEqual({
         kind: "unchanged",
         status: storedScan.status,
       });
     }
-    expect(decideRepost(unplaced, 1, "b".repeat(64))).toEqual({ kind: "replace" });
-    expect(decideRepost(matched, 1, "b".repeat(64))).toEqual({
+    expect(repost(unplaced, 1, "b".repeat(64))).toEqual({ kind: "replace" });
+    expect(repost(matched, 1, "b".repeat(64))).toEqual({
       kind: "conflict",
       reason: "this page was already posted with other content",
     });
   });
 
   it("of another attempt reading the page the same leaves a placed page, and takes its image for an unplaced one", () => {
-    expect(decideRepost(matched, 2, "a".repeat(64))).toEqual({
+    expect(repost(matched, 2, "a".repeat(64))).toEqual({
       kind: "unchanged",
       status: matched.status,
     });
-    expect(decideRepost(unplaced, 2, "a".repeat(64))).toEqual({ kind: "replace" });
+    expect(repost(unplaced, 2, "a".repeat(64))).toEqual({ kind: "replace" });
   });
 
   it("of another attempt reading it otherwise replaces only a page that names no printed page", () => {
-    expect(decideRepost(unplaced, 2, "b".repeat(64))).toEqual({ kind: "replace" });
-    expect(decideRepost(matched, 2, "b".repeat(64))).toEqual({
+    expect(repost(unplaced, 2, "b".repeat(64))).toEqual({ kind: "replace" });
+    expect(repost(matched, 2, "b".repeat(64))).toEqual({
       kind: "conflict",
       reason: "already stored by attempt 1",
     });
+  });
+});
+
+describe("a re-post that is a failed page", () => {
+  const read: StoredScan = {
+    attempt: 1,
+    postedSha256: "a".repeat(64),
+    status: "UNIDENTIFIED",
+    rejectedReason: null,
+    questionnairePageId: null,
+  };
+  const failed: StoredScan = { ...read, status: "REJECTED", rejectedReason: "UNREADABLE" };
+  const failedPost = {
+    attempt: 2,
+    postedSha256: "b".repeat(64),
+    postedFailed: true,
+    uploadProcessed: false,
+  };
+
+  it("never replaces a page that was read, but replaces another failed one", () => {
+    expect(decideRepost(read, failedPost)).toEqual({
+      kind: "conflict",
+      reason: "a read of this page is already stored",
+    });
+    for (const rejectedReason of ["UNKNOWN_CODE", "CODES_DISAGREE"] as const) {
+      expect(decideRepost({ ...read, status: "REJECTED", rejectedReason }, failedPost)).toEqual({
+        kind: "conflict",
+        reason: "a read of this page is already stored",
+      });
+    }
+    expect(decideRepost(failed, failedPost)).toEqual({ kind: "replace" });
+  });
+});
+
+describe("a re-post once the upload is processed", () => {
+  const unplaced: StoredScan = {
+    attempt: 1,
+    postedSha256: "a".repeat(64),
+    status: "UNIDENTIFIED",
+    rejectedReason: null,
+    questionnairePageId: null,
+  };
+  const processed = (postedSha256: string) => ({
+    attempt: 2,
+    postedSha256,
+    postedFailed: false,
+    uploadProcessed: true,
+  });
+
+  it("only replays: the same read is unchanged, anything it would store is a conflict", () => {
+    expect(decideRepost(unplaced, processed("a".repeat(64)))).toEqual({
+      kind: "unchanged",
+      status: "UNIDENTIFIED",
+    });
+    for (const storedScan of [unplaced, undefined]) {
+      expect(decideRepost(storedScan, processed("b".repeat(64)))).toEqual({
+        kind: "conflict",
+        reason: "the upload is already processed",
+      });
+    }
   });
 });
 

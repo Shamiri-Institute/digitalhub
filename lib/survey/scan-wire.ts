@@ -86,7 +86,7 @@ export function parsePostedPage(
   posted: PostedPage,
 ): { ok: true; parsed: ParsedPage; postedSha256: string } | { ok: false; reason: string } {
   const parsed: z.ZodSafeParseResult<ParsedPage> =
-    "error" in posted
+    posted.error != null
       ? FailedPageSchema.transform((page) => ({ kind: "failed" as const, page })).safeParse(posted)
       : ReadPageSchema.transform((page) => ({ kind: "read" as const, page })).safeParse(posted);
   if (!parsed.success) {

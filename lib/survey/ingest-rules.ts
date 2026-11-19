@@ -125,6 +125,7 @@ export type StoredScan = {
   attempt: number;
   postedSha256: string;
   status: SurveyScanPageStatus;
+  rejectedReason: SurveyScanRejection | null;
   questionnairePageId: string | null;
 };
 
@@ -134,22 +135,39 @@ export type RepostDecision =
   | { kind: "replace" }
   | { kind: "conflict"; reason: string };
 
+const uploadProcessedConflict = (): RepostDecision => ({
+  kind: "conflict",
+  reason: "the upload is already processed",
+});
+
 // Nothing points at a stored page that names no printed page, so a post may replace it: with other
-// content, or with the same content from a later attempt, whose image is then the one stored.
+// content, or with the same content from a later attempt, whose image is then the one stored. A
+// failed post never replaces a read, and once the upload is processed a post only replays.
 export function decideRepost(
   storedScan: StoredScan | undefined,
-  attempt: number,
-  postedSha256: string,
+  {
+    attempt,
+    postedSha256,
+    postedFailed,
+    uploadProcessed,
+  }: { attempt: number; postedSha256: string; postedFailed: boolean; uploadProcessed: boolean },
 ): RepostDecision {
-  if (!storedScan) return { kind: "new" };
+  if (!storedScan) return uploadProcessed ? uploadProcessedConflict() : { kind: "new" };
   const placed = storedScan.questionnairePageId !== null;
-  if (storedScan.postedSha256 === postedSha256 && (placed || storedScan.attempt === attempt)) {
+  const sameContent = storedScan.postedSha256 === postedSha256;
+  if (sameContent && (placed || uploadProcessed || storedScan.attempt === attempt)) {
     return { kind: "unchanged", status: storedScan.status };
   }
-  if (!placed) return { kind: "replace" };
-  return storedScan.attempt === attempt
-    ? { kind: "conflict", reason: "this page was already posted with other content" }
-    : { kind: "conflict", reason: `already stored by attempt ${storedScan.attempt}` };
+  if (placed) {
+    return storedScan.attempt === attempt
+      ? { kind: "conflict", reason: "this page was already posted with other content" }
+      : { kind: "conflict", reason: `already stored by attempt ${storedScan.attempt}` };
+  }
+  if (uploadProcessed) return uploadProcessedConflict();
+  if (postedFailed && storedScan.rejectedReason !== SurveyScanRejection.UNREADABLE) {
+    return { kind: "conflict", reason: "a read of this page is already stored" };
+  }
+  return { kind: "replace" };
 }
 
 export const DEFAULT_CONFIDENCE_THRESHOLD = 0.9;

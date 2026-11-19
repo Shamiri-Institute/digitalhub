@@ -559,6 +559,20 @@ describe("ingesting pages", () => {
     ]);
   });
 
+  it("moves the copies of one post to their own statuses", async () => {
+    const finishedCopy = await issueCopy();
+    const startedCopy = await issueCopy();
+    const uploadId = await createUpload();
+    await ingest(uploadId, [
+      readPost(finishedCopy.pages[0], 0),
+      readPost(finishedCopy.pages[1], 1),
+      readPost(finishedCopy.pages[2], 2),
+      readPost(startedCopy.pages[0], 3),
+    ]);
+    expect(await copyStatus(finishedCopy.questionnaireId)).toBe("READY");
+    expect(await copyStatus(startedCopy.questionnaireId)).toBe("PARTIAL");
+  });
+
   it("refuses a page the upload doesn't have, an upload that doesn't exist, and an old attempt", async () => {
     const copy = await issueCopy();
     const uploadId = await createUpload(scope.hubId, 2);
@@ -770,6 +784,21 @@ describe("re-posting a page", () => {
     expect([
       ...new Set((await answersOf(copy.questionnaireId)).map(({ scanPageId }) => scanPageId)),
     ]).toEqual([failed?.id]);
+  });
+
+  it("as failed never replaces a page that was read, even one that names no printed page", async () => {
+    const copy = await issueCopy();
+    const uploadId = await createUpload();
+    await ingest(uploadId, [readPost(copy.pages[0], 0, { qrs: [] })]);
+    const scansBefore = await scansOf(uploadId);
+
+    expect(await ingest(uploadId, [{ pageIndex: 0, error: "timeout" }])).toEqual({
+      kind: "ingested",
+      pages: [
+        { pageIndex: 0, result: "conflict", reason: "a read of this page is already stored" },
+      ],
+    });
+    expect(await scansOf(uploadId)).toEqual(scansBefore);
   });
 
   it("with a confidence left out changes nothing after one posted as null", async () => {

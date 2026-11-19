@@ -131,22 +131,17 @@ export async function ingestPages(
     }
     firstPostingByIndex.set(pageIndex, { position, postedSha256: parsing.postedSha256 });
     const storedScan = storedScanByIndex.get(pageIndex);
-    const repost = decideRepost(storedScan, attempt, parsing.postedSha256);
+    const repost = decideRepost(storedScan, {
+      attempt,
+      postedSha256: parsing.postedSha256,
+      postedFailed: parsing.parsed.kind === "failed",
+      uploadProcessed: upload.status === SurveyUploadStatus.PROCESSED,
+    });
     if (repost.kind === "unchanged") {
       return { kind: "done", result: { pageIndex, result: "unchanged", status: repost.status } };
     }
     if (repost.kind === "conflict") {
       return { kind: "done", result: { pageIndex, result: "conflict", reason: repost.reason } };
-    }
-    if (upload.status === SurveyUploadStatus.PROCESSED) {
-      if (storedScan?.postedSha256 === parsing.postedSha256) {
-        return {
-          kind: "done",
-          result: { pageIndex, result: "unchanged", status: storedScan.status },
-        };
-      }
-      const reason = "the upload is already processed";
-      return { kind: "done", result: { pageIndex, result: "conflict", reason } };
     }
     return {
       kind: "store",
@@ -592,21 +587,27 @@ async function recomputeCopyStatuses(tx: Transaction, copyIds: string[]) {
     })
     .from(surveyQuestionnaire)
     .where(inArray(surveyQuestionnaire.id, copyIds));
-  /* oxlint-disable eslint/no-await-in-loop -- one transaction runs one statement at a time */
-  for (const copy of copies) {
+  const statusChanges = copies.flatMap((copy) => {
     const status = copyStatusOf({
       current: copy.status,
       printedPages: copy.printedPages,
       matchedPages: copy.matchedPages,
       answersNeedingReview: copy.answersNeedingReview,
     });
-    if (status === copy.status) continue;
-    const [updated] = await tx
+    return status === copy.status ? [] : [{ copyId: copy.id, status }];
+  });
+  const changesByNewStatus = Map.groupBy(statusChanges, ({ status }) => status);
+  /* oxlint-disable eslint/no-await-in-loop -- one statement per status, at most four */
+  for (const [status, changes] of changesByNewStatus) {
+    const changedCopyIds = changes.map(({ copyId }) => copyId);
+    const updated = await tx
       .update(surveyQuestionnaire)
       .set({ status })
-      .where(eq(surveyQuestionnaire.id, copy.id))
+      .where(inArray(surveyQuestionnaire.id, changedCopyIds))
       .returning({ id: surveyQuestionnaire.id });
-    if (!updated) throw new Error(`Questionnaire ${copy.id} disappeared while locked`);
+    const updatedIds = new Set(updated.map(({ id }) => id));
+    const missingCopyId = changedCopyIds.find((copyId) => !updatedIds.has(copyId));
+    if (missingCopyId) throw new Error(`Questionnaire ${missingCopyId} disappeared while locked`);
   }
   /* oxlint-enable eslint/no-await-in-loop */
 }
