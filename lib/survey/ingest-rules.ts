@@ -242,6 +242,7 @@ export function planAnswers({
   const readOfField = new Map(page.fields.map((read) => [read.field, read]));
   const answers = printedFields.map(({ field, kind }): PlannedAnswer => {
     const rule = rules.get(field);
+    // A version's fields and form are written together at publish and frozen, so a miss is corrupt data, not a bad post.
     if (!rule) {
       throw new Error(`The form has no question for printed field ${field}`);
     }

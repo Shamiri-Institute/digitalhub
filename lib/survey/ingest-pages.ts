@@ -186,6 +186,7 @@ export async function ingestPages(
     ) {
       const { copy, pageNumber } = outcome.page;
       const rules = context.rulesByVersion.get(copy.versionId);
+      // loadIngestContext loads rules for every version it loads fields for, so this can't miss.
       if (!rules) throw new Error(`No form loaded for version ${copy.versionId}`);
       const planned = planAnswers({
         page: parsing.parsed.page,

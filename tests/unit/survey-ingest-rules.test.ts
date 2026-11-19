@@ -610,7 +610,7 @@ describe("a matched page's answers", () => {
     });
   });
 
-  it("accept a blank optional answer, but not a blank required one or a blank on a misaligned page", () => {
+  it("raise no flag of their own for a blank optional answer, but still apply the other rules to it", () => {
     const blankPage = [
       { field: "notes", value: null, status: "blank" as const, confidence: null },
       { field: "sign", value: null, status: "blank" as const, confidence: null },
