@@ -1,5 +1,5 @@
 import type { db, Transaction } from "#/db/client";
-import type { ImplementerRole, TicketEventKind } from "#/db/enums";
+import type { AdminTeam, ImplementerRole, TicketEventKind } from "#/db/enums";
 import {
   TicketCategory as TicketCategoryValues,
   TicketPriorityLevel as TicketPriorityLevelValues,
@@ -37,7 +37,7 @@ export type TicketPriorityLevel = z.infer<typeof TicketPriorityLevelEnum>;
 
 export type EscalationInitiatorRole = Extract<
   ImplementerRole,
-  "FELLOW" | "SUPERVISOR" | "HUB_COORDINATOR" | "CLINICAL_LEAD"
+  "FELLOW" | "SUPERVISOR" | "HUB_COORDINATOR" | "CLINICAL_LEAD" | "ADMIN"
 >;
 
 export const ESCALATION_INITIATOR_ROLES: EscalationInitiatorRole[] = [
@@ -45,6 +45,7 @@ export const ESCALATION_INITIATOR_ROLES: EscalationInitiatorRole[] = [
   "SUPERVISOR",
   "HUB_COORDINATOR",
   "CLINICAL_LEAD",
+  "ADMIN",
 ];
 
 export function isEscalationInitiatorRole(role: ImplementerRole): role is EscalationInitiatorRole {
@@ -65,10 +66,11 @@ export const ESCALATION_RECIPIENT_ROLES: EscalationRecipientRole[] = [
 
 export type ReassignmentInitiatorRole = Extract<
   ImplementerRole,
-  "HUB_COORDINATOR" | "ADMIN" | "CLINICAL_LEAD"
+  "SUPERVISOR" | "HUB_COORDINATOR" | "ADMIN" | "CLINICAL_LEAD"
 >;
 
 export const REASSIGNMENT_INITIATOR_ROLES: ReassignmentInitiatorRole[] = [
+  "SUPERVISOR",
   "HUB_COORDINATOR",
   "ADMIN",
   "CLINICAL_LEAD",
@@ -76,9 +78,17 @@ export const REASSIGNMENT_INITIATOR_ROLES: ReassignmentInitiatorRole[] = [
 
 /** Everyone who may receive a ticket from the initiator, the default recipient first. */
 export type ListEscalationRecipientsHandler = (
-  initiator: { userId: string; implementerId: string },
+  initiator: { userId: string; implementerId: string; recipientTeam: AdminTeam },
   q?: Transaction | typeof db,
 ) => Promise<string[]>;
+
+export const ADMIN_TEAM_FROM_CATEGORY: Record<TicketCategory, AdminTeam> = {
+  TECH: "TECH",
+  RESEARCH: "RESEARCH",
+  OPERATIONS: "OPERATIONS",
+  CARE: "CARE",
+  CLINICAL: "CARE",
+};
 
 export const ESCALATION_RECIPIENT_FROM_CATEGORY: Record<TicketCategory, EscalationRecipientRole> = {
   TECH: "HUB_COORDINATOR",
@@ -97,6 +107,7 @@ export const ESCALATION_RECIPIENT_FROM_INITIATOR: Record<
     category ? ESCALATION_RECIPIENT_FROM_CATEGORY[category] : "HUB_COORDINATOR",
   HUB_COORDINATOR: (): EscalationRecipientRole => "ADMIN",
   CLINICAL_LEAD: (): EscalationRecipientRole => "ADMIN",
+  ADMIN: (): EscalationRecipientRole => "ADMIN",
 };
 
 export interface CreateTicketPayload {
@@ -123,6 +134,8 @@ export interface TicketPerson {
   userId: string;
   name: string | null;
   role: ImplementerRole | null;
+  /** Set for an admin on a team. */
+  team: AdminTeam | null;
 }
 
 export interface FullTicket {
@@ -180,7 +193,10 @@ export interface TicketDetails {
   reopenableUntil: Date | null;
 }
 
-export type UserRoleNameMap = Map<string, { role: ImplementerRole; name: string | null } | null>;
+export type UserRoleNameMap = Map<
+  string,
+  { role: ImplementerRole; name: string | null; team: AdminTeam | null } | null
+>;
 
 export const ROLE_NAME_CONFIG: { role: ImplementerRole; table: string; column: string }[] = [
   { role: "FELLOW", table: "fellows", column: "fellow_name" },

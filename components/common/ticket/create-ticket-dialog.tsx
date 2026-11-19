@@ -37,7 +37,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { createTicket } from "#/lib/actions/ticket";
 import { CreateTicketSchema, type TicketAssignees } from "#/lib/actions/ticket/types";
-import { personName, roleLabel } from "./format";
+import { RecipientOptions } from "./recipient-options";
 import { zodResolver } from "#/lib/zod-resolver";
 
 export default function CreateTicketDialog({
@@ -225,12 +225,7 @@ function CreateTicketForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {categoryAssignees.map((person) => (
-                        <SelectItem key={person.userId} value={person.userId}>
-                          {personName(person)}
-                          {person.role && ` · ${roleLabel(person.role)}`}
-                        </SelectItem>
-                      ))}
+                      <RecipientOptions people={categoryAssignees} />
                     </SelectContent>
                   </Select>
                 )}

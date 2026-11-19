@@ -54,6 +54,7 @@ import { cn, stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { ActionResponse } from "#/types/actions.types";
 import { sentenceLabel, hasHolderActions, personName, roleLabel } from "./format";
+import { RecipientOptions } from "./recipient-options";
 
 const ReasonFormSchema = z.object({
   reason: stringValidation("A reason is required"),
@@ -468,12 +469,7 @@ function ReasonForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent position="popper">
-                      {recipients.map((person) => (
-                        <SelectItem key={person.userId} value={person.userId}>
-                          {personName(person)}
-                          {person.role && ` · ${roleLabel(person.role)}`}
-                        </SelectItem>
-                      ))}
+                      <RecipientOptions people={recipients} />
                     </SelectContent>
                   </Select>
                 )}

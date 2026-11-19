@@ -1,9 +1,11 @@
 import type { BrowserContext, Page } from "@playwright/test";
-import { eq, inArray, like, sql } from "drizzle-orm";
+import { and, eq, inArray, like, type SQL, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { adminUser, hubCoordinator, ticketEvents, tickets } from "#/db/schema";
-import { expect, test } from "#/tests/fixtures";
+import { type AdminTeam, TEAM_LABELS } from "#/db/enums";
+import { techAdminEmail } from "#/db/seed/fixtures";
+import { adminUser, hubCoordinator, supervisor, ticketEvents, tickets } from "#/db/schema";
+import { expect, test, type Undo } from "#/tests/fixtures";
 import {
   createAdminCopy,
   required,
@@ -18,9 +20,16 @@ import { activity, fillAction, openTicket, submitAction, takeAction } from "#/te
 test.describe.configure({ mode: "serial" });
 
 type Hub = {
+  implementerId: string;
   supervisorEmail: string;
+  supervisorUserId: string;
+  supervisorName: string;
   bystanderEmail: string;
+  bystanderUserId: string;
+  bystanderSupervisorId: string;
+  bystanderName: string;
   coordinatorEmail: string;
+  coordinatorUserId: string;
   coordinatorName: string;
   coordinatorId: string;
   otherCoordinatorId: string;
@@ -38,15 +47,18 @@ test.beforeAll(async () => {
   const {
     rows: [row],
   } = await db.execute<Hub>(sql`
-    select su.email as "supervisorEmail", bu.email as "bystanderEmail",
-      hu.email as "coordinatorEmail", hc.coordinator_name as "coordinatorName", hc.id as "coordinatorId", hc2.id as "otherCoordinatorId",
+    select sm.implementer_id as "implementerId", su.email as "supervisorEmail",
+      su.id as "supervisorUserId", sv.supervisor_name as "supervisorName", bu.email as "bystanderEmail", bu.id as "bystanderUserId", bv.id as "bystanderSupervisorId",
+      bv.supervisor_name as "bystanderName",
+      hu.email as "coordinatorEmail", hu.id as "coordinatorUserId", hc.coordinator_name as "coordinatorName", hc.id as "coordinatorId", hc2.id as "otherCoordinatorId",
       hc2.coordinator_name as "otherCoordinatorName", h2u.email as "otherCoordinatorEmail",
       lu.email as "leadEmail", am.user_id as "adminUserId"
     from supervisors sv
     join implementer_members sm on sm.identifier = sv.id and sm.role = 'SUPERVISOR'
       and ${signableMember("sm")}
     join users su on su.id = sm.user_id
-    join supervisors bv on bv.hub_id = sv.hub_id and bv.id <> sv.id
+    join supervisors bv on bv.hub_id = sv.hub_id and bv.id <> sv.id and bv.archived_at is null
+      and bv.dropped_out is not true and bv.supervisor_name is not null
     join implementer_members bm on bm.identifier = bv.id and bm.role = 'SUPERVISOR'
       and ${signableMember("bm")}
     join users bu on bu.id = bm.user_id
@@ -66,7 +78,8 @@ test.beforeAll(async () => {
     join users lu on lu.id = lm.user_id
     join implementer_members am on am.role = 'ADMIN' and am.implementer_id = sm.implementer_id
       and ${signableMember("am")}
-    where (select count(*) from clinical_leads o where o.assigned_hub_id = sv.hub_id) = 1
+    where sv.supervisor_name is not null
+      and (select count(*) from clinical_leads o where o.assigned_hub_id = sv.hub_id) = 1
       and (select count(*) from hub_coordinators o where o.assigned_hub_id = sv.hub_id) = 2
     order by sv.id, bv.id, hc.id
     limit 1`);
@@ -222,8 +235,9 @@ test("a hub coordinator reassigns to an active coordinator of the hub, who may p
   await expect(activity(page)).toContainText("On leave.");
 
   // The new holder escalates to an admin, so the admin may reassign this new escalation.
+  const oldest = await oldestAdminName(hub.implementerId, eq(adminUser.team, "OPERATIONS"));
   await takeAction(page, "Escalate", "Needs an admin.");
-  await expect(await heldBy(page, "/hc/tickets", subject)).toContainText("Admin");
+  await expect(await heldBy(page, "/hc/tickets", subject)).toContainText(oldest);
 
   // Each escalation keeps its reason and the roles it went between, for every participant.
   await signIn(context, hub.supervisorEmail);
@@ -371,63 +385,311 @@ test("the creator can reopen a ticket to a different coordinator", async ({ page
   await expect(step.getByRole("button", { name: "Start", exact: true })).toBeVisible();
 });
 
-test("an admin reassigns a ticket to another admin", async ({ page, context, undo }) => {
-  const subject = `${subjectPrefix} admin reassign`;
-  const [holder, other] = await Promise.all([
-    createAdminCopy(hub.adminUserId),
-    createAdminCopy(hub.adminUserId),
-  ]);
-  undo(holder.remove);
-  undo(other.remove);
-  // Runs before the removals above, since the ticket's events point at both admins.
+// The admin the routing picks by default: the oldest one matching `who` in the implementer.
+async function oldestAdminName(implementerId: string, who: SQL) {
+  const [admin] = await db
+    .select({ name: adminUser.adminName })
+    .from(adminUser)
+    .where(and(eq(adminUser.implementerId, implementerId), who))
+    .orderBy(adminUser.createdAt, adminUser.id)
+    .limit(1);
+  required(admin?.name, "a named admin");
+  return admin.name;
+}
+
+/** A ticket held by the hub's supervisor, as if one of their fellows had raised it. */
+async function ticketHeldBySupervisor(subject: string) {
+  const {
+    rows: [fellow],
+  } = await db.execute<{ userId: string }>(sql`
+    select fm.user_id as "userId"
+    from implementer_members sm
+    join fellows f on f.supervisor_id = sm.identifier
+    join implementer_members fm on fm.identifier = f.id and fm.role = 'FELLOW'
+    where sm.user_id = ${hub.supervisorUserId} and sm.role = 'SUPERVISOR'
+    limit 1`);
+  required(fellow, "a fellow of the hub's supervisor");
+  const [ticket] = await db
+    .insert(tickets)
+    .values({
+      createdById: fellow.userId,
+      subject,
+      description: "Raised by the ticket routing spec.",
+      category: "TECH",
+      holderId: hub.supervisorUserId,
+      status: "ESCALATED",
+    })
+    .returning({ id: tickets.id });
+  required(ticket, "the supervisor's ticket");
+  await db.insert(ticketEvents).values({
+    ticketId: ticket.id,
+    kind: "CREATED",
+    actorId: fellow.userId,
+    assigneeId: hub.supervisorUserId,
+    reason: "Raised by the ticket routing spec.",
+  });
+}
+
+test("a supervisor reassigns to another supervisor of the hub, as often as needed", async ({
+  page,
+  context,
+}) => {
+  const subject = `${subjectPrefix} supervisor reassign`;
+  await ticketHeldBySupervisor(subject);
+
+  await signIn(context, hub.supervisorEmail);
+  const reassign = await act(page, "/sc/tickets", subject, "Reassign", "Off sick.");
+  await expect(reassign).toContainText("Reassign to another supervisor");
+  await reassign.getByRole("combobox").click();
+  await page.getByRole("option", { name: hub.bystanderName }).click();
+  await submitAction(page, "Reassign");
+
+  await signIn(context, hub.bystanderEmail);
+  const back = await act(page, "/sc/tickets", subject, "Reassign", "Back from leave.");
+  await back.getByRole("combobox").click();
+  await page.getByRole("option", { name: hub.supervisorName }).click();
+  await submitAction(page, "Reassign");
+
+  // Every handover stays in the history.
+  await signIn(context, hub.supervisorEmail);
+  await expect(await heldBy(page, "/sc/tickets", subject)).toHaveText("You");
+  await openTicket(page, "/sc/tickets", subject);
+  await expect(activity(page)).toContainText("Off sick.");
+  await expect(activity(page)).toContainText("Back from leave.");
+});
+
+test("the server refuses a reassignment to someone who left the tier after the form opened", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const subject = `${subjectPrefix} stale reassign`;
+  await ticketHeldBySupervisor(subject);
+
+  await signIn(context, hub.supervisorEmail);
+  const reassign = await act(page, "/sc/tickets", subject, "Reassign", "Off sick.");
+  await reassign.getByRole("combobox").click();
+  await page.getByRole("option", { name: hub.bystanderName }).click();
+
+  const [bystander] = await db
+    .select({ droppedOut: supervisor.droppedOut })
+    .from(supervisor)
+    .where(eq(supervisor.id, hub.bystanderSupervisorId));
+  required(bystander, "the hub's other supervisor");
+  await db
+    .update(supervisor)
+    .set({ droppedOut: true })
+    .where(eq(supervisor.id, hub.bystanderSupervisorId));
+  undo(() =>
+    db.update(supervisor).set(bystander).where(eq(supervisor.id, hub.bystanderSupervisorId)),
+  );
+  await reassign.getByRole("button", { name: "Reassign", exact: true }).click();
+
+  await expect(
+    page.getByText("Choose an active colleague in your hub to take it over").first(),
+  ).toBeVisible();
+  await expect(await heldBy(page, "/sc/tickets", subject)).toHaveText("You");
+});
+
+test("a hub coordinator's ticket goes to the oldest admin on its category's team", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const subject = `${subjectPrefix} team`;
+  const oldest = await oldestAdminName(hub.implementerId, eq(adminUser.team, "OPERATIONS"));
+  const newer = await createAdminCopy(hub.adminUserId);
+  undo(newer.remove);
+  await db.update(adminUser).set({ team: "OPERATIONS" }).where(eq(adminUser.email, newer.email));
+
+  await signIn(context, hub.coordinatorEmail);
+  await createTicket(page, "/hc/tickets", subject, "OPERATIONS");
+  await expect(await heldBy(page, "/hc/tickets", subject)).toContainText(oldest);
+});
+
+test("an admin's ticket for a team with no one else on it goes to the oldest super admin", async ({
+  page,
+  context,
+}) => {
+  const subject = `${subjectPrefix} no team`;
+  // The seed's Tech admin is the team's only member, and never receives their own ticket. No other
+  // spec puts anyone on Tech, so a parallel worker cannot fill the team mid-test.
+  const [techAdmin] = await db
+    .select({ implementerId: adminUser.implementerId })
+    .from(adminUser)
+    .where(eq(adminUser.email, techAdminEmail));
+  required(techAdmin, "the seeded Tech admin");
+  const oldest = await oldestAdminName(techAdmin.implementerId, eq(adminUser.isSuperAdmin, true));
+
+  await signIn(context, techAdminEmail);
+  await createTicket(page, "/admin/tickets", subject, "TECH");
+  await expect(await heldBy(page, "/admin/tickets", subject)).toContainText(oldest);
+});
+
+test("an admin raises a ticket for its category's team", async ({ page, context, undo }) => {
+  const subject = `${subjectPrefix} admin raised`;
+  const oldest = await oldestAdminName(hub.implementerId, eq(adminUser.team, "CARE"));
+  const creator = await createAdminCopy(hub.adminUserId);
+  undo(creator.remove);
+  // Runs before the removal above, since the ticket's events point at the creator.
   undo(async () => {
     const created = db.select({ id: tickets.id }).from(tickets).where(eq(tickets.subject, subject));
     await db.delete(ticketEvents).where(inArray(ticketEvents.ticketId, created));
     await db.delete(tickets).where(eq(tickets.subject, subject));
   });
-  const holderName = `E2E Holder ${uniqueSuffix()}`;
-  const otherName = `E2E Other ${uniqueSuffix()}`;
-  // Only super admins receive tickets, so the holder must be one to be offered on a new ticket.
-  await db
-    .update(adminUser)
-    .set({ adminName: holderName, isSuperAdmin: true })
-    .where(eq(adminUser.email, holder.email));
-  await db.update(adminUser).set({ adminName: otherName }).where(eq(adminUser.email, other.email));
 
-  await signIn(context, hub.coordinatorEmail);
-  await createTicket(page, "/hc/tickets", subject, "TECH", holderName);
-
-  await signIn(context, holder.email);
-  const reassign = await act(page, "/admin/tickets", subject, "Reassign", "Out this week.");
-  await expect(reassign).toContainText("Reassign to another admin");
-  await reassign.getByRole("combobox").click();
-  await page.getByRole("option", { name: new RegExp(otherName) }).click();
-  await submitAction(page, "Reassign");
-
-  await signIn(context, other.email);
-  await expect(await heldBy(page, "/admin/tickets", subject)).toHaveText("You");
+  await signIn(context, creator.email);
+  await createTicket(page, "/admin/tickets", subject, "CARE");
+  await expect(await heldBy(page, "/admin/tickets", subject)).toContainText(oldest);
 });
 
-test("a hub coordinator's ticket goes to the implementer's first super admin, not a newer one", async ({
+/** A named admin on each of `teams`, removed after the test along with the ticket called `subject`. */
+async function teamAdmins(undo: Undo, subject: string, teams: AdminTeam[]) {
+  const admins = await Promise.all(
+    teams.map(async (team) => {
+      const admin = await createAdminCopy(hub.adminUserId);
+      undo(admin.remove);
+      const name = `E2E ${TEAM_LABELS[team]} ${uniqueSuffix()}`;
+      await db
+        .update(adminUser)
+        .set({ adminName: name, team })
+        .where(eq(adminUser.email, admin.email));
+      return { ...admin, name };
+    }),
+  );
+  // Runs before the removals above, since the ticket's events point at the admins.
+  undo(async () => {
+    const created = db.select({ id: tickets.id }).from(tickets).where(eq(tickets.subject, subject));
+    await db.delete(ticketEvents).where(inArray(ticketEvents.ticketId, created));
+    await db.delete(tickets).where(eq(tickets.subject, subject));
+  });
+  return admins;
+}
+
+test("an admin reassigns across teams and escalates to Tech, the top tier", async ({
   page,
   context,
   undo,
 }) => {
-  const subject = `${subjectPrefix} admin`;
-  const newerSuperAdmin = await createAdminCopy(hub.adminUserId);
-  undo(newerSuperAdmin.remove);
-  await db
-    .update(adminUser)
-    .set({ isSuperAdmin: true })
-    .where(eq(adminUser.email, newerSuperAdmin.email));
+  const subject = `${subjectPrefix} admin reassign`;
+  const [holder, other, tech] = await teamAdmins(undo, subject, ["CARE", "RESEARCH", "TECH"]);
+  required(holder, "the Care admin");
+  required(other, "the Research admin");
+  required(tech, "the Tech admin");
 
   await signIn(context, hub.coordinatorEmail);
-  await createTicket(page, "/hc/tickets", subject, "TECH");
-  await expect(await heldBy(page, "/hc/tickets", subject)).toContainText("Admin");
+  await createTicket(page, "/hc/tickets", subject, "CARE", holder.name);
 
-  await signIn(context, newerSuperAdmin.email);
-  await page.goto(getUrl("/admin/tickets"));
-  await expect(await searchRows(page, subject)).toHaveCount(0);
-  // Admins receive tickets but do not raise them.
-  await expect(page.getByRole("button", { name: "New ticket" })).toHaveCount(0);
+  // Every admin is one tier, so the holder can hand the ticket to another team, listed under it.
+  await signIn(context, holder.email);
+  const reassign = await act(page, "/admin/tickets", subject, "Reassign", "Out this week.");
+  await expect(reassign).toContainText("Reassign to another admin");
+  await reassign.getByRole("combobox").click();
+  await expect(page.getByRole("group", { name: "Research team" })).toContainText(other.name);
+  await page.getByRole("option", { name: other.name }).click();
+  await submitAction(page, "Reassign");
+
+  await signIn(context, other.email);
+  const escalate = await act(page, "/admin/tickets", subject, "Escalate", "Needs an engineer.");
+  await escalate.getByRole("combobox").click();
+  await expect(page.getByRole("group", { name: "Tech team" })).toBeVisible();
+  await page.getByRole("option", { name: tech.name }).click();
+  await submitAction(page, "Escalate");
+
+  // Tech is the top of the ladder, so its holder can reassign but not escalate.
+  await signIn(context, tech.email);
+  const step = await openTicket(page, "/admin/tickets", subject);
+  await expect(step.getByRole("button", { name: "Reassign", exact: true })).toBeVisible();
+  await expect(step.getByRole("button", { name: "Escalate", exact: true })).toHaveCount(0);
+});
+
+for (const [change, error] of [
+  ["the holder joined Tech", "The Tech team is the top tier, so reassign the ticket instead"],
+  ["the recipient left Tech", "Choose someone who can take this ticket"],
+] as const) {
+  test(`the server refuses an admin's escalation when ${change} after the form opened`, async ({
+    page,
+    context,
+    undo,
+  }) => {
+    const subject = `${subjectPrefix} stale escalation ${change}`;
+    const [holder, tech] = await teamAdmins(undo, subject, ["CARE", "TECH"]);
+    required(holder, "the Care admin");
+    required(tech, "the Tech admin");
+    await signIn(context, hub.coordinatorEmail);
+    await createTicket(page, "/hc/tickets", subject, "CARE", holder.name);
+
+    await signIn(context, holder.email);
+    const escalate = await act(page, "/admin/tickets", subject, "Escalate", "Needs an engineer.");
+    await escalate.getByRole("combobox").click();
+    await page.getByRole("option", { name: tech.name }).click();
+
+    const [moved, team] =
+      change === "the holder joined Tech" ? [holder, "TECH"] : [tech, "RESEARCH"];
+    await db
+      .update(adminUser)
+      .set({ team: team as AdminTeam })
+      .where(eq(adminUser.email, moved.email));
+    await escalate.getByRole("button", { name: "Escalate", exact: true }).click();
+
+    await expect(page.getByText(error).first()).toBeVisible();
+    await expect(await heldBy(page, "/admin/tickets", subject)).toHaveText("You");
+  });
+}
+
+test("the server refuses a reassignment to another tier", async ({ page, context }) => {
+  const subject = `${subjectPrefix} cross-tier reassign`;
+  await ticketHeldBySupervisor(subject);
+
+  await signIn(context, hub.supervisorEmail);
+  const reassign = await act(page, "/sc/tickets", subject, "Reassign", "Off sick.");
+  await reassign.getByRole("combobox").click();
+  await page.getByRole("option", { name: hub.bystanderName }).click();
+  // The picker offers only supervisors, so swap the pick for the hub coordinator on the way out.
+  await page.route(page.url(), async (route) => {
+    const body = route.request().postData();
+    if (route.request().method() !== "POST" || !body?.includes(hub.bystanderUserId)) {
+      return route.fallback();
+    }
+    await route.continue({ postData: body.replaceAll(hub.bystanderUserId, hub.coordinatorUserId) });
+  });
+  await reassign.getByRole("button", { name: "Reassign", exact: true }).click();
+
+  await expect(
+    page.getByText("Choose an active colleague in your hub to take it over").first(),
+  ).toBeVisible();
+  await page.unrouteAll();
+  await expect(await heldBy(page, "/sc/tickets", subject)).toHaveText("You");
+});
+
+test("a hub coordinator escalates to the oldest super admin when the category's team is empty", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const subject = `${subjectPrefix} empty team`;
+  // No other spec relies on the Tech team, so it can be emptied for this test.
+  const onTech = and(eq(adminUser.implementerId, hub.implementerId), eq(adminUser.team, "TECH"));
+  const techAdmins = await db.select({ id: adminUser.id }).from(adminUser).where(onTech);
+  await db.update(adminUser).set({ team: null }).where(onTech);
+  undo(() =>
+    db
+      .update(adminUser)
+      .set({ team: "TECH" })
+      .where(
+        inArray(
+          adminUser.id,
+          techAdmins.map((admin) => admin.id),
+        ),
+      ),
+  );
+  const oldest = await oldestAdminName(hub.implementerId, eq(adminUser.isSuperAdmin, true));
+
+  await signIn(context, hub.supervisorEmail);
+  await createTicket(page, "/sc/tickets", subject, "TECH", hub.coordinatorName);
+
+  await signIn(context, hub.coordinatorEmail);
+  await act(page, "/hc/tickets", subject, "Escalate", "Needs an engineer.");
+  await submitAction(page, "Escalate");
+  await expect(await heldBy(page, "/hc/tickets", subject)).toContainText(oldest);
 });

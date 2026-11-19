@@ -7,6 +7,7 @@ export const careAdminEmail = "care.admin@shamiri.institute";
 export const plainAdminEmail = "plain.admin@shamiri.institute";
 export const researchAdminEmail = "research.admin@shamiri.institute";
 export const operationsAdminEmail = "operations.admin@shamiri.institute";
+export const techAdminEmail = "tech.admin@shamiri.institute";
 
 const arsenalStaffDetails = {
   county: "Nairobi",
