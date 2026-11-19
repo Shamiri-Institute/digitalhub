@@ -1,3 +1,4 @@
+import type { db, Transaction } from "#/db/client";
 import type { ImplementerRole, TicketEventKind } from "#/db/enums";
 import {
   TicketCategory as TicketCategoryValues,
@@ -74,10 +75,10 @@ export const REASSIGNMENT_INITIATOR_ROLES: ReassignmentInitiatorRole[] = [
 ];
 
 /** Everyone who may receive a ticket from the initiator, the default recipient first. */
-export type ListEscalationRecipientsHandler = (initiator: {
-  userId: string;
-  implementerId: string;
-}) => Promise<string[]>;
+export type ListEscalationRecipientsHandler = (
+  initiator: { userId: string; implementerId: string },
+  q?: Transaction | typeof db,
+) => Promise<string[]>;
 
 export const ESCALATION_RECIPIENT_FROM_CATEGORY: Record<TicketCategory, EscalationRecipientRole> = {
   TECH: "HUB_COORDINATOR",

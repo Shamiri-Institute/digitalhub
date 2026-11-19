@@ -1,12 +1,19 @@
 "use server";
 
-import { and, asc, desc, eq, exists, inArray, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, exists, inArray, isNotNull, isNull, ne, or, sql } from "drizzle-orm";
 import { refresh } from "next/cache";
 
 import { db, type Transaction } from "#/db/client";
 import { ImplementerRole, TicketCategory, type TicketStatus } from "#/db/enums";
-import { adminUser, implementerMember, ticketEvents, tickets } from "#/db/schema";
-import { requireAuthRole } from "#/lib/auth/require-auth-role";
+import {
+  adminUser,
+  clinicalLead,
+  hubCoordinator,
+  implementerMember,
+  ticketEvents,
+  tickets,
+} from "#/db/schema";
+import { NotFoundError, requireAuthRole } from "#/lib/auth/require-auth-role";
 import { mayReopenTicket, REOPEN_WINDOW_DAYS, REOPEN_WINDOW_MS } from "#/lib/ticket-reopen-window";
 import type { ActionResponse } from "#/types/actions.types";
 import {
@@ -385,6 +392,7 @@ export async function reopenTicket(
           ESCALATION_RECIPIENT_FROM_INITIATOR[role](lockedTicket.category),
           { userId: callerUserId, implementerId: activeImplementerId },
           recipientId,
+          tx,
         );
       }
       const newHolderId = returnsToHolder ? undefined : recipientId;
@@ -517,25 +525,59 @@ async function listReassignmentRecipients(
   q: Transaction | typeof db,
   { userId, role, implementerId, identifier }: ReassignmentActor,
 ) {
-  const { rows } = await q.execute<{ user_id: string }>(sql`
-    SELECT m.user_id
-    FROM implementer_members m
-    LEFT JOIN hub_coordinators hc ON m.role = 'HUB_COORDINATOR' AND hc.id = m.identifier
-    LEFT JOIN clinical_leads cl ON m.role = 'CLINICAL_LEAD' AND cl.id = m.identifier
-    WHERE m.role = ${role}::implementer_roles
-      AND m.implementer_id = ${implementerId}
-      AND m.user_id <> ${userId}
-      AND m.identifier IS NOT NULL
-      AND (
-        m.role = 'ADMIN'
-        OR (hc.archived_at IS NULL AND hc.dropped_out IS NOT TRUE AND hc.assigned_hub_id IN (
-          SELECT assigned_hub_id FROM hub_coordinators WHERE id = ${identifier}))
-        OR (cl.dropped_out IS NOT TRUE AND cl.assigned_hub_id IN (
-          SELECT assigned_hub_id FROM clinical_leads WHERE id = ${identifier}))
+  const colleagues = and(
+    eq(implementerMember.role, role),
+    eq(implementerMember.implementerId, implementerId),
+    ne(implementerMember.userId, userId),
+    isNotNull(implementerMember.identifier),
+  );
+  const byAge = [asc(implementerMember.createdAt), asc(implementerMember.id)];
+  const userIdOf = { userId: implementerMember.userId };
+
+  let rows: { userId: string }[] = [];
+  if (role === "ADMIN") {
+    rows = await q
+      .select(userIdOf)
+      .from(implementerMember)
+      .where(colleagues)
+      .orderBy(...byAge);
+  } else if (role === "HUB_COORDINATOR" && identifier) {
+    const actorHubs = q
+      .select({ hubId: hubCoordinator.assignedHubId })
+      .from(hubCoordinator)
+      .where(eq(hubCoordinator.id, identifier));
+    rows = await q
+      .select(userIdOf)
+      .from(implementerMember)
+      .innerJoin(hubCoordinator, eq(hubCoordinator.id, implementerMember.identifier))
+      .where(
+        and(
+          colleagues,
+          isNull(hubCoordinator.archivedAt),
+          or(eq(hubCoordinator.droppedOut, false), isNull(hubCoordinator.droppedOut)),
+          inArray(hubCoordinator.assignedHubId, actorHubs),
+        ),
       )
-    ORDER BY m.created_at, m.id
-  `);
-  return rows.map((row) => row.user_id);
+      .orderBy(...byAge);
+  } else if (role === "CLINICAL_LEAD" && identifier) {
+    const actorHubs = q
+      .select({ hubId: clinicalLead.assignedHubId })
+      .from(clinicalLead)
+      .where(eq(clinicalLead.id, identifier));
+    rows = await q
+      .select(userIdOf)
+      .from(implementerMember)
+      .innerJoin(clinicalLead, eq(clinicalLead.id, implementerMember.identifier))
+      .where(
+        and(
+          colleagues,
+          or(eq(clinicalLead.droppedOut, false), isNull(clinicalLead.droppedOut)),
+          inArray(clinicalLead.assignedHubId, actorHubs),
+        ),
+      )
+      .orderBy(...byAge);
+  }
+  return rows.map((row) => row.userId);
 }
 
 async function assertReassignmentEligible(
@@ -564,7 +606,7 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
     const [ticketRow] = await selectTickets()
       .where(and(eq(tickets.id, ticketId), canViewTicket(callerUserId)))
       .limit(1);
-    if (!ticketRow) throw new Error("Ticket not found");
+    if (!ticketRow) throw new NotFoundError("Ticket");
     const callerHoldsTicket =
       isActiveTicketStatus(ticketRow.status) && ticketRow.holderId === callerUserId;
     // Each action's own role guard, so the page never offers one that would be refused.
@@ -677,7 +719,9 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
       },
     };
   } catch (error) {
-    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+    // Only a missing ticket becomes a not-found page; anything else reaches the error boundary.
+    if (!(error instanceof NotFoundError)) throw error;
+    return { success: false, message: error.message };
   }
 }
 
@@ -738,8 +782,8 @@ async function fetchTicketsForUser(
 }
 
 const listEscalationRecipients: Record<EscalationRecipientRole, ListEscalationRecipientsHandler> = {
-  SUPERVISOR: async ({ userId, implementerId }) => {
-    const { rows: result } = await db.execute<{ supervisor_user_id: string }>(sql`
+  SUPERVISOR: async ({ userId, implementerId }, q = db) => {
+    const { rows: result } = await q.execute<{ supervisor_user_id: string }>(sql`
       SELECT im2.user_id AS supervisor_user_id
       FROM implementer_members im1
       JOIN fellows f ON f.id = im1.identifier
@@ -756,8 +800,8 @@ const listEscalationRecipients: Record<EscalationRecipientRole, ListEscalationRe
     `);
     return result.map((row) => row.supervisor_user_id);
   },
-  HUB_COORDINATOR: async ({ userId, implementerId }) => {
-    const { rows: result } = await db.execute<{ hub_coordinator_user_id: string }>(sql`
+  HUB_COORDINATOR: async ({ userId, implementerId }, q = db) => {
+    const { rows: result } = await q.execute<{ hub_coordinator_user_id: string }>(sql`
       SELECT hc_member.user_id as hub_coordinator_user_id
       FROM implementer_members sup_member
       JOIN supervisors s ON s.id = sup_member.identifier
@@ -775,8 +819,8 @@ const listEscalationRecipients: Record<EscalationRecipientRole, ListEscalationRe
     `);
     return result.map((row) => row.hub_coordinator_user_id);
   },
-  CLINICAL_LEAD: async ({ userId, implementerId }) => {
-    const { rows: result } = await db.execute<{ clinical_lead_user_id: string }>(sql`
+  CLINICAL_LEAD: async ({ userId, implementerId }, q = db) => {
+    const { rows: result } = await q.execute<{ clinical_lead_user_id: string }>(sql`
       SELECT cl_member.user_id as clinical_lead_user_id
       FROM implementer_members sup_member
       JOIN supervisors s ON s.id = sup_member.identifier
@@ -793,10 +837,10 @@ const listEscalationRecipients: Record<EscalationRecipientRole, ListEscalationRe
     `);
     return result.map((row) => row.clinical_lead_user_id);
   },
-  ADMIN: async ({ implementerId }) => {
+  ADMIN: async ({ implementerId }, q = db) => {
     // Oldest first, so adding admins, or an admin of another implementer, never changes who
     // receives a ticket by default.
-    const recipients = await db
+    const recipients = await q
       .select({ userId: implementerMember.userId })
       .from(adminUser)
       .innerJoin(
@@ -818,8 +862,9 @@ async function assertRecipient(
   role: EscalationRecipientRole,
   initiator: Parameters<ListEscalationRecipientsHandler>[0],
   recipientId: string,
+  q: Transaction | typeof db = db,
 ) {
-  const recipients = await listEscalationRecipients[role](initiator);
+  const recipients = await listEscalationRecipients[role](initiator, q);
   if (!recipients.includes(recipientId)) throw new Error("Choose someone who can take this ticket");
 }
 

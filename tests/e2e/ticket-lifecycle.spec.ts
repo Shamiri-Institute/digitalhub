@@ -160,7 +160,7 @@ test("the creator cancels an open ticket with a reason", async ({ page, context,
 
   await signInWithEmail(context, fellowAndSupervisor.supervisorEmail);
   await expectNoActions(page, "/sc/tickets", ticketSubject, [
-    "Start ticket",
+    "Start",
     "Change priority",
     "Resolve",
     "Escalate",
