@@ -52,15 +52,24 @@ type SurveyEvent = {
  * history and the data commit or roll back together.
  */
 export async function recordSurveyEvent(tx: Transaction, event: SurveyEvent) {
-  await tx.insert(surveyAuditEvent).values({
-    actorKind: event.actor.kind,
-    actorUserId: event.actor.kind === SurveyAuditActor.USER ? event.actor.userId : null,
-    surveyId: event.surveyId ?? null,
-    entityType: event.entityType,
-    entityId: event.entityId,
-    action: event.action,
-    before: event.before ?? null,
-    after: event.after ?? null,
-    reason: event.reason ?? null,
-  });
+  await recordSurveyEvents(tx, [event]);
+}
+
+export async function recordSurveyEvents(tx: Transaction, events: readonly SurveyEvent[]) {
+  if (events.length === 0) {
+    return;
+  }
+  await tx.insert(surveyAuditEvent).values(
+    events.map((event) => ({
+      actorKind: event.actor.kind,
+      actorUserId: event.actor.kind === SurveyAuditActor.USER ? event.actor.userId : null,
+      surveyId: event.surveyId ?? null,
+      entityType: event.entityType,
+      entityId: event.entityId,
+      action: event.action,
+      before: event.before ?? null,
+      after: event.after ?? null,
+      reason: event.reason ?? null,
+    })),
+  );
 }

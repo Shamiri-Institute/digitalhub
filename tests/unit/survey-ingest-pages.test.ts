@@ -421,7 +421,7 @@ describe("ingesting pages", () => {
     });
   });
 
-  it("rejects a page of a void copy, or another hub's, before calling it a duplicate", async () => {
+  it("rejects a page of a void copy, or another hub's (void or not), before calling it a duplicate", async () => {
     const copy = await issueCopy();
     const firstUploadId = await createUpload();
     await ingest(firstUploadId, [readPost(copy.pages[0], 0)]);
@@ -448,6 +448,11 @@ describe("ingesting pages", () => {
     expect((await scansOf(laterUploadId))[0]).toMatchObject({
       rejectedReason: "VOID_COPY",
       questionnairePageId: copy.pages[0].id,
+    });
+    const laterOtherHubUploadId = await createUpload(otherHubId);
+    await ingest(laterOtherHubUploadId, [readPost(copy.pages[0], 0)]);
+    expect((await scansOf(laterOtherHubUploadId))[0]).toMatchObject({
+      rejectedReason: "OTHER_HUB",
     });
     expect(await copyStatus(copy.questionnaireId)).toBe("VOID");
   });
@@ -481,7 +486,7 @@ describe("ingesting pages", () => {
     expect(await answersOf(copy.questionnaireId)).toEqual(answersBefore);
   });
 
-  it("resolves a page posted twice in one post like two posts", async () => {
+  it("matches a printed page once in one post, and refuses a page index posted twice otherwise", async () => {
     const copy = await issueCopy();
     const uploadId = await createUpload();
     expect(
@@ -503,12 +508,55 @@ describe("ingesting pages", () => {
         { pageIndex: 3, result: "stored", status: "MATCHED" },
         {
           pageIndex: 3,
-          result: "conflict",
-          reason: "this page was already posted with other content",
+          result: "invalid",
+          reason: "page 3 is posted twice in this post, with other content",
         },
       ],
     });
     expect(await copyStatus(copy.questionnaireId)).toBe("READY");
+  });
+
+  it("stores a duplicate beside the page it duplicates, whichever of them is a replacement", async () => {
+    const firstCopy = await issueCopy();
+    const secondCopy = await issueCopy();
+    const uploadId = await createUpload();
+    await ingest(uploadId, [
+      readPost(firstCopy.pages[0], 0, { qrs: [] }),
+      readPost(secondCopy.pages[0], 2, { qrs: [] }),
+    ]);
+    const [firstUnplaced, secondUnplaced] = await scansOf(uploadId);
+
+    expect(
+      await ingest(uploadId, [
+        readPost(firstCopy.pages[0], 1),
+        readPost(firstCopy.pages[0], 0),
+        readPost(secondCopy.pages[0], 2),
+        readPost(secondCopy.pages[0], 3),
+      ]),
+    ).toEqual({
+      kind: "ingested",
+      pages: [
+        { pageIndex: 1, result: "stored", status: "MATCHED" },
+        { pageIndex: 0, result: "stored", status: "DUPLICATE" },
+        { pageIndex: 2, result: "stored", status: "MATCHED" },
+        { pageIndex: 3, result: "stored", status: "DUPLICATE" },
+      ],
+    });
+    const scans = await scansOf(uploadId);
+    const idOf = (pageIndex: number) => scans.find((scan) => scan.pageIndex === pageIndex)?.id;
+    expect(
+      scans.map(({ id, pageIndex, status, duplicateOfId }) => ({
+        id,
+        pageIndex,
+        status,
+        duplicateOfId,
+      })),
+    ).toEqual([
+      { id: firstUnplaced?.id, pageIndex: 0, status: "DUPLICATE", duplicateOfId: idOf(1) },
+      { id: idOf(1), pageIndex: 1, status: "MATCHED", duplicateOfId: null },
+      { id: secondUnplaced?.id, pageIndex: 2, status: "MATCHED", duplicateOfId: null },
+      { id: idOf(3), pageIndex: 3, status: "DUPLICATE", duplicateOfId: secondUnplaced?.id },
+    ]);
   });
 
   it("refuses a page the upload doesn't have, an upload that doesn't exist, and an old attempt", async () => {
@@ -555,6 +603,24 @@ describe("ingesting pages", () => {
         { pageIndex: 1, result: "unchanged", status: "REJECTED" },
       ],
     });
+  });
+
+  it("once the upload is processed, answers an earlier attempt's unplaced page read the same as unchanged", async () => {
+    const copy = await issueCopy();
+    const uploadId = await createUpload();
+    const unplacedPost = readPost(copy.pages[0], 0, { qrs: [] });
+    await ingest(uploadId, [unplacedPost]);
+    await db
+      .update(surveyUpload)
+      .set({ attempt: 2, status: "PROCESSED" })
+      .where(eq(surveyUpload.id, uploadId));
+    const scansBefore = await scansOf(uploadId);
+
+    expect(await ingest(uploadId, [unplacedPost], 2)).toEqual({
+      kind: "ingested",
+      pages: [{ pageIndex: 0, result: "unchanged", status: "UNIDENTIFIED" }],
+    });
+    expect(await scansOf(uploadId)).toEqual(scansBefore);
   });
 
   it("once the upload is processed, refuses a page it would store, storing nothing", async () => {
@@ -806,7 +872,7 @@ describe("re-running an upload", () => {
     expect(await copyStatus(copy.questionnaireId)).toBe("PARTIAL");
   });
 
-  it("changes nothing when it reads a stored page the same, whatever it stored", async () => {
+  it("reading pages the same keeps a placed page, and stores this attempt's image for one that names none", async () => {
     const copy = await issueCopy();
     const uploadId = await createUpload();
     const posted = [
@@ -820,9 +886,23 @@ describe("re-running an upload", () => {
     await rerun(uploadId);
     expect(await ingest(uploadId, posted, 2)).toEqual({
       kind: "ingested",
+      pages: [
+        unchanged(0, "MATCHED"),
+        { pageIndex: 1, result: "stored", status: "UNIDENTIFIED" },
+        { pageIndex: 2, result: "stored", status: "REJECTED" },
+      ],
+    });
+    expect(await scansOf(uploadId)).toEqual([
+      scansBefore[0],
+      { ...scansBefore[1], attempt: 2, imageS3Key: `pages/${uploadId}/2/1.jpg` },
+      { ...scansBefore[2], attempt: 2 },
+    ]);
+    const scansAfterRerun = await scansOf(uploadId);
+    expect(await ingest(uploadId, posted, 2)).toEqual({
+      kind: "ingested",
       pages: [unchanged(0, "MATCHED"), unchanged(1, "UNIDENTIFIED"), unchanged(2, "REJECTED")],
     });
-    expect(await scansOf(uploadId)).toEqual(scansBefore);
+    expect(await scansOf(uploadId)).toEqual(scansAfterRerun);
   });
 
   it("never replaces a page it stored against a printed page", async () => {
@@ -992,7 +1072,7 @@ describe("a matched page's answers", () => {
       dob: ["NOT_ALIGNED"],
       home: ["UNCERTAIN"],
       mood: ["BREAKS_FORM_RULE"],
-      notes: ["HANDWRITING"],
+      notes: [],
       "phq.1": ["NOT_ALIGNED"],
       "phq.2": ["NOT_ALIGNED"],
       "phq.3": ["NOT_ALIGNED"],

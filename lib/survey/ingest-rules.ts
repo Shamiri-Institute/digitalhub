@@ -112,8 +112,9 @@ function rejectionOfPrintedPage(
   page: PrintedPage,
   uploadHubId: string,
 ): ScanRejectionNamingAPage | undefined {
-  if (page.copy.status === SurveyQuestionnaireStatus.VOID) return SurveyScanRejection.VOID_COPY;
+  // Another hub's copy first, so a hub never learns the state of a copy it doesn't own.
   if (page.copy.hubId !== uploadHubId) return SurveyScanRejection.OTHER_HUB;
+  if (page.copy.status === SurveyQuestionnaireStatus.VOID) return SurveyScanRejection.VOID_COPY;
   if (page.copy.status === SurveyQuestionnaireStatus.VERIFIED) {
     return SurveyScanRejection.VERIFIED_COPY;
   }
@@ -133,17 +134,19 @@ export type RepostDecision =
   | { kind: "replace" }
   | { kind: "conflict"; reason: string };
 
-// Nothing points at a stored page that names no printed page, so any later post may replace it.
+// Nothing points at a stored page that names no printed page, so a post may replace it: with other
+// content, or with the same content from a later attempt, whose image is then the one stored.
 export function decideRepost(
   storedScan: StoredScan | undefined,
   attempt: number,
   postedSha256: string,
 ): RepostDecision {
   if (!storedScan) return { kind: "new" };
-  if (storedScan.postedSha256 === postedSha256) {
+  const placed = storedScan.questionnairePageId !== null;
+  if (storedScan.postedSha256 === postedSha256 && (placed || storedScan.attempt === attempt)) {
     return { kind: "unchanged", status: storedScan.status };
   }
-  if (storedScan.questionnairePageId === null) return { kind: "replace" };
+  if (!placed) return { kind: "replace" };
   return storedScan.attempt === attempt
     ? { kind: "conflict", reason: "this page was already posted with other content" }
     : { kind: "conflict", reason: `already stored by attempt ${storedScan.attempt}` };
@@ -306,9 +309,6 @@ function reviewFlagsOf({
   }
   if (!aligned) flags.push(SurveyAnswerFlag.NOT_ALIGNED);
   if (rule.verifyAlways) flags.push(SurveyAnswerFlag.VERIFY_ALWAYS);
-  if (kind === SurveyFieldKind.TEXT && read.status !== "blank") {
-    flags.push(SurveyAnswerFlag.HANDWRITING);
-  }
   if (read.confidence != null && read.confidence < rule.confidenceThreshold) {
     flags.push(SurveyAnswerFlag.LOW_CONFIDENCE);
   }

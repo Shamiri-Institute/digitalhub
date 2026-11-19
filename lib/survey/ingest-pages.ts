@@ -8,7 +8,6 @@ import {
   SurveyAuditActor,
   type SurveyFieldKind,
   SurveyScanPageStatus,
-  type SurveyScanRejection,
   SurveyUploadStatus,
 } from "#/db/enums";
 import {
@@ -22,7 +21,8 @@ import {
   surveyVersionField,
 } from "#/db/schema";
 import { countOf } from "#/db/sql";
-import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
+import { objectId } from "#/lib/crypto";
+import { recordSurveyEvents, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
 import {
   type AnswerRule,
   answerRulesOf,
@@ -34,10 +34,8 @@ import {
   type PlannedAnswer,
   type PrintedField,
   type PrintedPage,
-  type RepostDecision,
   reviewStatusOf,
   type ScanOutcome,
-  type StoredScan,
 } from "#/lib/survey/ingest-rules";
 import { pageIdFromQrText } from "#/lib/survey/print-qr";
 import { scanPageImageKey } from "#/lib/survey/scan-files";
@@ -105,29 +103,64 @@ export async function ingestPages(
       postedPages.flatMap(({ parsing }) => (parsing.ok ? [parsing.parsed.page.pageIndex] : [])),
     ),
   ]);
-  const storedScanByIndex = new Map<number, StoredScans[number]>(
+  const storedScanByIndex = new Map(
     storedScans.map((storedScan) => [storedScan.pageIndex, storedScan]),
   );
-  const repostOf = (storedScan: StoredScan | undefined, postedSha256: string): RepostDecision => {
-    const repost = decideRepost(storedScan, attempt, postedSha256);
-    return upload.status === SurveyUploadStatus.PROCESSED &&
-      (repost.kind === "new" || repost.kind === "replace")
-      ? { kind: "conflict", reason: "the upload is already processed" }
-      : repost;
-  };
 
-  const indexesToStore = new Set<number>();
-  const namedPageIds = new Set<string>();
-  for (const { pageIndex, parsing } of postedPages) {
-    if (!parsing.ok || (upload.pageCount !== null && pageIndex >= upload.pageCount)) continue;
-    // A page at an index an earlier page of this post stores is decided against that page.
-    if (!indexesToStore.has(pageIndex)) {
-      const repost = repostOf(storedScanByIndex.get(pageIndex), parsing.postedSha256);
-      if (repost.kind !== "new" && repost.kind !== "replace") continue;
-      indexesToStore.add(pageIndex);
+  const firstPostingByIndex = new Map<number, { position: number; postedSha256: string }>();
+  const decisions = postedPages.map(({ pageIndex, parsing }, position): PageDecision => {
+    if (!parsing.ok) {
+      return { kind: "done", result: { pageIndex, result: "invalid", reason: parsing.reason } };
     }
-    if (parsing.parsed.kind === "failed") continue;
-    for (const qrText of parsing.parsed.page.qrs) {
+    if (upload.pageCount !== null && pageIndex >= upload.pageCount) {
+      const reason = `the upload has ${upload.pageCount} pages`;
+      return { kind: "done", result: { pageIndex, result: "invalid", reason } };
+    }
+    const firstPosting = firstPostingByIndex.get(pageIndex);
+    if (firstPosting) {
+      return firstPosting.postedSha256 === parsing.postedSha256
+        ? { kind: "repeat", pageIndex, firstPosition: firstPosting.position }
+        : {
+            kind: "done",
+            result: {
+              pageIndex,
+              result: "invalid",
+              reason: `page ${pageIndex} is posted twice in this post, with other content`,
+            },
+          };
+    }
+    firstPostingByIndex.set(pageIndex, { position, postedSha256: parsing.postedSha256 });
+    const storedScan = storedScanByIndex.get(pageIndex);
+    const repost = decideRepost(storedScan, attempt, parsing.postedSha256);
+    if (repost.kind === "unchanged") {
+      return { kind: "done", result: { pageIndex, result: "unchanged", status: repost.status } };
+    }
+    if (repost.kind === "conflict") {
+      return { kind: "done", result: { pageIndex, result: "conflict", reason: repost.reason } };
+    }
+    if (upload.status === SurveyUploadStatus.PROCESSED) {
+      if (storedScan?.postedSha256 === parsing.postedSha256) {
+        return {
+          kind: "done",
+          result: { pageIndex, result: "unchanged", status: storedScan.status },
+        };
+      }
+      const reason = "the upload is already processed";
+      return { kind: "done", result: { pageIndex, result: "conflict", reason } };
+    }
+    return {
+      kind: "store",
+      pageIndex,
+      parsed: parsing.parsed,
+      postedSha256: parsing.postedSha256,
+      replacedScan: repost.kind === "replace" ? storedScan : undefined,
+    };
+  });
+
+  const namedPageIds = new Set<string>();
+  for (const decision of decisions) {
+    if (decision.kind !== "store" || decision.parsed.kind !== "read") continue;
+    for (const qrText of decision.parsed.page.qrs) {
       const pageId = pageIdFromQrText(qrText);
       if (pageId !== undefined) namedPageIds.add(pageId);
     }
@@ -142,103 +175,49 @@ export async function ingestPages(
     namedPageIds: [...namedPageIds],
   });
 
+  // In post order: planScan records each match, which decides whether a later page is its duplicate.
+  const plannedScans: PlannedScan[] = [];
   const results: PageIngestResult[] = [];
-  const touchedCopyIds = new Set<string>();
-  /* oxlint-disable eslint/no-await-in-loop -- a page sees the writes of the pages posted before it */
-  for (const { pageIndex, parsing } of postedPages) {
-    if (!parsing.ok) {
-      results.push({ pageIndex, result: "invalid", reason: parsing.reason });
-      continue;
-    }
-    if (upload.pageCount !== null && pageIndex >= upload.pageCount) {
-      results.push({
-        pageIndex,
-        result: "invalid",
-        reason: `the upload has ${upload.pageCount} pages`,
+  for (const decision of decisions) {
+    if (decision.kind === "done") {
+      results.push(decision.result);
+    } else if (decision.kind === "repeat") {
+      const firstResult = results[decision.firstPosition];
+      if (!firstResult) throw new Error("A repeated page comes before its first posting");
+      results.push(
+        firstResult.result === "stored"
+          ? { pageIndex: decision.pageIndex, result: "unchanged", status: firstResult.status }
+          : firstResult,
+      );
+    } else {
+      const planning = planScan(decision, {
+        uploadId,
+        attempt,
+        uploadHubId: upload.hubId,
+        context,
       });
-      continue;
-    }
-    const storedScan = storedScanByIndex.get(pageIndex);
-    const repost = repostOf(storedScan, parsing.postedSha256);
-    if (repost.kind === "unchanged") {
-      results.push({ pageIndex, result: "unchanged", status: repost.status });
-      continue;
-    }
-    if (repost.kind === "conflict") {
-      results.push({ pageIndex, result: "conflict", reason: repost.reason });
-      continue;
-    }
-
-    const identity = identifyPage(parsing.parsed, context.printedPagesById);
-    const outcome = decideOutcome(
-      identity,
-      upload.hubId,
-      identity.kind === "printed"
-        ? context.matchedScanByPage.get(identity.page.questionnairePageId)
-        : undefined,
-    );
-
-    let plannedAnswers: PlannedAnswer[] = [];
-    if (
-      (outcome.status === SurveyScanPageStatus.MATCHED ||
-        outcome.status === SurveyScanPageStatus.DUPLICATE) &&
-      parsing.parsed.kind === "read"
-    ) {
-      const { copy, pageNumber } = outcome.page;
-      const rules = context.rulesByVersion.get(copy.versionId);
-      // loadIngestContext loads rules for every version it loads fields for, so this can't miss.
-      if (!rules) throw new Error(`No form loaded for version ${copy.versionId}`);
-      const planned = planAnswers({
-        page: parsing.parsed.page,
-        printedFields: context.fieldsByVersionPage.get(`${copy.versionId}:${pageNumber}`) ?? [],
-        rules,
-        kindsUnderReview: context.kindsUnderReview,
-      });
-      if (!planned.ok) {
-        results.push({ pageIndex, result: "invalid", reason: planned.reason });
-        continue;
+      if (planning.ok) {
+        plannedScans.push(planning.scan);
+        results.push({
+          pageIndex: decision.pageIndex,
+          result: "stored",
+          status: planning.scan.scanRow.status,
+        });
+      } else {
+        results.push({ pageIndex: decision.pageIndex, result: "invalid", reason: planning.reason });
       }
-      plannedAnswers = planned.answers;
     }
+  }
 
-    const replacedScan = repost.kind === "replace" ? storedScan : undefined;
-    const questionnairePageId = outcome.page?.questionnairePageId ?? null;
-    const rejectedReason =
-      outcome.status === SurveyScanPageStatus.REJECTED ? outcome.rejectedReason : null;
-    const scanPageId = await storeScanPage(tx, {
-      uploadId,
-      attempt,
-      pageIndex,
-      parsed: parsing.parsed,
-      postedSha256: parsing.postedSha256,
-      outcome,
-      questionnairePageId,
-      rejectedReason,
-      replacedScanId: replacedScan?.id,
-    });
-    const answerCounts =
-      outcome.status === SurveyScanPageStatus.MATCHED
-        ? await writeAnswers(tx, { scanPageId, copy: outcome.page.copy, answers: plannedAnswers })
-        : undefined;
-    if (outcome.status === SurveyScanPageStatus.MATCHED) {
-      context.matchedScanByPage.set(outcome.page.questionnairePageId, scanPageId);
-      touchedCopyIds.add(outcome.page.copy.id);
-    }
-    storedScanByIndex.set(pageIndex, {
-      id: scanPageId,
-      pageIndex,
-      attempt,
-      postedSha256: parsing.postedSha256,
-      status: outcome.status,
-      questionnairePageId,
-      rejectedReason,
-    });
-
-    await recordSurveyEvent(tx, {
+  await storeScanPages(tx, plannedScans);
+  const answerCountsByScan = await writeAnswers(tx, plannedScans);
+  await recordSurveyEvents(
+    tx,
+    plannedScans.map(({ scanRow, outcome, replacedScan }) => ({
       actor: { kind: SurveyAuditActor.PIPELINE },
       surveyId: outcome.page?.copy.surveyId,
       entityType: SurveyAuditEntity.SCAN_PAGE,
-      entityId: scanPageId,
+      entityId: scanRow.id,
       action: SurveyAuditAction.SCAN_PAGE_INGESTED,
       before: replacedScan && {
         attempt: replacedScan.attempt,
@@ -247,20 +226,119 @@ export async function ingestPages(
       },
       after: {
         uploadId,
+        pageIndex: scanRow.pageIndex,
+        attempt,
+        status: scanRow.status,
+        rejectedReason: scanRow.rejectedReason ?? undefined,
+        questionnaireId: outcome.page?.copy.id,
+        answers: answerCountsByScan.get(scanRow.id),
+      },
+    })),
+  );
+  await recomputeCopyStatuses(tx, [
+    ...new Set(
+      plannedScans.flatMap(({ outcome }) =>
+        outcome.status === SurveyScanPageStatus.MATCHED ? [outcome.page.copy.id] : [],
+      ),
+    ),
+  ]);
+  return { kind: "ingested", pages: results };
+}
+
+type PageDecision =
+  | { kind: "done"; result: PageIngestResult }
+  | { kind: "repeat"; pageIndex: number; firstPosition: number }
+  | {
+      kind: "store";
+      pageIndex: number;
+      parsed: ParsedPage;
+      postedSha256: string;
+      replacedScan: StoredScans[number] | undefined;
+    };
+
+type PlannedScan = {
+  scanRow: typeof surveyScanPage.$inferInsert & {
+    id: string;
+    pageIndex: number;
+    status: SurveyScanPageStatus;
+  };
+  outcome: ScanOutcome;
+  // Only a matched page's answers are written; a duplicate's read stays in posted_result.
+  answersToWrite: { copy: Copy; answers: PlannedAnswer[] } | undefined;
+  replacedScan: StoredScans[number] | undefined;
+};
+
+// Pages are planned in post order, so a page sees the match of a page planned before it.
+function planScan(
+  decision: Extract<PageDecision, { kind: "store" }>,
+  {
+    uploadId,
+    attempt,
+    uploadHubId,
+    context,
+  }: { uploadId: string; attempt: number; uploadHubId: string; context: IngestContext },
+): { ok: true; scan: PlannedScan } | { ok: false; reason: string } {
+  const { pageIndex, parsed, postedSha256, replacedScan } = decision;
+  const identity = identifyPage(parsed, context.printedPagesById);
+  const outcome = decideOutcome(
+    identity,
+    uploadHubId,
+    identity.kind === "printed"
+      ? context.matchedScanByPage.get(identity.page.questionnairePageId)
+      : undefined,
+  );
+
+  let answersToWrite: PlannedScan["answersToWrite"];
+  if (
+    (outcome.status === SurveyScanPageStatus.MATCHED ||
+      outcome.status === SurveyScanPageStatus.DUPLICATE) &&
+    parsed.kind === "read"
+  ) {
+    const { copy, pageNumber } = outcome.page;
+    const rules = context.rulesByVersion.get(copy.versionId);
+    // loadIngestContext loads rules for every version it loads fields for, so this can't miss.
+    if (!rules) throw new Error(`No form loaded for version ${copy.versionId}`);
+    const planned = planAnswers({
+      page: parsed.page,
+      printedFields: context.fieldsByVersionPage.get(`${copy.versionId}:${pageNumber}`) ?? [],
+      rules,
+      kindsUnderReview: context.kindsUnderReview,
+    });
+    if (!planned.ok) return planned;
+    if (outcome.status === SurveyScanPageStatus.MATCHED) {
+      answersToWrite = { copy, answers: planned.answers };
+    }
+  }
+
+  const scanPageId = replacedScan?.id ?? objectId("surveyscanpage");
+  if (outcome.status === SurveyScanPageStatus.MATCHED) {
+    context.matchedScanByPage.set(outcome.page.questionnairePageId, scanPageId);
+  }
+  const readPage = parsed.kind === "read" ? parsed.page : undefined;
+  return {
+    ok: true,
+    scan: {
+      scanRow: {
+        id: scanPageId,
+        uploadId,
         pageIndex,
         attempt,
+        imageS3Key: readPage ? scanPageImageKey(uploadId, attempt, pageIndex) : null,
+        aligned: readPage ? readPage.aligned : null,
+        questionnairePageId: outcome.page?.questionnairePageId ?? null,
         status: outcome.status,
-        rejectedReason: rejectedReason ?? undefined,
-        questionnaireId: outcome.page?.copy.id,
-        answers: answerCounts,
+        rejectedReason:
+          outcome.status === SurveyScanPageStatus.REJECTED ? outcome.rejectedReason : null,
+        duplicateOfId:
+          outcome.status === SurveyScanPageStatus.DUPLICATE ? outcome.duplicateOfId : null,
+        postedResult: parsed.page,
+        postedSha256,
       },
-    });
-    results.push({ pageIndex, result: "stored", status: outcome.status });
-  }
-  /* oxlint-enable eslint/no-await-in-loop */
-
-  await recomputeCopyStatuses(tx, [...touchedCopyIds]);
-  return { kind: "ingested", pages: results };
+      outcome,
+      answersToWrite,
+      replacedScan,
+    },
+  };
 }
 
 async function loadStoredScans(tx: Transaction, uploadId: string, pageIndexes: number[]) {
@@ -398,100 +476,99 @@ async function loadIngestContext(
   };
 }
 
-async function storeScanPage(
-  tx: Transaction,
-  {
-    uploadId,
-    attempt,
-    pageIndex,
-    parsed,
-    postedSha256,
-    outcome,
-    questionnairePageId,
-    rejectedReason,
-    replacedScanId,
-  }: {
-    uploadId: string;
-    attempt: number;
-    pageIndex: number;
-    parsed: ParsedPage;
-    postedSha256: string;
-    outcome: ScanOutcome;
-    questionnairePageId: string | null;
-    rejectedReason: SurveyScanRejection | null;
-    replacedScanId: string | undefined;
-  },
-) {
-  const readPage = parsed.kind === "read" ? parsed.page : undefined;
-  const scan = {
-    attempt,
-    imageS3Key: readPage ? scanPageImageKey(uploadId, attempt, pageIndex) : null,
-    aligned: readPage ? readPage.aligned : null,
-    questionnairePageId,
-    status: outcome.status,
-    rejectedReason,
-    duplicateOfId: outcome.status === SurveyScanPageStatus.DUPLICATE ? outcome.duplicateOfId : null,
-    postedResult: parsed.page,
-    postedSha256,
-  };
-  const [stored] =
-    replacedScanId === undefined
-      ? await tx
-          .insert(surveyScanPage)
-          .values({ uploadId, pageIndex, ...scan })
-          .returning({ id: surveyScanPage.id })
-      : await tx
-          .update(surveyScanPage)
-          .set(scan)
-          .where(
-            and(eq(surveyScanPage.id, replacedScanId), isNull(surveyScanPage.questionnairePageId)),
-          )
-          .returning({ id: surveyScanPage.id });
-  if (!stored) throw new Error("The scan page was not stored");
-  return stored.id;
+// One statement for new and replaced pages, so a duplicate may point at a page stored beside it:
+// Postgres checks the foreign keys once the statement ends.
+async function storeScanPages(tx: Transaction, plannedScans: readonly PlannedScan[]) {
+  if (plannedScans.length === 0) {
+    return;
+  }
+  const stored = await tx
+    .insert(surveyScanPage)
+    .values(plannedScans.map(({ scanRow }) => scanRow))
+    .onConflictDoUpdate({
+      target: [surveyScanPage.uploadId, surveyScanPage.pageIndex],
+      set: {
+        attempt: sql`excluded.attempt`,
+        imageS3Key: sql`excluded.image_s3_key`,
+        aligned: sql`excluded.aligned`,
+        questionnairePageId: sql`excluded.questionnaire_page_id`,
+        status: sql`excluded.status`,
+        rejectedReason: sql`excluded.rejected_reason`,
+        duplicateOfId: sql`excluded.duplicate_of_id`,
+        postedResult: sql`excluded.posted_result`,
+        postedSha256: sql`excluded.posted_sha256`,
+      },
+      setWhere: isNull(surveyScanPage.questionnairePageId),
+    })
+    .returning({ id: surveyScanPage.id });
+  const storedIds = new Set(stored.map(({ id }) => id));
+  const unstored = plannedScans.find(({ scanRow }) => !storedIds.has(scanRow.id));
+  if (unstored) throw new Error(`Scan page ${unstored.scanRow.pageIndex} was not stored`);
 }
 
-async function writeAnswers(
-  tx: Transaction,
-  { scanPageId, copy, answers }: { scanPageId: string; copy: Copy; answers: PlannedAnswer[] },
-) {
-  const written =
-    answers.length === 0
-      ? []
-      : await tx
-          .insert(surveyAnswer)
-          .values(
-            answers.map((answer) => ({
-              questionnaireId: copy.id,
-              versionId: copy.versionId,
-              field: answer.field,
-              scanPageId,
-              recognizedValue: answer.recognizedValue,
-              confidence: answer.confidence,
-              readStatus: answer.readStatus,
-              readDetail: answer.readDetail,
-              value: answer.recognizedValue,
-              source: SurveyAnswerSource.PIPELINE,
-              reviewStatus: reviewStatusOf(answer.flags),
-              flags: answer.flags,
-            })),
-          )
-          .onConflictDoNothing({
-            target: [surveyAnswer.questionnaireId, surveyAnswer.versionId, surveyAnswer.field],
-          })
-          .returning({ field: surveyAnswer.field });
-  const writtenFields = new Set(written.map(({ field }) => field));
-  const writtenAnswers = answers.filter((answer) => writtenFields.has(answer.field));
-  return {
-    total: writtenAnswers.length,
-    autoAccepted: writtenAnswers.filter((answer) => answer.flags.length === 0).length,
-    needsReview: writtenAnswers.filter((answer) => answer.flags.length > 0).length,
-    noPrediction: writtenAnswers.filter(
-      (answer) => answer.readStatus === SurveyAnswerReadStatus.NO_PREDICTION,
-    ).length,
-    keptReviewed: answers.length - writtenAnswers.length,
-  };
+// Postgres takes at most 65,535 parameters per statement; an answer row binds 14.
+const ANSWERS_PER_INSERT = 2_000;
+
+async function writeAnswers(tx: Transaction, plannedScans: readonly PlannedScan[]) {
+  const answerRows = plannedScans.flatMap(({ scanRow, answersToWrite }) =>
+    answersToWrite
+      ? answersToWrite.answers.map((answer) => ({
+          questionnaireId: answersToWrite.copy.id,
+          versionId: answersToWrite.copy.versionId,
+          field: answer.field,
+          scanPageId: scanRow.id,
+          recognizedValue: answer.recognizedValue,
+          confidence: answer.confidence,
+          readStatus: answer.readStatus,
+          readDetail: answer.readDetail,
+          value: answer.recognizedValue,
+          source: SurveyAnswerSource.PIPELINE,
+          reviewStatus: reviewStatusOf(answer.flags),
+          flags: answer.flags,
+        }))
+      : [],
+  );
+  const writtenKeys = new Set<string>();
+  /* oxlint-disable eslint/no-await-in-loop -- one transaction runs one statement at a time */
+  for (let start = 0; start < answerRows.length; start += ANSWERS_PER_INSERT) {
+    const written = await tx
+      .insert(surveyAnswer)
+      .values(answerRows.slice(start, start + ANSWERS_PER_INSERT))
+      .onConflictDoNothing({
+        target: [surveyAnswer.questionnaireId, surveyAnswer.versionId, surveyAnswer.field],
+      })
+      .returning({ scanPageId: surveyAnswer.scanPageId, field: surveyAnswer.field });
+    for (const { scanPageId, field } of written) writtenKeys.add(`${scanPageId}:${field}`);
+  }
+  /* oxlint-enable eslint/no-await-in-loop */
+
+  const answerCountsByScan = new Map<string, AnswerCounts>();
+  for (const { scanRow, answersToWrite } of plannedScans) {
+    if (!answersToWrite) continue;
+    const { answers } = answersToWrite;
+    const writtenAnswers = answers.filter((answer) =>
+      writtenKeys.has(`${scanRow.id}:${answer.field}`),
+    );
+    answerCountsByScan.set(scanRow.id, {
+      total: writtenAnswers.length,
+      autoAccepted: writtenAnswers.filter((answer) => answer.flags.length === 0).length,
+      needsReview: writtenAnswers.filter((answer) => answer.flags.length > 0).length,
+      noPrediction: writtenAnswers.filter(
+        (answer) => answer.readStatus === SurveyAnswerReadStatus.NO_PREDICTION,
+      ).length,
+      keptReviewed: answers.length - writtenAnswers.length,
+    });
+  }
+  return answerCountsByScan;
 }
+
+type AnswerCounts = {
+  total: number;
+  autoAccepted: number;
+  needsReview: number;
+  noPrediction: number;
+  keptReviewed: number;
+};
 
 async function recomputeCopyStatuses(tx: Transaction, copyIds: string[]) {
   if (copyIds.length === 0) {

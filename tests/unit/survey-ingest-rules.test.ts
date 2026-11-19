@@ -334,6 +334,12 @@ describe("a page's outcome", () => {
       rejectedReason: "OTHER_HUB",
       page: verifiedOtherHubPage,
     });
+    const voidOtherHubPage = printedPage({ status: "VOID", hubId: "other hub" });
+    expect(decideOutcome({ kind: "printed", page: voidOtherHubPage }, "hub")).toEqual({
+      status: "REJECTED",
+      rejectedReason: "OTHER_HUB",
+      page: voidOtherHubPage,
+    });
     expect(decideOutcome({ kind: "failed" }, "hub")).toEqual({
       status: "REJECTED",
       rejectedReason: "UNREADABLE",
@@ -394,13 +400,12 @@ describe("a re-post", () => {
     });
   });
 
-  it("of another attempt changes nothing when it reads the page the same", () => {
-    for (const storedScan of [matched, unplaced]) {
-      expect(decideRepost(storedScan, 2, "a".repeat(64))).toEqual({
-        kind: "unchanged",
-        status: storedScan.status,
-      });
-    }
+  it("of another attempt reading the page the same leaves a placed page, and takes its image for an unplaced one", () => {
+    expect(decideRepost(matched, 2, "a".repeat(64))).toEqual({
+      kind: "unchanged",
+      status: matched.status,
+    });
+    expect(decideRepost(unplaced, 2, "a".repeat(64))).toEqual({ kind: "replace" });
   });
 
   it("of another attempt reading it otherwise replaces only a page that names no printed page", () => {
@@ -585,7 +590,7 @@ describe("a matched page's answers", () => {
           printedFields: PAGE_THREE_FIELDS,
         }),
       ),
-    ).toEqual({ notes: ["HANDWRITING"], sign: [] });
+    ).toEqual({ notes: [], sign: [] });
     expect(
       flagsOf(plan(CLEAN_PAGE_TWO, { printedFields: PAGE_TWO_FIELDS, aligned: false })),
     ).toEqual({ age: ["NOT_ALIGNED"], dob: ["NOT_ALIGNED"], "phq.1": ["NOT_ALIGNED"] });
