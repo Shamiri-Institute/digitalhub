@@ -592,7 +592,8 @@ test("an admin reassigns across teams and escalates to Tech, the top tier", asyn
   await signIn(context, other.email);
   const escalate = await act(page, "/admin/tickets", subject, "Escalate", "Needs an engineer.");
   await escalate.getByRole("combobox").click();
-  await expect(page.getByRole("group", { name: "Tech team" })).toBeVisible();
+  // Everyone offered is on Tech, so the list needs no team headings.
+  await expect(page.getByRole("listbox").getByRole("group")).toHaveCount(0);
   await page.getByRole("option", { name: tech.name }).click();
   await submitAction(page, "Escalate");
 
