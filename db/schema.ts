@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 
+import { json, jsonb } from "#/db/json";
 import { objectId } from "#/lib/crypto";
 import type { SurveyForm } from "#/lib/survey/form";
 import type { Layout } from "#/lib/survey/layout";
@@ -14,8 +15,6 @@ import {
   foreignKey,
   index,
   integer,
-  json,
-  jsonb,
   pgEnum,
   pgSequence,
   pgTable,
