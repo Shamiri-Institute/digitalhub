@@ -13,14 +13,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover
 import { cn } from "#/lib/utils";
 
 type ComboboxProps = {
-  items: { id: string; label: string }[];
+  items: { id: string; label: string; group?: string }[];
   activeItemId: string;
   onSelectItem: (itemId: string) => void;
   placeholder?: string;
   inputPlaceholder?: string;
   disabled?: boolean;
   className?: string;
-};
+} & Omit<React.ComponentProps<typeof Button>, "onSelect">;
 
 export function Combobox({
   items,
@@ -30,14 +30,18 @@ export function Combobox({
   inputPlaceholder,
   disabled,
   className,
+  ...triggerProps
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
+  const groups = new Map<string | undefined, typeof items>();
+  for (const item of items) groups.set(item.group, [...(groups.get(item.group) ?? []), item]);
 
   return (
     <div className={cn("rounded-md border border-input bg-white px-1.5 py-0", className)}>
       <Popover open={open} onOpenChange={(o) => !disabled && setOpen(o)}>
         <PopoverTrigger asChild>
           <Button
+            {...triggerProps}
             variant="base"
             aria-expanded={open}
             className="w-full justify-between px-1.5"
@@ -68,20 +72,25 @@ export function Combobox({
               className="h-9"
             />
             <CommandEmpty>No item found.</CommandEmpty>
-            <CommandGroup className="max-h-48 overflow-y-scroll">
-              {items.map((item) => (
-                <CommandItem
-                  key={item.id}
-                  value={item.id}
-                  onSelect={() => {
-                    onSelectItem(item.id);
-                    setOpen(false);
-                  }}
-                >
-                  <span className="truncate text-ellipsis text-sm">{item.label}</span>
-                </CommandItem>
+            <div className="max-h-48 overflow-y-scroll">
+              {[...groups].map(([group, members]) => (
+                // A lone heading names nothing the field doesn't, so one group has none.
+                <CommandGroup key={group ?? ""} heading={groups.size > 1 ? group : undefined}>
+                  {members.map((item) => (
+                    <CommandItem
+                      key={item.id}
+                      value={item.id}
+                      onSelect={() => {
+                        onSelectItem(item.id);
+                        setOpen(false);
+                      }}
+                    >
+                      <span className="truncate text-ellipsis text-sm">{item.label}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
               ))}
-            </CommandGroup>
+            </div>
           </Command>
         </PopoverContent>
       </Popover>
