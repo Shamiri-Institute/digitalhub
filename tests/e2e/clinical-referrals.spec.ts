@@ -95,7 +95,7 @@ async function fillReferralToRecipient(page: Page) {
   const dialog = page.getByRole("dialog", { name: "Refer clinical case" });
   await dialog.getByRole("combobox", { name: "Refer to" }).click();
   await page.getByRole("option", { name: "Supervisor", exact: true }).click();
-  await dialog.getByRole("button", { name: "Select a supervisor..." }).click();
+  await dialog.getByRole("button", { name: "Select Supervisor" }).click();
   await page.getByPlaceholder("Search supervisors...").fill(recipient.name);
   await page.getByRole("option", { name: recipient.name, exact: true }).click();
   await dialog.getByRole("combobox", { name: "Referral Reason" }).click();

@@ -24,7 +24,7 @@ test("a supervisor cannot upload a recording for a fellow they no longer supervi
   await page.goto(getUrl("/sc/reporting/recordings"));
   await page.getByRole("button", { name: "Upload recording" }).click();
   const dialog = page.getByRole("dialog", { name: "Upload recording" });
-  await dialog.getByRole("button", { name: "Select a fellow" }).click();
+  await dialog.getByRole("button", { name: "Fellow", exact: true }).click();
   await page.getByRole("option", { name: fellowName, exact: true }).click();
   await dialog
     .getByRole("combobox")
