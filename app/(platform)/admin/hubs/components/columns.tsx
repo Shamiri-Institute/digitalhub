@@ -7,7 +7,8 @@ import Link from "next/link";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
 import type { AdminHub } from "../queries";
-import { formatCount, StateBar, states } from "./hub-stats";
+import { formatCount } from "#/components/common/stats";
+import { StateBar, states } from "./hub-stats";
 
 const countColumn = (
   id: string,

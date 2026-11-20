@@ -4,7 +4,8 @@ import { db } from "#/db/client";
 import { ticketEvents, tickets } from "#/db/schema";
 import { expect, test } from "#/tests/fixtures";
 import { signableMember, signInWithEmail, required, uniqueSuffix } from "#/tests/helpers";
-import { chooseRowAction, getUrl, searchRows } from "#/tests/pages/helpers";
+import { getUrl, searchRows } from "#/tests/pages/helpers";
+import { openTicket, takeAction } from "#/tests/pages/tickets";
 
 type Fixture = { fellowEmail: string; supervisorEmail: string; clinicalLeadEmail: string };
 
@@ -64,16 +65,8 @@ test("a supervisor escalates a fellow's clinical ticket to the hub's clinical le
   await expect(newTicket).toBeHidden();
 
   await signInWithEmail(context, fixture.supervisorEmail);
-  await page.goto(getUrl("/sc/tickets"));
-  await chooseRowAction(page, await searchRows(page, subject), "Escalate ticket");
-  const escalate = page.getByRole("dialog", { name: "Escalate Ticket" });
-  await escalate.getByRole("combobox").click();
-  await page.getByRole("option", { name: "Yes" }).click();
-  await escalate
-    .getByPlaceholder("Explain why this ticket needs to be escalated")
-    .fill("Needs a clinical lead.");
-  await escalate.getByRole("button", { name: "Escalate Ticket" }).click();
-  await expect(escalate).toBeHidden();
+  await openTicket(page, "/sc/tickets", subject);
+  await takeAction(page, "Escalate", "Needs a clinical lead.");
 
   await signInWithEmail(context, fixture.clinicalLeadEmail);
   await page.goto(getUrl("/cl/tickets"));

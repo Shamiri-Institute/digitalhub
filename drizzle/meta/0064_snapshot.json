@@ -1,5 +1,5 @@
 {
-  "id": "4239c1f0-7e89-4620-bb33-754557fd24ff",
+  "id": "25c36c3e-307d-48da-9486-a444015c50fa",
   "prevId": "b9d09c19-dd07-408d-8d89-e008726263c0",
   "version": "7",
   "dialect": "postgresql",
@@ -9311,16 +9311,9 @@
           "primaryKey": false,
           "notNull": false
         },
-        "read_status": {
-          "name": "read_status",
-          "type": "survey_answer_read_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "read_detail": {
-          "name": "read_detail",
-          "type": "jsonb",
+        "crop_s3_key": {
+          "name": "crop_s3_key",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -9496,19 +9489,11 @@
         },
         "survey_answers_pipeline_check": {
           "name": "survey_answers_pipeline_check",
-          "value": "\"survey_answers\".\"source\" <> 'PIPELINE' OR (\"survey_answers\".\"scan_page_id\" IS NOT NULL AND \"survey_answers\".\"read_status\" IS NOT NULL)"
-        },
-        "survey_answers_read_status_check": {
-          "name": "survey_answers_read_status_check",
-          "value": "\"survey_answers\".\"read_status\" IS NULL OR (\"survey_answers\".\"read_status\" = 'OK') = (\"survey_answers\".\"recognized_value\" IS NOT NULL)"
-        },
-        "survey_answers_read_detail_check": {
-          "name": "survey_answers_read_detail_check",
-          "value": "\"survey_answers\".\"read_detail\" IS NULL OR jsonb_typeof(\"survey_answers\".\"read_detail\") = 'object'"
+          "value": "\"survey_answers\".\"source\" <> 'PIPELINE' OR (\"survey_answers\".\"scan_page_id\" IS NOT NULL AND \"survey_answers\".\"confidence\" IS NOT NULL)"
         },
         "survey_answers_manual_check": {
           "name": "survey_answers_manual_check",
-          "value": "\"survey_answers\".\"source\" <> 'MANUAL' OR (\"survey_answers\".\"recognized_value\" IS NULL AND \"survey_answers\".\"confidence\" IS NULL AND \"survey_answers\".\"read_status\" IS NULL AND \"survey_answers\".\"read_detail\" IS NULL AND \"survey_answers\".\"review_status\" IN ('VERIFIED', 'CORRECTED'))"
+          "value": "\"survey_answers\".\"source\" <> 'MANUAL' OR (\"survey_answers\".\"recognized_value\" IS NULL AND \"survey_answers\".\"confidence\" IS NULL AND \"survey_answers\".\"review_status\" IN ('VERIFIED', 'CORRECTED'))"
         },
         "survey_answers_reviewed_check": {
           "name": "survey_answers_reviewed_check",
@@ -9669,33 +9654,6 @@
           "value": "(\"survey_audit_events\".\"actor_kind\" = 'USER') = (\"survey_audit_events\".\"actor_user_id\" is not null)"
         }
       },
-      "isRLSEnabled": false
-    },
-    "public.survey_field_kind_reviews": {
-      "name": "survey_field_kind_reviews",
-      "schema": "",
-      "columns": {
-        "kind": {
-          "name": "kind",
-          "type": "survey_field_kind",
-          "typeSchema": "public",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.survey_print_files": {
@@ -10609,24 +10567,11 @@
           "primaryKey": false,
           "notNull": true
         },
-        "attempt": {
-          "name": "attempt",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 1
-        },
         "image_s3_key": {
           "name": "image_s3_key",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
-        },
-        "aligned": {
-          "name": "aligned",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "questionnaire_page_id": {
           "name": "questionnaire_page_id",
@@ -10641,30 +10586,11 @@
           "primaryKey": false,
           "notNull": true
         },
-        "rejected_reason": {
-          "name": "rejected_reason",
-          "type": "survey_scan_rejection",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
         "duplicate_of_id": {
           "name": "duplicate_of_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
-        },
-        "posted_result": {
-          "name": "posted_result",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "posted_sha256": {
-          "name": "posted_sha256",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
         }
       },
       "indexes": {
@@ -10785,22 +10711,6 @@
           "name": "survey_scan_pages_page_index_check",
           "value": "\"survey_scan_pages\".\"page_index\" >= 0"
         },
-        "survey_scan_pages_attempt_check": {
-          "name": "survey_scan_pages_attempt_check",
-          "value": "\"survey_scan_pages\".\"attempt\" >= 1"
-        },
-        "survey_scan_pages_posted_sha256_check": {
-          "name": "survey_scan_pages_posted_sha256_check",
-          "value": "\"survey_scan_pages\".\"posted_sha256\" ~ '^[0-9a-f]{64}$'"
-        },
-        "survey_scan_pages_posted_result_check": {
-          "name": "survey_scan_pages_posted_result_check",
-          "value": "jsonb_typeof(\"survey_scan_pages\".\"posted_result\") = 'object'"
-        },
-        "survey_scan_pages_rejected_check": {
-          "name": "survey_scan_pages_rejected_check",
-          "value": "(\"survey_scan_pages\".\"status\" = 'REJECTED') = (\"survey_scan_pages\".\"rejected_reason\" IS NOT NULL)\n        AND (\"survey_scan_pages\".\"rejected_reason\" IS NOT DISTINCT FROM 'UNREADABLE') = (\"survey_scan_pages\".\"image_s3_key\" IS NULL)\n        AND (\"survey_scan_pages\".\"image_s3_key\" IS NULL) = (\"survey_scan_pages\".\"aligned\" IS NULL)"
-        },
         "survey_scan_pages_duplicate_check": {
           "name": "survey_scan_pages_duplicate_check",
           "value": "(\"survey_scan_pages\".\"status\" = 'DUPLICATE') = (\"survey_scan_pages\".\"duplicate_of_id\" IS NOT NULL)"
@@ -10811,7 +10721,7 @@
         },
         "survey_scan_pages_identified_check": {
           "name": "survey_scan_pages_identified_check",
-          "value": "CASE \"survey_scan_pages\".\"status\"\n        WHEN 'UNIDENTIFIED' THEN \"survey_scan_pages\".\"questionnaire_page_id\" IS NULL\n        WHEN 'REJECTED' THEN (\"survey_scan_pages\".\"rejected_reason\" IN ('VOID_COPY', 'OTHER_HUB', 'VERIFIED_COPY')) = (\"survey_scan_pages\".\"questionnaire_page_id\" IS NOT NULL)\n        ELSE \"survey_scan_pages\".\"questionnaire_page_id\" IS NOT NULL\n      END"
+          "value": "CASE \"survey_scan_pages\".\"status\"\n        WHEN 'UNIDENTIFIED' THEN \"survey_scan_pages\".\"questionnaire_page_id\" IS NULL\n        WHEN 'REJECTED' THEN TRUE\n        ELSE \"survey_scan_pages\".\"questionnaire_page_id\" IS NOT NULL\n      END"
         }
       },
       "isRLSEnabled": false
@@ -10906,13 +10816,6 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
-        },
-        "attempt": {
-          "name": "attempt",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 1
         }
       },
       "indexes": {
@@ -11014,10 +10917,6 @@
         "survey_uploads_byte_size_check": {
           "name": "survey_uploads_byte_size_check",
           "value": "\"survey_uploads\".\"byte_size\" > 0"
-        },
-        "survey_uploads_attempt_check": {
-          "name": "survey_uploads_attempt_check",
-          "value": "\"survey_uploads\".\"attempt\" >= 1"
         },
         "survey_uploads_uploaded_check": {
           "name": "survey_uploads_uploaded_check",
@@ -12964,7 +12863,7 @@
     "public.admin_team": {
       "name": "admin_team",
       "schema": "public",
-      "values": ["CARE", "RESEARCH", "OPERATIONS"]
+      "values": ["CARE", "RESEARCH", "OPERATIONS", "TECH"]
     },
     "public.approval_status": {
       "name": "approval_status",
@@ -13066,11 +12965,6 @@
       "schema": "public",
       "values": ["TRAINING", "CHECK_INS", "MATERIALS", "PEER_SUPPORT", "SUFFICIENT", "OTHER"]
     },
-    "public.survey_answer_read_status": {
-      "name": "survey_answer_read_status",
-      "schema": "public",
-      "values": ["OK", "UNCERTAIN", "BLANK", "NO_PREDICTION"]
-    },
     "public.survey_answer_review_status": {
       "name": "survey_answer_review_status",
       "schema": "public",
@@ -13105,18 +12999,6 @@
       "name": "survey_scan_page_status",
       "schema": "public",
       "values": ["MATCHED", "UNIDENTIFIED", "DUPLICATE", "REJECTED"]
-    },
-    "public.survey_scan_rejection": {
-      "name": "survey_scan_rejection",
-      "schema": "public",
-      "values": [
-        "UNREADABLE",
-        "UNKNOWN_CODE",
-        "CODES_DISAGREE",
-        "VOID_COPY",
-        "OTHER_HUB",
-        "VERIFIED_COPY"
-      ]
     },
     "public.survey_status": {
       "name": "survey_status",
