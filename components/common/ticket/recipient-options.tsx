@@ -5,7 +5,7 @@ import { SelectGroup, SelectItem, SelectLabel, SelectSeparator } from "#/compone
 import type { TicketPerson } from "#/lib/actions/ticket/types";
 import { personName, roleLabel } from "./format";
 
-function groupLabel(person: TicketPerson) {
+export function groupLabel(person: TicketPerson) {
   if (person.role === "ADMIN") return person.team ? `${TEAM_LABELS[person.team]} team` : "No team";
   return person.role ? roleLabel(person.role) : "Other";
 }
@@ -29,7 +29,6 @@ export function RecipientOptions({ people }: { people: TicketPerson[] }) {
     <Fragment key={label}>
       {i > 0 && <SelectSeparator />}
       <SelectGroup>
-        {/* Quieter than the names, so the list reads as people under small headings. */}
         <SelectLabel className="text-xs font-medium text-shamiri-text-dark-grey">
           {label}
         </SelectLabel>

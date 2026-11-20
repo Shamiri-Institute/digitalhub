@@ -39,6 +39,7 @@ import { toast, toastOnError } from "#/components/ui/use-toast";
 import { createTicket } from "#/lib/actions/ticket";
 import { CreateTicketSchema, type TicketAssignees } from "#/lib/actions/ticket/types";
 import { personName } from "./format";
+import { groupLabel } from "./recipient-options";
 import { zodResolver } from "#/lib/zod-resolver";
 
 export default function CreateTicketDialog({
@@ -214,6 +215,7 @@ function CreateTicketForm({
                       items={categoryAssignees.map((person) => ({
                         id: person.userId,
                         label: personName(person),
+                        group: groupLabel(person),
                       }))}
                       activeItemId={field.value}
                       onSelectItem={field.onChange}
