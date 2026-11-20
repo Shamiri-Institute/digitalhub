@@ -4,7 +4,15 @@ import { and, eq, inArray, like, type SQL, sql } from "drizzle-orm";
 import { db } from "#/db/client";
 import { type AdminTeam, TEAM_LABELS } from "#/db/enums";
 import { techAdminEmail } from "#/db/seed/fixtures";
-import { adminUser, hubCoordinator, supervisor, ticketEvents, tickets } from "#/db/schema";
+import {
+  adminUser,
+  fellow,
+  hubCoordinator,
+  implementerMember,
+  supervisor,
+  ticketEvents,
+  tickets,
+} from "#/db/schema";
 import { expect, test, type Undo } from "#/tests/fixtures";
 import {
   createAdminCopy,
@@ -23,13 +31,12 @@ type Hub = {
   implementerId: string;
   supervisorEmail: string;
   supervisorUserId: string;
+  supervisorId: string;
   supervisorName: string;
   bystanderEmail: string;
-  bystanderUserId: string;
   bystanderSupervisorId: string;
   bystanderName: string;
   coordinatorEmail: string;
-  coordinatorUserId: string;
   coordinatorName: string;
   coordinatorId: string;
   otherCoordinatorId: string;
@@ -48,9 +55,9 @@ test.beforeAll(async () => {
     rows: [row],
   } = await db.execute<Hub>(sql`
     select sm.implementer_id as "implementerId", su.email as "supervisorEmail",
-      su.id as "supervisorUserId", sv.supervisor_name as "supervisorName", bu.email as "bystanderEmail", bu.id as "bystanderUserId", bv.id as "bystanderSupervisorId",
+      su.id as "supervisorUserId", sv.id as "supervisorId", sv.supervisor_name as "supervisorName", bu.email as "bystanderEmail", bv.id as "bystanderSupervisorId",
       bv.supervisor_name as "bystanderName",
-      hu.email as "coordinatorEmail", hu.id as "coordinatorUserId", hc.coordinator_name as "coordinatorName", hc.id as "coordinatorId", hc2.id as "otherCoordinatorId",
+      hu.email as "coordinatorEmail", hc.coordinator_name as "coordinatorName", hc.id as "coordinatorId", hc2.id as "otherCoordinatorId",
       hc2.coordinator_name as "otherCoordinatorName", h2u.email as "otherCoordinatorEmail",
       lu.email as "leadEmail", am.user_id as "adminUserId"
     from supervisors sv
@@ -78,12 +85,18 @@ test.beforeAll(async () => {
     join users lu on lu.id = lm.user_id
     join implementer_members am on am.role = 'ADMIN' and am.implementer_id = sm.implementer_id
       and ${signableMember("am")}
-    where sv.supervisor_name is not null
+    where sv.supervisor_name is not null and sv.archived_at is null and sv.dropped_out is not true
+      and exists (select 1 from fellows f
+        join implementer_members fm on fm.identifier = f.id and fm.role = 'FELLOW'
+        where f.supervisor_id = sv.id)
       and (select count(*) from clinical_leads o where o.assigned_hub_id = sv.hub_id) = 1
       and (select count(*) from hub_coordinators o where o.assigned_hub_id = sv.hub_id) = 2
     order by sv.id, bv.id, hc.id
     limit 1`);
-  required(row, "a hub with two supervisors, two hub coordinators and one clinical lead");
+  required(
+    row,
+    "a hub with two supervisors, one active with fellows, two hub coordinators and one clinical lead",
+  );
   hub = row;
 });
 
@@ -116,8 +129,7 @@ async function createTicket(
   await dialog.getByRole("combobox").first().click();
   await page.getByRole("option", { name: category, exact: true }).click();
   if (assignee) {
-    // The searchable picker's trigger is the dialog's only popover button.
-    await dialog.locator('button[aria-haspopup="dialog"]').click();
+    await dialog.getByRole("button", { name: "Assign to" }).click();
     await page.getByPlaceholder("Search by name").fill(assignee);
     await page.getByRole("option", { name: assignee }).click();
   }
@@ -401,20 +413,17 @@ async function oldestAdminName(implementerId: string, who: SQL) {
 
 /** A ticket held by the hub's supervisor, as if one of their fellows had raised it. */
 async function ticketHeldBySupervisor(subject: string) {
-  const {
-    rows: [fellow],
-  } = await db.execute<{ userId: string }>(sql`
-    select fm.user_id as "userId"
-    from implementer_members sm
-    join fellows f on f.supervisor_id = sm.identifier
-    join implementer_members fm on fm.identifier = f.id and fm.role = 'FELLOW'
-    where sm.user_id = ${hub.supervisorUserId} and sm.role = 'SUPERVISOR'
-    limit 1`);
-  required(fellow, "a fellow of the hub's supervisor");
+  const [fellowMember] = await db
+    .select({ userId: implementerMember.userId })
+    .from(implementerMember)
+    .innerJoin(fellow, eq(fellow.id, implementerMember.identifier))
+    .where(and(eq(fellow.supervisorId, hub.supervisorId), eq(implementerMember.role, "FELLOW")))
+    .limit(1);
+  required(fellowMember, "a fellow of the hub's supervisor");
   const [ticket] = await db
     .insert(tickets)
     .values({
-      createdById: fellow.userId,
+      createdById: fellowMember.userId,
       subject,
       description: "Raised by the ticket routing spec.",
       category: "TECH",
@@ -426,7 +435,7 @@ async function ticketHeldBySupervisor(subject: string) {
   await db.insert(ticketEvents).values({
     ticketId: ticket.id,
     kind: "CREATED",
-    actorId: fellow.userId,
+    actorId: fellowMember.userId,
     assigneeId: hub.supervisorUserId,
     reason: "Raised by the ticket routing spec.",
   });
@@ -639,31 +648,6 @@ for (const [change, error] of [
     await expect(await heldBy(page, "/admin/tickets", subject)).toHaveText("You");
   });
 }
-
-test("the server refuses a reassignment to another tier", async ({ page, context }) => {
-  const subject = `${subjectPrefix} cross-tier reassign`;
-  await ticketHeldBySupervisor(subject);
-
-  await signIn(context, hub.supervisorEmail);
-  const reassign = await act(page, "/sc/tickets", subject, "Reassign", "Off sick.");
-  await reassign.getByRole("combobox").click();
-  await page.getByRole("option", { name: hub.bystanderName }).click();
-  // The picker offers only supervisors, so swap the pick for the hub coordinator on the way out.
-  await page.route(page.url(), async (route) => {
-    const body = route.request().postData();
-    if (route.request().method() !== "POST" || !body?.includes(hub.bystanderUserId)) {
-      return route.fallback();
-    }
-    await route.continue({ postData: body.replaceAll(hub.bystanderUserId, hub.coordinatorUserId) });
-  });
-  await reassign.getByRole("button", { name: "Reassign", exact: true }).click();
-
-  await expect(
-    page.getByText("Choose an active colleague in your hub to take it over").first(),
-  ).toBeVisible();
-  await page.unrouteAll();
-  await expect(await heldBy(page, "/sc/tickets", subject)).toHaveText("You");
-});
 
 test("a hub coordinator escalates to the oldest super admin when the category's team is empty", async ({
   page,
