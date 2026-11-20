@@ -1,4 +1,3 @@
-import type { Page } from "@playwright/test";
 import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
@@ -12,6 +11,7 @@ import {
   uniqueSuffix,
 } from "#/tests/helpers";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
+import { fillAction, openTicket } from "#/tests/pages/tickets";
 
 type Fixture = { supervisorEmail: string; supervisorUserId: string; fellowUserId: string };
 
@@ -72,18 +72,6 @@ async function createEscalatedTicket(fixture: Fixture, undo: Undo, subject: stri
   return ticket;
 }
 
-async function openTicketAction(page: Page, subject: string, action: string) {
-  await page.goto(getUrl("/sc/tickets"));
-  // The holder's actions arrive with a status request the menu makes as it opens; reopening the
-  // menu while that request runs would start it again.
-  await (await searchRows(page, subject)).getByRole("cell").last().click();
-  await page.getByRole("menu").getByText(action, { exact: true }).click();
-  const dialog = page.getByRole("dialog");
-  await dialog.getByRole("combobox").click();
-  await page.getByRole("option", { name: "Yes" }).click();
-  return dialog;
-}
-
 test("escalating and resolving a ticket at once lets only the first one through", async ({
   page,
   context,
@@ -96,31 +84,26 @@ test("escalating and resolving a ticket at once lets only the first one through"
   const ticket = await createEscalatedTicket(fixture, undo, subject);
 
   await signInWithEmail(context, fixture.supervisorEmail);
-  const escalate = await openTicketAction(page, subject, "Escalate ticket");
-  await escalate
-    .getByPlaceholder("Explain why this ticket needs to be escalated")
-    .fill("Needs the hub coordinator.");
+  await openTicket(page, "/sc/tickets", subject);
+  const escalate = await fillAction(page, "Escalate", "Needs the hub coordinator.");
   const otherTab = await context.newPage();
-  const resolve = await openTicketAction(otherTab, subject, "Resolve ticket");
-  await resolve.getByPlaceholder("Explain how this ticket was resolved").fill("Sorted out.");
+  await openTicket(otherTab, "/sc/tickets", subject);
+  const resolve = await fillAction(otherTab, "Resolve", "Sorted out.");
 
   await raceOnRow("tickets", ticket.id, async (waitForWaiting) => {
-    await escalate.getByRole("button", { name: "Escalate Ticket" }).click();
+    await escalate.getByRole("button", { name: "Escalate" }).click();
     await waitForWaiting(1);
-    await resolve.getByRole("button", { name: "Resolve Ticket" }).click();
+    await resolve.getByRole("button", { name: "Resolve" }).click();
     await waitForWaiting(2);
   });
 
-  await expect(page.getByText("Ticket escalated successfully").first()).toBeVisible();
+  await expect(page.getByText("Escalation created successfully").first()).toBeVisible();
   await expect(
     otherTab.getByText("Only the ticket's current holder can resolve it").first(),
   ).toBeVisible();
-  await page.reload();
-  const row = await searchRows(page, subject);
-  // The table lowercases the status through CSS.
-  await expect(row).toContainText(/escalated/i);
-  // The ticket's menu offers "View resolution" only after a status request it makes on opening, so
-  // the database is the reliable place to see that the refused resolution was not stored.
+  await page.goto(getUrl("/sc/tickets"));
+  await expect(await searchRows(page, subject)).toContainText(/escalated/i);
+  // The database is the reliable place to see that the refused resolution was not stored.
   expect(
     await db.$count(
       ticketEvents,

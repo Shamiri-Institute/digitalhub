@@ -6,7 +6,8 @@ import { ticketEvents, tickets } from "#/db/schema";
 import { REOPEN_WINDOW_MS } from "#/lib/ticket-reopen-window";
 import { expect, test, type Undo } from "#/tests/fixtures";
 import { required, signableMember, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
-import { getUrl, chooseRowAction, searchRows } from "#/tests/pages/helpers";
+import { getUrl, searchRows } from "#/tests/pages/helpers";
+import { activity, fillAction, openTicket, submitAction, takeAction } from "#/tests/pages/tickets";
 
 type FellowAndSupervisor = {
   fellowEmail: string;
@@ -62,27 +63,15 @@ async function insertHeldTicket(fellowAndSupervisor: FellowAndSupervisor, undo: 
   return { ticketId: ticket.id, ticketSubject };
 }
 
-async function giveReason(page: Page, title: string, reason: string) {
-  const dialog = page.getByRole("dialog", { name: title });
-  await dialog.getByLabel("Reason").fill(reason);
-  await dialog.getByRole("button", { name: title }).click();
-  await expect(dialog).toBeHidden();
-}
-
-async function expectRowAfterReload(page: Page, ticketSubject: string, text: RegExp) {
-  await page.reload();
+async function expectRowAfterReload(page: Page, path: string, ticketSubject: string, text: RegExp) {
+  await page.goto(getUrl(path));
   await expect(await searchRows(page, ticketSubject)).toContainText(text);
 }
 
-async function expectNoActions(page: Page, ticketSubject: string, actions: string[]) {
-  await (await searchRows(page, ticketSubject)).getByRole("cell").last().click();
-  const menu = page.getByRole("menu");
-  // The actions arrive with a status request the menu makes as it opens.
-  await expect(menu.getByText("View ticket")).toBeVisible();
-  await page.waitForLoadState("networkidle");
+async function expectNoActions(page: Page, path: string, ticketSubject: string, actions: string[]) {
+  const step = await openTicket(page, path, ticketSubject);
   for (const action of actions)
-    await expect(menu.getByText(action, { exact: true })).toHaveCount(0);
-  await page.keyboard.press("Escape");
+    await expect(step.getByRole("button", { name: action, exact: true })).toHaveCount(0);
 }
 
 test("the holder starts, reprioritises and resolves a ticket, and its creator reopens it", async ({
@@ -98,37 +87,64 @@ test("the holder starts, reprioritises and resolves a ticket, and its creator re
   await signInWithEmail(context, fellowAndSupervisor.supervisorEmail);
   await page.goto(getUrl("/sc/tickets"));
   await expect(await searchRows(page, ticketSubject)).toContainText(/open/i);
-  await chooseRowAction(page, await searchRows(page, ticketSubject), "Start ticket");
+  const step = await openTicket(page, "/sc/tickets", ticketSubject);
+  await step.getByRole("button", { name: "Start", exact: true }).click();
+  await step.getByRole("button", { name: "Start ticket" }).click();
   await expect(page.getByText("Ticket started").first()).toBeVisible();
-  await expectRowAfterReload(page, ticketSubject, /in progress/i);
+  await expectRowAfterReload(page, "/sc/tickets", ticketSubject, /in progress/i);
 
-  await chooseRowAction(page, await searchRows(page, ticketSubject), "Change priority");
-  await page.getByRole("dialog", { name: "Change priority" }).getByRole("combobox").click();
-  await page.getByRole("option", { name: "URGENT" }).click();
-  await giveReason(page, "Change priority", "A whole school is affected.");
-  await expectRowAfterReload(page, ticketSubject, /urgent/i);
+  await openTicket(page, "/sc/tickets", ticketSubject);
+  const priority = await fillAction(page, "Change priority", "A whole school is affected.");
+  await priority.getByRole("combobox").click();
+  await page.getByRole("option", { name: "Urgent" }).click();
+  await submitAction(page, "Change priority");
+  await expectRowAfterReload(page, "/sc/tickets", ticketSubject, /urgent/i);
 
-  await chooseRowAction(page, await searchRows(page, ticketSubject), "Resolve ticket");
-  const resolve = page.getByRole("dialog", { name: "Resolve Ticket" });
-  await resolve.getByRole("combobox").click();
-  await page.getByRole("option", { name: "Yes" }).click();
-  await resolve.getByPlaceholder("Explain how this ticket was resolved").fill("Sorted out.");
-  await resolve.getByRole("button", { name: "Resolve Ticket" }).click();
-  await expect(resolve).toBeHidden();
-  await expectRowAfterReload(page, ticketSubject, /resolved/i);
+  await openTicket(page, "/sc/tickets", ticketSubject);
+  await takeAction(page, "Resolve", "Sorted out.");
+  await expectRowAfterReload(page, "/sc/tickets", ticketSubject, /resolved/i);
 
   await signInWithEmail(context, fellowAndSupervisor.fellowEmail);
-  await page.goto(getUrl("/fel/tickets"));
-  await chooseRowAction(page, await searchRows(page, ticketSubject), "Reopen ticket");
-  await giveReason(page, "Reopen ticket", "The device still drops the connection.");
-  await expectRowAfterReload(page, ticketSubject, /in progress/i);
+  await openTicket(page, "/fel/tickets", ticketSubject);
+  await takeAction(page, "Reopen", "The device still drops the connection.");
+  await expectRowAfterReload(page, "/fel/tickets", ticketSubject, /in progress/i);
 
-  await chooseRowAction(page, await searchRows(page, ticketSubject), "View ticket");
-  const details = page.getByRole("dialog", { name: "Ticket Details" });
-  await expect(details).toContainText("Priority changed from medium to urgent");
-  await expect(details).toContainText("A whole school is affected.");
-  await expect(details).toContainText("Reopened");
-  await expect(details).toContainText("The device still drops the connection.");
+  await openTicket(page, "/fel/tickets", ticketSubject);
+  await expect(activity(page)).toContainText("Medium to Urgent");
+  await expect(activity(page)).toContainText("A whole school is affected.");
+  // The holder is still active, so the reopen names the supervisor who resolved it.
+  await expect(
+    activity(page).getByRole("listitem").filter({ hasText: "Reopened" }).last(),
+  ).toContainText("Sent to");
+  await expect(activity(page)).toContainText("The device still drops the connection.");
+});
+
+test("previous and next step through the tickets the holder holds, newest first", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fellowAndSupervisor = await pickFellowAndSupervisor();
+  required(fellowAndSupervisor, "a fellow and their supervisor who can both sign in");
+  const older = await insertHeldTicket(fellowAndSupervisor, undo);
+  const newer = await insertHeldTicket(fellowAndSupervisor, undo);
+  // A microsecond apart, which a Date can't hold, and far enough back that no other ticket falls
+  // between them.
+  for (const [ticket, createdAt] of [
+    [older, "2001-01-01 00:00:00.000001+00"],
+    [newer, "2001-01-01 00:00:00.000002+00"],
+  ] as const)
+    await db
+      .update(tickets)
+      .set({ createdAt: sql`${createdAt}::timestamptz` })
+      .where(eq(tickets.id, ticket.ticketId));
+
+  await signInWithEmail(context, fellowAndSupervisor.supervisorEmail);
+  await openTicket(page, "/sc/tickets", older.ticketSubject);
+  await page.getByRole("link", { name: /^Previous ticket you hold/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: newer.ticketSubject })).toBeVisible();
+  await page.getByRole("link", { name: /^Next ticket you hold/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: older.ticketSubject })).toBeVisible();
 });
 
 test("the creator cancels an open ticket with a reason", async ({ page, context, undo }) => {
@@ -137,26 +153,22 @@ test("the creator cancels an open ticket with a reason", async ({ page, context,
   const { ticketSubject } = await insertHeldTicket(fellowAndSupervisor, undo);
 
   await signInWithEmail(context, fellowAndSupervisor.fellowEmail);
-  await page.goto(getUrl("/fel/tickets"));
-  await chooseRowAction(page, await searchRows(page, ticketSubject), "Cancel ticket");
-  await giveReason(page, "Cancel ticket", "Raised by mistake.");
-  await expectRowAfterReload(page, ticketSubject, /cancelled/i);
-  await expectNoActions(page, ticketSubject, ["Cancel ticket", "Reopen ticket"]);
+  await openTicket(page, "/fel/tickets", ticketSubject);
+  await takeAction(page, "Cancel ticket", "Raised by mistake.");
+  await expectRowAfterReload(page, "/fel/tickets", ticketSubject, /cancelled/i);
+  await expectNoActions(page, "/fel/tickets", ticketSubject, ["Cancel ticket", "Reopen"]);
 
   await signInWithEmail(context, fellowAndSupervisor.supervisorEmail);
-  await page.goto(getUrl("/sc/tickets"));
-  await expectNoActions(page, ticketSubject, [
-    "Start ticket",
+  await expectNoActions(page, "/sc/tickets", ticketSubject, [
+    "Start",
     "Change priority",
-    "Resolve ticket",
-    "Escalate ticket",
-    "Reassign ticket",
+    "Resolve",
+    "Escalate",
+    "Reassign",
   ]);
 
-  await chooseRowAction(page, await searchRows(page, ticketSubject), "View ticket");
-  const details = page.getByRole("dialog", { name: "Ticket Details" });
-  await expect(details).toContainText("Cancelled");
-  await expect(details).toContainText("Raised by mistake.");
+  await expect(activity(page)).toContainText("Cancelled");
+  await expect(activity(page)).toContainText("Raised by mistake.");
 });
 
 test("the creator can't reopen a ticket once the reopen window has passed", async ({
@@ -174,8 +186,7 @@ test("the creator can't reopen a ticket once the reopen window has passed", asyn
     .where(eq(tickets.id, ticketId));
 
   await signInWithEmail(context, fellowAndSupervisor.fellowEmail);
-  await page.goto(getUrl("/fel/tickets"));
-  await expectNoActions(page, ticketSubject, ["Reopen ticket", "Cancel ticket"]);
+  await expectNoActions(page, "/fel/tickets", ticketSubject, ["Reopen", "Cancel ticket"]);
 });
 
 test("the creator can cancel a clinical ticket only until it is started", async ({
@@ -189,12 +200,9 @@ test("the creator can cancel a clinical ticket only until it is started", async 
   await db.update(tickets).set({ category: "CLINICAL" }).where(eq(tickets.id, ticketId));
 
   await signInWithEmail(context, fellowAndSupervisor.fellowEmail);
-  await page.goto(getUrl("/fel/tickets"));
-  await (await searchRows(page, ticketSubject)).getByRole("cell").last().click();
-  await expect(page.getByRole("menu").getByText("Cancel ticket", { exact: true })).toBeVisible();
-  await page.keyboard.press("Escape");
+  const step = await openTicket(page, "/fel/tickets", ticketSubject);
+  await expect(step.getByRole("button", { name: "Cancel ticket" })).toBeVisible();
 
   await db.update(tickets).set({ status: "IN_PROGRESS" }).where(eq(tickets.id, ticketId));
-  await page.reload();
-  await expectNoActions(page, ticketSubject, ["Cancel ticket"]);
+  await expectNoActions(page, "/fel/tickets", ticketSubject, ["Cancel ticket"]);
 });

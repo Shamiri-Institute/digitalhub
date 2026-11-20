@@ -1,28 +1,38 @@
 "use server";
 
-import { and, asc, desc, eq, exists, inArray, isNull, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  exists,
+  inArray,
+  isNotNull,
+  isNull,
+  ne,
+  or,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 import { refresh } from "next/cache";
 
 import { db, type Transaction } from "#/db/client";
-import {
-  ImplementerRole,
-  type TicketCategory,
-  type TicketEventKind,
-  type TicketStatus,
-} from "#/db/enums";
+import { type AdminTeam, ImplementerRole, TicketCategory, type TicketStatus } from "#/db/enums";
 import {
   adminUser,
   clinicalLead,
   hubCoordinator,
   implementerMember,
+  supervisor,
   ticketEvents,
   tickets,
 } from "#/db/schema";
-import { requireAuthRole } from "#/lib/auth/require-auth-role";
-import { mayReopenTicket, REOPEN_WINDOW_DAYS } from "#/lib/ticket-reopen-window";
+import { NotFoundError, requireAuthRole } from "#/lib/auth/require-auth-role";
+import { mayReopenTicket, REOPEN_WINDOW_DAYS, REOPEN_WINDOW_MS } from "#/lib/ticket-reopen-window";
 import type { ActionResponse } from "#/types/actions.types";
 import {
   ACTIVE_TICKET_STATUSES,
+  ADMIN_TEAM_FROM_CATEGORY,
   ChangeTicketPrioritySchema,
   type ChangeTicketPriorityInput,
   type CreateTicketInput,
@@ -35,20 +45,17 @@ import {
   ESCALATION_RECIPIENT_ROLES,
   type EscalationInitiatorRole,
   type EscalationRecipientRole,
-  type FetchEscalationRecipientHandler,
+  type ListEscalationRecipientsHandler,
   type FullTicket,
-  type FullTicketReassignment,
+  type TicketActions,
+  type TicketAssignees,
+  type TicketDetails,
+  type TicketEvent,
+  type TicketPerson,
   isEscalationInitiatorRole,
   REASSIGNMENT_INITIATOR_ROLES,
-  type ReassignmentInitiatorRole,
   ROLE_NAME_CONFIG,
-  TICKET_CHANGE_KINDS,
-  type TicketChange,
-  type TicketEscalation,
-  type TicketEscalationStatus,
   type TicketFilters,
-  RESOLVED_TICKET_STATUSES,
-  type TicketResolution,
   TicketReasonSchema,
   type UserRoleNameMap,
 } from "./types";
@@ -63,20 +70,21 @@ export async function createTicket(payload: CreateTicketInput): Promise<ActionRe
 
     if (!isEscalationInitiatorRole(role)) throw new Error("The role cannot create tickets");
 
-    const ticketFields = CreateTicketSchema.parse(payload);
-    const nextRecipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role](ticketFields.category);
-    const handler = fetchEscalationRecipientHandlers[nextRecipientRole];
-    const escalationRecipientId = await handler({
-      userId: createdById,
-      implementerId: activeImplementerId,
-    });
+    const { assigneeId, ...ticketFields } = CreateTicketSchema.parse(payload);
+    await assertRecipient(
+      { userId: createdById, implementerId: activeImplementerId },
+      role,
+      ticketFields.category,
+      false,
+      assigneeId,
+    );
 
     const ticketPayload: CreateTicketPayload = { ...ticketFields, createdById };
 
     await db.transaction(async (tx) => {
       const [ticket] = await tx
         .insert(tickets)
-        .values({ ...ticketPayload, holderId: escalationRecipientId })
+        .values({ ...ticketPayload, holderId: assigneeId })
         .returning({ id: tickets.id });
       if (!ticket) throw new Error("Ticket insert returned no row");
 
@@ -84,13 +92,52 @@ export async function createTicket(payload: CreateTicketInput): Promise<ActionRe
         ticketId: ticket.id,
         kind: "CREATED",
         actorId: createdById,
-        assigneeId: escalationRecipientId,
+        assigneeId,
         reason: ticketPayload.description,
       });
     });
 
     refresh();
     return { success: true, message: "Successfully created ticket" };
+  } catch (error: unknown) {
+    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function getTicketAssignees(): Promise<ActionResponse<TicketAssignees>> {
+  try {
+    const initiator = await requireAuthRole(...ESCALATION_INITIATOR_ROLES);
+    const { role, implementerId } = initiator;
+    if (!isEscalationInitiatorRole(role)) throw new Error("The role cannot create tickets");
+
+    const categories = Object.values(TicketCategory);
+    // Categories that share a recipient role, or an admin team, share one lookup.
+    const lookups = new Map<string, Promise<string[]>>();
+    const recipientIds = await Promise.all(
+      categories.map((c) => {
+        const recipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role](c);
+        const key = recipientRole === "ADMIN" ? ADMIN_TEAM_FROM_CATEGORY[c] : recipientRole;
+        const lookup = lookups.get(key) ?? routeRecipients(initiator, role, c, false);
+        lookups.set(key, lookup);
+        return lookup;
+      }),
+    );
+    const people = await getUserNamesAndRolesById(recipientIds.flat(), implementerId);
+
+    return {
+      success: true,
+      message: "Assignees retrieved",
+      data: Object.fromEntries(
+        categories.map((c, i) => [
+          c,
+          // A recipient with several memberships is shown in the role they would take it as.
+          (recipientIds[i] ?? []).map((id) => ({
+            ...personOf(id, people),
+            role: ESCALATION_RECIPIENT_FROM_INITIATOR[role](c),
+          })),
+        ]),
+      ) as TicketAssignees,
+    };
   } catch (error: unknown) {
     return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
   }
@@ -131,83 +178,6 @@ function canViewTicket(userId: string) {
         ),
     ),
   );
-}
-
-async function findViewableTicket(ticketId: string, userId: string) {
-  const [ticket] = await db
-    .select({
-      status: tickets.status,
-      holderId: tickets.holderId,
-      createdById: tickets.createdById,
-      resolvedAt: tickets.resolvedAt,
-      category: tickets.category,
-    })
-    .from(tickets)
-    .where(and(eq(tickets.id, ticketId), canViewTicket(userId)));
-  return ticket;
-}
-
-export async function getEscalationsPerTicket(
-  ticketId: string,
-): Promise<ActionResponse<TicketEscalation[]>> {
-  try {
-    const { userId: callerUserId, implementerId } = await requireAuthRole(
-      ...Object.values(ImplementerRole),
-    );
-
-    const viewableTicket = await findViewableTicket(ticketId, callerUserId);
-    if (!viewableTicket) throw new Error("Not authorized to view this ticket's escalations");
-
-    const escalations = await readHandovers(ticketId, ["CREATED", "ESCALATED"]);
-    if (escalations.length === 0) throw new Error("No escalations were found for this ticket");
-
-    const nameMap = await getUserNamesAndRolesById(
-      escalations.flatMap((e) => [e.actorId, e.assigneeId]),
-      implementerId,
-    );
-
-    const mappedEscalations: TicketEscalation[] = escalations.map(
-      (escalation): TicketEscalation => {
-        const escalatedBy = nameMap.get(escalation.actorId);
-        const escalatedTo = nameMap.get(escalation.assigneeId);
-
-        return {
-          id: escalation.id,
-          escalationReason: escalation.reason,
-          createdAt: escalation.createdAt,
-          escalatedByName: escalatedBy?.name ?? "",
-          escalatedToName: escalatedTo?.name ?? "",
-          escalatedByRole: escalatedBy?.role as EscalationInitiatorRole,
-          escalatedToRole: escalatedTo?.role as EscalationRecipientRole,
-        };
-      },
-    );
-
-    return {
-      success: true,
-      message: "Successfully fetched escalations",
-      data: mappedEscalations,
-    };
-  } catch (error) {
-    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
-  }
-}
-
-/** Events that hand the ticket to someone, which always carry an assignee and a reason. */
-async function readHandovers(
-  ticketId: string,
-  kinds: Extract<TicketEventKind, "CREATED" | "ESCALATED" | "REASSIGNED">[],
-) {
-  const events = await db.query.ticketEvents.findMany({
-    where: (e, { and, eq, inArray }) => and(eq(e.ticketId, ticketId), inArray(e.kind, kinds)),
-    orderBy: (e, { asc }) => [asc(e.createdAt), asc(e.id)],
-  });
-  return events.map(({ actorId, assigneeId, reason, ...event }) => {
-    if (!actorId || !assigneeId || reason === null) {
-      throw new Error("A handover event lacks its actor or assignee");
-    }
-    return { ...event, actorId, assigneeId, reason };
-  });
 }
 
 async function lockTicket(tx: Transaction, ticketId: string) {
@@ -287,28 +257,37 @@ async function runTicketAction(
   }
 }
 
-export async function createEscalation(ticketId: string, reason: string): Promise<ActionResponse> {
+export async function createEscalation(
+  ticketId: string,
+  reason: string,
+  recipientId: string,
+): Promise<ActionResponse> {
   return runTicketAction("Escalation created successfully", async () => {
     const {
       userId: callerUserId,
       role,
       implementerId: activeImplementerId,
+      identifier,
     } = await requireAuthRole(...ESCALATION_INITIATOR_ROLES);
     const escalationReason = TicketReasonSchema.parse(reason);
 
     if (!isEscalationInitiatorRole(role)) throw new Error("The role cannot create escalations");
+    if (await isTopTier(role, identifier)) {
+      throw new Error("The Tech team is the top tier, so reassign the ticket instead");
+    }
     const ticket = await db.query.tickets.findFirst({
       where: (t, { eq }) => eq(t.id, ticketId),
       columns: { category: true },
     });
     if (!ticket) throw new Error("Ticket not found");
-    const nextRecipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role](ticket.category);
 
-    const handler = fetchEscalationRecipientHandlers[nextRecipientRole];
-    const escalationRecipientId = await handler({
-      userId: callerUserId,
-      implementerId: activeImplementerId,
-    });
+    await assertRecipient(
+      { userId: callerUserId, implementerId: activeImplementerId },
+      role,
+      ticket.category,
+      true,
+      recipientId,
+    );
 
     await db.transaction(async (tx) => {
       const lockedTicket = await lockTicket(tx, ticketId);
@@ -323,7 +302,7 @@ export async function createEscalation(ticketId: string, reason: string): Promis
           ticketId,
           kind: "ESCALATED",
           actorId: callerUserId,
-          assigneeId: escalationRecipientId,
+          assigneeId: recipientId,
           reason: escalationReason,
         },
         { status: "ESCALATED" },
@@ -404,7 +383,11 @@ export async function changeTicketPriority(
   });
 }
 
-export async function reopenTicket(ticketId: string, reason: string): Promise<ActionResponse> {
+export async function reopenTicket(
+  ticketId: string,
+  reason: string,
+  recipientId: string,
+): Promise<ActionResponse> {
   return runTicketAction("Ticket reopened", async () => {
     const {
       userId: callerUserId,
@@ -427,16 +410,22 @@ export async function reopenTicket(ticketId: string, reason: string): Promise<Ac
         );
       }
 
-      // The ticket returns to its holder, who resolved it, unless they have since left; then it is
-      // routed afresh, as a new ticket is, so it is never left with no one able to act on it.
-      const holderIsActive =
-        lockedTicket.holderId !== null &&
-        (await isActiveHolder(tx, lockedTicket.holderId, activeImplementerId));
-      const newHolderId = holderIsActive
-        ? undefined
-        : await fetchEscalationRecipientHandlers[
-            ESCALATION_RECIPIENT_FROM_INITIATOR[role](lockedTicket.category)
-          ]({ userId: callerUserId, implementerId: activeImplementerId });
+      // The creator may send it back to whoever resolved it, while they are still active, or to
+      // anyone a new ticket could go to.
+      const returnsToHolder =
+        recipientId === lockedTicket.holderId &&
+        (await isActiveHolder(tx, recipientId, activeImplementerId));
+      if (!returnsToHolder) {
+        await assertRecipient(
+          { userId: callerUserId, implementerId: activeImplementerId },
+          role,
+          lockedTicket.category,
+          false,
+          recipientId,
+          tx,
+        );
+      }
+      const newHolderId = returnsToHolder ? undefined : recipientId;
 
       await recordTicketEvent(
         tx,
@@ -504,7 +493,11 @@ export async function reassignTicket(
 
       assertTicketHolder(lockedTicket.holderId, callerUserId, "reassign");
 
-      await assertReassignmentEligible(tx, { role, implementerId, identifier }, reassignedTo);
+      await assertReassignmentEligible(
+        tx,
+        { userId: callerUserId, role, implementerId, identifier },
+        reassignedTo,
+      );
 
       await recordTicketEvent(
         tx,
@@ -525,7 +518,11 @@ export async function reassignTicket(
 }
 
 // The same archived and dropped-out rules the escalation routing applies to each role.
-async function isActiveHolder(tx: Transaction, holderId: string, implementerId: string) {
+async function isActiveHolder(
+  tx: Transaction | typeof db,
+  holderId: string,
+  implementerId: string,
+) {
   const { rows } = await tx.execute(sql`
     SELECT 1
     FROM implementer_members m
@@ -545,257 +542,287 @@ async function isActiveHolder(tx: Transaction, holderId: string, implementerId: 
   return rows.length > 0;
 }
 
-async function assertReassignmentEligible(
-  tx: Transaction,
-  actor: { role: ImplementerRole; implementerId: string; identifier: string | null },
-  reassignedTo: string,
-): Promise<void> {
-  const { role, implementerId, identifier } = actor;
+type ReassignmentActor = {
+  userId: string;
+  role: ImplementerRole;
+  implementerId: string;
+  identifier: string | null;
+};
 
-  const targetMember = await tx.query.implementerMember.findFirst({
-    where: (m, { and, eq }) =>
-      and(eq(m.userId, reassignedTo), eq(m.role, role), eq(m.implementerId, implementerId)),
-    columns: { identifier: true },
-  });
+// Another active holder of the actor's role: any admin, or a supervisor, coordinator or clinical
+// lead of one of the actor's hubs.
+async function listReassignmentRecipients(
+  q: Transaction | typeof db,
+  { userId, role, implementerId, identifier }: ReassignmentActor,
+) {
+  const colleagues = and(
+    eq(implementerMember.role, role),
+    eq(implementerMember.implementerId, implementerId),
+    ne(implementerMember.userId, userId),
+    isNotNull(implementerMember.identifier),
+  );
+  const byAge = [asc(implementerMember.createdAt), asc(implementerMember.id)];
+  const userIdOf = { userId: implementerMember.userId };
 
-  if (!targetMember?.identifier) {
-    throw new Error("The selected user is not an eligible recipient for this tier");
-  }
-
-  if (role === ImplementerRole.HUB_COORDINATOR) {
-    if (!identifier) throw new Error("Your account is not linked to a hub coordinator profile");
-
-    // The target's hub must be one the acting coordinator is assigned to.
-    const actorHubs = tx
+  let rows: { userId: string }[] = [];
+  if (role === "ADMIN") {
+    rows = await q
+      .select(userIdOf)
+      .from(implementerMember)
+      .where(colleagues)
+      .orderBy(...byAge);
+  } else if (role === "SUPERVISOR" && identifier) {
+    const actorHubs = q
+      .select({ hubId: supervisor.hubId })
+      .from(supervisor)
+      .where(eq(supervisor.id, identifier));
+    rows = await q
+      .select(userIdOf)
+      .from(implementerMember)
+      .innerJoin(supervisor, eq(supervisor.id, implementerMember.identifier))
+      .where(
+        and(
+          colleagues,
+          isNull(supervisor.archivedAt),
+          or(eq(supervisor.droppedOut, false), isNull(supervisor.droppedOut)),
+          inArray(supervisor.hubId, actorHubs),
+        ),
+      )
+      .orderBy(...byAge);
+  } else if (role === "HUB_COORDINATOR" && identifier) {
+    const actorHubs = q
       .select({ hubId: hubCoordinator.assignedHubId })
       .from(hubCoordinator)
       .where(eq(hubCoordinator.id, identifier));
-    const [target] = await tx
-      .select({ id: hubCoordinator.id })
-      .from(hubCoordinator)
+    rows = await q
+      .select(userIdOf)
+      .from(implementerMember)
+      .innerJoin(hubCoordinator, eq(hubCoordinator.id, implementerMember.identifier))
       .where(
         and(
-          eq(hubCoordinator.id, targetMember.identifier),
+          colleagues,
           isNull(hubCoordinator.archivedAt),
           or(eq(hubCoordinator.droppedOut, false), isNull(hubCoordinator.droppedOut)),
           inArray(hubCoordinator.assignedHubId, actorHubs),
         ),
-      );
-
-    if (!target) {
-      throw new Error("The selected hub coordinator is inactive or not in your hub");
-    }
-    return;
-  }
-
-  if (role === ImplementerRole.CLINICAL_LEAD) {
-    if (!identifier) throw new Error("Your account is not linked to a clinical lead profile");
-
-    const actorHubs = tx
+      )
+      .orderBy(...byAge);
+  } else if (role === "CLINICAL_LEAD" && identifier) {
+    const actorHubs = q
       .select({ hubId: clinicalLead.assignedHubId })
       .from(clinicalLead)
       .where(eq(clinicalLead.id, identifier));
-    const [target] = await tx
-      .select({ id: clinicalLead.id })
-      .from(clinicalLead)
+    rows = await q
+      .select(userIdOf)
+      .from(implementerMember)
+      .innerJoin(clinicalLead, eq(clinicalLead.id, implementerMember.identifier))
       .where(
         and(
-          eq(clinicalLead.id, targetMember.identifier),
+          colleagues,
           or(eq(clinicalLead.droppedOut, false), isNull(clinicalLead.droppedOut)),
           inArray(clinicalLead.assignedHubId, actorHubs),
         ),
-      );
+      )
+      .orderBy(...byAge);
+  }
+  return rows.map((row) => row.userId);
+}
 
-    if (!target) {
-      throw new Error("The selected clinical lead is inactive or not in your hub");
-    }
+async function assertReassignmentEligible(
+  tx: Transaction,
+  actor: ReassignmentActor,
+  reassignedTo: string,
+): Promise<void> {
+  if (!(await listReassignmentRecipients(tx, actor)).includes(reassignedTo)) {
+    throw new Error(
+      actor.role === "ADMIN"
+        ? "Choose another admin to take it over"
+        : "Choose an active colleague in your hub to take it over",
+    );
   }
 }
 
-export async function getTicketEscalationStatus(
-  ticketId: string,
-): Promise<ActionResponse<TicketEscalationStatus>> {
+export async function getTicketDetails(ticketId: string): Promise<ActionResponse<TicketDetails>> {
   try {
-    const { userId: callerUserId, role } = await requireAuthRole(...Object.values(ImplementerRole));
+    const {
+      userId: callerUserId,
+      role,
+      implementerId,
+      identifier,
+    } = await requireAuthRole(...Object.values(ImplementerRole));
 
-    const ticket = await findViewableTicket(ticketId, callerUserId);
-    if (!ticket) throw new Error("Ticket not found");
-
-    const pastKinds = await db
-      .selectDistinct({ kind: ticketEvents.kind })
-      .from(ticketEvents)
-      .where(
-        and(
-          eq(ticketEvents.ticketId, ticketId),
-          inArray(ticketEvents.kind, ["REASSIGNED", "RESOLVED"]),
-        ),
-      );
-    const hasReassignment = pastKinds.some((e) => e.kind === "REASSIGNED");
-    const ticketIsActive = isActiveTicketStatus(ticket.status);
-    const callerHoldsTicket = ticketIsActive && ticket.holderId === callerUserId;
-    // Each action's own role guard, so the menu never offers one that would be refused.
+    const [ticketRow] = await selectTickets()
+      .where(and(eq(tickets.id, ticketId), canViewTicket(callerUserId)))
+      .limit(1);
+    if (!ticketRow) throw new NotFoundError("Ticket");
+    const callerHoldsTicket =
+      isActiveTicketStatus(ticketRow.status) && ticketRow.holderId === callerUserId;
+    // Each action's own role guard, so the page never offers one that would be refused.
     const callerHoldsTicketAs = (roles: readonly ImplementerRole[]) =>
       callerHoldsTicket && roles.includes(role);
+    const initiatorRole = isEscalationInitiatorRole(role) ? role : null;
+
     // Reopen and cancel run under an initiator role, so another membership must not offer them.
     const callerCreatedTicket =
-      ticket.createdById === callerUserId && isEscalationInitiatorRole(role);
+      ticketRow.createdById === callerUserId && isEscalationInitiatorRole(role);
+    const { resolvedAt, holderId } = ticketRow;
+    const reopenable = ticketRow.status === "RESOLVED" && mayReopenTicket(resolvedAt, new Date());
+    const canReopen = callerCreatedTicket && reopenable;
 
-    return {
-      success: true,
-      message: "Ticket escalation status retrieved",
-      data: {
-        canStart:
-          callerHoldsTicketAs(ESCALATION_RECIPIENT_ROLES) && ticket.status !== "IN_PROGRESS",
-        canChangePriority: callerHoldsTicketAs(ESCALATION_RECIPIENT_ROLES),
-        canEscalate: callerHoldsTicketAs(ESCALATION_INITIATOR_ROLES),
-        canReassign: callerHoldsTicketAs(REASSIGNMENT_INITIATOR_ROLES),
-        canResolve: callerHoldsTicketAs(ESCALATION_RECIPIENT_ROLES),
-        canReopen:
-          callerCreatedTicket &&
-          ticket.status === "RESOLVED" &&
-          mayReopenTicket(ticket.resolvedAt, new Date()),
-        canCancel: callerCreatedTicket && mayCancelTicket(ticket),
-        hasReassignment,
-        hasResolution:
-          RESOLVED_TICKET_STATUSES.includes(ticket.status) &&
-          pastKinds.some((e) => e.kind === "RESOLVED"),
-      },
-    };
-  } catch (error) {
-    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
-  }
-}
+    const canReassign = callerHoldsTicketAs(REASSIGNMENT_INITIATOR_ROLES);
+    const canEscalate =
+      callerHoldsTicketAs(ESCALATION_INITIATOR_ROLES) && !(await isTopTier(role, identifier));
 
-export async function getTicketResolution(
-  ticketId: string,
-): Promise<ActionResponse<TicketResolution>> {
-  try {
-    const { userId: callerUserId, implementerId } = await requireAuthRole(
-      ...Object.values(ImplementerRole),
+    // Previous and next follow the list's order, newest first, through the tickets the caller
+    // holds when they hold this one, so a holder can work through their queue. The comparison stays
+    // in SQL because created_at keeps microseconds that a Date would drop.
+    const neighbourScope = and(
+      canViewTicket(callerUserId),
+      holderId === callerUserId ? eq(tickets.holderId, callerUserId) : undefined,
     );
+    const position = sql`(${tickets.createdAt}, ${tickets.id})`;
+    const thisTicket = sql`(SELECT ${tickets.createdAt}, ${tickets.id} FROM ${tickets} WHERE ${tickets.id} = ${ticketId})`;
+    const sibling = { id: tickets.id, visibleId: tickets.visibleId };
 
-    const viewableTicket = await findViewableTicket(ticketId, callerUserId);
-    if (!viewableTicket) throw new Error("You are not authorized to view this ticket's resolution");
-
-    const resolution = await db.query.ticketEvents.findFirst({
-      where: (e, { and, eq }) => and(eq(e.ticketId, ticketId), eq(e.kind, "RESOLVED")),
-      orderBy: (e, { desc }) => [desc(e.createdAt), desc(e.id)],
-      with: {
-        actor: {
-          with: {
-            memberships: {
-              where: (m, { eq }) => eq(m.implementerId, implementerId),
-              orderBy: (m, { asc }) => [asc(m.id)],
-              limit: 1,
-              columns: { role: true },
-            },
-          },
-        },
-      },
-    });
-
-    if (!resolution) throw new Error("This ticket has not been resolved");
-
-    return {
-      success: true,
-      message: "Resolution retrieved successfully",
-      data: {
-        id: resolution.id,
-        resolvedByRole: resolution.actor?.memberships[0]?.role ?? null,
-        resolutionReason: resolution.reason ?? "",
-        createdAt: resolution.createdAt,
-      },
-    };
-  } catch (error) {
-    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
-  }
-}
-
-export async function getTicketChanges(ticketId: string): Promise<ActionResponse<TicketChange[]>> {
-  try {
-    const { userId: callerUserId, implementerId } = await requireAuthRole(
-      ...Object.values(ImplementerRole),
-    );
-
-    const viewableTicket = await findViewableTicket(ticketId, callerUserId);
-    if (!viewableTicket) throw new Error("You are not authorized to view this ticket's changes");
-
-    const changes = await db.query.ticketEvents.findMany({
-      where: (e, { and, eq, inArray }) =>
-        and(eq(e.ticketId, ticketId), inArray(e.kind, [...TICKET_CHANGE_KINDS])),
-      orderBy: (e, { asc }) => [asc(e.createdAt), asc(e.id)],
-    });
-    const nameMap = await getUserNamesAndRolesById(
-      changes.flatMap((e) => (e.actorId ? [e.actorId] : [])),
+    const [routedIds, events, holderIsActive, reassignIds, [previous], [next]] = await Promise.all([
+      (canEscalate || canReopen) && initiatorRole
+        ? routeRecipients(
+            { userId: callerUserId, implementerId },
+            initiatorRole,
+            ticketRow.category,
+            canEscalate,
+          )
+        : [],
+      db.query.ticketEvents.findMany({
+        where: (e, { eq }) => eq(e.ticketId, ticketId),
+        orderBy: (e, { asc }) => [asc(e.createdAt), asc(e.id)],
+      }),
+      canReopen && isActiveHolder(db, holderId, implementerId),
+      canReassign
+        ? listReassignmentRecipients(db, { userId: callerUserId, role, implementerId, identifier })
+        : [],
+      db
+        .select(sibling)
+        .from(tickets)
+        .where(and(neighbourScope, sql`${position} > ${thisTicket}`))
+        .orderBy(asc(tickets.createdAt), asc(tickets.id))
+        .limit(1),
+      db
+        .select(sibling)
+        .from(tickets)
+        .where(and(neighbourScope, sql`${position} < ${thisTicket}`))
+        .orderBy(desc(tickets.createdAt), desc(tickets.id))
+        .limit(1),
+    ]);
+    // A reopened ticket goes back to whoever resolved it unless the creator picks someone else.
+    const recipientIds = holderIsActive
+      ? [holderId, ...routedIds.filter((id) => id !== holderId)]
+      : routedIds;
+    const people = await getUserNamesAndRolesById(
+      [
+        ticketRow.createdById,
+        ticketRow.holderId,
+        ...events.flatMap((e) => [e.actorId, e.assigneeId].filter((id) => id !== null)),
+        ...recipientIds,
+        ...reassignIds,
+      ],
       implementerId,
     );
+    const ticket = toFullTicket(ticketRow, people);
+
+    const actions: TicketActions = {
+      canStart: callerHoldsTicketAs(ESCALATION_RECIPIENT_ROLES) && ticket.status !== "IN_PROGRESS",
+      canChangePriority: callerHoldsTicketAs(ESCALATION_RECIPIENT_ROLES),
+      canEscalate,
+      canReassign,
+      canResolve: callerHoldsTicketAs(ESCALATION_RECIPIENT_ROLES),
+      canReopen,
+      canCancel: callerCreatedTicket && mayCancelTicket(ticket),
+    };
 
     return {
       success: true,
-      message: "Ticket changes retrieved",
-      data: changes.map((e): TicketChange => ({
-        id: e.id,
-        kind: e.kind as TicketChange["kind"],
-        actorName: (e.actorId && nameMap.get(e.actorId)?.name) || null,
-        fromValue: e.fromValue,
-        toValue: e.toValue,
-        reason: e.reason ?? "",
-        createdAt: e.createdAt,
-      })),
+      message: "Ticket retrieved",
+      data: {
+        viewerId: callerUserId,
+        // A recipient with several memberships is shown in the role they would take it as.
+        // The resolver keeps their own role, which may be above the routing's.
+        recipients: recipientIds.map((id) =>
+          holderIsActive && id === holderId
+            ? personOf(id, people)
+            : {
+                ...personOf(id, people),
+                role:
+                  initiatorRole &&
+                  ESCALATION_RECIPIENT_FROM_INITIATOR[initiatorRole](ticket.category),
+              },
+        ),
+        reassignRecipients: reassignIds.map((id) => ({ ...personOf(id, people), role })),
+        ticket,
+        previous: previous ?? null,
+        next: next ?? null,
+        actions,
+        reopenableUntil:
+          reopenable && resolvedAt ? new Date(resolvedAt.getTime() + REOPEN_WINDOW_MS) : null,
+        events: events.map((e): TicketEvent => ({
+          id: e.id,
+          kind: e.kind,
+          actor: e.actorId ? personOf(e.actorId, people) : null,
+          assignee: e.assigneeId ? personOf(e.assigneeId, people) : null,
+          fromValue: e.fromValue,
+          toValue: e.toValue,
+          reason: e.reason,
+          createdAt: e.createdAt,
+        })),
+      },
     };
   } catch (error) {
-    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+    // Only a missing ticket becomes a not-found page; anything else reaches the error boundary.
+    if (!(error instanceof NotFoundError)) throw error;
+    return { success: false, message: error.message };
   }
 }
 
-export async function getTicketReassignments(
-  ticketId: string,
-): Promise<ActionResponse<FullTicketReassignment[]>> {
-  try {
-    const { userId: callerUserId, implementerId } = await requireAuthRole(
-      ...Object.values(ImplementerRole),
-    );
+function selectTickets() {
+  return db
+    .select({
+      id: tickets.id,
+      visibleId: tickets.visibleId,
+      subject: tickets.subject,
+      description: tickets.description,
+      category: tickets.category,
+      status: tickets.status,
+      priority: tickets.priority,
+      createdAt: tickets.createdAt,
+      createdById: tickets.createdById,
+      holderId: tickets.holderId,
+      resolvedAt: tickets.resolvedAt,
+      closedAt: tickets.closedAt,
+    })
+    .from(tickets);
+}
 
-    const viewableTicket = await findViewableTicket(ticketId, callerUserId);
-    if (!viewableTicket)
-      throw new Error("You are not authorized to view this ticket's reassignments");
+export type TicketRow = Awaited<ReturnType<ReturnType<typeof selectTickets>["where"]>>[number];
 
-    const reassignments = await readHandovers(ticketId, ["REASSIGNED"]);
-    if (reassignments.length === 0) {
-      throw new Error("No reassignments exist for this ticket");
-    }
+function personOf(userId: string, people: UserRoleNameMap): TicketPerson {
+  const person = people.get(userId);
+  return {
+    userId,
+    name: person?.name ?? null,
+    role: person?.role ?? null,
+    team: person?.team ?? null,
+  };
+}
 
-    const userIds = reassignments.flatMap((r) => [r.actorId, r.assigneeId]);
-
-    const nameMap = await getUserNamesAndRolesById(
-      userIds,
-      implementerId,
-      REASSIGNMENT_INITIATOR_ROLES,
-    );
-
-    const mappedReassignments: FullTicketReassignment[] = reassignments.map((reassignment) => {
-      const reassignedFromInfo = nameMap.get(reassignment.actorId);
-      const reassignedToInfo = nameMap.get(reassignment.assigneeId);
-
-      return {
-        id: reassignment.id,
-        reassignmentReason: reassignment.reason,
-        createdAt: reassignment.createdAt,
-        reassignedFromName: reassignedFromInfo?.name ?? "",
-        reassignedToName: reassignedToInfo?.name ?? "",
-        reassignedFromRole: (reassignedFromInfo?.role as ReassignmentInitiatorRole) ?? null,
-        reassignedToRole: (reassignedToInfo?.role as ReassignmentInitiatorRole) ?? null,
-      };
-    });
-
-    return {
-      success: true,
-      message: "Reassignments retrieved successfully",
-      data: mappedReassignments,
-    };
-  } catch (error) {
-    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
-  }
+function toFullTicket(
+  { createdById, holderId, ...ticketFields }: TicketRow,
+  people: UserRoleNameMap,
+): FullTicket {
+  return {
+    ...ticketFields,
+    createdBy: personOf(createdById, people),
+    holder: personOf(holderId, people),
+  };
 }
 
 async function fetchTicketsForUser(
@@ -803,40 +830,23 @@ async function fetchTicketsForUser(
   implementerId: string,
   filters: TicketFilters,
 ): Promise<FullTicket[]> {
-  const rows = await db
-    .select({
-      id: tickets.id,
-      subject: tickets.subject,
-      description: tickets.description,
-      category: tickets.category,
-      status: tickets.status,
-      priority: tickets.priority,
-      createdAt: tickets.createdAt,
-      holderId: tickets.holderId,
-    })
-    .from(tickets)
+  const rows = await selectTickets()
     .where(
       and(canViewTicket(userId), filters.status ? eq(tickets.status, filters.status) : undefined),
     )
-    .orderBy(desc(tickets.createdAt));
+    .orderBy(desc(tickets.createdAt), desc(tickets.id));
 
-  const roleMap = await getUserNamesAndRolesById(
-    Array.from(new Set(rows.map((r) => r.holderId))),
+  const people = await getUserNamesAndRolesById(
+    Array.from(new Set(rows.flatMap((r) => [r.createdById, r.holderId]))),
     implementerId,
   );
 
-  return rows.map(({ holderId, ...row }): FullTicket => ({
-    ...row,
-    currentTier: roleMap.get(holderId)?.role ?? null,
-  }));
+  return rows.map((row) => toFullTicket(row, people));
 }
 
-const fetchEscalationRecipientHandlers: Record<
-  EscalationRecipientRole,
-  FetchEscalationRecipientHandler
-> = {
-  SUPERVISOR: async ({ userId }) => {
-    const { rows: result } = await db.execute<{ supervisor_user_id: string }>(sql`
+const listEscalationRecipients: Record<EscalationRecipientRole, ListEscalationRecipientsHandler> = {
+  SUPERVISOR: async ({ userId, implementerId }, q = db) => {
+    const { rows: result } = await q.execute<{ supervisor_user_id: string }>(sql`
       SELECT im2.user_id AS supervisor_user_id
       FROM implementer_members im1
       JOIN fellows f ON f.id = im1.identifier
@@ -844,20 +854,17 @@ const fetchEscalationRecipientHandlers: Record<
       JOIN implementer_members im2 ON im2.identifier = s.id
       WHERE im1.user_id = ${userId}
         AND im1.role = 'FELLOW'
+        AND im1.implementer_id = ${implementerId}
         AND im2.role = 'SUPERVISOR'
+        AND im2.implementer_id = ${implementerId}
         AND s.archived_at IS NULL
         AND s.dropped_out IS NOT TRUE
-      ORDER BY im2.created_at, im2.id
-      LIMIT 1;
+      ORDER BY im2.created_at, im2.id;
     `);
-
-    const supervisorUserId = result[0]?.supervisor_user_id;
-    if (!supervisorUserId) throw new Error("No supervisor found for this fellow");
-
-    return supervisorUserId;
+    return result.map((row) => row.supervisor_user_id);
   },
-  HUB_COORDINATOR: async ({ userId, implementerId }) => {
-    const { rows: result } = await db.execute<{ hub_coordinator_user_id: string }>(sql`
+  HUB_COORDINATOR: async ({ userId, implementerId }, q = db) => {
+    const { rows: result } = await q.execute<{ hub_coordinator_user_id: string }>(sql`
       SELECT hc_member.user_id as hub_coordinator_user_id
       FROM implementer_members sup_member
       JOIN supervisors s ON s.id = sup_member.identifier
@@ -872,16 +879,11 @@ const fetchEscalationRecipientHandlers: Record<
         AND hc.archived_at IS NULL
         AND hc.dropped_out IS NOT TRUE
       ORDER BY hc.created_at, hc.id
-      LIMIT 1
     `);
-
-    const hubCoordinatorUserId = result[0]?.hub_coordinator_user_id;
-    if (!hubCoordinatorUserId) throw new Error("No hub coordinator found for this supervisor");
-
-    return hubCoordinatorUserId;
+    return result.map((row) => row.hub_coordinator_user_id);
   },
-  CLINICAL_LEAD: async ({ userId, implementerId }) => {
-    const { rows: result } = await db.execute<{ clinical_lead_user_id: string }>(sql`
+  CLINICAL_LEAD: async ({ userId, implementerId }, q = db) => {
+    const { rows: result } = await q.execute<{ clinical_lead_user_id: string }>(sql`
       SELECT cl_member.user_id as clinical_lead_user_id
       FROM implementer_members sup_member
       JOIN supervisors s ON s.id = sup_member.identifier
@@ -895,67 +897,103 @@ const fetchEscalationRecipientHandlers: Record<
         AND sup_member.implementer_id = ${implementerId}
         AND cl.dropped_out IS NOT TRUE
       ORDER BY cl.created_at, cl.id
-      LIMIT 1
     `);
-
-    const clinicalLeadUserId = result[0]?.clinical_lead_user_id;
-    if (!clinicalLeadUserId) throw new Error("No clinical lead found for this supervisor");
-
-    return clinicalLeadUserId;
+    return result.map((row) => row.clinical_lead_user_id);
   },
-  ADMIN: async ({ implementerId }) => {
-    // The oldest super admin of the ticket's implementer, so adding admins, or an admin of another
-    // implementer, never changes who receives the ticket.
-    const [recipient] = await db
-      .select({ userId: implementerMember.userId })
-      .from(adminUser)
-      .innerJoin(
-        implementerMember,
-        and(
-          eq(implementerMember.identifier, adminUser.id),
-          eq(implementerMember.role, "ADMIN"),
-          eq(implementerMember.implementerId, implementerId),
-        ),
-      )
-      .where(and(eq(adminUser.implementerId, implementerId), eq(adminUser.isSuperAdmin, true)))
-      .orderBy(asc(adminUser.createdAt), asc(adminUser.id))
-      .limit(1);
-    if (!recipient) throw new Error("No admin user found");
-
-    return recipient.userId;
+  ADMIN: async ({ userId, implementerId, recipientTeam }, q = db) => {
+    // Oldest first, so adding admins, or an admin of another implementer, never changes who
+    // receives a ticket by default.
+    const adminsMatching = (filter: SQL) =>
+      q
+        .select({ userId: implementerMember.userId })
+        .from(adminUser)
+        .innerJoin(
+          implementerMember,
+          and(
+            eq(implementerMember.identifier, adminUser.id),
+            eq(implementerMember.role, "ADMIN"),
+            eq(implementerMember.implementerId, implementerId),
+          ),
+        )
+        .where(
+          and(
+            eq(adminUser.implementerId, implementerId),
+            ne(implementerMember.userId, userId),
+            filter,
+          ),
+        )
+        .orderBy(asc(adminUser.createdAt), asc(adminUser.id));
+    const onTeam = await adminsMatching(eq(adminUser.team, recipientTeam));
+    const recipients =
+      onTeam.length > 0 ? onTeam : await adminsMatching(eq(adminUser.isSuperAdmin, true));
+    return recipients.map((recipient) => recipient.userId);
   },
 };
+
+// Who a ticket goes to from the initiator, the default first. An admin escalates to the Tech team;
+// otherwise admin recipients are on the team the ticket's category names.
+function routeRecipients(
+  initiator: { userId: string; implementerId: string },
+  initiatorRole: EscalationInitiatorRole,
+  category: TicketCategory,
+  escalating: boolean,
+  q: Transaction | typeof db = db,
+) {
+  const recipientTeam: AdminTeam =
+    initiatorRole === "ADMIN" && escalating ? "TECH" : ADMIN_TEAM_FROM_CATEGORY[category];
+  return listEscalationRecipients[ESCALATION_RECIPIENT_FROM_INITIATOR[initiatorRole](category)](
+    { ...initiator, recipientTeam },
+    q,
+  );
+}
+
+// The caller picks the recipient, so check they are one the routing allows.
+async function assertRecipient(
+  initiator: { userId: string; implementerId: string },
+  initiatorRole: EscalationInitiatorRole,
+  category: TicketCategory,
+  escalating: boolean,
+  recipientId: string,
+  q: Transaction | typeof db = db,
+) {
+  const recipients = await routeRecipients(initiator, initiatorRole, category, escalating, q);
+  if (!recipients.includes(recipientId)) throw new Error("Choose someone who can take this ticket");
+}
+
+// Tickets climb to the Tech team, so its admins have no one above them to escalate to.
+async function isTopTier(role: ImplementerRole, identifier: string | null) {
+  if (role !== "ADMIN" || !identifier) return false;
+  const admin = await db.query.adminUser.findFirst({
+    where: (a, { eq }) => eq(a.id, identifier),
+    columns: { team: true },
+  });
+  return admin?.team === "TECH";
+}
 
 async function getUserNamesAndRolesById(
   userIds: string[],
   implementerId: string,
-  roles: ImplementerRole[] = [],
 ): Promise<UserRoleNameMap> {
   const result: UserRoleNameMap = new Map();
   if (userIds.length === 0) return result;
 
-  const activeConfigs =
-    roles.length > 0
-      ? ROLE_NAME_CONFIG.filter((config) => roles.includes(config.role))
-      : ROLE_NAME_CONFIG;
-
-  const coalesceSql = activeConfigs.map((c) => `${c.table}.${c.column}`).join(", ");
-  const joinsSql = activeConfigs
-    .map(
-      (c) =>
-        `LEFT JOIN ${c.table} ON ${c.table}.id = im.identifier AND im.role = '${c.role}'::implementer_roles`,
-    )
-    .join("\n");
+  const coalesceSql = ROLE_NAME_CONFIG.map((c) => `${c.table}.${c.column}`).join(", ");
+  const joinsSql = ROLE_NAME_CONFIG.map(
+    (c) =>
+      `LEFT JOIN ${c.table} ON ${c.table}.id = im.identifier AND im.role = '${c.role}'::implementer_roles`,
+  ).join("\n");
 
   const { rows } = await db.execute<{
     user_id: string;
     role: ImplementerRole;
     name: string | null;
+    team: AdminTeam | null;
   }>(sql`
     SELECT
       im.user_id,
       im.role::text AS role,
-      COALESCE(${sql.raw(coalesceSql)}) AS name
+      COALESCE(${sql.raw(coalesceSql)}) AS name,
+      admin_users.team::text AS team
     FROM implementer_members im
     ${sql.raw(joinsSql)}
     WHERE ${inArray(sql`im.user_id`, userIds)}
@@ -963,7 +1001,9 @@ async function getUserNamesAndRolesById(
   `);
 
   for (const row of rows) {
-    result.set(`${row.user_id}`, { role: row.role, name: row.name });
+    // Another membership's row has no team, so it must not hide the admin one's.
+    const team = row.team ?? result.get(row.user_id)?.team ?? null;
+    result.set(`${row.user_id}`, { role: row.role, name: row.name, team });
   }
 
   return result;

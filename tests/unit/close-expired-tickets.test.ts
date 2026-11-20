@@ -1,13 +1,11 @@
 // @vitest-environment node
 import { inArray, TransactionRollbackError } from "drizzle-orm";
-import { afterAll, expect, it } from "vitest";
+import { expect, it } from "vitest";
 
-import { db, pool } from "#/db/client";
+import { db } from "#/db/client";
 import { ticketEvents, tickets } from "#/db/schema";
 import { closeExpiredTickets } from "#/lib/close-expired-tickets";
 import { REOPEN_WINDOW_MS } from "#/lib/ticket-reopen-window";
-
-afterAll(() => pool.end());
 
 it("closes resolved tickets past the reopen window and leaves the rest", async () => {
   const creator = await db.query.user.findFirst({ columns: { id: true } });

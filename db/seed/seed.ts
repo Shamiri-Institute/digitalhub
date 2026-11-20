@@ -43,6 +43,7 @@ import {
   researchAdminEmail,
   sobhaAcademy,
   superAdminEmail,
+  techAdminEmail,
 } from "#/db/seed/fixtures";
 import type { SurveyForm } from "#/lib/survey/form";
 import { issuePrintFile, recordPrintRun } from "#/lib/survey/print-run";
@@ -399,6 +400,14 @@ async function createAdminUsers(
       implementerIds: [shamiri.id],
       isSuperAdmin: false,
       team: AdminTeam.OPERATIONS,
+    },
+    {
+      userId: objectId("user"),
+      email: techAdminEmail,
+      adminName: "Tech Admin",
+      implementerIds: [shamiri.id],
+      isSuperAdmin: false,
+      team: AdminTeam.TECH,
     },
     {
       userId: objectId("user"),

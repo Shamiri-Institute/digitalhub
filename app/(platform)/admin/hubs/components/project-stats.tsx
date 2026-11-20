@@ -1,5 +1,6 @@
 import { type AdminHub, withScheduled } from "../queries";
-import { Figure, formatCount, Note, SessionsStat, StatCell } from "./hub-stats";
+import { Figure, formatCount, Note, StatCell } from "#/components/common/stats";
+import { SessionsStat } from "./hub-stats";
 
 const sum = (hubs: AdminHub[], count: (hub: AdminHub) => number) =>
   hubs.reduce((total, hub) => total + count(hub), 0);

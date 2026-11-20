@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
+import { Combobox } from "#/components/ui/combobox";
 import {
   Dialog,
   DialogClose,
@@ -36,10 +37,18 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { createTicket } from "#/lib/actions/ticket";
-import { CreateTicketSchema } from "#/lib/actions/ticket/types";
+import { CreateTicketSchema, type TicketAssignees } from "#/lib/actions/ticket/types";
+import { personName } from "./format";
+import { groupLabel } from "./recipient-options";
 import { zodResolver } from "#/lib/zod-resolver";
 
-export default function CreateTicketDialog({ disabled }: { disabled?: boolean }) {
+export default function CreateTicketDialog({
+  assignees,
+  disabled,
+}: {
+  assignees?: TicketAssignees;
+  disabled?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -50,13 +59,19 @@ export default function CreateTicketDialog({ disabled }: { disabled?: boolean })
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
-        <CreateTicketForm close={() => setOpen(false)} />
+        <CreateTicketForm assignees={assignees} close={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   );
 }
 
-function CreateTicketForm({ close }: { close: () => void }) {
+function CreateTicketForm({
+  assignees,
+  close,
+}: {
+  assignees?: TicketAssignees;
+  close: () => void;
+}) {
   const { isSaving, save } = useDialogSave();
 
   const form = useForm<z.infer<typeof CreateTicketSchema>>({
@@ -66,8 +81,11 @@ function CreateTicketForm({ close }: { close: () => void }) {
       description: "",
       category: undefined,
       priority: "MEDIUM",
+      assigneeId: "",
     },
   });
+  const category = form.watch("category");
+  const categoryAssignees = (category && assignees?.[category]) || [];
 
   const onSubmit = (data: z.infer<typeof CreateTicketSchema>) => {
     save(async () => {
@@ -129,7 +147,16 @@ function CreateTicketForm({ close }: { close: () => void }) {
               render={({ field }) => (
                 <FormItem required>
                   <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      form.setValue(
+                        "assigneeId",
+                        assignees?.[value as TicketCategory]?.[0]?.userId ?? "",
+                      );
+                    }}
+                    value={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
@@ -172,6 +199,36 @@ function CreateTicketForm({ close }: { close: () => void }) {
               )}
             />
           </div>
+          <FormField
+            control={form.control}
+            name="assigneeId"
+            render={({ field }) => (
+              <FormItem required>
+                <FormLabel>Assign to</FormLabel>
+                {category && categoryAssignees.length === 0 ? (
+                  <p className="text-sm text-shamiri-text-dark-grey">
+                    No one is available to take this ticket. Ask an administrator for help.
+                  </p>
+                ) : (
+                  <FormControl>
+                    <Combobox
+                      items={categoryAssignees.map((person) => ({
+                        id: person.userId,
+                        label: personName(person),
+                        group: groupLabel(person),
+                      }))}
+                      activeItemId={field.value}
+                      onSelectItem={field.onChange}
+                      placeholder={category ? "Choose who should take it" : "Pick a category first"}
+                      inputPlaceholder="Search by name"
+                      disabled={!category}
+                    />
+                  </FormControl>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
         <Separator className="my-6" />
         <DialogFooter className="flex justify-end gap-2">
