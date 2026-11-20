@@ -63,7 +63,7 @@ test("a clinical lead accepts a referred case before it becomes theirs", async (
   const dialog = page.getByRole("dialog", { name: "Refer clinical case" });
   await dialog.getByRole("combobox", { name: "Refer to" }).click();
   await page.getByRole("option", { name: "Clinical Lead", exact: true }).click();
-  await dialog.getByRole("button", { name: "Select a clinical lead..." }).click();
+  await dialog.getByRole("button", { name: "Select Clinical Lead" }).click();
   await page.getByPlaceholder("Search clinical leads...").fill(fixture.leadName);
   await page.getByRole("option", { name: fixture.leadName, exact: true }).click();
   await dialog.getByRole("combobox", { name: "Referral Reason" }).click();
