@@ -111,8 +111,16 @@ export async function getTicketAssignees(): Promise<ActionResponse<TicketAssigne
     if (!isEscalationInitiatorRole(role)) throw new Error("The role cannot create tickets");
 
     const categories = Object.values(TicketCategory);
+    // Categories that share a recipient role, or an admin team, share one lookup.
+    const lookups = new Map<string, Promise<string[]>>();
     const recipientIds = await Promise.all(
-      categories.map((c) => routeRecipients(initiator, role, c, false)),
+      categories.map((c) => {
+        const recipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role](c);
+        const key = recipientRole === "ADMIN" ? ADMIN_TEAM_FROM_CATEGORY[c] : recipientRole;
+        const lookup = lookups.get(key) ?? routeRecipients(initiator, role, c, false);
+        lookups.set(key, lookup);
+        return lookup;
+      }),
     );
     const people = await getUserNamesAndRolesById(recipientIds.flat(), implementerId);
 
