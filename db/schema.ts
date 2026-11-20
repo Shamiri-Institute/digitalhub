@@ -4,6 +4,7 @@ import { json, jsonb } from "#/db/json";
 import { objectId } from "#/lib/crypto";
 import type { SurveyForm } from "#/lib/survey/form";
 import type { Layout } from "#/lib/survey/layout";
+import type { FailedPage, FieldReadDetail, ReadPage } from "#/lib/survey/scan-wire";
 import { MAX_COPIES_PER_FILE } from "#/lib/survey/serial";
 import type { TranscriptGap, TranscriptSegment } from "#/lib/transcription/transcribe";
 import {
@@ -39,9 +40,11 @@ import {
   RecordingProcessingStatus,
   RiskNotCompletedReason,
   RiskScreenOutcome,
+  SCAN_REJECTIONS_NAMING_A_PAGE,
   SessionStatus,
   SupervisorHandoffStatus,
   SupportType,
+  SurveyAnswerReadStatus,
   SurveyAnswerReviewStatus,
   SurveyAnswerSource,
   SurveyAuditActor,
@@ -49,6 +52,7 @@ import {
   SurveyPrintStatus,
   SurveyQuestionnaireStatus,
   SurveyScanPageStatus,
+  SurveyScanRejection,
   SurveyStatus,
   SurveyUploadStatus,
   SurveyVersionPrefill,
@@ -153,6 +157,14 @@ export const surveyAnswerSourceEnum = pgEnum(
 export const surveyAnswerReviewStatusEnum = pgEnum(
   "survey_answer_review_status",
   enumValues(SurveyAnswerReviewStatus),
+);
+export const surveyAnswerReadStatusEnum = pgEnum(
+  "survey_answer_read_status",
+  enumValues(SurveyAnswerReadStatus),
+);
+export const surveyScanRejectionEnum = pgEnum(
+  "survey_scan_rejection",
+  enumValues(SurveyScanRejection),
 );
 
 export const verification = pgTable(
@@ -3094,6 +3106,7 @@ export const surveyUpload = pgTable(
     status: surveyUploadStatusEnum().default(SurveyUploadStatus.PENDING).notNull(),
     error: text(),
     uploadedAt: timestamp("uploaded_at", { withTimezone: true, mode: "date" }),
+    attempt: integer().default(1).notNull(),
   },
   (table) => [
     uniqueIndex("survey_uploads_sha256_key").on(table.sha256),
@@ -3102,6 +3115,7 @@ export const surveyUpload = pgTable(
     index("survey_uploads_uploaded_by_idx").on(table.uploadedBy),
     check("survey_uploads_sha256_check", sql`${table.sha256} ~ '^[0-9a-f]{64}$'`),
     check("survey_uploads_byte_size_check", sql`${table.byteSize} > 0`),
+    check("survey_uploads_attempt_check", sql`${table.attempt} >= 1`),
     check(
       "survey_uploads_uploaded_check",
       sql`${table.status} = 'PENDING' or ${table.uploadedAt} is not null`,
@@ -3283,8 +3297,8 @@ export const surveyVersionField = pgTable(
   ],
 );
 
-// One page image cut from an upload. A REJECTED scan may have no printed page: a cover sheet, a
-// blank, another form.
+// One page of an upload. A REJECTED scan may have no printed page: a cover sheet, a blank, another
+// form.
 export const surveyScanPage = pgTable(
   "survey_scan_pages",
   {
@@ -3301,10 +3315,15 @@ export const surveyScanPage = pgTable(
       .$onUpdate(() => new Date()),
     uploadId: text("upload_id").notNull(),
     pageIndex: integer("page_index").notNull(),
-    imageS3Key: text("image_s3_key").notNull(),
+    attempt: integer().default(1).notNull(),
+    imageS3Key: text("image_s3_key"),
+    aligned: boolean(),
     questionnairePageId: text("questionnaire_page_id"),
     status: surveyScanPageStatusEnum().notNull(),
+    rejectedReason: surveyScanRejectionEnum("rejected_reason"),
     duplicateOfId: text("duplicate_of_id"),
+    postedResult: jsonb("posted_result").$type<ReadPage | FailedPage>().notNull(),
+    postedSha256: text("posted_sha256").notNull(),
   },
   (table) => [
     uniqueIndex("survey_scan_pages_upload_id_page_index_key").on(table.uploadId, table.pageIndex),
@@ -3323,6 +3342,18 @@ export const surveyScanPage = pgTable(
       table.questionnairePageId,
     ),
     check("survey_scan_pages_page_index_check", sql`${table.pageIndex} >= 0`),
+    check("survey_scan_pages_attempt_check", sql`${table.attempt} >= 1`),
+    check("survey_scan_pages_posted_sha256_check", sql`${table.postedSha256} ~ '^[0-9a-f]{64}$'`),
+    check(
+      "survey_scan_pages_posted_result_check",
+      sql`jsonb_typeof(${table.postedResult}) = 'object'`,
+    ),
+    check(
+      "survey_scan_pages_rejected_check",
+      sql`(${table.status} = 'REJECTED') = (${table.rejectedReason} IS NOT NULL)
+        AND (${table.rejectedReason} IS NOT DISTINCT FROM 'UNREADABLE') = (${table.imageS3Key} IS NULL)
+        AND (${table.imageS3Key} IS NULL) = (${table.aligned} IS NULL)`,
+    ),
     check(
       "survey_scan_pages_duplicate_check",
       sql`(${table.status} = 'DUPLICATE') = (${table.duplicateOfId} IS NOT NULL)`,
@@ -3332,7 +3363,7 @@ export const surveyScanPage = pgTable(
       "survey_scan_pages_identified_check",
       sql`CASE ${table.status}
         WHEN 'UNIDENTIFIED' THEN ${table.questionnairePageId} IS NULL
-        WHEN 'REJECTED' THEN TRUE
+        WHEN 'REJECTED' THEN (${table.rejectedReason} IN (${sql.raw(SCAN_REJECTIONS_NAMING_A_PAGE.map((reason) => `'${reason}'`).join(", "))})) = (${table.questionnairePageId} IS NOT NULL)
         ELSE ${table.questionnairePageId} IS NOT NULL
       END`,
     ),
@@ -3385,7 +3416,8 @@ export const surveyAnswer = pgTable(
     // What the pipeline read, kept beside `value` so a reviewer sees both.
     recognizedValue: jsonb("recognized_value").$type<JsonValue>(),
     confidence: doublePrecision(),
-    cropS3Key: text("crop_s3_key"),
+    readStatus: surveyAnswerReadStatusEnum("read_status"),
+    readDetail: jsonb("read_detail").$type<FieldReadDetail>(),
     value: jsonb().$type<JsonValue>(),
     source: surveyAnswerSourceEnum().notNull(),
     reviewStatus: surveyAnswerReviewStatusEnum("review_status").notNull(),
@@ -3418,12 +3450,20 @@ export const surveyAnswer = pgTable(
     ),
     check(
       "survey_answers_pipeline_check",
-      sql`${table.source} <> 'PIPELINE' OR (${table.scanPageId} IS NOT NULL AND ${table.confidence} IS NOT NULL)`,
+      sql`${table.source} <> 'PIPELINE' OR (${table.scanPageId} IS NOT NULL AND ${table.readStatus} IS NOT NULL)`,
+    ),
+    check(
+      "survey_answers_read_status_check",
+      sql`${table.readStatus} IS NULL OR (${table.readStatus} = 'OK') = (${table.recognizedValue} IS NOT NULL)`,
+    ),
+    check(
+      "survey_answers_read_detail_check",
+      sql`${table.readDetail} IS NULL OR jsonb_typeof(${table.readDetail}) = 'object'`,
     ),
     // A typed-in answer is a reviewer's, so it is reviewed by them.
     check(
       "survey_answers_manual_check",
-      sql`${table.source} <> 'MANUAL' OR (${table.recognizedValue} IS NULL AND ${table.confidence} IS NULL AND ${table.reviewStatus} IN ('VERIFIED', 'CORRECTED'))`,
+      sql`${table.source} <> 'MANUAL' OR (${table.recognizedValue} IS NULL AND ${table.confidence} IS NULL AND ${table.readStatus} IS NULL AND ${table.readDetail} IS NULL AND ${table.reviewStatus} IN ('VERIFIED', 'CORRECTED'))`,
     ),
     check(
       "survey_answers_reviewed_check",
@@ -3459,6 +3499,13 @@ export const surveyAnswer = pgTable(
       .onDelete("restrict"),
   ],
 );
+
+export const surveyFieldKindReview = pgTable("survey_field_kind_reviews", {
+  kind: surveyFieldKindEnum().primaryKey(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+});
 
 // Append-only history of every change to survey data; a trigger rejects UPDATE and DELETE. No
 // foreign keys to the surveys tables, so the history outlives what it records.

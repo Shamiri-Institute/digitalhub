@@ -8,6 +8,7 @@ export const SurveyAuditEntity = {
   PRINT_RUN: "PRINT_RUN",
   QUESTIONNAIRE: "QUESTIONNAIRE",
   SCAN_UPLOAD: "SCAN_UPLOAD",
+  SCAN_PAGE: "SCAN_PAGE",
 } as const;
 export type SurveyAuditEntity = (typeof SurveyAuditEntity)[keyof typeof SurveyAuditEntity];
 
@@ -20,6 +21,7 @@ export const SurveyAuditAction = {
   PRINT_RUN_CREATED: "PRINT_RUN_CREATED",
   QUESTIONNAIRE_VOIDED: "QUESTIONNAIRE_VOIDED",
   SCAN_UPLOADED: "SCAN_UPLOADED",
+  SCAN_PAGE_INGESTED: "SCAN_PAGE_INGESTED",
 } as const;
 export type SurveyAuditAction = (typeof SurveyAuditAction)[keyof typeof SurveyAuditAction];
 
@@ -34,11 +36,15 @@ type SurveyEvent = {
   reason?: string;
 } & (
   | {
-      entityType: Exclude<SurveyAuditEntity, typeof SurveyAuditEntity.SCAN_UPLOAD>;
+      entityType: Exclude<
+        SurveyAuditEntity,
+        typeof SurveyAuditEntity.SCAN_UPLOAD | typeof SurveyAuditEntity.SCAN_PAGE
+      >;
       surveyId: string;
     }
   // An upload's pages aren't matched to a survey yet.
   | { entityType: typeof SurveyAuditEntity.SCAN_UPLOAD; surveyId?: undefined }
+  | { entityType: typeof SurveyAuditEntity.SCAN_PAGE; surveyId: string | undefined }
 );
 
 /**
@@ -46,15 +52,24 @@ type SurveyEvent = {
  * history and the data commit or roll back together.
  */
 export async function recordSurveyEvent(tx: Transaction, event: SurveyEvent) {
-  await tx.insert(surveyAuditEvent).values({
-    actorKind: event.actor.kind,
-    actorUserId: event.actor.kind === SurveyAuditActor.USER ? event.actor.userId : null,
-    surveyId: event.surveyId ?? null,
-    entityType: event.entityType,
-    entityId: event.entityId,
-    action: event.action,
-    before: event.before ?? null,
-    after: event.after ?? null,
-    reason: event.reason ?? null,
-  });
+  await recordSurveyEvents(tx, [event]);
+}
+
+export async function recordSurveyEvents(tx: Transaction, events: readonly SurveyEvent[]) {
+  if (events.length === 0) {
+    return;
+  }
+  await tx.insert(surveyAuditEvent).values(
+    events.map((event) => ({
+      actorKind: event.actor.kind,
+      actorUserId: event.actor.kind === SurveyAuditActor.USER ? event.actor.userId : null,
+      surveyId: event.surveyId ?? null,
+      entityType: event.entityType,
+      entityId: event.entityId,
+      action: event.action,
+      before: event.before ?? null,
+      after: event.after ?? null,
+      reason: event.reason ?? null,
+    })),
+  );
 }

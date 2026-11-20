@@ -7,7 +7,7 @@
 // run's y is its baseline. Runs on server and client alike, so it must not import the database.
 
 import { SurveyVersionPrefill } from "#/db/enums";
-import { isQuestion, type SurveyForm, type SurveyItem } from "#/lib/survey/form";
+import { gridRowField, isQuestion, type SurveyForm, type SurveyItem } from "#/lib/survey/form";
 import { isBlank, plainText } from "#/lib/survey/rich-text";
 import { pageCode } from "#/lib/survey/serial";
 import {
@@ -828,7 +828,7 @@ function grid(item: Extract<SurveyItem, { kind: "grid" }>, top: number): Block {
     content.push(...placeLines(lines, rowStyle, CONTENT.left, textTop));
     const markTop = rowTop + (height - CHOICE.mark) / 2;
     fields.push({
-      field: `${item.key}.${row.key}`,
+      field: gridRowField(item.key, row.key),
       questionId: item.id,
       kind: "choice",
       multiple: false,
