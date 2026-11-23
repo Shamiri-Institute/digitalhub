@@ -27,6 +27,7 @@ export default function TicketsDatatable({
   timeZone: string | null;
   emptyStateMessage: string;
 }) {
+  const noOneToTake = assignees && Object.values(assignees).every((people) => people.length === 0);
   return (
     <DataTable
       urlState
@@ -36,7 +37,18 @@ export default function TicketsDatatable({
       className="data-table data-table-action bg-white lg:mt-4"
       emptyStateMessage={emptyStateMessage}
       renderTableActions={
-        isEscalationInitiatorRole(role) ? <CreateTicketDialog assignees={assignees} /> : undefined
+        isEscalationInitiatorRole(role) ? (
+          <div className="flex items-center gap-2">
+            {noOneToTake && (
+              <span className="text-sm text-shamiri-text-dark-grey">
+                {role === "CLINICAL_TEAM"
+                  ? "No clinical lead in your hub"
+                  : "No one is available to take a ticket"}
+              </span>
+            )}
+            <CreateTicketDialog assignees={assignees} disabled={noOneToTake} />
+          </div>
+        ) : undefined
       }
     />
   );

@@ -37,7 +37,7 @@ export type TicketPriorityLevel = z.infer<typeof TicketPriorityLevelEnum>;
 
 export type EscalationInitiatorRole = Extract<
   ImplementerRole,
-  "FELLOW" | "SUPERVISOR" | "HUB_COORDINATOR" | "CLINICAL_LEAD" | "ADMIN"
+  "FELLOW" | "SUPERVISOR" | "HUB_COORDINATOR" | "CLINICAL_LEAD" | "CLINICAL_TEAM" | "ADMIN"
 >;
 
 export const ESCALATION_INITIATOR_ROLES: EscalationInitiatorRole[] = [
@@ -45,6 +45,7 @@ export const ESCALATION_INITIATOR_ROLES: EscalationInitiatorRole[] = [
   "SUPERVISOR",
   "HUB_COORDINATOR",
   "CLINICAL_LEAD",
+  "CLINICAL_TEAM",
   "ADMIN",
 ];
 
@@ -54,7 +55,7 @@ export function isEscalationInitiatorRole(role: ImplementerRole): role is Escala
 
 export type EscalationRecipientRole = Extract<
   ImplementerRole,
-  "SUPERVISOR" | "HUB_COORDINATOR" | "ADMIN" | "CLINICAL_LEAD"
+  "SUPERVISOR" | "HUB_COORDINATOR" | "ADMIN" | "CLINICAL_LEAD" | "CLINICAL_TEAM"
 >;
 
 export const ESCALATION_RECIPIENT_ROLES: EscalationRecipientRole[] = [
@@ -62,11 +63,12 @@ export const ESCALATION_RECIPIENT_ROLES: EscalationRecipientRole[] = [
   "HUB_COORDINATOR",
   "ADMIN",
   "CLINICAL_LEAD",
+  "CLINICAL_TEAM",
 ];
 
 export type ReassignmentInitiatorRole = Extract<
   ImplementerRole,
-  "SUPERVISOR" | "HUB_COORDINATOR" | "ADMIN" | "CLINICAL_LEAD"
+  "SUPERVISOR" | "HUB_COORDINATOR" | "ADMIN" | "CLINICAL_LEAD" | "CLINICAL_TEAM"
 >;
 
 export const REASSIGNMENT_INITIATOR_ROLES: ReassignmentInitiatorRole[] = [
@@ -74,11 +76,17 @@ export const REASSIGNMENT_INITIATOR_ROLES: ReassignmentInitiatorRole[] = [
   "HUB_COORDINATOR",
   "ADMIN",
   "CLINICAL_LEAD",
+  "CLINICAL_TEAM",
 ];
 
 /** Everyone who may receive a ticket from the initiator, the default recipient first. */
 export type ListEscalationRecipientsHandler = (
-  initiator: { userId: string; implementerId: string; recipientTeam: AdminTeam },
+  initiator: {
+    userId: string;
+    implementerId: string;
+    role: EscalationInitiatorRole;
+    recipientTeam: AdminTeam;
+  },
   q?: Transaction | typeof db,
 ) => Promise<string[]>;
 
@@ -107,7 +115,15 @@ export const ESCALATION_RECIPIENT_FROM_INITIATOR: Record<
     category ? ESCALATION_RECIPIENT_FROM_CATEGORY[category] : "HUB_COORDINATOR",
   HUB_COORDINATOR: (): EscalationRecipientRole => "ADMIN",
   CLINICAL_LEAD: (): EscalationRecipientRole => "ADMIN",
+  CLINICAL_TEAM: (): EscalationRecipientRole => "CLINICAL_LEAD",
   ADMIN: (): EscalationRecipientRole => "ADMIN",
+};
+
+/** Who the initiator may also pick, after everyone the routing sends the ticket to by default. */
+export const EXTRA_RECIPIENT_ROLES_FROM_INITIATOR: Partial<
+  Record<EscalationInitiatorRole, EscalationRecipientRole[]>
+> = {
+  CLINICAL_LEAD: ["CLINICAL_TEAM"],
 };
 
 export interface CreateTicketPayload {
