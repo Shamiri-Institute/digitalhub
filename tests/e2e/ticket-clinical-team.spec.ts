@@ -144,7 +144,7 @@ test("a clinical team member with no hub cannot raise a ticket and is told why",
   await signIn(context, unplaced.email);
   await page.goto(getUrl("/ct/tickets"));
   await expect(page.getByRole("button", { name: "New ticket" })).toBeDisabled();
-  await expect(page.getByText("No clinical lead is available to take a ticket")).toBeVisible();
+  await expect(page.getByText("No clinical lead in your hub")).toBeVisible();
 
   // Nor is a clinical lead offered them.
   await signIn(context, hub.leadEmail);

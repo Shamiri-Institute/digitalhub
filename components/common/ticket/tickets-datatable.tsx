@@ -30,6 +30,9 @@ export default function TicketsDatatable({
   emptyStateMessage: string;
 }) {
   const noOneToTake = assignees && Object.values(assignees).every((people) => people.length === 0);
+  const recipient = isEscalationInitiatorRole(role)
+    ? ESCALATION_RECIPIENT_FROM_INITIATOR[role]()
+    : undefined;
   return (
     <DataTable
       urlState
@@ -41,10 +44,11 @@ export default function TicketsDatatable({
       renderTableActions={
         isEscalationInitiatorRole(role) ? (
           <div className="flex items-center gap-2">
-            {noOneToTake && (
+            {noOneToTake && recipient && (
               <span className="text-sm text-shamiri-text-dark-grey">
-                No {roleLabel(ESCALATION_RECIPIENT_FROM_INITIATOR[role]()).toLowerCase()} is
-                available to take a ticket
+                {recipient === "ADMIN"
+                  ? "No admin is available to take a ticket"
+                  : `No ${roleLabel(recipient).toLowerCase()} in your hub`}
               </span>
             )}
             <CreateTicketDialog assignees={assignees} disabled={noOneToTake} />
