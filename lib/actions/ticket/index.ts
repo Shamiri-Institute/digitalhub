@@ -115,7 +115,7 @@ export async function getTicketAssignees(): Promise<ActionResponse<TicketAssigne
     const categories = Object.values(TicketCategory);
     // Categories that share a recipient role, or an admin team, share one lookup.
     const lookups = new Map<string, Promise<string[]>>();
-    const list: ListRecipients = (recipientRole, recipientTeam) => {
+    const cachedRecipientsFor: ListRecipients = (recipientRole, recipientTeam) => {
       const key = recipientRole === "ADMIN" ? recipientTeam : recipientRole;
       const lookup =
         lookups.get(key) ??
@@ -124,7 +124,7 @@ export async function getTicketAssignees(): Promise<ActionResponse<TicketAssigne
       return lookup;
     };
     const recipientsByCategory = await Promise.all(
-      categories.map((c) => routeRecipients(initiator, role, c, false, db, list)),
+      categories.map((c) => routeRecipients(initiator, role, c, false, db, cachedRecipientsFor)),
     );
     const people = await getUserNamesAndRolesById(
       recipientsByCategory.flat().map((recipient) => recipient.userId),
@@ -524,6 +524,21 @@ export async function reassignTicket(
   });
 }
 
+// The hubs a user leads as a clinical lead, as a subquery.
+function clinicalLeadHubs(q: Transaction | typeof db, userId: string, implementerId: string) {
+  return q
+    .select({ hubId: clinicalLead.assignedHubId })
+    .from(implementerMember)
+    .innerJoin(clinicalLead, eq(clinicalLead.id, implementerMember.identifier))
+    .where(
+      and(
+        eq(implementerMember.userId, userId),
+        eq(implementerMember.role, "CLINICAL_LEAD"),
+        eq(implementerMember.implementerId, implementerId),
+      ),
+    );
+}
+
 // The same archived and dropped-out rules the escalation routing applies to each role. A clinical
 // team member must still be in one of the creator's clinical lead hubs.
 async function isActiveHolder(
@@ -546,14 +561,7 @@ async function isActiveHolder(
         OR (s.archived_at IS NULL AND s.dropped_out IS NOT TRUE AND s.id IS NOT NULL)
         OR (hc.archived_at IS NULL AND hc.dropped_out IS NOT TRUE AND hc.id IS NOT NULL)
         OR (cl.dropped_out IS NOT TRUE AND cl.id IS NOT NULL)
-        OR ct.assigned_hub_id IN (
-          SELECT lead.assigned_hub_id
-          FROM implementer_members lm
-          JOIN clinical_leads lead ON lead.id = lm.identifier
-          WHERE lm.user_id = ${creatorId}
-            AND lm.role = 'CLINICAL_LEAD'
-            AND lm.implementer_id = ${implementerId}
-        )
+        OR ct.assigned_hub_id IN ${clinicalLeadHubs(tx, creatorId, implementerId)}
       )
     LIMIT 1
   `);
@@ -957,17 +965,6 @@ const listEscalationRecipients: Record<EscalationRecipientRole, ListEscalationRe
   },
   CLINICAL_TEAM: async ({ userId, implementerId }, q = db) => {
     // Only clinical leads send tickets to their hub's clinical team.
-    const clinicalLeadHubs = q
-      .select({ hubId: clinicalLead.assignedHubId })
-      .from(implementerMember)
-      .innerJoin(clinicalLead, eq(clinicalLead.id, implementerMember.identifier))
-      .where(
-        and(
-          eq(implementerMember.userId, userId),
-          eq(implementerMember.role, "CLINICAL_LEAD"),
-          eq(implementerMember.implementerId, implementerId),
-        ),
-      );
     const clinicalTeamMembers = await q
       .select({ userId: implementerMember.userId })
       .from(clinicalTeam)
@@ -980,7 +977,7 @@ const listEscalationRecipients: Record<EscalationRecipientRole, ListEscalationRe
       )
       .where(
         and(
-          inArray(clinicalTeam.assignedHubId, clinicalLeadHubs),
+          inArray(clinicalTeam.assignedHubId, clinicalLeadHubs(q, userId, implementerId)),
           ne(implementerMember.userId, userId),
         ),
       )
@@ -1048,7 +1045,9 @@ async function routeRecipients(
     (recipientIdsByRole[i] ?? []).map((userId) => ({ userId, role })),
   );
   // Someone with several memberships is offered once, in the first role that reaches them.
-  return routed.filter((r, i) => routed.findIndex((o) => o.userId === r.userId) === i);
+  return routed.filter(
+    (recipient, i) => routed.findIndex((earlier) => earlier.userId === recipient.userId) === i,
+  );
 }
 
 // The caller picks the recipient, so check they are one the routing allows.
