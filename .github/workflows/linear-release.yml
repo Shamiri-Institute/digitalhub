@@ -32,3 +32,4 @@ jobs:
         with:
           access_key: ${{ secrets.LINEAR_ACCESS_KEY }}
           version: ${{ steps.tag.outputs.name }}
+          name: ${{ steps.tag.outputs.name }}
