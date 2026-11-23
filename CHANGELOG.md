@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.14.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.13.0...v2.14.0) (2026-11-23)
+
+### Features
+
+- **survey:** ingest the scan pipeline's page results ([#1088](https://github.com/Shamiri-Institute/digitalhub/issues/1088)) ([328649b](https://github.com/Shamiri-Institute/digitalhub/commit/328649bdbebb47fbee65f53c80861470c194e899))
+- **tickets:** move the ticket view to its own page and let users pick who takes a ticket ([#1085](https://github.com/Shamiri-Institute/digitalhub/issues/1085)) ([ec0676a](https://github.com/Shamiri-Institute/digitalhub/commit/ec0676a1baaf04c5f5b72c77828e7ce5dc79aae8))
+- **tickets:** route escalations to admin teams and let admins raise tickets and supervisors reassign ([#1089](https://github.com/Shamiri-Institute/digitalhub/issues/1089)) ([96acff7](https://github.com/Shamiri-Institute/digitalhub/commit/96acff7b26f970693e08bd520598bd5141409f65))
+
+### Bug Fixes
+
+- **db:** read json and jsonb columns back as they were stored ([#1087](https://github.com/Shamiri-Institute/digitalhub/issues/1087)) ([2f186f7](https://github.com/Shamiri-Institute/digitalhub/commit/2f186f714509be102d8266650c12eec4127a268a))
+- **hooks:** let pre-push pass when only lockfiles change ([#1091](https://github.com/Shamiri-Institute/digitalhub/issues/1091)) ([f672da4](https://github.com/Shamiri-Institute/digitalhub/commit/f672da4dc7c0fd650a5834534c07dd469a70a8ca))
+- **tests:** select form comboboxes by their field label ([#1090](https://github.com/Shamiri-Institute/digitalhub/issues/1090)) ([4007414](https://github.com/Shamiri-Institute/digitalhub/commit/400741484376edfd1d09d11eba3c4424239e37a4))
+- **ui:** align colours with the Figma Hub redesign ([#1084](https://github.com/Shamiri-Institute/digitalhub/issues/1084)) ([9686d00](https://github.com/Shamiri-Institute/digitalhub/commit/9686d000d450840525ed184892c54e087f4eac02))
+- **ui:** match the Figma type system and elevation ([#1086](https://github.com/Shamiri-Institute/digitalhub/issues/1086)) ([e794440](https://github.com/Shamiri-Institute/digitalhub/commit/e794440d5a80afb72a02fab5210e69e1668f89c6))
+
 ## [2.13.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.12.0...v2.13.0) (2026-11-18)
 
 ### Features
