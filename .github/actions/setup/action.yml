@@ -25,6 +25,18 @@ runs:
       with:
         path: node_modules
         key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}
+    # Lockfile changes miss node_modules; restore a previous store so pnpm only fetches the delta.
+    - if: steps.modules.outputs.cache-hit != 'true'
+      id: pnpm-store-path
+      shell: bash
+      run: echo "dir=$(pnpm store path)" >> "$GITHUB_OUTPUT"
+    - if: steps.modules.outputs.cache-hit != 'true'
+      uses: actions/cache@v5
+      with:
+        path: ${{ steps.pnpm-store-path.outputs.dir }}
+        key: pnpm-store-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}
+        restore-keys: |
+          pnpm-store-${{ runner.os }}-${{ runner.arch }}-
     - if: steps.modules.outputs.cache-hit != 'true'
       shell: bash
       run: pnpm install --frozen-lockfile
