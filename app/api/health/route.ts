@@ -1,13 +1,17 @@
-import { NextResponse } from "next/server";
+import { sql } from "drizzle-orm";
 
-export function GET() {
-  const url = process.env.VERCEL_URL || process.env.NEXT_PUBLIC_APP_URL;
-  if (!url) {
-    throw new Error("No URL found");
+import { db } from "#/db/client";
+
+const NO_STORE = { "Cache-Control": "no-store" };
+
+export async function GET() {
+  try {
+    await Promise.race([
+      db.execute(sql`select 1`),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 3000)),
+    ]);
+    return Response.json({ status: "ok" }, { headers: NO_STORE });
+  } catch {
+    return Response.json({ status: "error" }, { status: 503, headers: NO_STORE });
   }
-  const host = /^https?:\/\//i.test(url) ? url : `https://${url}`;
-  return NextResponse.json({
-    status: "ok",
-    host,
-  });
 }
