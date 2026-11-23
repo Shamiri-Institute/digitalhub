@@ -1,12 +1,19 @@
-import type { BrowserContext, Page } from "@playwright/test";
-import { eq, inArray, like, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { clinicalTeam, implementerMember, session, ticketEvents, tickets, user } from "#/db/schema";
+import { clinicalTeam, implementerMember, session, user } from "#/db/schema";
 import { expect, test } from "#/tests/fixtures";
-import { required, signableMember, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
-import { cellUnder, getUrl, searchRows } from "#/tests/pages/helpers";
-import { activity, fillAction, openTicket, submitAction, takeAction } from "#/tests/pages/tickets";
+import { deleteTickets, required, signableMember, signIn, uniqueSuffix } from "#/tests/helpers";
+import { getUrl } from "#/tests/pages/helpers";
+import {
+  activity,
+  createTicket,
+  fillAction,
+  heldBy,
+  openTicket,
+  submitAction,
+  takeAction,
+} from "#/tests/pages/tickets";
 
 // The specs share the hub's clinical lead and clinical team, so they take turns.
 test.describe.configure({ mode: "serial" });
@@ -47,15 +54,6 @@ test.beforeAll(async () => {
   hub = row;
 });
 
-async function deleteTickets(subject: string) {
-  const created = db
-    .select({ id: tickets.id })
-    .from(tickets)
-    .where(like(tickets.subject, `${subject}%`));
-  await db.delete(ticketEvents).where(inArray(ticketEvents.ticketId, created));
-  await db.delete(tickets).where(like(tickets.subject, `${subject}%`));
-}
-
 test.afterAll(() => deleteTickets(subjectPrefix));
 
 // Another clinical team member, in `hubId` or in no hub.
@@ -82,39 +80,6 @@ async function createTeamMember(hubId: string | null) {
     await db.delete(user).where(eq(user.id, created.id));
   };
   return { email, name, remove };
-}
-
-async function signIn(context: BrowserContext, email: string) {
-  await context.clearCookies();
-  await signInWithEmail(context, email);
-}
-
-async function createTicket(
-  page: Page,
-  path: string,
-  subject: string,
-  category: string,
-  assignee?: string,
-) {
-  await page.goto(getUrl(path));
-  await page.getByRole("button", { name: "New ticket" }).click();
-  const dialog = page.getByRole("dialog", { name: "Create new ticket" });
-  await dialog.getByPlaceholder("Enter ticket subject").fill(subject);
-  await dialog.getByPlaceholder("Describe the issue").fill("Raised by the clinical team spec.");
-  await dialog.getByRole("combobox").first().click();
-  await page.getByRole("option", { name: category, exact: true }).click();
-  if (assignee) {
-    await dialog.getByRole("button", { name: "Assign to" }).click();
-    await page.getByPlaceholder("Search by name").fill(assignee);
-    await page.getByRole("option", { name: assignee }).click();
-  }
-  await dialog.getByRole("button", { name: "Submit" }).click();
-  await expect(dialog).toBeHidden();
-}
-
-async function heldBy(page: Page, path: string, subject: string) {
-  await page.goto(getUrl(path));
-  return cellUnder(page, await searchRows(page, subject), "Held by");
 }
 
 test("a clinical team member's ticket goes to their hub's clinical lead, whatever its category", async ({

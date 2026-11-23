@@ -1,7 +1,7 @@
 import { type BrowserContext, expect, type Locator, type Page } from "@playwright/test";
 import { randomInt, randomUUID } from "node:crypto";
 
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, like, sql } from "drizzle-orm";
 
 import { db, pool } from "#/db/client";
 import {
@@ -18,6 +18,8 @@ import {
   implementerMember,
   session,
   student,
+  ticketEvents,
+  tickets,
   user,
 } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
@@ -144,6 +146,22 @@ export async function emailForProfile(identifier: string, role: Role) {
 
 export async function signInWithEmail(context: BrowserContext, email: string) {
   await context.addCookies([await sessionCookieFor(email)]);
+}
+
+/** Signs in as `email` in place of whoever the context was signed in as. */
+export async function signIn(context: BrowserContext, email: string) {
+  await context.clearCookies();
+  await signInWithEmail(context, email);
+}
+
+/** Deletes the tickets whose subject starts with `subject`, with their events. */
+export async function deleteTickets(subject: string) {
+  const created = db
+    .select({ id: tickets.id })
+    .from(tickets)
+    .where(like(tickets.subject, `${subject}%`));
+  await db.delete(ticketEvents).where(inArray(ticketEvents.ticketId, created));
+  await db.delete(tickets).where(like(tickets.subject, `${subject}%`));
 }
 
 /**
