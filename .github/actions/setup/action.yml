@@ -7,13 +7,13 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+    - uses: actions/setup-node@v6
       with:
         node-version: "24"
     - id: package-manager
       shell: bash
       run: echo "version=$(node -p 'require("./package.json").packageManager')" >> "$GITHUB_OUTPUT"
-    - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+    - uses: actions/cache@v5
       with:
         path: ~/.cache/node/corepack
         key: corepack-${{ runner.os }}-${{ steps.package-manager.outputs.version }}
@@ -21,7 +21,7 @@ runs:
       run: corepack enable && corepack install
     # Pull requests restore the copy that pushes to dev and main save.
     - id: modules
-      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+      uses: actions/cache@v5
       with:
         path: node_modules
         key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}
@@ -31,7 +31,7 @@ runs:
       shell: bash
       run: echo "dir=$(pnpm store path)" >> "$GITHUB_OUTPUT"
     - if: steps.modules.outputs.cache-hit != 'true'
-      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+      uses: actions/cache@v5
       with:
         path: ${{ steps.pnpm-store-path.outputs.dir }}
         key: pnpm-store-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml', 'pnpm-workspace.yaml') }}
@@ -47,7 +47,7 @@ runs:
     # A browser cached on one Ubuntu release may lack libraries on another.
     - if: inputs.browsers == 'true'
       id: browsers
-      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+      uses: actions/cache@v5
       with:
         path: ~/.cache/ms-playwright
         key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ env.ImageOS }}-${{ steps.playwright.outputs.version }}
