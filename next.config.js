@@ -44,6 +44,8 @@ const PRINT_FONTS = ["./public/fonts/figtree/*.ttf"];
 const nextConfig = {
   // CI's E2E build skips the type check its typecheck job runs on the same commit.
   typescript: { ignoreBuildErrors: process.env.CI_TYPES_CHECKED_ELSEWHERE === "1" },
+  // 2.14.0 restored 2.13.0's Turbopack cache on Vercel and shipped the old Tailwind stylesheet.
+  experimental: { turbopackFileSystemCacheForBuild: false },
   // ffmpeg-static locates its binary beside its own files, so it is loaded at runtime, and the
   // binary and the transcription and rating prompts are traced into the route that runs them.
   serverExternalPackages: ["ffmpeg-static"],
