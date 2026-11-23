@@ -9,7 +9,7 @@ files=$(git diff --name-only --diff-filter=ACMR "$base" -- '*.ts' '*.tsx' '*.js'
 code=$(printf '%s\n' "$files" | grep -E '\.(ts|tsx|js|mjs)$' || true)
 
 # shellcheck disable=SC2086 # one argument per file
-pnpm exec oxfmt --check $files
+pnpm exec oxfmt --check --no-error-on-unmatched-pattern $files
 if [ -n "$code" ]; then
   # shellcheck disable=SC2086
   pnpm exec oxlint --type-aware $code
