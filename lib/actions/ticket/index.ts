@@ -114,15 +114,17 @@ export async function getTicketAssignees(): Promise<ActionResponse<TicketAssigne
 
     const categories = Object.values(TicketCategory);
     // Categories that share a recipient role, or an admin team, share one lookup.
-    const lookups = new Map<string, Promise<RoutedRecipient[]>>();
+    const lookups = new Map<string, Promise<string[]>>();
+    const list: ListRecipients = (recipientRole, recipientTeam) => {
+      const key = recipientRole === "ADMIN" ? recipientTeam : recipientRole;
+      const lookup =
+        lookups.get(key) ??
+        listEscalationRecipients[recipientRole]({ ...initiator, role, recipientTeam });
+      lookups.set(key, lookup);
+      return lookup;
+    };
     const recipientsByCategory = await Promise.all(
-      categories.map((c) => {
-        const recipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role](c);
-        const key = recipientRole === "ADMIN" ? ADMIN_TEAM_FROM_CATEGORY[c] : recipientRole;
-        const lookup = lookups.get(key) ?? routeRecipients(initiator, role, c, false);
-        lookups.set(key, lookup);
-        return lookup;
-      }),
+      categories.map((c) => routeRecipients(initiator, role, c, false, db, list)),
     );
     const people = await getUserNamesAndRolesById(
       recipientsByCategory.flat().map((recipient) => recipient.userId),
@@ -419,7 +421,7 @@ export async function reopenTicket(
       // anyone a new ticket could go to.
       const returnsToHolder =
         recipientId === lockedTicket.holderId &&
-        (await isActiveHolder(tx, recipientId, activeImplementerId));
+        (await isActiveHolder(tx, recipientId, activeImplementerId, callerUserId));
       if (!returnsToHolder) {
         await assertRecipient(
           { userId: callerUserId, implementerId: activeImplementerId },
@@ -522,11 +524,13 @@ export async function reassignTicket(
   });
 }
 
-// The same archived and dropped-out rules the escalation routing applies to each role.
+// The same archived and dropped-out rules the escalation routing applies to each role. A clinical
+// team member must still be in one of the creator's clinical lead hubs.
 async function isActiveHolder(
   tx: Transaction | typeof db,
   holderId: string,
   implementerId: string,
+  creatorId: string,
 ) {
   const { rows } = await tx.execute(sql`
     SELECT 1
@@ -542,7 +546,14 @@ async function isActiveHolder(
         OR (s.archived_at IS NULL AND s.dropped_out IS NOT TRUE AND s.id IS NOT NULL)
         OR (hc.archived_at IS NULL AND hc.dropped_out IS NOT TRUE AND hc.id IS NOT NULL)
         OR (cl.dropped_out IS NOT TRUE AND cl.id IS NOT NULL)
-        OR ct.assigned_hub_id IS NOT NULL
+        OR ct.assigned_hub_id IN (
+          SELECT lead.assigned_hub_id
+          FROM implementer_members lm
+          JOIN clinical_leads lead ON lead.id = lm.identifier
+          WHERE lm.user_id = ${creatorId}
+            AND lm.role = 'CLINICAL_LEAD'
+            AND lm.implementer_id = ${implementerId}
+        )
       )
     LIMIT 1
   `);
@@ -716,7 +727,7 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
           where: (e, { eq }) => eq(e.ticketId, ticketId),
           orderBy: (e, { asc }) => [asc(e.createdAt), asc(e.id)],
         }),
-        canReopen && isActiveHolder(db, holderId, implementerId),
+        canReopen && isActiveHolder(db, holderId, implementerId, callerUserId),
         canReassign
           ? listReassignmentRecipients(db, {
               userId: callerUserId,
@@ -938,6 +949,7 @@ const listEscalationRecipients: Record<EscalationRecipientRole, ListEscalationRe
         and(
           inArray(clinicalLead.assignedHubId, initiatorHubs),
           or(eq(clinicalLead.droppedOut, false), isNull(clinicalLead.droppedOut)),
+          ne(implementerMember.userId, userId),
         ),
       )
       .orderBy(asc(clinicalLead.createdAt), asc(clinicalLead.id));
@@ -1006,6 +1018,10 @@ const listEscalationRecipients: Record<EscalationRecipientRole, ListEscalationRe
 };
 
 type RoutedRecipient = { userId: string; role: EscalationRecipientRole };
+type ListRecipients = (
+  role: EscalationRecipientRole,
+  recipientTeam: AdminTeam,
+) => Promise<string[]>;
 
 // Who a ticket goes to from the initiator, the default first. An admin escalates to the Tech team;
 // otherwise admin recipients are on the team the ticket's category names.
@@ -1015,21 +1031,24 @@ async function routeRecipients(
   category: TicketCategory,
   escalating: boolean,
   q: Transaction | typeof db = db,
+  list: ListRecipients = (role, recipientTeam) =>
+    listEscalationRecipients[role]({ ...initiator, role: initiatorRole, recipientTeam }, q),
 ): Promise<RoutedRecipient[]> {
   const recipientTeam: AdminTeam =
     initiatorRole === "ADMIN" && escalating ? "TECH" : ADMIN_TEAM_FROM_CATEGORY[category];
   const recipientRoles = [
     ESCALATION_RECIPIENT_FROM_INITIATOR[initiatorRole](category),
-    ...(EXTRA_RECIPIENT_ROLES_FROM_INITIATOR[initiatorRole] ?? []),
+    // Extra roles sit beside or below the initiator, so they only take new or reopened tickets.
+    ...(escalating ? [] : (EXTRA_RECIPIENT_ROLES_FROM_INITIATOR[initiatorRole] ?? [])),
   ];
   const recipientIdsByRole = await Promise.all(
-    recipientRoles.map((role) =>
-      listEscalationRecipients[role]({ ...initiator, role: initiatorRole, recipientTeam }, q),
-    ),
+    recipientRoles.map((role) => list(role, recipientTeam)),
   );
-  return recipientRoles.flatMap((role, i) =>
+  const routed = recipientRoles.flatMap((role, i) =>
     (recipientIdsByRole[i] ?? []).map((userId) => ({ userId, role })),
   );
+  // Someone with several memberships is offered once, in the first role that reaches them.
+  return routed.filter((r, i) => routed.findIndex((o) => o.userId === r.userId) === i);
 }
 
 // The caller picks the recipient, so check they are one the routing allows.

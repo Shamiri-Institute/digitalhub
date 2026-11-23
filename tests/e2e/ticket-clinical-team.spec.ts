@@ -126,6 +126,11 @@ test("a clinical lead sends a ticket to their clinical team, who reassign it and
   await expect(await heldBy(page, "/cl/tickets", subject)).toHaveText("You");
   await openTicket(page, "/cl/tickets", subject);
   await expect(activity(page)).toContainText("Needs the clinical lead.");
+
+  // Escalating goes up to admins, never back down to the clinical team.
+  const escalate = await fillAction(page, "Escalate", "Needs an admin.");
+  await escalate.getByRole("combobox").click();
+  await expect(page.getByRole("option", { name: new RegExp(hub.teamName) })).toHaveCount(0);
 });
 
 test("a clinical team member with no hub cannot raise a ticket and is told why", async ({
@@ -139,7 +144,7 @@ test("a clinical team member with no hub cannot raise a ticket and is told why",
   await signIn(context, unplaced.email);
   await page.goto(getUrl("/ct/tickets"));
   await expect(page.getByRole("button", { name: "New ticket" })).toBeDisabled();
-  await expect(page.getByText("No clinical lead in your hub")).toBeVisible();
+  await expect(page.getByText("No clinical lead is available to take a ticket")).toBeVisible();
 
   // Nor is a clinical lead offered them.
   await signIn(context, hub.leadEmail);

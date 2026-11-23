@@ -33,13 +33,11 @@ export async function submitAction(page: Page, action: string) {
   await expect(form).toBeHidden();
 }
 
-/** Takes `action` with `reason` on the open ticket page. */
 export async function takeAction(page: Page, action: string, reason: string) {
   await fillAction(page, action, reason);
   await submitAction(page, action);
 }
 
-/** Raises a ticket from the list at `path`, picking `assignee` by name when given. */
 export async function createTicket(
   page: Page,
   path: string,
@@ -63,7 +61,6 @@ export async function createTicket(
   await expect(dialog).toBeHidden();
 }
 
-/** The "Held by" cell of the ticket called `subject` in the list at `path`. */
 export async function heldBy(page: Page, path: string, subject: string) {
   await page.goto(getUrl(path));
   return cellUnder(page, await searchRows(page, subject), "Held by");

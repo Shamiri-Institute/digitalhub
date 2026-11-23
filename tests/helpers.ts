@@ -148,13 +148,11 @@ export async function signInWithEmail(context: BrowserContext, email: string) {
   await context.addCookies([await sessionCookieFor(email)]);
 }
 
-/** Signs in as `email` in place of whoever the context was signed in as. */
 export async function signIn(context: BrowserContext, email: string) {
   await context.clearCookies();
   await signInWithEmail(context, email);
 }
 
-/** Deletes the tickets whose subject starts with `subject`, with their events. */
 export async function deleteTickets(subject: string) {
   const created = db
     .select({ id: tickets.id })

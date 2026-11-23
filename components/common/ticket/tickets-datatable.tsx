@@ -3,8 +3,10 @@
 import type { ImplementerRole } from "#/db/enums";
 import { columns, hiddenTicketColumns } from "#/components/common/ticket/columns";
 import CreateTicketDialog from "#/components/common/ticket/create-ticket-dialog";
+import { roleLabel } from "#/components/common/ticket/format";
 import DataTable from "#/components/data-table";
 import {
+  ESCALATION_RECIPIENT_FROM_INITIATOR,
   type FullTicket,
   isEscalationInitiatorRole,
   type TicketAssignees,
@@ -41,9 +43,8 @@ export default function TicketsDatatable({
           <div className="flex items-center gap-2">
             {noOneToTake && (
               <span className="text-sm text-shamiri-text-dark-grey">
-                {role === "CLINICAL_TEAM"
-                  ? "No clinical lead in your hub"
-                  : "No one is available to take a ticket"}
+                No {roleLabel(ESCALATION_RECIPIENT_FROM_INITIATOR[role]()).toLowerCase()} is
+                available to take a ticket
               </span>
             )}
             <CreateTicketDialog assignees={assignees} disabled={noOneToTake} />
