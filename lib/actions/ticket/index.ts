@@ -115,7 +115,7 @@ export async function getTicketAssignees(): Promise<ActionResponse<TicketAssigne
     const categories = Object.values(TicketCategory);
     // Categories that share a recipient role, or an admin team, share one lookup.
     const lookups = new Map<string, Promise<RoutedRecipient[]>>();
-    const recipients = await Promise.all(
+    const recipientsByCategory = await Promise.all(
       categories.map((c) => {
         const recipientRole = ESCALATION_RECIPIENT_FROM_INITIATOR[role](c);
         const key = recipientRole === "ADMIN" ? ADMIN_TEAM_FROM_CATEGORY[c] : recipientRole;
@@ -125,7 +125,7 @@ export async function getTicketAssignees(): Promise<ActionResponse<TicketAssigne
       }),
     );
     const people = await getUserNamesAndRolesById(
-      recipients.flat().map((r) => r.userId),
+      recipientsByCategory.flat().map((recipient) => recipient.userId),
       implementerId,
     );
 
@@ -136,7 +136,10 @@ export async function getTicketAssignees(): Promise<ActionResponse<TicketAssigne
         categories.map((c, i) => [
           c,
           // A recipient with several memberships is shown in the role they would take it as.
-          (recipients[i] ?? []).map((r) => ({ ...personOf(r.userId, people), role: r.role })),
+          (recipientsByCategory[i] ?? []).map((recipient) => ({
+            ...personOf(recipient.userId, people),
+            role: recipient.role,
+          })),
         ]),
       ) as TicketAssignees,
     };
@@ -699,37 +702,43 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
     const thisTicket = sql`(SELECT ${tickets.createdAt}, ${tickets.id} FROM ${tickets} WHERE ${tickets.id} = ${ticketId})`;
     const sibling = { id: tickets.id, visibleId: tickets.visibleId };
 
-    const [routed, events, holderIsActive, reassignIds, [previous], [next]] = await Promise.all([
-      (canEscalate || canReopen) && initiatorRole
-        ? routeRecipients(
-            { userId: callerUserId, implementerId },
-            initiatorRole,
-            ticketRow.category,
-            canEscalate,
-          )
-        : [],
-      db.query.ticketEvents.findMany({
-        where: (e, { eq }) => eq(e.ticketId, ticketId),
-        orderBy: (e, { asc }) => [asc(e.createdAt), asc(e.id)],
-      }),
-      canReopen && isActiveHolder(db, holderId, implementerId),
-      canReassign
-        ? listReassignmentRecipients(db, { userId: callerUserId, role, implementerId, identifier })
-        : [],
-      db
-        .select(sibling)
-        .from(tickets)
-        .where(and(neighbourScope, sql`${position} > ${thisTicket}`))
-        .orderBy(asc(tickets.createdAt), asc(tickets.id))
-        .limit(1),
-      db
-        .select(sibling)
-        .from(tickets)
-        .where(and(neighbourScope, sql`${position} < ${thisTicket}`))
-        .orderBy(desc(tickets.createdAt), desc(tickets.id))
-        .limit(1),
-    ]);
-    const routedIds = routed.map((r) => r.userId);
+    const [routedRecipients, events, holderIsActive, reassignIds, [previous], [next]] =
+      await Promise.all([
+        (canEscalate || canReopen) && initiatorRole
+          ? routeRecipients(
+              { userId: callerUserId, implementerId },
+              initiatorRole,
+              ticketRow.category,
+              canEscalate,
+            )
+          : [],
+        db.query.ticketEvents.findMany({
+          where: (e, { eq }) => eq(e.ticketId, ticketId),
+          orderBy: (e, { asc }) => [asc(e.createdAt), asc(e.id)],
+        }),
+        canReopen && isActiveHolder(db, holderId, implementerId),
+        canReassign
+          ? listReassignmentRecipients(db, {
+              userId: callerUserId,
+              role,
+              implementerId,
+              identifier,
+            })
+          : [],
+        db
+          .select(sibling)
+          .from(tickets)
+          .where(and(neighbourScope, sql`${position} > ${thisTicket}`))
+          .orderBy(asc(tickets.createdAt), asc(tickets.id))
+          .limit(1),
+        db
+          .select(sibling)
+          .from(tickets)
+          .where(and(neighbourScope, sql`${position} < ${thisTicket}`))
+          .orderBy(desc(tickets.createdAt), desc(tickets.id))
+          .limit(1),
+      ]);
+    const routedIds = routedRecipients.map((recipient) => recipient.userId);
     // A reopened ticket goes back to whoever resolved it unless the creator picks someone else.
     const recipientIds = holderIsActive
       ? [holderId, ...routedIds.filter((id) => id !== holderId)]
@@ -768,7 +777,7 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
             ? personOf(id, people)
             : {
                 ...personOf(id, people),
-                role: routed.find((r) => r.userId === id)?.role ?? null,
+                role: routedRecipients.find((recipient) => recipient.userId === id)?.role ?? null,
               },
         ),
         reassignRecipients: reassignIds.map((id) => ({ ...personOf(id, people), role })),
@@ -897,51 +906,74 @@ const listEscalationRecipients: Record<EscalationRecipientRole, ListEscalationRe
     return result.map((row) => row.hub_coordinator_user_id);
   },
   CLINICAL_LEAD: async ({ userId, implementerId, role }, q = db) => {
+    const initiatorMembership = (memberRole: "CLINICAL_TEAM" | "SUPERVISOR") =>
+      and(
+        eq(implementerMember.userId, userId),
+        eq(implementerMember.role, memberRole),
+        eq(implementerMember.implementerId, implementerId),
+      );
     const initiatorHubs =
       role === "CLINICAL_TEAM"
-        ? sql`
-          SELECT ct.assigned_hub_id
-          FROM implementer_members ct_member
-          JOIN clinical_teams ct ON ct.id = ct_member.identifier
-          WHERE ct_member.user_id = ${userId}
-            AND ct_member.role = 'CLINICAL_TEAM'::implementer_roles
-            AND ct_member.implementer_id = ${implementerId}`
-        : sql`
-          SELECT s.hub_id
-          FROM implementer_members sup_member
-          JOIN supervisors s ON s.id = sup_member.identifier
-          WHERE sup_member.user_id = ${userId}
-            AND sup_member.role = 'SUPERVISOR'::implementer_roles
-            AND sup_member.implementer_id = ${implementerId}`;
-    const { rows: result } = await q.execute<{ clinical_lead_user_id: string }>(sql`
-      SELECT cl_member.user_id as clinical_lead_user_id
-      FROM clinical_leads cl
-      JOIN implementer_members cl_member
-        ON cl_member.identifier = cl.id
-        AND cl_member.role = 'CLINICAL_LEAD'::implementer_roles
-      WHERE cl.assigned_hub_id IN (${initiatorHubs})
-        AND cl.dropped_out IS NOT TRUE
-      ORDER BY cl.created_at, cl.id
-    `);
-    return result.map((row) => row.clinical_lead_user_id);
+        ? q
+            .select({ hubId: clinicalTeam.assignedHubId })
+            .from(implementerMember)
+            .innerJoin(clinicalTeam, eq(clinicalTeam.id, implementerMember.identifier))
+            .where(initiatorMembership("CLINICAL_TEAM"))
+        : q
+            .select({ hubId: supervisor.hubId })
+            .from(implementerMember)
+            .innerJoin(supervisor, eq(supervisor.id, implementerMember.identifier))
+            .where(initiatorMembership("SUPERVISOR"));
+    const clinicalLeads = await q
+      .select({ userId: implementerMember.userId })
+      .from(clinicalLead)
+      .innerJoin(
+        implementerMember,
+        and(
+          eq(implementerMember.identifier, clinicalLead.id),
+          eq(implementerMember.role, "CLINICAL_LEAD"),
+        ),
+      )
+      .where(
+        and(
+          inArray(clinicalLead.assignedHubId, initiatorHubs),
+          or(eq(clinicalLead.droppedOut, false), isNull(clinicalLead.droppedOut)),
+        ),
+      )
+      .orderBy(asc(clinicalLead.createdAt), asc(clinicalLead.id));
+    return clinicalLeads.map((clinicalLeadMember) => clinicalLeadMember.userId);
   },
   CLINICAL_TEAM: async ({ userId, implementerId }, q = db) => {
     // Only clinical leads send tickets to their hub's clinical team.
-    const { rows: result } = await q.execute<{ clinical_team_user_id: string }>(sql`
-      SELECT ct_member.user_id as clinical_team_user_id
-      FROM implementer_members cl_member
-      JOIN clinical_leads cl ON cl.id = cl_member.identifier
-      JOIN clinical_teams ct ON ct.assigned_hub_id = cl.assigned_hub_id
-      JOIN implementer_members ct_member
-        ON ct_member.identifier = ct.id
-        AND ct_member.role = 'CLINICAL_TEAM'::implementer_roles
-      WHERE cl_member.user_id = ${userId}
-        AND cl_member.role = 'CLINICAL_LEAD'::implementer_roles
-        AND cl_member.implementer_id = ${implementerId}
-        AND ct_member.user_id <> ${userId}
-      ORDER BY ct.created_at, ct.id
-    `);
-    return result.map((row) => row.clinical_team_user_id);
+    const clinicalLeadHubs = q
+      .select({ hubId: clinicalLead.assignedHubId })
+      .from(implementerMember)
+      .innerJoin(clinicalLead, eq(clinicalLead.id, implementerMember.identifier))
+      .where(
+        and(
+          eq(implementerMember.userId, userId),
+          eq(implementerMember.role, "CLINICAL_LEAD"),
+          eq(implementerMember.implementerId, implementerId),
+        ),
+      );
+    const clinicalTeamMembers = await q
+      .select({ userId: implementerMember.userId })
+      .from(clinicalTeam)
+      .innerJoin(
+        implementerMember,
+        and(
+          eq(implementerMember.identifier, clinicalTeam.id),
+          eq(implementerMember.role, "CLINICAL_TEAM"),
+        ),
+      )
+      .where(
+        and(
+          inArray(clinicalTeam.assignedHubId, clinicalLeadHubs),
+          ne(implementerMember.userId, userId),
+        ),
+      )
+      .orderBy(asc(clinicalTeam.createdAt), asc(clinicalTeam.id));
+    return clinicalTeamMembers.map((clinicalTeamMember) => clinicalTeamMember.userId);
   },
   ADMIN: async ({ userId, implementerId, recipientTeam }, q = db) => {
     // Oldest first, so adding admins, or an admin of another implementer, never changes who
@@ -986,16 +1018,18 @@ async function routeRecipients(
 ): Promise<RoutedRecipient[]> {
   const recipientTeam: AdminTeam =
     initiatorRole === "ADMIN" && escalating ? "TECH" : ADMIN_TEAM_FROM_CATEGORY[category];
-  const roles = [
+  const recipientRoles = [
     ESCALATION_RECIPIENT_FROM_INITIATOR[initiatorRole](category),
     ...(EXTRA_RECIPIENT_ROLES_FROM_INITIATOR[initiatorRole] ?? []),
   ];
-  const ids = await Promise.all(
-    roles.map((role) =>
+  const recipientIdsByRole = await Promise.all(
+    recipientRoles.map((role) =>
       listEscalationRecipients[role]({ ...initiator, role: initiatorRole, recipientTeam }, q),
     ),
   );
-  return roles.flatMap((role, i) => (ids[i] ?? []).map((userId) => ({ userId, role })));
+  return recipientRoles.flatMap((role, i) =>
+    (recipientIdsByRole[i] ?? []).map((userId) => ({ userId, role })),
+  );
 }
 
 // The caller picks the recipient, so check they are one the routing allows.
@@ -1008,7 +1042,7 @@ async function assertRecipient(
   q: Transaction | typeof db = db,
 ) {
   const recipients = await routeRecipients(initiator, initiatorRole, category, escalating, q);
-  if (!recipients.some((r) => r.userId === recipientId))
+  if (!recipients.some((recipient) => recipient.userId === recipientId))
     throw new Error("Choose someone who can take this ticket");
 }
 
