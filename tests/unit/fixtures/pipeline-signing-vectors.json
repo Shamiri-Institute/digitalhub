@@ -1,0 +1,50 @@
+{
+  "secret": "sdh-pipeline-test-vector-secret-0001",
+  "note": "Inputs and expected X-SDH-Signature values for signing v1. The body is the exact UTF-8 bytes sent.",
+  "vectors": [
+    {
+      "name": "post page results",
+      "direction": "pipeline-to-sdh",
+      "timestamp": 1763467200,
+      "method": "POST",
+      "path": "/api/survey-pipeline/uploads/surveyupload_01m6htfacrexvafv9q82gvhagw/pages",
+      "body": "{\"attempt\":1,\"pages\":[{\"pageIndex\":7,\"error\":\"The page could not be rendered\"}]}",
+      "bodySha256": "42b433aa1fe7ee834325a69a874285927ffe8dc6096ff18db4578ff512a05189",
+      "signedString": "v1\npipeline-to-sdh\n1763467200\nPOST\n/api/survey-pipeline/uploads/surveyupload_01m6htfacrexvafv9q82gvhagw/pages\n42b433aa1fe7ee834325a69a874285927ffe8dc6096ff18db4578ff512a05189",
+      "signature": "5666d5f0d78fa9fa0615ddaea11d827a0dd0cfe5192c1b1c33d3a10071dd0fc3"
+    },
+    {
+      "name": "get a layout, empty body",
+      "direction": "pipeline-to-sdh",
+      "timestamp": 1763467260,
+      "method": "GET",
+      "path": "/api/survey-pipeline/layouts/surveyversion_01m6hnbx8ve7tbr8hc3yzq0n4m",
+      "body": "",
+      "bodySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "signedString": "v1\npipeline-to-sdh\n1763467260\nGET\n/api/survey-pipeline/layouts/surveyversion_01m6hnbx8ve7tbr8hc3yzq0n4m\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "signature": "1f6372989f1121322e6f313c657b7fe36e2340a158feb05fe5966ca6fe454c83"
+    },
+    {
+      "name": "non-ASCII body bytes",
+      "direction": "pipeline-to-sdh",
+      "timestamp": 1763467320,
+      "method": "POST",
+      "path": "/api/survey-pipeline/uploads/surveyupload_01m6htfacrexvafv9q82gvhagw/status",
+      "body": "{\"attempt\":2,\"status\":\"FAILED\",\"error\":\"Ukurasa haukusomeka — página ilegible\"}",
+      "bodySha256": "95f147bd2563e6f227af14b2ccb2da07797500818d7678c3c65bc8dbf02dd8e1",
+      "signedString": "v1\npipeline-to-sdh\n1763467320\nPOST\n/api/survey-pipeline/uploads/surveyupload_01m6htfacrexvafv9q82gvhagw/status\n95f147bd2563e6f227af14b2ccb2da07797500818d7678c3c65bc8dbf02dd8e1",
+      "signature": "0c7924c6b2a979eac7aecf11ccf32c09483930c73f079a89d433103606817855"
+    },
+    {
+      "name": "notification to the pipeline",
+      "direction": "sdh-to-pipeline",
+      "timestamp": 1763467380,
+      "method": "POST",
+      "path": "/uploads",
+      "body": "{\"uploadId\":\"surveyupload_01m6htfacrexvafv9q82gvhagw\",\"attempt\":1,\"contentType\":\"application/pdf\",\"byteSize\":48213004,\"sha256\":\"9f2c\"}",
+      "bodySha256": "2244d6bbc2ad432820747e8fed0f9eed9745e95ae6f7a1364d057459e292c2c0",
+      "signedString": "v1\nsdh-to-pipeline\n1763467380\nPOST\n/uploads\n2244d6bbc2ad432820747e8fed0f9eed9745e95ae6f7a1364d057459e292c2c0",
+      "signature": "951472d07f95a489595eafe297b2f1b34e24e06fd1a7ad29c9c3d4eae6c7111d"
+    }
+  ]
+}

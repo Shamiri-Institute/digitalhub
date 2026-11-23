@@ -38,7 +38,7 @@ import {
   type ScanOutcome,
 } from "#/lib/survey/ingest-rules";
 import { pageIdFromQrText } from "#/lib/survey/print-qr";
-import { scanPageImageKey } from "#/lib/survey/scan-files";
+import { hexChecksum } from "#/lib/s3/utils/checksum";
 import { type ParsedPage, parsePostedPage, type PostedPage } from "#/lib/survey/scan-wire";
 
 export type PageIngestResult = { pageIndex: number } & (
@@ -52,13 +52,23 @@ export type IngestPagesResult =
   | { kind: "upload-not-accepting"; status: SurveyUploadStatus }
   | { kind: "ingested"; pages: PageIngestResult[] };
 
-const UPLOAD_STATUSES_ACCEPTING_PAGES: ReadonlySet<SurveyUploadStatus> = new Set([
+export const UPLOAD_STATUSES_ACCEPTING_PAGES: ReadonlySet<SurveyUploadStatus> = new Set([
   SurveyUploadStatus.QUEUED,
   SurveyUploadStatus.PROCESSING,
   SurveyUploadStatus.PROCESSED,
 ]);
 
 type Copy = PrintedPage["copy"];
+
+export type CheckedPageImage =
+  | { ok: true; key: string; width: number; height: number }
+  | { ok: false; reason: string };
+
+export function pageImageRef(pageIndex: number, sha256Hex: string) {
+  return `${pageIndex}:${sha256Hex}`;
+}
+
+const A4_HEIGHT_PER_WIDTH = 841.89 / 595.28;
 
 type IngestContext = {
   printedPagesById: Map<string, PrintedPage>;
@@ -70,7 +80,16 @@ type IngestContext = {
 
 export async function ingestPages(
   tx: Transaction,
-  { uploadId, attempt }: { uploadId: string; attempt: number },
+  {
+    uploadId,
+    attempt,
+    pageImages,
+  }: {
+    uploadId: string;
+    attempt: number;
+    /** What the caller found for each image a read page names, by pageImageRef. */
+    pageImages: ReadonlyMap<string, CheckedPageImage>;
+  },
   pages: readonly PostedPage[],
 ): Promise<IngestPagesResult> {
   const postedPages = pages.map((posted) => ({
@@ -188,6 +207,7 @@ export async function ingestPages(
       const planning = planScan(decision, {
         uploadId,
         attempt,
+        pageImages,
         uploadHubId: upload.hubId,
         context,
       });
@@ -269,11 +289,36 @@ function planScan(
   {
     uploadId,
     attempt,
+    pageImages,
     uploadHubId,
     context,
-  }: { uploadId: string; attempt: number; uploadHubId: string; context: IngestContext },
+  }: {
+    uploadId: string;
+    attempt: number;
+    pageImages: ReadonlyMap<string, CheckedPageImage>;
+    uploadHubId: string;
+    context: IngestContext;
+  },
 ): { ok: true; scan: PlannedScan } | { ok: false; reason: string } {
   const { pageIndex, parsed, postedSha256, replacedScan } = decision;
+  const readPage = parsed.kind === "read" ? parsed.page : undefined;
+  let imageS3Key: string | null = null;
+  if (readPage) {
+    if (!readPage.imageSha256) {
+      return { ok: false, reason: "a page to store names its image in imageSha256" };
+    }
+    const image = pageImages.get(pageImageRef(pageIndex, hexChecksum(readPage.imageSha256)));
+    if (!image) return { ok: false, reason: "no upload link was asked for this page's image" };
+    if (!image.ok) return image;
+    if (readPage.aligned && Math.abs(image.height - image.width * A4_HEIGHT_PER_WIDTH) > 1) {
+      return {
+        ok: false,
+        reason: "an aligned page's image must be A4: height ÷ width = 841.89 ÷ 595.28",
+      };
+    }
+    imageS3Key = image.key;
+  }
+
   const identity = identifyPage(parsed, context.printedPagesById);
   const outcome = decideOutcome(
     identity,
@@ -309,7 +354,6 @@ function planScan(
   if (outcome.status === SurveyScanPageStatus.MATCHED) {
     context.matchedScanByPage.set(outcome.page.questionnairePageId, scanPageId);
   }
-  const readPage = parsed.kind === "read" ? parsed.page : undefined;
   return {
     ok: true,
     scan: {
@@ -318,7 +362,7 @@ function planScan(
         uploadId,
         pageIndex,
         attempt,
-        imageS3Key: readPage ? scanPageImageKey(uploadId, attempt, pageIndex) : null,
+        imageS3Key,
         aligned: readPage ? readPage.aligned : null,
         questionnairePageId: outcome.page?.questionnairePageId ?? null,
         status: outcome.status,

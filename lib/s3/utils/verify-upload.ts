@@ -1,6 +1,7 @@
 import "server-only";
 
 import { deleteObject, headObject } from "#/lib/s3/s3.service";
+import { base64Checksum } from "#/lib/s3/utils/checksum";
 import type { S3Bucket } from "#/lib/s3/s3.types";
 import { type UploadClaim, verifyUploadToken } from "#/lib/s3/utils/upload-token";
 
@@ -48,6 +49,18 @@ function isNotFoundError(error: unknown): boolean {
   const httpStatus = (error as { $metadata?: { httpStatusCode?: number } }).$metadata
     ?.httpStatusCode;
   return name === "NotFound" || name === "NoSuchKey" || httpStatus === 404;
+}
+
+/** Whether an object S3 holds is exactly this file: its size, type and checksum. */
+export function isStoredAs(
+  stored: Extract<HeadOutcome, { status: "ok" }>,
+  file: { byteSize: number; sha256: string; contentType: string },
+) {
+  return (
+    stored.contentLength === file.byteSize &&
+    stored.contentType === file.contentType &&
+    stored.checksumSha256 === base64Checksum(file.sha256)
+  );
 }
 
 export async function verifyUploadedObject(

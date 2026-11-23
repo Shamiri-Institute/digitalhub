@@ -108,7 +108,7 @@ export function decideOutcome(
   }
 }
 
-function rejectionOfPrintedPage(
+export function rejectionOfPrintedPage(
   page: PrintedPage,
   uploadHubId: string,
 ): ScanRejectionNamingAPage | undefined {

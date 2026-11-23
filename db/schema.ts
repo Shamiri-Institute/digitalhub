@@ -3107,6 +3107,7 @@ export const surveyUpload = pgTable(
     error: text(),
     uploadedAt: timestamp("uploaded_at", { withTimezone: true, mode: "date" }),
     attempt: integer().default(1).notNull(),
+    lastHeartbeatAt: timestamp("last_heartbeat_at", { withTimezone: true, mode: "date" }),
   },
   (table) => [
     uniqueIndex("survey_uploads_sha256_key").on(table.sha256),
@@ -3297,6 +3298,44 @@ export const surveyVersionField = pgTable(
   ],
 );
 
+// Each page image the pipeline was given an upload link for, as it described it. A page post names
+// one by its checksum; the SDH checks the stored object against it, and an aligned page's aspect
+// ratio against A4, since the post itself carries neither.
+export const surveyScanPageImage = pgTable(
+  "survey_scan_page_images",
+  {
+    uploadId: text("upload_id").notNull(),
+    attempt: integer().notNull(),
+    pageIndex: integer("page_index").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .$defaultFn(() => new Date())
+      .$onUpdate(() => new Date()),
+    byteSize: integer("byte_size").notNull(),
+    // Lowercase hex.
+    sha256: text().notNull(),
+    width: integer().notNull(),
+    height: integer().notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.uploadId, table.attempt, table.pageIndex, table.sha256] }),
+    check("survey_scan_page_images_attempt_check", sql`${table.attempt} >= 1`),
+    check("survey_scan_page_images_page_index_check", sql`${table.pageIndex} >= 0`),
+    check("survey_scan_page_images_byte_size_check", sql`${table.byteSize} > 0`),
+    check("survey_scan_page_images_sha256_check", sql`${table.sha256} ~ '^[0-9a-f]{64}$'`),
+    check("survey_scan_page_images_size_check", sql`${table.width} > 0 AND ${table.height} > 0`),
+    foreignKey({
+      columns: [table.uploadId],
+      foreignColumns: [surveyUpload.id],
+      name: "survey_scan_page_images_upload_id_fkey",
+    })
+      .onUpdate("restrict")
+      .onDelete("cascade"),
+  ],
+);
 // One page of an upload. A REJECTED scan may have no printed page: a cover sheet, a blank, another
 // form.
 export const surveyScanPage = pgTable(

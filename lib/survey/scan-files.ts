@@ -58,6 +58,12 @@ export async function fileSha256(file: Blob, signal?: AbortSignal): Promise<stri
   return bytesToHex(hash.digest());
 }
 
-export function scanPageImageKey(uploadId: string, attempt: number, pageIndex: number) {
-  return `pages/${uploadId}/${attempt}/${pageIndex}.jpg`;
+// Named by its bytes, so a page's stored image is never overwritten by a later link for that page.
+export function scanPageImageKey(
+  uploadId: string,
+  attempt: number,
+  pageIndex: number,
+  sha256Hex: string,
+) {
+  return `pages/${uploadId}/${attempt}/${pageIndex}-${sha256Hex}.jpg`;
 }

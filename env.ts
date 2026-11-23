@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const SURVEY_PIPELINE_SECRET_MIN_LENGTH = 32;
+
 const schema = z.object({
   // Signs the session cookie; sessions live in the database.
   BETTER_AUTH_SECRET: z.string().min(32),
@@ -28,6 +30,14 @@ const schema = z.object({
 
   // Vercel Cron sends it as a bearer token. Unset, the cron routes refuse every request.
   CRON_SECRET: z.string().min(16).optional(),
+
+  // Signs requests between the SDH and the scan extraction pipeline, both ways
+  // (lib/survey/pipeline-signing.ts). Unset, the pipeline routes refuse every request; set
+  // shorter than 32 characters, the app doesn't start.
+  SURVEY_PIPELINE_SECRET: z.preprocess(
+    (secret) => (secret === "" ? undefined : secret),
+    z.string().min(SURVEY_PIPELINE_SECRET_MIN_LENGTH).optional(),
+  ),
 });
 
 export const env = process.env.CI
