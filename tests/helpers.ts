@@ -1,7 +1,7 @@
 import { type BrowserContext, expect, type Locator, type Page } from "@playwright/test";
 import { randomInt, randomUUID } from "node:crypto";
 
-import { eq, inArray, like, sql } from "drizzle-orm";
+import { and, eq, inArray, like, type SQL, sql } from "drizzle-orm";
 
 import { db, pool } from "#/db/client";
 import {
@@ -151,6 +151,18 @@ export async function signInWithEmail(context: BrowserContext, email: string) {
 export async function signIn(context: BrowserContext, email: string) {
   await context.clearCookies();
   await signInWithEmail(context, email);
+}
+
+// The admin the routing picks by default: the oldest one matching `who` in the implementer.
+export async function oldestAdminName(implementerId: string, who: SQL) {
+  const [admin] = await db
+    .select({ name: adminUser.adminName })
+    .from(adminUser)
+    .where(and(eq(adminUser.implementerId, implementerId), who))
+    .orderBy(adminUser.createdAt, adminUser.id)
+    .limit(1);
+  required(admin?.name, "a named admin");
+  return admin.name;
 }
 
 export async function deleteTickets(subject: string) {

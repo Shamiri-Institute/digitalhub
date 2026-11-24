@@ -115,7 +115,7 @@ export const ESCALATION_RECIPIENT_FROM_INITIATOR: Record<
     category ? ESCALATION_RECIPIENT_FROM_CATEGORY[category] : "HUB_COORDINATOR",
   HUB_COORDINATOR: (): EscalationRecipientRole => "ADMIN",
   CLINICAL_LEAD: (): EscalationRecipientRole => "ADMIN",
-  CLINICAL_TEAM: (): EscalationRecipientRole => "CLINICAL_LEAD",
+  CLINICAL_TEAM: (): EscalationRecipientRole => "ADMIN",
   ADMIN: (): EscalationRecipientRole => "ADMIN",
 };
 

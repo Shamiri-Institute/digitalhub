@@ -924,25 +924,18 @@ const listEscalationRecipients: Record<EscalationRecipientRole, ListEscalationRe
     `);
     return result.map((row) => row.hub_coordinator_user_id);
   },
-  CLINICAL_LEAD: async ({ userId, implementerId, role }, q = db) => {
-    const initiatorMembership = (memberRole: "CLINICAL_TEAM" | "SUPERVISOR") =>
-      and(
-        eq(implementerMember.userId, userId),
-        eq(implementerMember.role, memberRole),
-        eq(implementerMember.implementerId, implementerId),
+  CLINICAL_LEAD: async ({ userId, implementerId }, q = db) => {
+    const initiatorHubs = q
+      .select({ hubId: supervisor.hubId })
+      .from(implementerMember)
+      .innerJoin(supervisor, eq(supervisor.id, implementerMember.identifier))
+      .where(
+        and(
+          eq(implementerMember.userId, userId),
+          eq(implementerMember.role, "SUPERVISOR"),
+          eq(implementerMember.implementerId, implementerId),
+        ),
       );
-    const initiatorHubs =
-      role === "CLINICAL_TEAM"
-        ? q
-            .select({ hubId: clinicalTeam.assignedHubId })
-            .from(implementerMember)
-            .innerJoin(clinicalTeam, eq(clinicalTeam.id, implementerMember.identifier))
-            .where(initiatorMembership("CLINICAL_TEAM"))
-        : q
-            .select({ hubId: supervisor.hubId })
-            .from(implementerMember)
-            .innerJoin(supervisor, eq(supervisor.id, implementerMember.identifier))
-            .where(initiatorMembership("SUPERVISOR"));
     const clinicalLeads = await q
       .select({ userId: implementerMember.userId })
       .from(clinicalLead)

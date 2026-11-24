@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { and, eq, inArray, type SQL, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { type AdminTeam, TEAM_LABELS } from "#/db/enums";
@@ -17,6 +17,7 @@ import { expect, test, type Undo } from "#/tests/fixtures";
 import {
   createAdminCopy,
   deleteTickets,
+  oldestAdminName,
   required,
   signableMember,
   signIn,
@@ -367,18 +368,6 @@ test("the creator can reopen a ticket to a different coordinator", async ({ page
   const step = await openTicket(page, "/hc/tickets", subject);
   await expect(step.getByRole("button", { name: "Start", exact: true })).toBeVisible();
 });
-
-// The admin the routing picks by default: the oldest one matching `who` in the implementer.
-async function oldestAdminName(implementerId: string, who: SQL) {
-  const [admin] = await db
-    .select({ name: adminUser.adminName })
-    .from(adminUser)
-    .where(and(eq(adminUser.implementerId, implementerId), who))
-    .orderBy(adminUser.createdAt, adminUser.id)
-    .limit(1);
-  required(admin?.name, "a named admin");
-  return admin.name;
-}
 
 /** A ticket held by the hub's supervisor, as if one of their fellows had raised it. */
 async function ticketHeldBySupervisor(subject: string) {
