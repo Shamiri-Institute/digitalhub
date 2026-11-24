@@ -3101,7 +3101,7 @@ export const surveyUpload = pgTable(
     sha256: text().notNull(),
     contentType: text("content_type").notNull(),
     byteSize: integer("byte_size").notNull(),
-    // Null for a PDF until the pipeline counts its pages.
+    // Null until the pipeline counts the scan's pages.
     pageCount: integer("page_count"),
     status: surveyUploadStatusEnum().default(SurveyUploadStatus.PENDING).notNull(),
     error: text(),

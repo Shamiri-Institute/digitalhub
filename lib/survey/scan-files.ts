@@ -6,16 +6,13 @@ import { bytesToHex } from "@noble/hashes/utils.js";
 import { MAX_FILE_SIZE } from "#/lib/s3/s3.types";
 import { normalizeContentType } from "#/lib/s3/utils/normalize-content-type";
 
-export const SCAN_CONTENT_TYPES = ["application/pdf", "image/jpeg", "image/png"] as const;
+export const SCAN_CONTENT_TYPES = ["application/pdf"] as const;
 export type ScanContentType = (typeof SCAN_CONTENT_TYPES)[number];
 
 export const MAX_SCAN_BYTES = MAX_FILE_SIZE;
 
 const EXTENSION_CONTENT_TYPES: Record<string, ScanContentType> = {
   pdf: "application/pdf",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  png: "image/png",
 };
 
 export function isScanContentType(contentType: string): contentType is ScanContentType {

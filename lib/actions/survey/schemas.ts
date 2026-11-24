@@ -105,7 +105,7 @@ export const StartScanUploadSchema = z.object({
   /** Admins only, as in CreatePrintRunSchema. */
   hubId: z.string().min(1).optional(),
   fileName: z.string().trim().min(1).max(255, { error: "Shorten the file name to 255 characters" }),
-  contentType: z.enum(SCAN_CONTENT_TYPES, { error: "Choose a PDF, JPEG or PNG file" }),
+  contentType: z.enum(SCAN_CONTENT_TYPES, { error: "Choose a PDF file" }),
   byteSize: z
     .int()
     .positive({ error: "The file is empty" })
