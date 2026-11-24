@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 
 import { SurveyAnswerReadStatus, SurveyFieldKind } from "#/db/enums";
+import { base64Checksum, hexChecksum } from "#/lib/s3/utils/checksum";
 
 export const MAX_PAGES_PER_POST = 200;
 
@@ -22,9 +23,24 @@ type WireReadStatus = (typeof WIRE_READ_STATUSES)[number];
 const StoredText = z.string().refine((text) => text.isWellFormed() && !text.includes("\u0000"), {
   error: "text must be well-formed Unicode without U+0000",
 });
-const storable = (text: string) => text.toWellFormed().replaceAll("\u0000", "");
+export const storable = (text: string) => text.toWellFormed().replaceAll("\u0000", "");
 const FreeText = z.string().transform(storable);
-const StoredPageIndex = z.int32().min(0);
+export const StoredPageIndex = z.int32().min(0);
+// Stored as it can be; one made only of what Postgres can't store still says something.
+export const PipelineErrorText = z
+  .string()
+  .min(1)
+  .max(2000)
+  .transform((text) => storable(text) || "no readable error text");
+// Only the standard spelling: S3 is given it as sent and the SDH compares it decoded.
+export const Sha256Base64 = z
+  .base64()
+  .refine((checksum) => base64Checksum(hexChecksum(checksum)) === checksum, {
+    error: "a SHA-256 in standard base64",
+  })
+  .refine((checksum) => Buffer.from(checksum, "base64").length === 32, {
+    error: "a SHA-256 in base64",
+  });
 
 const FieldReadSchema = z
   .object({
@@ -61,6 +77,8 @@ const ReadPageSchema = z
     aligned: z.boolean(),
     quality: z.number().min(0).max(1),
     fields: z.array(FieldReadSchema),
+    // The image the page was read from. A page the SDH already placed is posted without one.
+    imageSha256: z.preprocess((checksum) => checksum ?? undefined, Sha256Base64.optional()),
   })
   .refine((page) => new Set(page.fields.map((read) => read.field)).size === page.fields.length, {
     error: "a field is posted twice",
@@ -73,7 +91,7 @@ const ReadPageSchema = z
 
 const FailedPageSchema = z.object({
   pageIndex: StoredPageIndex,
-  error: z.string().min(1).max(2000).transform(storable),
+  error: PipelineErrorText,
 });
 
 export type ReadPage = z.output<typeof ReadPageSchema>;
@@ -90,11 +108,15 @@ export function parsePostedPage(
       ? FailedPageSchema.transform((page) => ({ kind: "failed" as const, page })).safeParse(posted)
       : ReadPageSchema.transform((page) => ({ kind: "read" as const, page })).safeParse(posted);
   if (!parsed.success) {
-    const [issue] = parsed.error.issues;
-    const path = issue?.path.join(".");
-    return { ok: false, reason: path ? `${path}: ${issue?.message}` : `${issue?.message}` };
+    return { ok: false, reason: zodIssueReason(parsed.error) };
   }
-  return { ok: true, parsed: parsed.data, postedSha256: canonicalSha256(parsed.data.page) };
+  return { ok: true, parsed: parsed.data, postedSha256: canonicalSha256(parsed.data) };
+}
+
+export function zodIssueReason(error: z.ZodError) {
+  const [issue] = error.issues;
+  const path = issue?.path.join(".");
+  return path ? `${path}: ${issue?.message}` : `${issue?.message}`;
 }
 
 function canonicalJson(value: unknown): string {
@@ -110,8 +132,10 @@ function canonicalJson(value: unknown): string {
   return JSON.stringify(value);
 }
 
-function canonicalSha256(page: ReadPage | FailedPage) {
-  return createHash("sha256").update(canonicalJson(page)).digest("hex");
+// What was read decides whether a post repeats a page; which image it came from doesn't.
+function canonicalSha256(parsed: ParsedPage) {
+  const content = parsed.kind === "read" ? { ...parsed.page, imageSha256: undefined } : parsed.page;
+  return createHash("sha256").update(canonicalJson(content)).digest("hex");
 }
 
 export const READ_STATUS_OF_WIRE: Record<WireReadStatus, SurveyAnswerReadStatus> = {

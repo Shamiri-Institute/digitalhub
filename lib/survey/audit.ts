@@ -22,6 +22,7 @@ export const SurveyAuditAction = {
   QUESTIONNAIRE_VOIDED: "QUESTIONNAIRE_VOIDED",
   SCAN_UPLOADED: "SCAN_UPLOADED",
   SCAN_PAGE_INGESTED: "SCAN_PAGE_INGESTED",
+  SCAN_STATUS_REPORTED: "SCAN_STATUS_REPORTED",
 } as const;
 export type SurveyAuditAction = (typeof SurveyAuditAction)[keyof typeof SurveyAuditAction];
 

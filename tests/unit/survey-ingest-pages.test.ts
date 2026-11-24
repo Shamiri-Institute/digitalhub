@@ -25,9 +25,11 @@ import {
 } from "#/db/schema";
 import type { HubSurveyScope } from "#/lib/auth/survey-access";
 import { objectId } from "#/lib/crypto";
-import { ingestPages } from "#/lib/survey/ingest-pages";
+import { type CheckedPageImage, ingestPages, pageImageRef } from "#/lib/survey/ingest-pages";
 import { issuePrintFile, recordPrintRun } from "#/lib/survey/print-run";
+import { scanPageImageKey } from "#/lib/survey/scan-files";
 import { pageQrText } from "#/lib/survey/print-qr";
+import { hexChecksum } from "#/lib/s3/utils/checksum";
 import type { FieldRead, PostedPage } from "#/lib/survey/scan-wire";
 import { createPublishedSurvey } from "#/tests/survey-fixtures";
 import { PRINT_FORM } from "./fixtures/survey-print-form";
@@ -186,6 +188,7 @@ function readPost(
   return {
     pageIndex,
     qrs: [page.qr, page.qr],
+    imageSha256: PAGE_IMAGE_SHA256,
     rotation: 0,
     aligned: true,
     quality: 0.95,
@@ -194,8 +197,26 @@ function readPost(
   };
 }
 
+// These tests post no images: every page names this one, and it counts as uploaded and A4.
+const PAGE_IMAGE_SHA256 = createHash("sha256").update("page image").digest("base64");
+const testImageKey = (uploadId: string, attempt: number, pageIndex: number) =>
+  scanPageImageKey(uploadId, attempt, pageIndex, hexChecksum(PAGE_IMAGE_SHA256));
+const checkedImagesIn = (uploadId: string, attempt: number, pages: readonly PostedPage[]) =>
+  new Map<string, CheckedPageImage>(
+    pages.map(({ pageIndex }) => [
+      pageImageRef(pageIndex, hexChecksum(PAGE_IMAGE_SHA256)),
+      { ok: true, key: testImageKey(uploadId, attempt, pageIndex), width: 1654, height: 2339 },
+    ]),
+  );
+
 function ingest(uploadId: string, pages: PostedPage[], attempt = 1) {
-  return db.transaction((tx) => ingestPages(tx, { uploadId, attempt }, pages));
+  return db.transaction((tx) =>
+    ingestPages(
+      tx,
+      { uploadId, attempt, pageImages: checkedImagesIn(uploadId, attempt, pages) },
+      pages,
+    ),
+  );
 }
 
 async function rolledBack<T>(work: (tx: Transaction) => Promise<T>) {
@@ -292,7 +313,7 @@ describe("ingesting pages", () => {
       attempt: 1,
       status: "MATCHED",
       questionnairePageId: copy.pages[0].id,
-      imageS3Key: `pages/${uploadId}/1/0.jpg`,
+      imageS3Key: testImageKey(uploadId, 1, 0),
       aligned: true,
     });
     expect(await answersOf(copy.questionnaireId)).toEqual(
@@ -371,21 +392,21 @@ describe("ingesting pages", () => {
         status: "UNIDENTIFIED",
         rejectedReason: null,
         questionnairePageId: null,
-        imageS3Key: `pages/${uploadId}/1/0.jpg`,
+        imageS3Key: testImageKey(uploadId, 1, 0),
       },
       {
         pageIndex: 1,
         status: "REJECTED",
         rejectedReason: "UNKNOWN_CODE",
         questionnairePageId: null,
-        imageS3Key: `pages/${uploadId}/1/1.jpg`,
+        imageS3Key: testImageKey(uploadId, 1, 1),
       },
       {
         pageIndex: 2,
         status: "REJECTED",
         rejectedReason: "CODES_DISAGREE",
         questionnairePageId: null,
-        imageS3Key: `pages/${uploadId}/1/2.jpg`,
+        imageS3Key: testImageKey(uploadId, 1, 2),
       },
       {
         pageIndex: 3,
@@ -854,7 +875,7 @@ describe("re-running an upload", () => {
       rejectedReason: null,
       questionnairePageId: copy.pages[2].id,
       duplicateOfId: null,
-      imageS3Key: `pages/${uploadId}/2/2.jpg`,
+      imageS3Key: testImageKey(uploadId, 2, 2),
       aligned: true,
       postedResult: readPost(copy.pages[2], 2),
     });
@@ -923,7 +944,7 @@ describe("re-running an upload", () => {
     });
     expect(await scansOf(uploadId)).toEqual([
       scansBefore[0],
-      { ...scansBefore[1], attempt: 2, imageS3Key: `pages/${uploadId}/2/1.jpg` },
+      { ...scansBefore[1], attempt: 2, imageS3Key: testImageKey(uploadId, 2, 1) },
       { ...scansBefore[2], attempt: 2 },
     ]);
     const scansAfterRerun = await scansOf(uploadId);
@@ -977,8 +998,8 @@ describe("re-running an upload", () => {
         imageS3Key,
       })),
     ).toEqual([
-      { pageIndex: 0, attempt: 1, imageS3Key: `pages/${uploadId}/1/0.jpg` },
-      { pageIndex: 1, attempt: 2, imageS3Key: `pages/${uploadId}/2/1.jpg` },
+      { pageIndex: 0, attempt: 1, imageS3Key: testImageKey(uploadId, 1, 0) },
+      { pageIndex: 1, attempt: 2, imageS3Key: testImageKey(uploadId, 2, 1) },
     ]);
   });
 
@@ -1117,7 +1138,12 @@ describe("a matched page's answers", () => {
     const copy = await issueCopy();
     const ingestPageTwo = async (tx: Transaction) => {
       const uploadId = await createUpload();
-      await ingestPages(tx, { uploadId, attempt: 1 }, [readPost(copy.pages[1], 0)]);
+      const pages = [readPost(copy.pages[1], 0)];
+      await ingestPages(
+        tx,
+        { uploadId, attempt: 1, pageImages: checkedImagesIn(uploadId, 1, pages) },
+        pages,
+      );
       return answersOf(copy.questionnaireId, tx);
     };
     const switched = await rolledBack(async (tx) => {
@@ -1194,7 +1220,15 @@ async function ingestWhileFirstHoldsLocks(
   const firstHoldsLocks = Promise.withResolvers<void>();
   const releaseFirst = Promise.withResolvers<void>();
   const first = db.transaction(async (tx) => {
-    const result = await ingestPages(tx, { uploadId: firstUploadId, attempt: 1 }, firstPages);
+    const result = await ingestPages(
+      tx,
+      {
+        uploadId: firstUploadId,
+        attempt: 1,
+        pageImages: checkedImagesIn(firstUploadId, 1, firstPages),
+      },
+      firstPages,
+    );
     firstHoldsLocks.resolve();
     await releaseFirst.promise;
     return result;
@@ -1203,7 +1237,15 @@ async function ingestWhileFirstHoldsLocks(
   const secondPid = Promise.withResolvers<number>();
   const second = db.transaction(async (tx) => {
     secondPid.resolve(await backendPid(tx));
-    return ingestPages(tx, { uploadId: secondUploadId, attempt: 1 }, secondPages);
+    return ingestPages(
+      tx,
+      {
+        uploadId: secondUploadId,
+        attempt: 1,
+        pageImages: checkedImagesIn(secondUploadId, 1, secondPages),
+      },
+      secondPages,
+    );
   });
   try {
     const pid = await secondPid.promise;
@@ -1286,7 +1328,11 @@ describe("two ingests at once", () => {
       expect(
         await db.transaction(async (tx) => {
           await tx.execute(sql`set local lock_timeout = '2s'`);
-          return ingestPages(tx, { uploadId, attempt: 1 }, posted);
+          return ingestPages(
+            tx,
+            { uploadId, attempt: 1, pageImages: checkedImagesIn(uploadId, 1, posted) },
+            posted,
+          );
         }),
       ).toEqual({
         kind: "ingested",

@@ -15,10 +15,11 @@ import { implementerHubsInProject } from "#/lib/auth/require-hub-role";
 import { type HubSurveyScope, type SurveyViewer, surveyHubScope } from "#/lib/auth/survey-access";
 import { objectId } from "#/lib/crypto";
 import { getPresignedUploadUrl } from "#/lib/s3/s3.service";
+import { base64Checksum } from "#/lib/s3/utils/checksum";
 import { PRESIGNED_UPLOAD_TTL_SECONDS } from "#/lib/s3/s3.types";
 import {
   discardOrphanedUpload,
-  type HeadOutcome,
+  isStoredAs,
   verifyUploadedObject,
 } from "#/lib/s3/utils/verify-upload";
 import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
@@ -131,19 +132,6 @@ export async function startScanUpload(
 }
 
 type StoredScanFile = Pick<ScanFile, "byteSize" | "sha256"> & { contentType: string };
-
-/** The checksum S3 reports for a file of this hex SHA-256. */
-function base64Checksum(sha256: string) {
-  return Buffer.from(sha256, "hex").toString("base64");
-}
-
-function isStoredAs(stored: Extract<HeadOutcome, { status: "ok" }>, file: StoredScanFile) {
-  return (
-    stored.contentLength === file.byteSize &&
-    stored.contentType === file.contentType &&
-    stored.checksumSha256 === base64Checksum(file.sha256)
-  );
-}
 
 /** Whether S3 already holds `file` at `key`, from an earlier PUT whose finish didn't happen. */
 async function holdsFile(key: string, file: StoredScanFile) {
