@@ -95,7 +95,7 @@ test("a clinical team member's ticket goes to their hub's clinical lead, whateve
   await expect(await heldBy(page, "/cl/tickets", subject)).toHaveText("You");
 });
 
-test("a clinical lead sends a ticket to their clinical team, who reassign it and escalate it back", async ({
+test("a clinical lead sends a ticket to their clinical team, who reassign it and escalate it back, and the clinical lead escalates it to them again", async ({
   page,
   context,
   undo,
@@ -127,10 +127,14 @@ test("a clinical lead sends a ticket to their clinical team, who reassign it and
   await openTicket(page, "/cl/tickets", subject);
   await expect(activity(page)).toContainText("Needs the clinical lead.");
 
-  // Escalating goes up to admins, never back down to the clinical team.
-  const escalate = await fillAction(page, "Escalate", "Needs an admin.");
+  // The clinical lead can escalate it to a clinical team member, who then holds it.
+  const escalate = await fillAction(page, "Escalate", "Needs a second look.");
   await escalate.getByRole("combobox").click();
-  await expect(page.getByRole("option", { name: new RegExp(hub.teamName) })).toHaveCount(0);
+  await page.getByRole("option", { name: new RegExp(teammate.name) }).click();
+  await submitAction(page, "Escalate");
+
+  await signIn(context, teammate.email);
+  await expect(await heldBy(page, "/ct/tickets", subject)).toHaveText("You");
 });
 
 test("a clinical team member with no hub cannot raise a ticket and is told why", async ({

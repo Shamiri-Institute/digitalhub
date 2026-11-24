@@ -1035,8 +1035,7 @@ async function routeRecipients(
     initiatorRole === "ADMIN" && escalating ? "TECH" : ADMIN_TEAM_FROM_CATEGORY[category];
   const recipientRoles = [
     ESCALATION_RECIPIENT_FROM_INITIATOR[initiatorRole](category),
-    // Extra roles sit beside or below the initiator, so they only take new or reopened tickets.
-    ...(escalating ? [] : (EXTRA_RECIPIENT_ROLES_FROM_INITIATOR[initiatorRole] ?? [])),
+    ...(EXTRA_RECIPIENT_ROLES_FROM_INITIATOR[initiatorRole] ?? []),
   ];
   const recipientIdsByRole = await Promise.all(
     recipientRoles.map((role) => list(role, recipientTeam)),
