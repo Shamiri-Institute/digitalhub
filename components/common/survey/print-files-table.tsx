@@ -1,14 +1,12 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 
+import { ActionButton } from "#/components/common/action-button";
 import DataTable from "#/components/data-table";
-import { Button } from "#/components/ui/button";
-import { toast, toastOnError } from "#/components/ui/use-toast";
 import { isPrintUnfinished, SurveyPrintStatus } from "#/db/enums";
 import { retryPrintRun } from "#/lib/actions/survey/print-runs";
+import { useRefreshWhile } from "#/lib/hooks/use-refresh-while";
 import type { PrintRunFile } from "#/lib/survey/print-run-queries";
 import { PrintStatusBadge } from "./print-runs-table";
 
@@ -93,16 +91,7 @@ export function PrintFilesTable({
   files: PrintRunFile[];
   runStatus: SurveyPrintStatus;
 }) {
-  const router = useRouter();
-  const unfinished = isPrintUnfinished(runStatus);
-  // effect: a timer is an external subscription; it stops once every file is finished.
-  useEffect(() => {
-    if (!unfinished) {
-      return;
-    }
-    const timer = setInterval(() => router.refresh(), REFRESH_MS);
-    return () => clearInterval(timer);
-  }, [unfinished, router]);
+  useRefreshWhile(isPrintUnfinished(runStatus), REFRESH_MS);
 
   const partsAtSchool = new Map<string, number>();
   for (const { schoolId } of files) {
@@ -120,7 +109,11 @@ export function PrintFilesTable({
         <p className="text-sm text-shamiri-text-grey">
           {ready} of {files.length} {files.length === 1 ? "file" : "files"} ready
         </p>
-        {runStatus === SurveyPrintStatus.FAILED && <RetryButton printRunId={printRunId} />}
+        {runStatus === SurveyPrintStatus.FAILED && (
+          <ActionButton variant="outline" action={() => retryPrintRun({ printRunId })}>
+            Try failed files again
+          </ActionButton>
+        )}
       </div>
       <DataTable
         data={rows}
@@ -132,26 +125,5 @@ export function PrintFilesTable({
         disablePagination
       />
     </div>
-  );
-}
-
-function RetryButton({ printRunId }: { printRunId: string }) {
-  const [retrying, setRetrying] = useState(false);
-  const retry = toastOnError(async () => {
-    setRetrying(true);
-    try {
-      const response = await retryPrintRun({ printRunId });
-      toast({
-        variant: response.success ? "default" : "destructive",
-        description: response.message,
-      });
-    } finally {
-      setRetrying(false);
-    }
-  });
-  return (
-    <Button variant="outline" onClick={retry} disabled={retrying} loading={retrying}>
-      Try failed files again
-    </Button>
   );
 }

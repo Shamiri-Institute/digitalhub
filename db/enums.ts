@@ -310,6 +310,28 @@ export const SurveyUploadStatus = {
 } as const;
 export type SurveyUploadStatus = (typeof SurveyUploadStatus)[keyof typeof SurveyUploadStatus];
 
+/** Stuck ones included: a stuck job may still recover, and the page should show it when it does. */
+export function isUploadUnfinished(status: SurveyUploadStatus) {
+  return (
+    status === SurveyUploadStatus.UPLOADED ||
+    status === SurveyUploadStatus.QUEUED ||
+    status === SurveyUploadStatus.PROCESSING
+  );
+}
+
+/** What a notification run has work for: an upload not yet queued, or a queued one due a try. */
+export function isUploadAwaitingPipeline(upload: {
+  status: SurveyUploadStatus;
+  notifyNextAt: Date | null;
+}) {
+  return (
+    upload.status === SurveyUploadStatus.UPLOADED ||
+    (upload.status === SurveyUploadStatus.QUEUED &&
+      upload.notifyNextAt !== null &&
+      upload.notifyNextAt.getTime() <= Date.now())
+  );
+}
+
 export const SURVEY_UPLOAD_STATUS_LABELS: Record<SurveyUploadStatus, string> = {
   PENDING: "Uploading",
   UPLOADED: "Uploaded",

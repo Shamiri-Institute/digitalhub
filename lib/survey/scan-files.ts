@@ -11,6 +11,11 @@ export type ScanContentType = (typeof SCAN_CONTENT_TYPES)[number];
 
 export const MAX_SCAN_BYTES = MAX_FILE_SIZE;
 
+/** A PDF's pages are counted by the pipeline; an image is one page. */
+export function startingPageCount(contentType: string) {
+  return contentType === "application/pdf" ? null : 1;
+}
+
 const EXTENSION_CONTENT_TYPES: Record<string, ScanContentType> = {
   pdf: "application/pdf",
   jpg: "image/jpeg",

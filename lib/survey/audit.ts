@@ -23,6 +23,8 @@ export const SurveyAuditAction = {
   SCAN_UPLOADED: "SCAN_UPLOADED",
   SCAN_PAGE_INGESTED: "SCAN_PAGE_INGESTED",
   SCAN_STATUS_REPORTED: "SCAN_STATUS_REPORTED",
+  SCAN_QUEUED: "SCAN_QUEUED",
+  SCAN_RERUN: "SCAN_RERUN",
 } as const;
 export type SurveyAuditAction = (typeof SurveyAuditAction)[keyof typeof SurveyAuditAction];
 

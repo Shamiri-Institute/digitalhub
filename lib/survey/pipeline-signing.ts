@@ -41,7 +41,7 @@ export function signPipelineRequest(secret: string, parts: SignedRequestParts) {
 
 // Read at each call rather than from env.ts, which parses the environment once at start.
 // env.ts refuses a short secret at start, but isn't parsed when CI is set; here it counts as unset.
-function pipelineSecret() {
+export function pipelineSecret() {
   const secret = process.env.SURVEY_PIPELINE_SECRET;
   return secret && secret.length >= SURVEY_PIPELINE_SECRET_MIN_LENGTH ? secret : undefined;
 }

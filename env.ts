@@ -1,3 +1,4 @@
+import { pipelineUploadsUrl } from "./lib/survey/pipeline-url";
 import { z } from "zod";
 
 export const SURVEY_PIPELINE_SECRET_MIN_LENGTH = 32;
@@ -37,6 +38,17 @@ const schema = z.object({
   SURVEY_PIPELINE_SECRET: z.preprocess(
     (secret) => (secret === "" ? undefined : secret),
     z.string().min(SURVEY_PIPELINE_SECRET_MIN_LENGTH).optional(),
+  ),
+  // Where the SDH notifies the pipeline that a scan is ready (lib/survey/pipeline-notify.ts),
+  // without the trailing /uploads. Unset, as on previews, no pipeline is notified.
+  SURVEY_PIPELINE_URL: z.preprocess(
+    (url) => (url === "" ? undefined : url),
+    z
+      .string()
+      .refine((url) => pipelineUploadsUrl(url) !== undefined, {
+        error: "an http(s) URL with no query string or fragment: the signature doesn't cover them",
+      })
+      .optional(),
   ),
 });
 

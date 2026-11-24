@@ -470,6 +470,20 @@
       "when": 1795417983409,
       "tag": "0066_pipeline_api",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1795532136634,
+      "tag": "0067_survey_pipeline_notify",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1795532137276,
+      "tag": "0068_survey_uploads_stuck_after_backfill",
+      "breakpoints": true
     }
   ]
 }

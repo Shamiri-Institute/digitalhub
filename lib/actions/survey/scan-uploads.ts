@@ -3,7 +3,9 @@
 import { refresh } from "next/cache";
 import type { z } from "zod";
 
+import { requireSurveyScope } from "#/lib/auth/admin-access";
 import { requireSurveyViewer, surveyHubScope } from "#/lib/auth/survey-access";
+import { rerunScanUpload as rerunUpload } from "#/lib/survey/pipeline-jobs";
 import {
   finishScanUpload as finishUpload,
   keepScanUploadHeld as keepHeld,
@@ -48,6 +50,7 @@ export async function finishScanUpload(
       return invalid(input.error);
     }
     const uploaded = await finishUpload(viewer, input.data.uploadId);
+    // The re-rendered scans page kicks the notification where no cron runs.
     refresh();
     return { success: true, message: `Uploaded ${uploaded.fileName}` };
   } catch (error) {
@@ -89,5 +92,26 @@ export async function cancelScanUpload(
     return { success: true, message: "Cancelled" };
   } catch (error) {
     return failure(error, "Sorry, could not cancel the upload.");
+  }
+}
+
+/**
+ * Runs a failed or stuck upload again, as its next attempt. Research admins only: a hub
+ * coordinator sees the upload's status but can't restart the pipeline.
+ */
+export async function rerunScanUpload(
+  data: z.infer<typeof ScanUploadSchema>,
+): Promise<ActionResponse> {
+  try {
+    const scope = await requireSurveyScope();
+    const input = ScanUploadSchema.safeParse(data);
+    if (!input.success) {
+      return invalid(input.error);
+    }
+    const rerun = await rerunUpload(scope, input.data.uploadId);
+    refresh();
+    return { success: true, message: `Running ${rerun.fileName} again (attempt ${rerun.attempt})` };
+  } catch (error) {
+    return failure(error, "Sorry, could not run the upload again.");
   }
 }

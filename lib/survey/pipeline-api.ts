@@ -23,6 +23,7 @@ import {
   UPLOAD_STATUSES_ACCEPTING_PAGES,
 } from "#/lib/survey/ingest-pages";
 import { rejectionOfPrintedPage } from "#/lib/survey/ingest-rules";
+import { StuckAfter } from "#/lib/survey/pipeline-deadlines";
 import { pageIdFromQrText } from "#/lib/survey/print-qr";
 import { scanPageImageKey } from "#/lib/survey/scan-files";
 import {
@@ -309,6 +310,13 @@ export async function pageImageLinks(
     if (descriptions.length > 0) {
       await tx.insert(surveyScanPageImage).values(descriptions).onConflictDoNothing();
     }
+    // Links granted are progress too: a large batch of images can take a while to send.
+    if (upload.status === SurveyUploadStatus.PROCESSING) {
+      await tx
+        .update(surveyUpload)
+        .set({ stuckAfter: StuckAfter.working })
+        .where(eq(surveyUpload.id, uploadId));
+    }
     return { ok: true as const, placedIndexes };
   });
   if (!linkPlan.ok) return linkPlan;
@@ -403,9 +411,22 @@ export async function postPages(
     }),
   );
 
-  const ingested = await db.transaction((tx) =>
-    ingestPages(tx, { uploadId, attempt, pageImages }, pages),
-  );
+  const ingested = await db.transaction(async (tx) => {
+    const result = await ingestPages(tx, { uploadId, attempt, pageImages }, pages);
+    if (result.kind === "ingested" && result.pages.some((page) => page.result === "stored")) {
+      // A stored page is progress, as a heartbeat is; a replay or a refused page isn't.
+      await tx
+        .update(surveyUpload)
+        .set({ stuckAfter: StuckAfter.working })
+        .where(
+          and(
+            eq(surveyUpload.id, uploadId),
+            eq(surveyUpload.status, SurveyUploadStatus.PROCESSING),
+          ),
+        );
+    }
+    return result;
+  });
   switch (ingested.kind) {
     case "upload-not-found":
       return refuse({ refused: "upload-not-found" });
@@ -558,8 +579,12 @@ export async function reportUploadStatus(
         changes = {
           status: SurveyUploadStatus.PROCESSING,
           pageCount: upload.pageCount ?? report.pageCount,
-          // The database's clock, which stuck jobs are measured on.
+          // The database's clock, as stuck_after is.
           lastHeartbeatAt: sql`now()`,
+          stuckAfter: StuckAfter.working,
+          // A notification retry still pending is moot once the pipeline is working on the job.
+          notifyNextAt: null,
+          notifyError: null,
         };
         break;
       }
@@ -586,11 +611,11 @@ export async function reportUploadStatus(
             reason: `${missingPages} of the upload's ${upload.pageCount} pages aren't posted yet`,
           });
         }
-        changes = { status: SurveyUploadStatus.PROCESSED };
+        changes = { status: SurveyUploadStatus.PROCESSED, stuckAfter: null };
         break;
       }
       case SurveyUploadStatus.FAILED:
-        changes = { status: SurveyUploadStatus.FAILED, error: report.error };
+        changes = { status: SurveyUploadStatus.FAILED, error: report.error, stuckAfter: null };
         break;
     }
 

@@ -8,6 +8,8 @@ import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { hubCoordinatorViewer } from "#/lib/auth/survey-access";
+import { isUploadAwaitingPipeline } from "#/db/enums";
+import { kickPipelineNotify } from "#/lib/survey/pipeline-notify";
 import { fetchScanUploads } from "#/lib/survey/scan-upload-queries";
 import { viewerTimeZone } from "#/lib/viewer-time-zone";
 
@@ -18,6 +20,11 @@ export default async function HubSurveyScansPage() {
   }
 
   const [uploads, timeZone] = await Promise.all([fetchScanUploads(viewer), viewerTimeZone()]);
+  // Where no cron runs (local, or a deployment other than production), viewing uploads waiting
+  // for the pipeline keeps them moving.
+  if (uploads.some(isUploadAwaitingPipeline)) {
+    kickPipelineNotify();
+  }
 
   return (
     <div className="flex h-full flex-col bg-white">
@@ -28,7 +35,7 @@ export default async function HubSurveyScansPage() {
         <ScanUploader />
         <section className="space-y-3">
           <h2 className="text-xl font-semibold">Uploaded scans</h2>
-          <ScanUploadsTable uploads={uploads} showHub={false} timeZone={timeZone} />
+          <ScanUploadsTable uploads={uploads} viewerKind="hub" timeZone={timeZone} />
         </section>
         <ViewerTimeZoneCookie serverTimeZone={timeZone} />
       </div>
