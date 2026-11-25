@@ -204,32 +204,6 @@ describe("scan uploads", () => {
     });
   });
 
-  it("sends a resumed upload as its first type, when nothing was stored yet", async () => {
-    const { file, bytes } = await scanFile("Kibera batch 12");
-    const first = await startScanUpload(uploader, file);
-
-    const asImage = await startScanUpload(uploader, { ...file, contentType: "image/png" });
-    expect(asImage).toMatchObject({ uploadId: first.uploadId, stored: false });
-    expect(toSend(asImage).headers["Content-Type"]).toBe("application/pdf");
-    expect((await put(asImage, bytes)).status).toBe(200);
-    expect(await finishScanUpload(hubViewer(uploader), asImage.uploadId)).toMatchObject({
-      contentType: "application/pdf",
-    });
-  });
-
-  it("keeps an upload's first type when it is resumed as another", async () => {
-    const { file, bytes } = await scanFile("Kibera batch 10");
-    const first = await startScanUpload(uploader, file);
-    expect((await put(first, bytes)).status).toBe(200);
-
-    const asImage = await startScanUpload(uploader, { ...file, contentType: "image/png" });
-    expect(asImage).toEqual({ uploadId: first.uploadId, stored: true });
-    expect(await finishScanUpload(hubViewer(uploader), asImage.uploadId)).toMatchObject({
-      contentType: "application/pdf",
-      pageCount: null,
-    });
-  });
-
   it("frees a cancelled upload's file for anyone at once, deleting what reached S3", async () => {
     const { file, bytes } = await scanFile("Kibera batch 6");
     const first = await startScanUpload(uploader, file);
@@ -358,14 +332,15 @@ describe("scan files", () => {
     );
   });
 
-  it("takes a scan's type from its extension only when the browser gives none", () => {
-    expect(scanContentTypeOf({ type: "image/png", name: "page.png" })).toBe("image/png");
+  it("takes only PDFs, by their extension when the browser gives no type", () => {
+    expect(scanContentTypeOf({ type: "image/png", name: "page.png" })).toBeUndefined();
     expect(scanContentTypeOf({ type: "Application/PDF; charset=binary", name: "a.pdf" })).toBe(
       "application/pdf",
     );
     expect(scanContentTypeOf({ type: "", name: "Batch 1.PDF" })).toBe("application/pdf");
-    expect(scanContentTypeOf({ type: "application/octet-stream", name: "p.jpg" })).toBe(
-      "image/jpeg",
+    expect(scanContentTypeOf({ type: "application/octet-stream", name: "p.jpg" })).toBeUndefined();
+    expect(scanContentTypeOf({ type: "application/octet-stream", name: "p.pdf" })).toBe(
+      "application/pdf",
     );
     expect(scanContentTypeOf({ type: "text/plain", name: "notes.pdf" })).toBeUndefined();
     expect(scanContentTypeOf({ type: "", name: "notes.txt" })).toBeUndefined();
