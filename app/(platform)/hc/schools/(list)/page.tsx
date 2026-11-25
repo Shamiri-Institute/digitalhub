@@ -13,9 +13,9 @@ import {
   fetchSchoolData,
   fetchSchoolDataCompletenessData,
   fetchSessionRatingAverages,
-} from "./actions";
-import ChartArea from "./components/lazy-chart-area";
-import WeeklyHubReportButtonAndForm from "./components/weekly-hub-report-button-and-form";
+} from "../actions";
+import ChartArea from "../components/lazy-chart-area";
+import WeeklyHubReportButtonAndForm from "../components/weekly-hub-report-button-and-form";
 
 export default async function SchoolsPage(props: {
   searchParams?: Promise<{
