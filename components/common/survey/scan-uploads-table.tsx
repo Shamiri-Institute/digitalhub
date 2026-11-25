@@ -3,7 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { useState } from "react";
 
-import { ActionButton } from "#/components/common/action-button";
+import { ActionButton, toastResponse } from "#/components/common/action-button";
 import DataTable from "#/components/data-table";
 import { Badge, type BadgeProps } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -17,13 +17,13 @@ import {
   DialogTitle,
   useDialogSave,
 } from "#/components/ui/dialog";
-import { toast } from "#/components/ui/use-toast";
-import { isUploadUnfinished, SURVEY_UPLOAD_STATUS_LABELS, SurveyUploadStatus } from "#/db/enums";
+import { SURVEY_UPLOAD_STATUS_LABELS, SurveyUploadStatus } from "#/db/enums";
 import { rerunScanUpload } from "#/lib/actions/survey/scan-uploads";
 import { formatDateTimeIn } from "#/lib/date-utils";
 import { useRefreshWhile } from "#/lib/hooks/use-refresh-while";
 import type { SurveyViewer } from "#/lib/auth/survey-access";
 import type { ScanUploads } from "#/lib/survey/scan-upload-queries";
+import { isUploadUnfinished, mayRunAgain } from "#/lib/survey/scan-upload-status";
 import { formatBytes } from "#/lib/utils";
 
 // The pipeline is notified each minute and reports at least every 5, so faster gains little.
@@ -95,9 +95,7 @@ function scanUploadColumns(viewerKind: ViewerKind): ColumnDef<ScanUploadRow>[] {
             header: () => <span className="sr-only">Run again</span>,
             enableHiding: false,
             cell: ({ row }) =>
-              row.original.status === SurveyUploadStatus.FAILED || row.original.stuck ? (
-                <RerunControl upload={row.original} />
-              ) : null,
+              mayRunAgain(row.original) ? <RerunControl upload={row.original} /> : null,
           } satisfies ColumnDef<ScanUploadRow>,
         ]
       : []),
@@ -139,11 +137,7 @@ function ConfirmRerun({ upload, onDone }: { upload: ScanUploadRow; onDone: () =>
   const { isSaving, save } = useDialogSave();
   const confirm = () =>
     save(async () => {
-      const response = await rerunScanUpload({ uploadId: upload.id });
-      toast({
-        variant: response.success ? "default" : "destructive",
-        description: response.message,
-      });
+      toastResponse(await rerunScanUpload({ uploadId: upload.id }));
       onDone();
     });
   return (

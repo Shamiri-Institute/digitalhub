@@ -12,6 +12,7 @@ import { implementerHubsInProject } from "#/lib/auth/require-hub-role";
 import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
 import { isStuck } from "#/lib/survey/pipeline-deadlines";
 import { startingPageCount } from "#/lib/survey/scan-files";
+import { mayRunAgain } from "#/lib/survey/scan-upload-status";
 
 /**
  * Runs a failed or stuck upload again, as its next attempt. It goes back to UPLOADED, so the next
@@ -44,7 +45,7 @@ export async function rerunScanUpload(scope: AdminScope, uploadId: string) {
     if (!upload) {
       throw new NotFoundError("Upload");
     }
-    if (upload.status !== SurveyUploadStatus.FAILED && !upload.stuck) {
+    if (!mayRunAgain(upload)) {
       throw new SurveyError("Only a failed or stuck upload can be run again");
     }
 

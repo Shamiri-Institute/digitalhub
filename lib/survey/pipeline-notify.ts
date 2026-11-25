@@ -23,16 +23,10 @@ import {
 } from "#/lib/survey/pipeline-signing";
 import { pipelineUploadsUrl } from "#/lib/survey/pipeline-url";
 
-/**
- * Notifications one run sends: due retries first, then new uploads queued into the room left, so a
- * queued upload never waits behind others; the rest of a backlog waits UPLOADED, which has no
- * deadline.
- */
 const UPLOADS_PER_RUN = 50;
 const SEND_TIMEOUT_MS = 10_000;
-/** How long a claimed upload is this run's while it sends, longer than any send can take. */
+// Longer than any send can take, so a claim outlives its send.
 const SEND_LEASE_SECONDS = 60;
-/** After this many refused tries the upload stops retrying and shows as stuck. */
 export const MAX_NOTIFY_TRIES = 10;
 const FIRST_RETRY_SECONDS = 60;
 const LONGEST_RETRY_SECONDS = 60 * 60;
@@ -50,10 +44,8 @@ type ClaimedUpload = Pick<
 >;
 
 /**
- * Queues uploads that are in and notifies the pipeline of every queued upload that is due a try.
- * Throws, after recording every try, when an upload has used its last one.
- * Does nothing where no pipeline is set, as on previews. `uploadIds` restricts it to those uploads,
- * for tests.
+ * Queues uploads that are in and notifies the pipeline of every queued upload due a try, or of
+ * `uploadIds` only. Throws, after recording every try, when an upload has used its last one.
  */
 export async function notifyPipeline({ uploadIds }: { uploadIds?: string[] } = {}): Promise<
   NotifyResult | { skipped: "no pipeline" }
@@ -85,27 +77,22 @@ export async function notifyPipeline({ uploadIds }: { uploadIds?: string[] } = {
 }
 
 /**
- * Notifies after the response is sent, where no cron runs (previews, local), so an upload reaches a
- * local pipeline without one. Safe to call any number of times: runs claim uploads with a lease.
+ * Notifies the pipeline of one upload once the response is sent, so it starts at once rather than
+ * at the next cron run. Vercel runs the cron in production only; elsewhere this is the only send,
+ * and a refused one shows as stuck, to run again.
  */
-export function kickPipelineNotify() {
-  if (process.env.VERCEL_ENV === "production") {
-    return;
-  }
+export function notifyPipelineSoon(uploadId: string) {
   after(async () => {
     try {
-      await notifyPipeline();
+      await notifyPipeline({ uploadIds: [uploadId] });
     } catch (error) {
       console.error("Notifying the pipeline failed", error);
     }
   });
 }
 
-/**
- * The pipeline to notify, or null where none is set. Read at each call, as the signing secret
- * is, so a test can set it. A URL without a usable secret is a broken deployment, not a preview, so
- * it throws, and the cron's monitor reports it rather than every scan waiting unseen.
- */
+// A URL without a usable secret is a broken deployment, not a preview: it throws, so the cron's
+// monitor reports it rather than every scan waiting unseen.
 function pipelineSettings() {
   const url = process.env.SURVEY_PIPELINE_URL;
   if (!url) {
@@ -206,7 +193,7 @@ async function queueAndClaim(uploadIds: string[] | undefined) {
   });
 }
 
-/** Sends one notification; answers why the pipeline didn't take it, or undefined if it did. */
+/** Why the pipeline didn't take the notification, or undefined if it did. */
 async function send(
   pipeline: { url: URL; secret: string },
   upload: ClaimedUpload,
@@ -242,17 +229,14 @@ async function send(
   } catch (error) {
     return `The pipeline couldn't be reached: ${error instanceof Error ? error.message : String(error)}`;
   }
-  // The answer has no body worth reading; closing it can't undo the status already received.
   response.body?.cancel().catch(() => {});
   return response.ok ? undefined : `The pipeline answered ${response.status}`;
 }
 
 /**
- * Records a try against the attempt it was sent for, so a re-run started meanwhile is untouched;
- * undefined when it no longer matches. Once the pipeline has the job it may already have moved the
- * upload on to PROCESSING, whose deadline is the pipeline's to move, so the deadline here changes
- * only while still QUEUED. A refusal is recorded only while QUEUED: a send that timed out may
- * still have reached a pipeline that has since started.
+ * Records a try against the attempt it was sent for, so a re-run started meanwhile is untouched.
+ * The pipeline may already have moved the upload on to PROCESSING, whose deadline is its own, so
+ * the deadline and any refusal are recorded only while the upload is still QUEUED.
  */
 async function recordTry(
   upload: ClaimedUpload,
@@ -288,7 +272,6 @@ async function recordTry(
     .set({
       notifyNextAt: gaveUp ? null : sql`now() + make_interval(secs => ${waitSeconds})`,
       notifyError: refusal,
-      // Given up, it is stuck at once; otherwise it is stuck if the retry doesn't happen.
       stuckAfter: gaveUp ? sql`now()` : StuckAfter.waitingForCron(waitSeconds),
     })
     .where(and(sameAttempt, eq(surveyUpload.status, SurveyUploadStatus.QUEUED)))

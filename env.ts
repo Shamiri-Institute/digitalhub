@@ -39,8 +39,6 @@ const schema = z.object({
     (secret) => (secret === "" ? undefined : secret),
     z.string().min(SURVEY_PIPELINE_SECRET_MIN_LENGTH).optional(),
   ),
-  // Where the SDH notifies the pipeline that a scan is ready (lib/survey/pipeline-notify.ts),
-  // without the trailing /uploads. Unset, as on previews, no pipeline is notified.
   SURVEY_PIPELINE_URL: z.preprocess(
     (url) => (url === "" ? undefined : url),
     z

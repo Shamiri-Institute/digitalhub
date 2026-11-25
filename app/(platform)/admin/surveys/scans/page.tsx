@@ -9,8 +9,6 @@ import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { surveyScope } from "#/lib/auth/admin-access";
-import { isUploadAwaitingPipeline } from "#/db/enums";
-import { kickPipelineNotify } from "#/lib/survey/pipeline-notify";
 import { fetchScanUploads, fetchUploadHubs } from "#/lib/survey/scan-upload-queries";
 import { viewerTimeZone } from "#/lib/viewer-time-zone";
 
@@ -26,11 +24,6 @@ export default async function AdminSurveyScansPage() {
     fetchUploadHubs(viewer),
     viewerTimeZone(),
   ]);
-  // Where no cron runs (local, or a deployment other than production), viewing uploads waiting
-  // for the pipeline keeps them moving.
-  if (uploads.some(isUploadAwaitingPipeline)) {
-    kickPipelineNotify();
-  }
 
   return (
     <div className="flex h-full flex-col bg-white">

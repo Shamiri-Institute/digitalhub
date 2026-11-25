@@ -6,6 +6,7 @@ import type { z } from "zod";
 import { requireSurveyScope } from "#/lib/auth/admin-access";
 import { requireSurveyViewer, surveyHubScope } from "#/lib/auth/survey-access";
 import { rerunScanUpload as rerunUpload } from "#/lib/survey/pipeline-jobs";
+import { notifyPipelineSoon } from "#/lib/survey/pipeline-notify";
 import {
   finishScanUpload as finishUpload,
   keepScanUploadHeld as keepHeld,
@@ -50,7 +51,7 @@ export async function finishScanUpload(
       return invalid(input.error);
     }
     const uploaded = await finishUpload(viewer, input.data.uploadId);
-    // The re-rendered scans page kicks the notification where no cron runs.
+    notifyPipelineSoon(input.data.uploadId);
     refresh();
     return { success: true, message: `Uploaded ${uploaded.fileName}` };
   } catch (error) {
@@ -109,6 +110,7 @@ export async function rerunScanUpload(
       return invalid(input.error);
     }
     const rerun = await rerunUpload(scope, input.data.uploadId);
+    notifyPipelineSoon(input.data.uploadId);
     refresh();
     return { success: true, message: `Running ${rerun.fileName} again (attempt ${rerun.attempt})` };
   } catch (error) {

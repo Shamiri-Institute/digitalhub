@@ -6,6 +6,13 @@ import { Button, type ButtonProps } from "#/components/ui/button";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import type { ActionResponse } from "#/types/actions.types";
 
+export function toastResponse(response: ActionResponse) {
+  toast({
+    variant: response.success ? "default" : "destructive",
+    description: response.message,
+  });
+}
+
 export function ActionButton({
   action,
   ...buttonProps
@@ -16,11 +23,7 @@ export function ActionButton({
   const run = toastOnError(async () => {
     setRunning(true);
     try {
-      const response = await action();
-      toast({
-        variant: response.success ? "default" : "destructive",
-        description: response.message,
-      });
+      toastResponse(await action());
     } finally {
       setRunning(false);
     }
