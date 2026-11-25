@@ -15,8 +15,11 @@ export const statusBadgeVariant: Record<TicketStatus, BadgeProps["variant"]> = {
 };
 
 // Everyone who runs a hub has the hub coordinator role, and the UI calls them all hub managers.
+// The clinical team role names a group, so one of them is a member.
 export function roleLabel(role: ImplementerRole) {
-  return role === "HUB_COORDINATOR" ? "Hub manager" : sentenceLabel(role);
+  if (role === "HUB_COORDINATOR") return "Hub manager";
+  if (role === "CLINICAL_TEAM") return "Clinical team member";
+  return sentenceLabel(role);
 }
 
 export function sentenceLabel(value: string) {
