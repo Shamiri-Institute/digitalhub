@@ -3478,6 +3478,10 @@ export const surveyAnswer = pgTable(
     index("survey_answers_version_id_field_idx").on(table.versionId, table.field),
     index("survey_answers_scan_page_id_idx").on(table.scanPageId),
     index("survey_answers_reviewed_by_idx").on(table.reviewedBy),
+    // The review queue reads only answers waiting for a person, a small share of all answers.
+    index("survey_answers_needs_review_idx")
+      .on(table.questionnaireId)
+      .where(sql`${table.reviewStatus} = 'NEEDS_REVIEW'`),
     // A blank answer is SQL null, never JSON null.
     check(
       "survey_answers_no_json_null_check",

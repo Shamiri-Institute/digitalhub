@@ -8,4 +8,5 @@ export const HUB_SURVEY_TABS: TabType[] = [
 export const ADMIN_SURVEY_TABS: TabType[] = [
   { name: "Surveys", href: "/admin/surveys" },
   { name: "Scans", href: "/admin/surveys/scans" },
+  { name: "Review", href: "/admin/surveys/review" },
 ];

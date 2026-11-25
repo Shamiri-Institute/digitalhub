@@ -9,6 +9,7 @@ export const SurveyAuditEntity = {
   QUESTIONNAIRE: "QUESTIONNAIRE",
   SCAN_UPLOAD: "SCAN_UPLOAD",
   SCAN_PAGE: "SCAN_PAGE",
+  ANSWER: "ANSWER",
 } as const;
 export type SurveyAuditEntity = (typeof SurveyAuditEntity)[keyof typeof SurveyAuditEntity];
 
@@ -23,6 +24,8 @@ export const SurveyAuditAction = {
   SCAN_UPLOADED: "SCAN_UPLOADED",
   SCAN_PAGE_INGESTED: "SCAN_PAGE_INGESTED",
   SCAN_STATUS_REPORTED: "SCAN_STATUS_REPORTED",
+  ANSWER_VERIFIED: "ANSWER_VERIFIED",
+  ANSWER_CORRECTED: "ANSWER_CORRECTED",
 } as const;
 export type SurveyAuditAction = (typeof SurveyAuditAction)[keyof typeof SurveyAuditAction];
 

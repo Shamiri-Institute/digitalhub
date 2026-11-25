@@ -116,3 +116,23 @@ export const StartScanUploadSchema = z.object({
 export const ScanUploadSchema = z.object({
   uploadId: stringValidation("Missing upload"),
 });
+
+/** When the reviewer's page showed the answer last reviewed, or null if it hadn't been. */
+const SeenReviewedAt = z.iso.datetime().nullable();
+
+export const AcceptAnswerSchema = z.object({
+  answerId: stringValidation("Missing answer"),
+  seenReviewedAt: SeenReviewedAt,
+});
+
+/** A corrected value: a code, codes, digits, a date, text or a signature; null leaves it blank. */
+export const CorrectAnswerSchema = z.object({
+  answerId: stringValidation("Missing answer"),
+  seenReviewedAt: SeenReviewedAt,
+  value: z.union([
+    z.string().max(2000, { error: "Use at most 2000 characters" }),
+    z.array(z.string().max(64)).max(64),
+    z.literal(true),
+    z.null(),
+  ]),
+});

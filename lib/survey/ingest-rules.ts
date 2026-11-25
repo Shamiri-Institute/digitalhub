@@ -334,7 +334,7 @@ function reviewFlagsOf({
   return flags;
 }
 
-function keepsFormRule(rule: AnswerRule, value: string | string[] | true): boolean {
+export function keepsFormRule(rule: AnswerRule, value: string | string[] | true): boolean {
   switch (rule.kind) {
     case "choice":
       return (Array.isArray(value) ? value : [value]).every(

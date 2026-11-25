@@ -25,7 +25,7 @@ const s3EndpointOrigin = (() => {
   }
 })();
 
-// The regions of the buckets the browser uploads to.
+// The regions of the buckets the browser uploads to and shows images from.
 const s3RegionOrigins = [
   ...new Set(
     [
@@ -81,7 +81,8 @@ const nextConfig = {
               "default-src 'self'; " +
               "script-src 'self' 'unsafe-inline' blob: https://unpkg.com; " +
               "style-src 'self' 'unsafe-inline'; " +
-              "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.s3.amazonaws.com; " +
+              // Scanned page images are shown from signed S3 links, as uploads are sent to them.
+              `img-src 'self' data: blob: https://lh3.googleusercontent.com ${s3EndpointOrigin} ${s3RegionOrigins} https://*.s3.amazonaws.com; ` +
               "font-src 'self'; " +
               `connect-src 'self' ${sentryIngestOrigin} ${s3EndpointOrigin} ${s3RegionOrigins} https://*.s3.amazonaws.com; ` +
               "frame-src https://dash.shamiri.institute; " +
