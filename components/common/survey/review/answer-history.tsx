@@ -40,7 +40,7 @@ export function AnswerHistory({
         {answer.history.map((event) => {
           const before = (event.before ?? {}) as Change;
           const after = (event.after ?? {}) as Change;
-          const who = event.actorName ?? event.actorEmail ?? "Someone";
+          const who = event.actorName ?? "Someone";
           const when = timeZone ? formatDateTimeIn(event.occurredAt, timeZone) : "";
           return (
             <li key={event.id} className="text-shamiri-text-grey">

@@ -162,6 +162,10 @@ export function AnswerPanel({
               ? "This copy is void, so its answers can't change."
               : "This copy is verified, so its answers can't change."}
           </p>
+        ) : !answer.viewerMayChange ? (
+          <p className="rounded-md bg-muted px-4 py-3 text-sm text-shamiri-text-grey">
+            Someone else reviewed this answer, so only the Research team can change it.
+          </p>
         ) : question ? (
           <form
             className="space-y-4"

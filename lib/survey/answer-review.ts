@@ -1,7 +1,7 @@
-// Research admins' review of scanned answers the SDH flagged: the queue, one answer in focus, and
-// a decision on it. A decision changes the answer's value and review status, never what the
-// pipeline read, and records both in the audit log. Every read and write is held to the admin's
-// implementer and project.
+// The review of scanned answers the SDH flagged: the queue, one answer in focus, and a decision on
+// it. A decision changes the answer's value and review status, never what the pipeline read, and
+// records both in the audit log. Every read and write is held to the viewer: a Research admin to
+// their implementer's surveys in their project, a hub coordinator further to their hub's copies.
 
 import "server-only";
 
@@ -29,7 +29,7 @@ import {
   user,
 } from "#/db/schema";
 import { SurveyError } from "#/lib/actions/survey/respond";
-import type { AdminScope } from "#/lib/auth/admin-access";
+import type { SurveyViewer } from "#/lib/auth/survey-access";
 import { NotFoundError } from "#/lib/auth/require-auth-role";
 import { getPresignedUrl } from "#/lib/s3/s3.service";
 import {
@@ -66,13 +66,31 @@ export type ReviewFilters = {
   flag?: SurveyAnswerFlag;
 };
 
-function inScope(scope: AdminScope) {
-  return and(eq(survey.implementerId, scope.implementerId), eq(survey.projectId, scope.projectId));
+// A hub coordinator reviews their hub's copies; a Research admin every copy of their project's surveys.
+function inScope(viewer: SurveyViewer) {
+  return and(
+    eq(survey.implementerId, viewer.implementerId),
+    eq(survey.projectId, viewer.projectId),
+    viewer.kind === "hub" ? eq(surveyQuestionnaire.hubId, viewer.hubId) : undefined,
+  );
 }
 
-function waitingForReview(scope: AdminScope) {
+// A hub coordinator reviews an answer no person has, or changes their own review; a decision someone
+// else made stands unless the Research team changes it.
+function viewerMayChange(
+  viewer: SurveyViewer,
+  answer: { reviewStatus: SurveyAnswerReviewStatus; reviewedBy: string | null },
+) {
+  return (
+    viewer.kind === "project" ||
+    !reviewedByAPerson(answer.reviewStatus) ||
+    answer.reviewedBy === viewer.userId
+  );
+}
+
+function waitingForReview(viewer: SurveyViewer) {
   return and(
-    inScope(scope),
+    inScope(viewer),
     eq(surveyAnswer.reviewStatus, SurveyAnswerReviewStatus.NEEDS_REVIEW),
     notInArray(surveyQuestionnaire.status, [...SETTLED_COPY_STATUSES]),
   );
@@ -91,8 +109,8 @@ function matchingFilters(filters: ReviewFilters): SQL[] {
  * Answers waiting for review, in the order a reviewer meets them on paper: by survey, copy, page
  * and position on the page. At most QUEUE_LIMIT; `total` counts them all.
  */
-export async function fetchReviewQueue(scope: AdminScope, filters: ReviewFilters) {
-  const where = and(waitingForReview(scope), ...matchingFilters(filters));
+export async function fetchReviewQueue(viewer: SurveyViewer, filters: ReviewFilters) {
+  const where = and(waitingForReview(viewer), ...matchingFilters(filters));
   const [waiting, [totals]] = await Promise.all([
     withCopyAndSurvey(
       db
@@ -200,7 +218,7 @@ async function versionsOf(versionIds: string[]): Promise<Map<string, VersionFiel
 }
 
 /** The surveys, hubs and schools with answers waiting, for the queue's filters. */
-export async function fetchReviewFilterOptions(scope: AdminScope) {
+export async function fetchReviewFilterOptions(viewer: SurveyViewer) {
   // One pass over the waiting answers, grouped by all three; each list is summed from it.
   const groups = await withCopyAndSurvey(
     db
@@ -218,7 +236,7 @@ export async function fetchReviewFilterOptions(scope: AdminScope) {
   )
     .innerJoin(hub, eq(hub.id, surveyQuestionnaire.hubId))
     .innerJoin(school, eq(school.id, surveyQuestionnaire.schoolId))
-    .where(waitingForReview(scope))
+    .where(waitingForReview(viewer))
     .groupBy(
       survey.id,
       survey.code,
@@ -240,7 +258,11 @@ export async function fetchReviewFilterOptions(scope: AdminScope) {
   };
   return {
     surveys: summed((group) => ({ id: group.surveyId, label: group.surveyLabel })),
-    hubs: summed((group) => ({ id: group.hubId, label: group.hubName })),
+    // A hub coordinator's queue is their hub's, so they have no hub to choose.
+    hubs:
+      viewer.kind === "project"
+        ? summed((group) => ({ id: group.hubId, label: group.hubName }))
+        : undefined,
     schools: summed((group) => ({ id: group.schoolId, label: group.schoolName })),
   };
 }
@@ -252,7 +274,7 @@ export type ReviewFilterOptions = Awaited<ReturnType<typeof fetchReviewFilterOpt
  * Joined in the core builder rather than a relational query: the scope is a condition on the
  * survey two relations away, and only the answer's own layout page is selected out of the layout.
  */
-export async function fetchAnswerForReview(scope: AdminScope, answerId: string) {
+export async function fetchAnswerForReview(viewer: SurveyViewer, answerId: string) {
   const [answerInScope] = await db
     .select({
       answer: surveyAnswer,
@@ -287,7 +309,7 @@ export async function fetchAnswerForReview(scope: AdminScope, answerId: string) 
       ),
     )
     .leftJoin(surveyScanPage, eq(surveyScanPage.id, surveyAnswer.scanPageId))
-    .where(and(eq(surveyAnswer.id, answerId), inScope(scope)));
+    .where(and(eq(surveyAnswer.id, answerId), inScope(viewer)));
   if (!answerInScope) {
     return null;
   }
@@ -311,6 +333,7 @@ export async function fetchAnswerForReview(scope: AdminScope, answerId: string) 
     flags: answerInScope.answer.flags,
     reviewStatus: answerInScope.answer.reviewStatus,
     reviewedAt: answerInScope.answer.reviewedAt,
+    viewerMayChange: viewerMayChange(viewer, answerInScope.answer),
     copy: {
       serial: answerInScope.serial,
       status: answerInScope.copyStatus,
@@ -326,7 +349,7 @@ export type AnswerForReview = NonNullable<Awaited<ReturnType<typeof fetchAnswerF
 
 /**
  * A short-lived link to a scan page's image, made from the key on its row. Callers reach the row
- * only through an answer in the admin's scope, so no key or other page is ever reachable.
+ * only through an answer the viewer may review, so no key or other page is ever reachable.
  */
 async function pageImageOf(
   scanPage: { imageS3Key: string | null; aligned: boolean | null } | null,
@@ -342,7 +365,7 @@ async function pageImageOf(
 }
 
 /** The image link for a queued answer's page, so the next answer's page can load ahead. */
-export async function pageImageForAnswer(scope: AdminScope, answerId: string) {
+export async function pageImageForAnswer(viewer: SurveyViewer, answerId: string) {
   const [answerPage] = await db
     .select({
       scanPage: {
@@ -354,7 +377,7 @@ export async function pageImageForAnswer(scope: AdminScope, answerId: string) {
     .innerJoin(surveyQuestionnaire, eq(surveyQuestionnaire.id, surveyAnswer.questionnaireId))
     .innerJoin(survey, eq(survey.id, surveyQuestionnaire.surveyId))
     .innerJoin(surveyScanPage, eq(surveyScanPage.id, surveyAnswer.scanPageId))
-    .where(and(eq(surveyAnswer.id, answerId), inScope(scope)));
+    .where(and(eq(surveyAnswer.id, answerId), inScope(viewer)));
   return answerPage ? pageImageOf(answerPage.scanPage) : null;
 }
 
@@ -366,8 +389,8 @@ async function answerHistory(answerId: string) {
       action: surveyAuditEvent.action,
       before: surveyAuditEvent.before,
       after: surveyAuditEvent.after,
+      // Names only: hub coordinators see who reviewed an answer, not their address.
       actorName: user.name,
-      actorEmail: user.email,
     })
     .from(surveyAuditEvent)
     .leftJoin(user, eq(user.id, surveyAuditEvent.actorUserId))
@@ -394,17 +417,22 @@ export type SeenReview = { reviewedAt: string | null };
  * its last answer reviewed makes it READY.
  */
 export async function reviewAnswer(
-  scope: AdminScope,
+  viewer: SurveyViewer,
   answerId: string,
   decision: ReviewDecision,
   seen: SeenReview,
 ) {
   return db.transaction(async (tx) => {
-    const target = await lockAnswer(tx, scope, answerId);
+    const target = await lockAnswer(tx, viewer, answerId);
     const reviewedAt = target.answer.reviewedAt?.toISOString() ?? null;
     if (seen.reviewedAt !== reviewedAt) {
       throw new SurveyError(
         "Someone reviewed this answer while you had it open. Reload to see their decision.",
+      );
+    }
+    if (!viewerMayChange(viewer, target.answer)) {
+      throw new SurveyError(
+        "Someone else reviewed this answer, so only the Research team can change it",
       );
     }
     const question = fieldQuestionOf(target.form, target.answer.field);
@@ -438,14 +466,14 @@ export async function reviewAnswer(
       .set({
         value: proposed,
         reviewStatus,
-        reviewedBy: scope.userId,
+        reviewedBy: viewer.userId,
         reviewedAt: sql`now()`,
       })
       .where(eq(surveyAnswer.id, answerId))
       .returning({ id: surveyAnswer.id });
     if (!reviewed) throw new Error(`Answer ${answerId} disappeared while locked`);
     await recordSurveyEvent(tx, {
-      actor: { kind: SurveyAuditActor.USER, userId: scope.userId },
+      actor: { kind: SurveyAuditActor.USER, userId: viewer.userId },
       entityType: SurveyAuditEntity.ANSWER,
       entityId: answerId,
       surveyId: target.surveyId,
@@ -459,14 +487,14 @@ export async function reviewAnswer(
 }
 
 /** The answer and its copy, locked copy first as ingest locks them, and held to the scope. */
-async function lockAnswer(tx: Transaction, scope: AdminScope, answerId: string) {
+async function lockAnswer(tx: Transaction, viewer: SurveyViewer, answerId: string) {
   const [copy] = await withCopyAndSurvey(
     tx
       .select({ id: surveyQuestionnaire.id, status: surveyQuestionnaire.status })
       .from(surveyAnswer)
       .$dynamic(),
   )
-    .where(and(eq(surveyAnswer.id, answerId), inScope(scope)))
+    .where(and(eq(surveyAnswer.id, answerId), inScope(viewer)))
     .for("update", { of: surveyQuestionnaire });
   if (!copy) {
     throw new NotFoundError("Answer");

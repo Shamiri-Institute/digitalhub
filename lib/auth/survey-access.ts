@@ -14,9 +14,9 @@ export type HubSurveyScope = {
 };
 
 /**
- * Who is looking at a hub's survey work (print runs, scan uploads): a hub coordinator sees their
- * hub's, a Research admin every hub's in their implementer and project. There is no unscoped viewer,
- * so no query can forget the filter.
+ * Who is looking at a hub's survey work (print runs, scan uploads, answer review): a hub
+ * coordinator sees their hub's, a Research admin every hub's in their implementer and project. There
+ * is no unscoped viewer, so no query can forget the filter.
  */
 export type SurveyViewer =
   | ({ kind: "hub" } & HubSurveyScope)

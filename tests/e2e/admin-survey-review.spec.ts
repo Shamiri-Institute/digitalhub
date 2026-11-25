@@ -88,6 +88,8 @@ test("R-SURV-REVIEW: a Research admin corrects an unsure answer and sees it afte
   const panel = page.getByRole("article");
   await expect(panel.getByRole("heading", { name: "How are you feeling today?" })).toBeVisible();
   await expect(panel.getByText("Unclear marking")).toBeVisible();
+  // A Research admin's queue spans their project's hubs.
+  await expect(page.getByRole("combobox", { name: "Hub" })).toBeVisible();
   await expect(panel.getByText("The pipeline read nothing definite")).toBeVisible();
   // Nothing definite was read, so the choice open to the reviewer is to confirm a blank or mark one.
   await expect(panel.getByRole("button", { name: "Accept as blank" })).toBeEnabled();
@@ -124,7 +126,10 @@ test("R-SURV-REVIEW: a correction the question's rules refuse shows why, and not
   await expect(panel.getByText("not reviewed yet")).toBeVisible();
 });
 
-test("R-SURV-REVIEW: hub coordinators can't open the review queue", async ({ page, context }) => {
+test("R-SURV-REVIEW: hub coordinators can't open the admin review queue", async ({
+  page,
+  context,
+}) => {
   await signInAs(context, "HUB_COORDINATOR");
   await page.goto(getUrl("/admin/surveys/review"));
 

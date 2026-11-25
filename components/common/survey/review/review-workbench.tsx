@@ -83,7 +83,7 @@ export function ReviewWorkbench({
             />
           ) : (
             <p className="rounded-lg bg-muted p-6 text-sm text-shamiri-text-grey">
-              This answer isn&apos;t in your surveys. Choose one from the list.
+              This answer isn&apos;t one you can review. Choose one from the list.
             </p>
           )}
         </div>

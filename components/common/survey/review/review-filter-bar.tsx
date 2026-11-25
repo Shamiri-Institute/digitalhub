@@ -55,13 +55,15 @@ export function ReviewFilterBar({
         options={withCounts(options.surveys)}
         onChange={(value) => choose("survey", value)}
       />
-      <FilterSelect
-        label="Hub"
-        everyLabel="Every hub"
-        value={filters.hubId}
-        options={withCounts(options.hubs)}
-        onChange={(value) => choose("hub", value)}
-      />
+      {options.hubs && (
+        <FilterSelect
+          label="Hub"
+          everyLabel="Every hub"
+          value={filters.hubId}
+          options={withCounts(options.hubs)}
+          onChange={(value) => choose("hub", value)}
+        />
+      )}
       <FilterSelect
         label="School"
         everyLabel="Every school"

@@ -3,24 +3,24 @@
 import { refresh } from "next/cache";
 import type { z } from "zod";
 
-import { requireSurveyScope } from "#/lib/auth/admin-access";
+import { requireSurveyViewer } from "#/lib/auth/survey-access";
 import { reviewAnswer } from "#/lib/survey/answer-review";
 import type { ActionResponse } from "#/types/actions.types";
 import { failure, invalid } from "./respond";
 import { AcceptAnswerSchema, CorrectAnswerSchema } from "./schemas";
 
-/** Accepts an answer as the pipeline read it. Research admins only. */
+/** Accepts an answer as it stands, for a Research admin or the hub coordinator of its copy's hub. */
 export async function acceptAnswer(
   data: z.infer<typeof AcceptAnswerSchema>,
 ): Promise<ActionResponse> {
   try {
-    const scope = await requireSurveyScope();
+    const viewer = await requireSurveyViewer();
     const input = AcceptAnswerSchema.safeParse(data);
     if (!input.success) {
       return invalid(input.error);
     }
     await reviewAnswer(
-      scope,
+      viewer,
       input.data.answerId,
       { kind: "accept" },
       { reviewedAt: input.data.seenReviewedAt },
@@ -37,13 +37,13 @@ export async function correctAnswer(
   data: z.infer<typeof CorrectAnswerSchema>,
 ): Promise<ActionResponse> {
   try {
-    const scope = await requireSurveyScope();
+    const viewer = await requireSurveyViewer();
     const input = CorrectAnswerSchema.safeParse(data);
     if (!input.success) {
       return invalid(input.error);
     }
     const { reviewStatus } = await reviewAnswer(
-      scope,
+      viewer,
       input.data.answerId,
       { kind: "correct", value: input.data.value },
       { reviewedAt: input.data.seenReviewedAt },

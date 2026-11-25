@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { db } from "#/db/client";
 import { hub, project, surveyAnswer, surveyQuestionnaire, surveyVersion } from "#/db/schema";
 import { SurveyError } from "#/lib/actions/survey/respond";
-import type { AdminScope } from "#/lib/auth/admin-access";
+import type { SurveyViewer } from "#/lib/auth/survey-access";
 import { fieldCropOf, fieldQuestionOf } from "#/lib/survey/answer-fields";
 import { fetchAnswerForReview, fetchReviewQueue, reviewAnswer } from "#/lib/survey/answer-review";
 import {
@@ -19,7 +19,8 @@ import {
 } from "#/tests/survey-fixtures";
 import { PRINT_FORM } from "./fixtures/survey-print-form";
 
-let scope: AdminScope & { hubId: string };
+// A Research admin, with the hub the test's copies are scanned for.
+let scope: Extract<SurveyViewer, { kind: "project" }> & { hubId: string };
 let schoolId: string;
 let removeSchool: (() => Promise<void>) | undefined;
 let versionId: string;
@@ -42,7 +43,7 @@ beforeAll(async () => {
       })
     : undefined;
   if (!defaultHub || !member) throw new Error("Seed the database first");
-  scope = { ...defaultHub, userId: member.userId };
+  scope = { kind: "project", ...defaultHub, userId: member.userId };
   const printSchool = await createPrintSchool({
     hubId: scope.hubId,
     schoolName: `Review test school ${surveyCode}`,
@@ -89,14 +90,26 @@ async function stored(answerId: string) {
   return answer;
 }
 
+// The copies' hub as its coordinator sees it; any user but the admin stands in for them.
+async function hubCoordinatorOfTheCopies(): Promise<Extract<SurveyViewer, { kind: "hub" }>> {
+  const someoneElse = await db.query.user.findFirst({
+    where: (u, { ne }) => ne(u.id, scope.userId),
+    orderBy: (u, { asc }) => asc(u.id),
+    columns: { id: true },
+  });
+  if (!someoneElse) throw new Error("Seed the database first");
+  const { hubId, implementerId, projectId } = scope;
+  return { kind: "hub", userId: someoneElse.id, hubId, implementerId, projectId };
+}
+
 // A decision made on a page that shows the answer as it stands now.
 async function review(
-  reviewerScope: AdminScope,
+  reviewer: SurveyViewer,
   answerId: string,
   decision: Parameters<typeof reviewAnswer>[2],
 ) {
   const reviewedAt = (await stored(answerId))?.reviewedAt?.toISOString() ?? null;
-  return reviewAnswer(reviewerScope, answerId, decision, { reviewedAt });
+  return reviewAnswer(reviewer, answerId, decision, { reviewedAt });
 }
 
 async function copyStatus(questionnaireId: string) {
@@ -138,6 +151,45 @@ describe("the review queue", () => {
     await expect(review(elsewhere, answerId("mood"), { kind: "accept" })).rejects.toThrow(
       "Answer not found",
     );
+  });
+
+  it("shows a hub coordinator their hub's answers, and no other hub's", async () => {
+    const { answerId } = await flaggedCopy();
+    const coordinator = await hubCoordinatorOfTheCopies();
+    const otherCoordinator: SurveyViewer = { ...coordinator, hubId: "another-hub" };
+
+    const queue = await fetchReviewQueue(coordinator, { surveyId });
+    expect(queue.answers.map((answer) => answer.id)).toContain(answerId("mood"));
+    expect(await review(coordinator, answerId("mood"), { kind: "correct", value: "2" })).toEqual({
+      reviewStatus: "CORRECTED",
+    });
+
+    expect((await fetchReviewQueue(otherCoordinator, { surveyId })).answers).toEqual([]);
+    expect(await fetchAnswerForReview(otherCoordinator, answerId("age"))).toBeNull();
+    await expect(
+      review(otherCoordinator, answerId("age"), { kind: "correct", value: "14" }),
+    ).rejects.toThrow("Answer not found");
+  });
+
+  it("lets a hub coordinator change their own review, but not the Research team's", async () => {
+    const { answerId } = await flaggedCopy();
+    const coordinator = await hubCoordinatorOfTheCopies();
+
+    await review(coordinator, answerId("mood"), { kind: "correct", value: "2" });
+    expect(await review(coordinator, answerId("mood"), { kind: "correct", value: "1" })).toEqual({
+      reviewStatus: "CORRECTED",
+    });
+
+    await review(scope, answerId("age"), { kind: "correct", value: "14" });
+    expect((await fetchAnswerForReview(coordinator, answerId("age")))?.viewerMayChange).toBe(false);
+    await expect(
+      review(coordinator, answerId("age"), { kind: "correct", value: "15" }),
+    ).rejects.toThrow("only the Research team can change it");
+    expect(await stored(answerId("age"))).toMatchObject({ value: "14", reviewedBy: scope.userId });
+    // The Research team may still change a coordinator's review.
+    expect(await review(scope, answerId("mood"), { kind: "correct", value: "3" })).toEqual({
+      reviewStatus: "CORRECTED",
+    });
   });
 });
 
