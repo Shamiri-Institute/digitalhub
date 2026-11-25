@@ -23,7 +23,7 @@ import {
   verifyUploadedObject,
 } from "#/lib/s3/utils/verify-upload";
 import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
-import { type ScanContentType, startingPageCount } from "#/lib/survey/scan-files";
+import type { ScanContentType } from "#/lib/survey/scan-files";
 
 export type ScanFile = {
   fileName: string;
@@ -256,7 +256,6 @@ export async function finishScanUpload(viewer: SurveyViewer, uploadId: string) {
       .set({
         status: SurveyUploadStatus.UPLOADED,
         uploadedAt: new Date(),
-        pageCount: startingPageCount(upload.contentType),
       })
       .where(
         and(

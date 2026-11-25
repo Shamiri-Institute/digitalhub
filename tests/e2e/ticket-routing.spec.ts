@@ -1,5 +1,5 @@
-import type { BrowserContext, Page } from "@playwright/test";
-import { and, eq, inArray, like, type SQL, sql } from "drizzle-orm";
+import type { Page } from "@playwright/test";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { type AdminTeam, TEAM_LABELS } from "#/db/enums";
@@ -16,13 +16,23 @@ import {
 import { expect, test, type Undo } from "#/tests/fixtures";
 import {
   createAdminCopy,
+  deleteTickets,
+  oldestAdminName,
   required,
   signableMember,
-  signInWithEmail,
+  signIn,
   uniqueSuffix,
 } from "#/tests/helpers";
 import { cellUnder, getUrl, searchRows } from "#/tests/pages/helpers";
-import { activity, fillAction, openTicket, submitAction, takeAction } from "#/tests/pages/tickets";
+import {
+  activity,
+  createTicket,
+  fillAction,
+  heldBy,
+  openTicket,
+  submitAction,
+  takeAction,
+} from "#/tests/pages/tickets";
 
 // Hub coordinators reassign to each other and the sign-ins share people, so the tests take turns.
 test.describe.configure({ mode: "serial" });
@@ -100,47 +110,7 @@ test.beforeAll(async () => {
   hub = row;
 });
 
-test.afterAll(async () => {
-  const created = db
-    .select({ id: tickets.id })
-    .from(tickets)
-    .where(like(tickets.subject, `${subjectPrefix}%`));
-  await db.delete(ticketEvents).where(inArray(ticketEvents.ticketId, created));
-  await db.delete(tickets).where(like(tickets.subject, `${subjectPrefix}%`));
-});
-
-async function signIn(context: BrowserContext, email: string) {
-  await context.clearCookies();
-  await signInWithEmail(context, email);
-}
-
-async function createTicket(
-  page: Page,
-  path: string,
-  subject: string,
-  category: string,
-  assignee?: string,
-) {
-  await page.goto(getUrl(path));
-  await page.getByRole("button", { name: "New ticket" }).click();
-  const dialog = page.getByRole("dialog", { name: "Create new ticket" });
-  await dialog.getByPlaceholder("Enter ticket subject").fill(subject);
-  await dialog.getByPlaceholder("Describe the issue").fill("Raised by the ticket routing spec.");
-  await dialog.getByRole("combobox").first().click();
-  await page.getByRole("option", { name: category, exact: true }).click();
-  if (assignee) {
-    await dialog.getByRole("button", { name: "Assign to" }).click();
-    await page.getByPlaceholder("Search by name").fill(assignee);
-    await page.getByRole("option", { name: assignee }).click();
-  }
-  await dialog.getByRole("button", { name: "Submit" }).click();
-  await expect(dialog).toBeHidden();
-}
-
-async function heldBy(page: Page, path: string, subject: string) {
-  await page.goto(getUrl(path));
-  return cellUnder(page, await searchRows(page, subject), "Held by");
-}
+test.afterAll(() => deleteTickets(subjectPrefix));
 
 async function act(page: Page, path: string, subject: string, action: string, reason: string) {
   await openTicket(page, path, subject);
@@ -398,18 +368,6 @@ test("the creator can reopen a ticket to a different coordinator", async ({ page
   const step = await openTicket(page, "/hc/tickets", subject);
   await expect(step.getByRole("button", { name: "Start", exact: true })).toBeVisible();
 });
-
-// The admin the routing picks by default: the oldest one matching `who` in the implementer.
-async function oldestAdminName(implementerId: string, who: SQL) {
-  const [admin] = await db
-    .select({ name: adminUser.adminName })
-    .from(adminUser)
-    .where(and(eq(adminUser.implementerId, implementerId), who))
-    .orderBy(adminUser.createdAt, adminUser.id)
-    .limit(1);
-  required(admin?.name, "a named admin");
-  return admin.name;
-}
 
 /** A ticket held by the hub's supervisor, as if one of their fellows had raised it. */
 async function ticketHeldBySupervisor(subject: string) {

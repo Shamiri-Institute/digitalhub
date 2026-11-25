@@ -1,6 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
-import { getUrl, searchRows } from "#/tests/pages/helpers";
+import { cellUnder, getUrl, searchRows } from "#/tests/pages/helpers";
 
 /** Opens the ticket called `subject` from the list at `path`, and returns the ticket's page. */
 export async function openTicket(page: Page, path: string, subject: string) {
@@ -33,8 +33,35 @@ export async function submitAction(page: Page, action: string) {
   await expect(form).toBeHidden();
 }
 
-/** Takes `action` with `reason` on the open ticket page. */
 export async function takeAction(page: Page, action: string, reason: string) {
   await fillAction(page, action, reason);
   await submitAction(page, action);
+}
+
+export async function createTicket(
+  page: Page,
+  path: string,
+  subject: string,
+  category: string,
+  assignee?: string,
+) {
+  await page.goto(getUrl(path));
+  await page.getByRole("button", { name: "New ticket" }).click();
+  const dialog = page.getByRole("dialog", { name: "Create new ticket" });
+  await dialog.getByPlaceholder("Enter ticket subject").fill(subject);
+  await dialog.getByPlaceholder("Describe the issue").fill("Raised by the ticket specs.");
+  await dialog.getByRole("combobox").first().click();
+  await page.getByRole("option", { name: category, exact: true }).click();
+  if (assignee) {
+    await dialog.getByRole("button", { name: "Assign to" }).click();
+    await page.getByPlaceholder("Search by name").fill(assignee);
+    await page.getByRole("option", { name: assignee }).click();
+  }
+  await dialog.getByRole("button", { name: "Submit" }).click();
+  await expect(dialog).toBeHidden();
+}
+
+export async function heldBy(page: Page, path: string, subject: string) {
+  await page.goto(getUrl(path));
+  return cellUnder(page, await searchRows(page, subject), "Held by");
 }

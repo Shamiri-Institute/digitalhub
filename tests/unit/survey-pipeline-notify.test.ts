@@ -399,18 +399,6 @@ describe("running an upload again", () => {
     expect(JSON.parse(received[0]?.body ?? "")).toMatchObject({ uploadId, attempt: 2 });
   });
 
-  it("keeps an image's single page when running it again", async () => {
-    const uploadId = await createUpload({
-      contentType: "image/png",
-      status: SurveyUploadStatus.FAILED,
-      error: "The image could not be read",
-      pageCount: 1,
-    });
-
-    await rerunScanUpload(scope, uploadId);
-    expect((await uploadRow(uploadId)).pageCount).toBe(1);
-  });
-
   it("runs a stuck upload again", async () => {
     const uploadId = await createUpload({
       status: SurveyUploadStatus.PROCESSING,

@@ -11,7 +11,6 @@ import { NotFoundError } from "#/lib/auth/require-auth-role";
 import { implementerHubsInProject } from "#/lib/auth/require-hub-role";
 import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
 import { isStuck } from "#/lib/survey/pipeline-deadlines";
-import { startingPageCount } from "#/lib/survey/scan-files";
 import { mayRunAgain } from "#/lib/survey/scan-upload-status";
 
 /**
@@ -27,7 +26,6 @@ export async function rerunScanUpload(scope: AdminScope, uploadId: string) {
       .select({
         status: surveyUpload.status,
         attempt: surveyUpload.attempt,
-        contentType: surveyUpload.contentType,
         fileName: surveyUpload.fileName,
         stuck: isStuck(surveyUpload.status, surveyUpload.stuckAfter),
       })
@@ -55,7 +53,7 @@ export async function rerunScanUpload(scope: AdminScope, uploadId: string) {
         status: SurveyUploadStatus.UPLOADED,
         attempt: upload.attempt + 1,
         // Counted again, so a re-run can recover from a count an earlier attempt got wrong.
-        pageCount: startingPageCount(upload.contentType),
+        pageCount: null,
         error: null,
         lastHeartbeatAt: null,
         notifyTries: 0,
