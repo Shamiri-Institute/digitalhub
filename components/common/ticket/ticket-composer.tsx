@@ -166,7 +166,7 @@ const focusMode = () =>
   requestAnimationFrame(() =>
     document
       .querySelector<HTMLElement>(
-        "#ticket-composer-form :is(textarea, [role=combobox], [data-autofocus])",
+        "#ticket-composer-form > :not([hidden]) :is(textarea, [role=combobox], [data-autofocus])",
       )
       ?.focus({ preventScroll: true }),
   );
@@ -277,39 +277,47 @@ export function TicketComposer({
             )}
           </div>
         )}
+        {/* Every mode stays mounted and only the current one shows, so switching keeps each draft. */}
         <div id="ticket-composer-form">
-          {current?.kind === "comment" ? (
-            <TicketCommentForm ticketId={ticket.id} />
-          ) : current?.kind === "start" ? (
-            <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-              <p className="text-pretty text-shamiri-text-dark-grey">
-                Let {personName(ticket.createdBy)} know you&apos;re on it. This ticket will show as
-                In progress.
-              </p>
-              <Button
-                data-autofocus
-                variant="brand"
-                type="button"
-                disabled={isStarting}
-                loading={isStarting}
-                onClick={start}
-              >
-                Start ticket
-              </Button>
-            </div>
-          ) : (
-            action && (
-              <ReasonForm
-                key={action.kind}
-                ticket={ticket}
-                action={action}
-                role={role}
-                recipients={action.kind === "reassign" ? reassignRecipients : recipients}
-                close={reset}
-                done={reset}
-              />
-            )
-          )}
+          {modes.map(({ kind }) => {
+            const reasonAction = available.find((a) => a.kind === kind);
+            return (
+              <div key={kind} hidden={kind !== current?.kind}>
+                {kind === "comment" ? (
+                  <TicketCommentForm ticketId={ticket.id} />
+                ) : kind === "start" ? (
+                  <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                    <p className="text-pretty text-shamiri-text-dark-grey">
+                      Let {personName(ticket.createdBy)} know you&apos;re on it. This ticket will
+                      show as In progress.
+                    </p>
+                    <Button
+                      data-autofocus
+                      variant="brand"
+                      type="button"
+                      disabled={isStarting}
+                      loading={isStarting}
+                      onClick={start}
+                    >
+                      Start ticket
+                    </Button>
+                  </div>
+                ) : (
+                  reasonAction && (
+                    <ReasonForm
+                      ticket={ticket}
+                      action={reasonAction}
+                      role={role}
+                      recipients={
+                        reasonAction.kind === "reassign" ? reassignRecipients : recipients
+                      }
+                      close={reset}
+                    />
+                  )
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -322,17 +330,16 @@ function ReasonForm({
   role,
   recipients,
   close,
-  done,
 }: {
   ticket: FullTicket;
   action: ReasonAction;
   role: ImplementerRole;
   recipients: TicketPerson[];
   close: () => void;
-  done: () => void;
 }) {
   const picksRecipient = ["escalate", "reopen", "reassign"].includes(action.kind);
   const [isSaving, startSaving] = useTransition();
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
   const form = useForm<ReasonFormValues>({
     resolver: zodResolver(
       ReasonFormSchema.refine(
@@ -355,11 +362,17 @@ function ReasonForm({
   });
   const noRecipients = picksRecipient && recipients.length === 0;
 
+  const discard = () => {
+    form.reset();
+    setConfirmingDiscard(false);
+    close();
+  };
+
   const onSubmit = (values: ReasonFormValues) =>
     startSaving(async () => {
       const result = await action.submit(ticket.id, values);
       toast({ variant: result.success ? "default" : "destructive", description: result.message });
-      if (result.success) done();
+      if (result.success) discard();
     });
 
   return (
@@ -439,7 +452,7 @@ function ReasonForm({
                   <Textarea
                     {...field}
                     onKeyDown={(e) => {
-                      if (e.key === "Escape") close();
+                      if (e.key === "Escape") e.currentTarget.blur();
                     }}
                     placeholder={action.placeholder}
                     className="min-h-16 bg-white field-sizing-content max-h-48"
@@ -451,19 +464,42 @@ function ReasonForm({
             )}
           />
         </div>
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" type="button" disabled={isSaving} onClick={close}>
-            Discard
-          </Button>
-          <Button
-            variant={action.destructive ? "destructive" : "brand"}
-            type="submit"
-            disabled={noRecipients || isSaving}
-            loading={isSaving}
-          >
-            {action.label}
-          </Button>
-        </div>
+        {confirmingDiscard ? (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md bg-background-secondary px-3 py-2 text-sm">
+            <p className="min-w-0 flex-1 text-pretty text-shamiri-text-dark-grey">
+              Discard the reason you wrote?
+            </p>
+            <div className="flex gap-2">
+              <Button type="button" variant="ghost" onClick={() => setConfirmingDiscard(false)}>
+                Keep writing
+              </Button>
+              <Button type="button" variant="destructive" onClick={discard}>
+                Discard reason
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="ghost"
+              type="button"
+              disabled={isSaving}
+              onClick={() =>
+                form.getValues("reason").trim() ? setConfirmingDiscard(true) : discard()
+              }
+            >
+              Discard
+            </Button>
+            <Button
+              variant={action.destructive ? "destructive" : "brand"}
+              type="submit"
+              disabled={noRecipients || isSaving}
+              loading={isSaving}
+            >
+              {action.label}
+            </Button>
+          </div>
+        )}
       </form>
     </Form>
   );

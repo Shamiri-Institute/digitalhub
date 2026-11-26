@@ -206,3 +206,36 @@ test("the creator can cancel a clinical ticket only until it is started", async 
   await db.update(tickets).set({ status: "IN_PROGRESS" }).where(eq(tickets.id, ticketId));
   await expectNoActions(page, "/fel/tickets", ticketSubject, ["Cancel ticket"]);
 });
+
+test("the holder's drafts survive switching modes, and discarding a reason asks first", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fellowAndSupervisor = await pickFellowAndSupervisor();
+  required(fellowAndSupervisor, "a fellow and their supervisor who can both sign in");
+  const { ticketSubject } = await insertHeldTicket(fellowAndSupervisor, undo);
+
+  await signInWithEmail(context, fellowAndSupervisor.supervisorEmail);
+  const step = await openTicket(page, "/sc/tickets", ticketSubject);
+  await step.getByRole("textbox", { name: "Add a comment" }).fill("Half-written comment");
+  const resolve = await fillAction(page, "Resolve", "Half-written fix");
+  await resolve.getByLabel("Reason").press("Escape");
+  await expect(resolve).toBeVisible();
+
+  await step.getByRole("button", { name: "Comment", exact: true }).click();
+  await expect(step.getByRole("textbox", { name: "Add a comment" })).toHaveValue(
+    "Half-written comment",
+  );
+  await step.getByRole("button", { name: "Resolve", exact: true }).click();
+  await expect(resolve.getByLabel("Reason")).toHaveValue("Half-written fix");
+
+  await resolve.getByRole("button", { name: "Discard" }).click();
+  await resolve.getByRole("button", { name: "Keep writing" }).click();
+  await expect(resolve.getByLabel("Reason")).toHaveValue("Half-written fix");
+  await resolve.getByRole("button", { name: "Discard" }).click();
+  await resolve.getByRole("button", { name: "Discard reason" }).click();
+  await expect(resolve).toBeHidden();
+  await step.getByRole("button", { name: "Resolve", exact: true }).click();
+  await expect(resolve.getByLabel("Reason")).toHaveValue("");
+});
