@@ -6,7 +6,7 @@ import { deleteObject } from "#/lib/s3/s3.service";
 import { expect, test, type Undo } from "#/tests/fixtures";
 import { required, signableMember, signIn, uniqueSuffix } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
-import { activity, openTicket } from "#/tests/pages/tickets";
+import { activity, chooseMode, openTicket } from "#/tests/pages/tickets";
 
 type Fixture = {
   fellowEmail: string;
@@ -102,6 +102,8 @@ test("the creator and the holder comment with files, and the author hides their 
   const popup = page.waitForEvent("popup");
   await activity(page).getByRole("button", { name: photo.name }).click();
   await expect(await popup).toHaveURL(/ticket-attachments/);
+  // The holder's composer opens on their next step, so they switch to Comment.
+  await chooseMode(page, "Comment");
   await form
     .getByLabel("Add a comment", { exact: true })
     .fill("Thanks, I'll call the fellow today.");

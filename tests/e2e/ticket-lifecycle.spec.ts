@@ -226,6 +226,9 @@ test("the holder's drafts survive switching modes, and discarding a reason asks 
 
   await signInWithEmail(context, fellowAndSupervisor.supervisorEmail);
   const step = await openTicket(page, "/sc/tickets", ticketSubject);
+  // The holder lands on their next step, with Comment a click away.
+  await expect(step.getByRole("radio", { name: "Start", exact: true })).toBeChecked();
+  await chooseMode(page, "Comment");
   await step.getByRole("textbox", { name: "Add a comment" }).fill("Half-written comment");
   const resolve = await fillAction(page, "Resolve", "Half-written fix");
   await resolve.getByLabel("Reason").press("Escape");

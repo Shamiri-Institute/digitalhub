@@ -195,9 +195,14 @@ export function TicketComposer({
       : []),
     ...available,
   ];
-  const [mode, setMode] = useState<Mode | null>(modes[0]?.kind ?? null);
+  // The step that moves the ticket on opens selected, so its holder lands on what's next.
+  const recommended = (["start", "resolve", "reopen"] as const).find((kind) =>
+    modes.some((m) => m.kind === kind),
+  );
+  // Null follows the default: the recommended step, else the first mode.
+  const [mode, setMode] = useState<Mode | null>(null);
   const [isStarting, startTransition] = useTransition();
-  if (modes.length === 0 || mode === null) {
+  if (modes.length === 0) {
     return (
       <p
         className={cn(
@@ -211,12 +216,10 @@ export function TicketComposer({
     );
   }
 
-  const current = modes.find((m) => m.kind === mode) ?? modes[0];
+  const current =
+    modes.find((m) => m.kind === mode) ?? modes.find((m) => m.kind === recommended) ?? modes[0];
   // The row holds Comment, the step that moves the ticket on, and the handovers; the rest wait
   // under More, unless there's only one of them.
-  const recommended = (["start", "resolve", "reopen"] as const).find((kind) =>
-    modes.some((m) => m.kind === kind),
-  );
   const inRow = (kind: Mode) =>
     kind === "comment" || kind === recommended || kind === "escalate" || kind === "reassign";
   const overflow = modes.filter((m) => !inRow(m.kind));
@@ -241,8 +244,9 @@ export function TicketComposer({
     setMode(kind);
     focusMode();
   };
-  // A finished or discarded action hands the box back to its first mode.
-  const reset = () => setMode(modes[0]?.kind ?? null);
+  // A finished or discarded action hands the box back to the default, which a finished action may
+  // have moved on (Start makes Resolve the next step).
+  const reset = () => setMode(null);
 
   const start = () =>
     startTransition(async () => {
