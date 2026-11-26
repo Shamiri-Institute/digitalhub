@@ -67,6 +67,8 @@ better-auth. Pages get the signed-in user from the role helpers in `app/auth.ts`
 
 Every export of a `"use server"` file is a public POST endpoint, even when only server components call it. Take the scope (hub, fellow, implementer) from the session, never from the arguments.
 
+An admin write looks up its target with `implementerId` and the active `projectId` from the session; a record outside them is not found.
+
 ## Testing
 
 - `pnpm run test` runs Playwright against `next dev`; `pnpm run test:prod` builds and runs against `next start`, as CI does. `pnpm run test:unit` runs Vitest.

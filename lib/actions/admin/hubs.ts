@@ -183,14 +183,20 @@ export async function updateHub(data: z.infer<typeof UpdateHubSchema>): Promise<
   try {
     const { implementerId } = await requireSuperAdmin();
     const parsed = UpdateHubSchema.parse(data);
+    const projectId = await getActiveProjectId();
+    const inScope = and(
+      eq(hub.id, parsed.hubId),
+      eq(hub.implementerId, implementerId),
+      eq(hub.projectId, projectId),
+    );
 
     await db.transaction(async (tx) => {
       // Locked, so two edits of one hub run one after the other and cannot give two new session
       // types the same code.
       const [existing] = await tx
-        .select({ hubName: hub.hubName, projectId: hub.projectId })
+        .select({ hubName: hub.hubName })
         .from(hub)
-        .where(and(eq(hub.id, parsed.hubId), eq(hub.implementerId, implementerId)))
+        .where(inScope)
         .for("update");
       if (!existing) {
         throw new AdminActionError("Hub not found");
@@ -199,14 +205,11 @@ export async function updateHub(data: z.infer<typeof UpdateHubSchema>): Promise<
       if (parsed.hubName !== existing.hubName) {
         await assertHubNameIsFree(tx, {
           implementerId,
-          projectId: existing.projectId,
+          projectId,
           hubName: parsed.hubName,
           exceptHubId: parsed.hubId,
         });
-        await tx
-          .update(hub)
-          .set({ hubName: parsed.hubName })
-          .where(and(eq(hub.id, parsed.hubId), eq(hub.implementerId, implementerId)));
+        await tx.update(hub).set({ hubName: parsed.hubName }).where(inScope);
       }
 
       await updateSessionNames(tx, parsed.hubId, parsed.sessionTypes, parsed.loadedSessionNameIds);
