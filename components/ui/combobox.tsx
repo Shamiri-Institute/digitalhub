@@ -57,7 +57,10 @@ export function Combobox({
           </span>
           <ChevronsUpDown className="ml-1.5 size-4 shrink-0 opacity-50" />
         </PopoverTrigger>
-        <PopoverContent className="w-[360px] p-0" align="start">
+        <PopoverContent
+          className="w-(--anchor-width) min-w-72 max-w-(--available-width) p-0"
+          align="start"
+        >
           <Command
             filter={(value: string, search: string) => {
               const item = items.find((item) => item.id.toLowerCase() === value.toLowerCase());

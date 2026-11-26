@@ -44,7 +44,7 @@ function ToastList() {
       )}
       <ToastPrimitive.Close
         aria-label="Close"
-        className="absolute right-1 top-1 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-hidden focus:ring-1 group-hover:opacity-100 group-data-[type=destructive]:text-white/80 hover:group-data-[type=destructive]:text-white"
+        className="absolute right-1 top-1 rounded-md p-1 text-foreground/60 transition-colors hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue group-data-[type=destructive]:text-white/80 hover:group-data-[type=destructive]:text-white"
       >
         <X className="h-4 w-4" />
       </ToastPrimitive.Close>

@@ -35,7 +35,7 @@ function RadioGroupItem({
       nativeButton
       render={(buttonProps) => <button type="button" {...buttonProps} />}
       className={cn(
-        "inline-flex aspect-square h-4 w-4 items-center justify-center rounded-full border border-primary text-primary shadow-sm focus:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue data-disabled:cursor-not-allowed data-disabled:opacity-50",
+        "relative inline-flex aspect-square h-4 w-4 items-center after:absolute after:-inset-1 justify-center rounded-full border border-primary text-primary shadow-sm focus:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue data-disabled:cursor-not-allowed data-disabled:opacity-50",
         className,
       )}
       {...props}

@@ -77,7 +77,7 @@ export default function ReferClinicalCase({
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger render={children} nativeButton={false} />
-      <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
+      <DialogContent className="z-10 max-h-[90%] w-[calc(100%-2rem)] max-w-2xl overflow-x-auto bg-white p-5">
         <ReferClinicalCaseForm
           clinicalCase={clinicalCase}
           referralOptions={referralOptions}

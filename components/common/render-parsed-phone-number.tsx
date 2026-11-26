@@ -1,6 +1,6 @@
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import { Icons } from "#/components/icons";
-import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 
 export default function RenderParsedPhoneNumber(number?: string) {
   try {
@@ -9,19 +9,15 @@ export default function RenderParsedPhoneNumber(number?: string) {
     if (error instanceof ParseError) {
       return (
         number && (
-          <Tooltip>
-            <TooltipTrigger>
-              <div className="flex gap-1">
-                <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
-                <span>{number}</span>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div className="px-2 py-1 capitalize">
-                {error.message.toLowerCase().replace("_", " ")}
-              </div>
-            </TooltipContent>
-          </Tooltip>
+          <Popover>
+            <PopoverTrigger openOnHover className="flex gap-1 rounded-sm">
+              <Icons.flagTriangleRight aria-hidden className="h-4 w-4 text-shamiri-red" />
+              <span>{number}</span>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto px-3 py-2 text-xs capitalize">
+              {error.message.toLowerCase().replace("_", " ")}
+            </PopoverContent>
+          </Popover>
         )
       );
     }
