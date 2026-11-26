@@ -53,7 +53,7 @@ export default async function TicketPage({
   const holderLabel = RESOLVED_TICKET_STATUSES.includes(ticket.status)
     ? "Resolved by"
     : ticket.status === "CANCELLED"
-      ? "Was with"
+      ? "Last held by"
       : "Held by";
   // High and urgent tickets that still need work tint their priority, like their badge.
   const priorityTint =

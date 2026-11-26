@@ -208,7 +208,7 @@ test("a hub coordinator reassigns to an active coordinator of the hub, who may p
 
   // The earlier holder can still see the ticket, and its history names the new holder.
   await openTicket(page, "/hc/tickets", subject);
-  await expect(activity(page)).toContainText(`Sent to ${hub.otherCoordinatorName}`);
+  await expect(activity(page)).toContainText(`reassigned it to ${hub.otherCoordinatorName}`);
 
   await signIn(context, hub.otherCoordinatorEmail);
   await expect(await heldBy(page, "/hc/tickets", subject)).toHaveText("You");
@@ -409,7 +409,7 @@ test("a supervisor reassigns to another supervisor of the hub, as often as neede
 
   await signIn(context, hub.supervisorEmail);
   const reassign = await act(page, "/sc/tickets", subject, "Reassign", "Off sick.");
-  await expect(reassign).toContainText("Reassign to another supervisor");
+  await expect(reassign).toContainText("Choose another supervisor");
   await reassign.getByRole("combobox").click();
   await page.getByRole("option", { name: hub.bystanderName }).click();
   await submitAction(page, "Reassign");
@@ -553,7 +553,7 @@ test("an admin reassigns across teams and escalates to Tech, the top tier", asyn
   // Every admin is one tier, so the holder can hand the ticket to another team, listed under it.
   await signIn(context, holder.email);
   const reassign = await act(page, "/admin/tickets", subject, "Reassign", "Out this week.");
-  await expect(reassign).toContainText("Reassign to another admin");
+  await expect(reassign).toContainText("Choose another admin");
   await reassign.getByRole("combobox").click();
   await expect(page.getByRole("group", { name: "Research team" })).toContainText(other.name);
   await page.getByRole("option", { name: other.name }).click();

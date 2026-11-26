@@ -32,7 +32,6 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from "#/components/ui/form";
 import {
   Select,
@@ -41,7 +40,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
-import { Textarea } from "#/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import {
@@ -65,7 +63,13 @@ import { zodResolver } from "#/lib/zod-resolver";
 import type { ActionResponse } from "#/types/actions.types";
 import { sentenceLabel, personName, roleLabel } from "./format";
 import { RecipientOptions } from "./recipient-options";
-import { TicketCommentForm } from "./ticket-comment-form";
+import {
+  composerBoxClass,
+  composerErrorClass,
+  composerTextareaClass,
+  composerToolbarClass,
+  TicketCommentForm,
+} from "./ticket-comment-form";
 
 const ReasonFormSchema = z.object({
   reason: stringValidation("A reason is required"),
@@ -232,7 +236,7 @@ export function TicketComposer({
         )}
       >
         <Lock aria-hidden className="h-4 w-4 shrink-0" />
-        This ticket is closed, so no more comments can be added.
+        This ticket is closed, so no more comments can be added. To follow up, raise a new ticket.
       </p>
     );
   }
@@ -373,21 +377,24 @@ export function TicketComposer({
                 {kind === "comment" ? (
                   <TicketCommentForm ticketId={ticket.id} />
                 ) : kind === "start" ? (
-                  <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-                    <p className="text-pretty text-shamiri-text-dark-grey">
+                  <div className={composerBoxClass}>
+                    <p className="px-3 py-2.5 text-sm leading-6 text-pretty text-shamiri-text-dark-grey">
                       Let {personName(ticket.createdBy)} know you&apos;re on it. This ticket will
                       show as In progress.
                     </p>
-                    <Button
-                      data-autofocus
-                      variant="brand"
-                      type="button"
-                      disabled={isStarting}
-                      loading={isStarting}
-                      onClick={start}
-                    >
-                      Start ticket
-                    </Button>
+                    <div className={cn(composerToolbarClass, "justify-end")}>
+                      <Button
+                        data-autofocus
+                        variant="brand"
+                        type="button"
+                        className="h-8 max-sm:h-11"
+                        disabled={isStarting}
+                        loading={isStarting}
+                        onClick={start}
+                      >
+                        Start ticket
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   reasonAction && (
@@ -427,6 +434,7 @@ function ReasonForm({
   const picksRecipient = ["escalate", "reopen", "reassign"].includes(action.kind);
   const [isSaving, startSaving] = useTransition();
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const form = useForm<ReasonFormValues>({
     resolver: zodResolver(
       ReasonFormSchema.refine(
@@ -451,16 +459,26 @@ function ReasonForm({
 
   const discard = () => {
     form.reset();
+    setServerError(null);
     setConfirmingDiscard(false);
     close();
   };
 
   const onSubmit = (values: ReasonFormValues) =>
     startSaving(async () => {
+      setServerError(null);
       const result = await action.submit(ticket.id, values);
-      toast({ variant: result.success ? "default" : "destructive", description: result.message });
-      if (result.success) discard();
+      if (!result.success) return setServerError(result.message);
+      toast({ description: result.message });
+      discard();
     });
+
+  const { errors } = form.formState;
+  const problem =
+    serverError ??
+    errors.recipientId?.message ??
+    errors.priority?.message ??
+    errors.reason?.message;
 
   return (
     <Form {...form}>
@@ -468,125 +486,143 @@ function ReasonForm({
         noValidate
         aria-label={action.label}
         onSubmit={toastOnError(form.handleSubmit(onSubmit))}
-        className="space-y-3"
+        className={composerBoxClass}
       >
-        <div className="grid gap-3 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
-          {picksRecipient && (
-            <FormField
-              control={form.control}
-              name="recipientId"
-              render={({ field }) => (
-                <FormItem required className="space-y-3">
-                  <FormLabel className="text-sm">
-                    {action.kind === "reassign"
-                      ? `Reassign to another ${roleLabel(role).toLowerCase()}`
-                      : "Send to"}
-                  </FormLabel>
-                  {noRecipients ? (
-                    <p className="text-sm text-shamiri-text-dark-grey">
-                      No one is available to take this ticket. Ask an administrator for help.
-                    </p>
-                  ) : (
+        <FormField
+          control={form.control}
+          name="reason"
+          render={({ field }) => (
+            <FormItem className="space-y-0">
+              <FormLabel className="sr-only">Reason</FormLabel>
+              <FormControl>
+                <textarea
+                  {...field}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") e.currentTarget.blur();
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey))
+                      e.currentTarget.form?.requestSubmit();
+                  }}
+                  placeholder={action.placeholder}
+                  rows={2}
+                  className={composerTextareaClass}
+                  disabled={isSaving}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        {problem && (
+          <p role="alert" className={composerErrorClass}>
+            {problem}
+          </p>
+        )}
+        {confirmingDiscard ? (
+          <div className={cn(composerToolbarClass, "pl-3")}>
+            <p className="min-w-0 flex-1 text-sm text-pretty text-shamiri-text-dark-grey">
+              Discard the reason you wrote?
+            </p>
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-8 max-sm:h-11"
+              onClick={() => setConfirmingDiscard(false)}
+            >
+              Keep writing
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              className="h-8 max-sm:h-11"
+              onClick={discard}
+            >
+              Discard reason
+            </Button>
+          </div>
+        ) : (
+          <div className={composerToolbarClass}>
+            {picksRecipient &&
+              (noRecipients ? (
+                <p className="px-1.5 text-sm text-shamiri-text-dark-grey">
+                  No one is available to take this ticket. Ask an administrator for help.
+                </p>
+              ) : (
+                <FormField
+                  control={form.control}
+                  name="recipientId"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-2 space-y-0 max-sm:w-full">
+                      <FormLabel className="pl-1.5 text-sm whitespace-nowrap text-shamiri-text-dark-grey">
+                        Send to
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-8 w-64 bg-white max-sm:h-11 max-sm:w-full">
+                            <SelectValue
+                              placeholder={
+                                action.kind === "reassign"
+                                  ? `Choose another ${roleLabel(role).toLowerCase()}`
+                                  : "Choose who should take it"
+                              }
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent position="popper">
+                          <RecipientOptions people={recipients} />
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+              ))}
+            {action.kind === "changePriority" && (
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-2 space-y-0">
+                    <FormLabel className="pl-1.5 text-sm text-shamiri-text-dark-grey">
+                      Priority
+                    </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="bg-white">
-                          <SelectValue placeholder="Choose who should take it" />
+                        <SelectTrigger className="h-8 w-36 bg-white max-sm:h-11">
+                          <SelectValue placeholder="Select priority" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent position="popper">
-                        <RecipientOptions people={recipients} />
+                        {Object.values(TicketPriorityLevel).map((priority) => (
+                          <SelectItem key={priority} value={priority}>
+                            {sentenceLabel(priority)}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-          {action.kind === "changePriority" && (
-            <FormField
-              control={form.control}
-              name="priority"
-              render={({ field }) => (
-                <FormItem required className="space-y-3">
-                  <FormLabel className="text-sm">Priority</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="Select priority" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent position="popper">
-                      {Object.values(TicketPriorityLevel).map((priority) => (
-                        <SelectItem key={priority} value={priority}>
-                          {sentenceLabel(priority)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-          <FormField
-            control={form.control}
-            name="reason"
-            render={({ field }) => (
-              <FormItem required className="space-y-3">
-                <FormLabel className="text-sm">Reason</FormLabel>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    onKeyDown={(e) => {
-                      if (e.key === "Escape") e.currentTarget.blur();
-                      if (e.key === "Enter" && (e.metaKey || e.ctrlKey))
-                        e.currentTarget.form?.requestSubmit();
-                    }}
-                    placeholder={action.placeholder}
-                    className="min-h-16 bg-white field-sizing-content max-h-48"
-                    disabled={isSaving}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+                  </FormItem>
+                )}
+              />
             )}
-          />
-        </div>
-        {confirmingDiscard ? (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md bg-background-secondary px-3 py-2 text-sm">
-            <p className="min-w-0 flex-1 text-pretty text-shamiri-text-dark-grey">
-              Discard the reason you wrote?
-            </p>
-            <div className="flex gap-2">
-              <Button type="button" variant="ghost" onClick={() => setConfirmingDiscard(false)}>
-                Keep writing
+            <div className="ml-auto flex gap-2">
+              <Button
+                variant="ghost"
+                type="button"
+                className="h-8 max-sm:h-11"
+                disabled={isSaving}
+                onClick={() =>
+                  form.getValues("reason").trim() ? setConfirmingDiscard(true) : discard()
+                }
+              >
+                Discard
               </Button>
-              <Button type="button" variant="destructive" onClick={discard}>
-                Discard reason
+              <Button
+                variant={action.destructive ? "destructive" : "brand"}
+                type="submit"
+                className="h-8 max-sm:h-11"
+                disabled={noRecipients || isSaving}
+                loading={isSaving}
+              >
+                {action.label}
               </Button>
             </div>
-          </div>
-        ) : (
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              type="button"
-              disabled={isSaving}
-              onClick={() =>
-                form.getValues("reason").trim() ? setConfirmingDiscard(true) : discard()
-              }
-            >
-              Discard
-            </Button>
-            <Button
-              variant={action.destructive ? "destructive" : "brand"}
-              type="submit"
-              disabled={noRecipients || isSaving}
-              loading={isSaving}
-            >
-              {action.label}
-            </Button>
           </div>
         )}
       </form>

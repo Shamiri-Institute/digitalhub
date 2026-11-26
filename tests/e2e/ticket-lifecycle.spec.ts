@@ -123,7 +123,7 @@ test("the holder starts, reprioritises and resolves a ticket, and its creator re
   // The holder is still active, so the reopen names the supervisor who resolved it.
   await expect(
     activity(page).getByRole("listitem").filter({ hasText: "Reopened" }).last(),
-  ).toContainText("Sent to");
+  ).toContainText("reopened it for");
   await expect(activity(page)).toContainText("The device still drops the connection.");
 });
 
@@ -175,7 +175,7 @@ test("the creator cancels an open ticket with a reason", async ({ page, context,
     "Reassign",
   ]);
 
-  await expect(activity(page)).toContainText("Cancelled");
+  await expect(activity(page)).toContainText("cancelled it");
   await expect(activity(page)).toContainText("Raised by mistake.");
 });
 
