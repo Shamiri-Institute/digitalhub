@@ -173,7 +173,7 @@ NEXT_PUBLIC_ENABLE_PERF_PROFILER="0"  # Set to 1 to enable the performance profi
 # ====================================
 # RECORDING TRANSCRIPTION
 # ====================================
-FIDELITY_AB_TEST_SUPERVISOR_IDS=""  # Comma-separated supervisor IDs whose uploads are transcribed
+FIDELITY_AB_TEST_SUPERVISOR_IDS=""  # Comma-separated supervisor IDs whose uploads are transcribed, or "*" for all
 CRON_SECRET="your-cron-secret"      # Bearer token Vercel Cron sends to /api/cron/*; 16+ characters
 # Gemini: Vertex AI in production, an AI Studio key for local development
 GOOGLE_GENAI_USE_VERTEXAI="true"
