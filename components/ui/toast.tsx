@@ -7,7 +7,7 @@ import { X } from "lucide-react";
 import { toastManager } from "#/components/ui/use-toast";
 
 const toastVariants = cva(
-  "group absolute inset-x-0 top-0 flex w-full items-center justify-between gap-2 overflow-hidden rounded-md border p-4 pr-6 shadow-lg transition-[transform,opacity] duration-300 [transform:translateX(var(--toast-swipe-movement-x))_translateY(var(--toast-swipe-movement-y))] data-limited:opacity-0 data-starting-style:opacity-0 data-ending-style:opacity-0 motion-safe:data-starting-style:[transform:translateY(-100%)] sm:top-auto sm:bottom-0 sm:motion-safe:data-starting-style:[transform:translateY(100%)] motion-safe:data-ending-style:data-[swipe-direction=right]:[transform:translateX(calc(var(--toast-swipe-movement-x)+100%))]",
+  "group absolute inset-x-0 top-0 flex w-full items-center justify-between gap-2 overflow-hidden rounded-md border p-4 pr-6 shadow-lg transition-[transform,opacity] duration-300 [transform:translateX(var(--toast-swipe-movement-x))_translateY(var(--toast-swipe-movement-y))] data-limited:hidden data-starting-style:opacity-0 data-ending-style:opacity-0 motion-safe:data-starting-style:[transform:translateY(-100%)] sm:top-auto sm:bottom-0 sm:motion-safe:data-starting-style:[transform:translateY(100%)] motion-safe:data-ending-style:data-[swipe-direction=right]:[transform:translateX(calc(var(--toast-swipe-movement-x)+100%))]",
   {
     variants: {
       variant: {
