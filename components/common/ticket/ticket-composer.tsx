@@ -3,6 +3,7 @@
 import {
   ArrowLeftRight,
   ArrowUpFromLine,
+  ChevronDown,
   CircleCheck,
   CircleX,
   Flag,
@@ -19,6 +20,13 @@ import { z } from "zod";
 import { TicketPriorityLevel, type ImplementerRole } from "#/db/enums";
 import { Button } from "#/components/ui/button";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
+import {
   Form,
   FormControl,
   FormField,
@@ -34,6 +42,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import {
   cancelTicket,
@@ -161,6 +170,13 @@ const nextStepActions: NextStepAction[] = [
 
 type Mode = ReasonAction["kind"] | "comment" | "start";
 
+const modeClass = (chosen: boolean, recommended: boolean) =>
+  cn(
+    "flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-transparent px-3 text-sm font-medium text-shamiri-text-dark-grey transition-colors hover:bg-transparent hover:text-shamiri-black focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue data-[state=on]:bg-white data-[state=on]:text-shamiri-black",
+    recommended && "font-semibold text-shamiri-black",
+    chosen && "border-border bg-white text-shamiri-black shadow-xs",
+  );
+
 // Switching mode focuses the new form's first field, so the keyboard follows the choice.
 const focusMode = () =>
   requestAnimationFrame(() =>
@@ -223,6 +239,17 @@ export function TicketComposer({
 
   const current = modes.find((m) => m.kind === mode) ?? modes[0];
   const action = available.find((a) => a.kind === current?.kind);
+  // The row holds Comment, the step that moves the ticket on, and the handovers; the rest wait
+  // under More, unless there's only one of them.
+  const recommended = (["start", "resolve", "reopen"] as const).find((kind) =>
+    modes.some((m) => m.kind === kind),
+  );
+  const inRow = (kind: Mode) =>
+    kind === "comment" || kind === recommended || kind === "escalate" || kind === "reassign";
+  const overflow = modes.filter((m) => !inRow(m.kind));
+  const rowModes = overflow.length > 1 ? modes.filter((m) => inRow(m.kind)) : modes;
+  const moreModes = overflow.length > 1 ? overflow : [];
+  const inMore = moreModes.some((m) => m.kind === current?.kind);
   const choose = (kind: Mode) => {
     setMode(kind);
     focusMode();
@@ -245,25 +272,60 @@ export function TicketComposer({
       <div className={cn("space-y-2.5 py-3", contained && "container")}>
         {modes.length > 1 && (
           <div className="flex items-center gap-3 overflow-x-auto max-sm:-mx-4 max-sm:px-4">
-            <fieldset className="flex shrink-0 gap-1 rounded-lg border bg-background-secondary p-0.5">
-              <legend className="sr-only">What to do</legend>
-              {modes.map(({ kind, label, icon: Icon, tone }) => (
-                <button
-                  key={kind}
-                  type="button"
-                  aria-pressed={kind === current?.kind}
-                  aria-controls="ticket-composer-form"
-                  onClick={() => choose(kind)}
-                  className={cn(
-                    "flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-transparent px-3 text-sm font-medium text-shamiri-text-dark-grey transition-colors hover:text-shamiri-black focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue",
-                    kind === current?.kind && "border-border bg-white text-shamiri-black shadow-xs",
-                  )}
-                >
-                  <Icon aria-hidden className={cn("h-4 w-4", tone)} />
-                  {label}
-                </button>
-              ))}
-            </fieldset>
+            <div className="flex shrink-0 gap-1 rounded-lg border bg-background-secondary p-0.5">
+              <ToggleGroup
+                type="single"
+                aria-label="What to do"
+                value={inMore ? "" : (current?.kind ?? "")}
+                // A single toggle group lets its pressed item be unpressed; a mode stays chosen.
+                onValueChange={(kind) => kind && choose(kind as Mode)}
+                className="gap-1"
+              >
+                {rowModes.map(({ kind, label, icon: Icon, tone }) => (
+                  <ToggleGroupItem
+                    key={kind}
+                    value={kind}
+                    aria-controls="ticket-composer-form"
+                    className={modeClass(kind === current?.kind, kind === recommended)}
+                  >
+                    <Icon aria-hidden className={cn("h-4 w-4", tone)} />
+                    {label}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+              {moreModes.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger className={modeClass(inMore, false)}>
+                    {inMore && current ? (
+                      <>
+                        <current.icon aria-hidden className={cn("h-4 w-4", current.tone)} />
+                        {current.label}
+                      </>
+                    ) : (
+                      "More"
+                    )}
+                    <ChevronDown aria-hidden className="h-4 w-4" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="start"
+                    // Focus goes to the chosen mode's form, not back to the trigger.
+                    onCloseAutoFocus={(e) => e.preventDefault()}
+                  >
+                    <DropdownMenuRadioGroup
+                      value={current?.kind}
+                      onValueChange={(kind) => choose(kind as Mode)}
+                    >
+                      {moreModes.map(({ kind, label, icon: Icon, tone }) => (
+                        <DropdownMenuRadioItem key={kind} value={kind} className="gap-1.5">
+                          <Icon aria-hidden className={cn("h-4 w-4", tone)} />
+                          {label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
             {action && (
               <p className="hidden truncate text-sm text-shamiri-text-dark-grey md:block">
                 {action.outcome({

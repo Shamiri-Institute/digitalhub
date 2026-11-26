@@ -19,9 +19,29 @@ export function activity(page: Page) {
   return page.getByRole("list", { name: "Activity" });
 }
 
-/** Opens `action`'s form in the next-step column and writes `reason`, without submitting it. */
+/** Switches the composer to `action`: a choice in its row of modes, or one under More. */
+export async function chooseMode(page: Page, action: string) {
+  const option = ticketPage(page).getByRole("radio", { name: action, exact: true });
+  if ((await option.count()) > 0) return option.click();
+  await ticketPage(page).getByRole("button", { name: "More" }).click();
+  await page.getByRole("menuitemradio", { name: action, exact: true }).click();
+}
+
+/** Every mode the composer offers, including those under More. */
+export async function composerModes(page: Page) {
+  const modes = await ticketPage(page).getByRole("radio").allInnerTexts();
+  const more = ticketPage(page).getByRole("button", { name: "More" });
+  if ((await more.count()) > 0) {
+    await more.click();
+    modes.push(...(await page.getByRole("menuitemradio").allInnerTexts()));
+    await page.keyboard.press("Escape");
+  }
+  return modes.map((mode) => mode.trim());
+}
+
+/** Opens `action`'s form in the composer and writes `reason`, without submitting it. */
 export async function fillAction(page: Page, action: string, reason: string) {
-  await ticketPage(page).getByRole("button", { name: action, exact: true }).click();
+  await chooseMode(page, action);
   const form = page.getByRole("form", { name: action });
   await form.getByLabel("Reason").fill(reason);
   return form;
