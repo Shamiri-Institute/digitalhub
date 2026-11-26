@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, lt, sql } from "drizzle-orm";
 import { refresh } from "next/cache";
 import type { z } from "zod";
 
@@ -8,6 +8,7 @@ import {
   ArchiveStudentSchema,
   DropoutStudentSchema,
   MarkAttendanceSchema,
+  QueuedStudentAttendanceSchema,
   StudentReportingNotesSchema,
 } from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator } from "#/app/auth";
@@ -287,116 +288,137 @@ export async function markStudentAttendance(
   }
 }
 
-export async function markManyStudentsAttendance(
-  ids: string[],
-  data: z.infer<typeof MarkAttendanceSchema>,
-) {
-  try {
-    const caller = await requireHubRole(...STUDENT_WRITE_ROLES);
+export type SyncedStudentAttendance = {
+  studentId: string;
+  sessionId: string;
+  markedAt: number;
+  /** "superseded": the stored mark was made later than this one, so it was kept. */
+  outcome: "saved" | "superseded" | "rejected";
+  message?: string;
+};
 
-    const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
-
-    const session = await requireSession(sessionId);
-
-    if (!session.occurred) {
-      return {
-        success: false,
-        message: "This session has not occurred yet.",
-      };
-    }
-
-    const uniqueIds = [...new Set(ids)];
-    const studentsInCallerScope =
-      session.schoolId === null || uniqueIds.length === 0
-        ? []
-        : await db
-            .select({ id: student.id })
-            .from(student)
-            .innerJoin(school, eq(school.id, student.schoolId))
-            .leftJoin(interventionGroup, eq(interventionGroup.id, student.assignedGroupId))
-            .where(
-              and(
-                inArray(student.id, uniqueIds),
-                eq(student.schoolId, session.schoolId),
-                caller.role === ImplementerRole.FELLOW
-                  ? eq(interventionGroup.leaderId, caller.profileId)
-                  : eq(school.hubId, caller.hubId),
-              ),
-            );
-    if (studentsInCallerScope.length !== uniqueIds.length) {
-      throw new Error("Student not found");
-    }
-
-    const status = attendedFlag(attended);
-
-    await db.transaction(async (tx) => {
-      const attendances = await tx.query.studentAttendance.findMany({
-        where: (a, { and, eq, inArray }) =>
-          and(inArray(a.studentId, ids), eq(a.sessionId, sessionId)),
-        columns: { studentId: true },
-      });
-
-      const studentIds = ids.filter((id) => {
-        return !attendances.map((x) => x.studentId).includes(id);
-      });
-
-      const students = await tx.query.student.findMany({
-        where: (s, { and, inArray, isNull }) =>
-          and(isNull(s.archivedAt), inArray(s.id, studentIds)),
-        with: { assignedGroup: true },
-      });
-
-      const createRecords: (typeof studentAttendance.$inferInsert)[] = [];
-
-      students.forEach((row) => {
-        if (!row.assignedGroup) {
-          throw new Error(`${row.studentName} has not been assigned to a group.`);
-        }
-
-        createRecords.push({
-          studentId: row.id,
-          absenceReason,
-          comments,
-          sessionId,
-          groupId: row.assignedGroup.id,
-          fellowId: row.assignedGroup.leaderId,
-          markedBy: caller.userId,
-          attended: status,
-        });
-      });
-
-      if (createRecords.length > 0) {
-        await tx.insert(studentAttendance).values(createRecords);
-      }
-
-      await tx
-        .update(studentAttendance)
-        .set({
-          markedBy: caller.userId,
-          absenceReason: status === null || status ? null : absenceReason,
-          comments: status === null || status ? null : comments,
-          attended: status,
-        })
-        .where(
-          and(
-            inArray(studentAttendance.studentId, ids),
-            eq(studentAttendance.sessionId, sessionId),
-          ),
-        );
-    });
-    return {
-      success: true,
-      message: `Successfully marked attendance for ${ids.length} students`,
-      attendances: await fetchSessionAttendances(sessionId),
-    };
-  } catch (err) {
-    console.error(err);
-    return {
-      success: false,
-      message:
-        (err as Error)?.message ?? "Sorry, an error occurred while marking student attendance.",
-    };
+/**
+ * Writes the marks a device queued, in one request. Each mark is checked and written on its own,
+ * so one the server refuses never holds back the rest of the queue. Throws only when the caller
+ * may not mark attendance at all, so the device keeps its queue.
+ */
+export async function syncStudentAttendance(
+  queuedMarks: z.infer<typeof QueuedStudentAttendanceSchema>,
+): Promise<SyncedStudentAttendance[]> {
+  const caller = await requireHubRole(...STUDENT_WRITE_ROLES);
+  const latestMarkByKey = new Map<string, (typeof queuedMarks)[number]>();
+  for (const mark of QueuedStudentAttendanceSchema.parse(queuedMarks)) {
+    const key = `${mark.studentId}:${mark.sessionId}`;
+    const queued = latestMarkByKey.get(key);
+    if (!queued || queued.markedAt < mark.markedAt) latestMarkByKey.set(key, mark);
   }
+  const marks = [...latestMarkByKey.values()];
+  if (marks.length === 0) return [];
+
+  const [sessions, studentsInCallerScope] = await Promise.all([
+    db.query.interventionSession.findMany({
+      where: (s, { inArray }) => inArray(s.id, [...new Set(marks.map((m) => m.sessionId))]),
+      columns: { id: true, occurred: true, schoolId: true },
+    }),
+    db
+      .select({
+        id: student.id,
+        schoolId: student.schoolId,
+        studentName: student.studentName,
+        groupId: interventionGroup.id,
+        leaderId: interventionGroup.leaderId,
+      })
+      .from(student)
+      .innerJoin(school, eq(school.id, student.schoolId))
+      .leftJoin(interventionGroup, eq(interventionGroup.id, student.assignedGroupId))
+      .where(
+        and(
+          inArray(student.id, [...new Set(marks.map((m) => m.studentId))]),
+          caller.role === ImplementerRole.FELLOW
+            ? eq(interventionGroup.leaderId, caller.profileId)
+            : eq(school.hubId, caller.hubId),
+        ),
+      ),
+  ]);
+  const sessionById = new Map(sessions.map((s) => [s.id, s]));
+  const studentById = new Map(studentsInCallerScope.map((s) => [s.id, s]));
+
+  const results: SyncedStudentAttendance[] = [];
+  const rows: (typeof studentAttendance.$inferInsert)[] = [];
+  const writableMarks: typeof marks = [];
+  // A device clock set ahead must not make its marks outrank every later one.
+  const now = Date.now();
+  for (const mark of marks) {
+    const { studentId, sessionId, markedAt } = mark;
+    const markSession = sessionById.get(sessionId);
+    const markStudent = studentById.get(studentId);
+    const rejection = !markSession
+      ? `Intervention session ${sessionId} not found`
+      : !markSession.occurred
+        ? "This session has not occurred yet."
+        : !markStudent
+          ? "Student not found"
+          : markStudent.schoolId !== markSession.schoolId
+            ? `Student ${studentId} not found`
+            : !markStudent.groupId
+              ? `${markStudent.studentName} has not been assigned to a group.`
+              : null;
+    if (rejection !== null || !markStudent?.groupId) {
+      results.push({
+        studentId,
+        sessionId,
+        markedAt,
+        outcome: "rejected",
+        message: rejection ?? "",
+      });
+      continue;
+    }
+    writableMarks.push(mark);
+    const status = attendedFlag(mark.attended);
+    rows.push({
+      studentId,
+      sessionId,
+      groupId: markStudent.groupId,
+      fellowId: markStudent.leaderId,
+      markedBy: caller.userId,
+      attended: status,
+      absenceReason: status === false ? mark.absenceReason : null,
+      comments: status === false ? mark.comments : null,
+      markedAt: new Date(Math.min(markedAt, now)),
+    });
+  }
+
+  const written =
+    rows.length === 0
+      ? []
+      : await db
+          .insert(studentAttendance)
+          .values(rows)
+          .onConflictDoUpdate({
+            target: [studentAttendance.studentId, studentAttendance.sessionId],
+            set: {
+              markedBy: sql`excluded.marked_by`,
+              attended: sql`excluded.attended`,
+              absenceReason: sql`excluded.absence_reason`,
+              comments: sql`excluded.comments`,
+              markedAt: sql`excluded.marked_at`,
+            },
+            setWhere: lt(studentAttendance.markedAt, sql`excluded.marked_at`),
+          })
+          .returning({
+            studentId: studentAttendance.studentId,
+            sessionId: studentAttendance.sessionId,
+          });
+  const writtenKeys = new Set(written.map((w) => `${w.studentId}:${w.sessionId}`));
+  for (const { studentId, sessionId, markedAt } of writableMarks) {
+    results.push({
+      studentId,
+      sessionId,
+      markedAt,
+      outcome: writtenKeys.has(`${studentId}:${sessionId}`) ? "saved" : "superseded",
+    });
+  }
+  return results;
 }
 
 export async function dropoutStudent(data: z.infer<typeof DropoutStudentSchema>) {

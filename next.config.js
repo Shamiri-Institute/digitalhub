@@ -47,6 +47,9 @@ const nextConfig = {
   // ffmpeg-static locates its binary beside its own files, so it is loaded at runtime, and the
   // binary and the transcription and rating prompts are traced into the route that runs them.
   serverExternalPackages: ["ffmpeg-static"],
+  // Holds navigations and server actions while the connection is down and retries them when it
+  // returns, instead of throwing in the client.
+  experimental: { useOffline: true },
   outputFileTracingIncludes: {
     "/api/cron/transcriptions": [
       "./node_modules/ffmpeg-static/ffmpeg",

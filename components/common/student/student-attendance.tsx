@@ -1,3 +1,4 @@
+import type { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import { ImplementerRole } from "#/db/enums";
 import type { fellow } from "#/db/schema";
 import type { ColumnDef, RowSelectionState } from "@tanstack/react-table";
@@ -10,6 +11,7 @@ import {
   useState,
 } from "react";
 import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
@@ -45,8 +47,13 @@ import {
 import { Skeleton } from "#/components/ui/skeleton";
 import { toast } from "#/components/ui/use-toast";
 import { fetchSessionStudentAttendance } from "#/lib/actions/session/session";
-import { markManyStudentsAttendance, markStudentAttendance } from "#/lib/actions/student";
 import type { TriageEventWithRelations } from "#/lib/actions/triage";
+import {
+  type QueuedStudentAttendance,
+  queuedStudentAttendance,
+  queueStudentAttendance,
+  sendQueuedStudentAttendance,
+} from "#/lib/offline/student-attendance-outbox";
 import {
   getStudentTriageHistory,
   getSupervisorsInFellowHub,
@@ -149,12 +156,19 @@ export function startStudentAttendanceOpening(
   };
 }
 
+/** The marks still queued on this phone show over the stored ones, until they are sent. */
 function loadStudents(sessionId: string): Promise<StudentsLoad> {
-  return fetchSessionStudentAttendance(sessionId)
-    .then(({ students, attendances }): StudentsLoad => ({
+  return Promise.all([
+    fetchSessionStudentAttendance(sessionId),
+    queuedStudentAttendance().catch((): QueuedStudentAttendance[] => []),
+  ])
+    .then(([{ students, attendances }, queuedMarks]): StudentsLoad => ({
       status: "loaded",
       studentsByGroup: studentsByAssignedGroup(students),
-      attendances,
+      attendances: withQueuedMarks(
+        attendances,
+        queuedMarks.filter((mark) => mark.sessionId === sessionId),
+      ),
     }))
     .catch((): StudentsLoad => ({ status: "failed" }));
 }
@@ -304,14 +318,52 @@ function SessionStudents({
     role,
   });
 
+  const studentNameById = new Map(
+    [...studentsByGroup.values()].flat().map((student) => [student.id, student.studentName]),
+  );
+
   const saveAttendance = async (
-    pending: ReturnType<typeof markStudentAttendance | typeof markManyStudentsAttendance>,
+    studentIds: string[],
+    data: z.infer<typeof MarkAttendanceSchema>,
   ) => {
-    const res = await pending;
-    if (res.attendances) {
-      setSessionAttendances(res.attendances);
+    const markedAt = Date.now();
+    const marks = studentIds.map((studentId) => ({
+      studentId,
+      sessionId: session.id,
+      attended: data.attended,
+      absenceReason: data.absenceReason,
+      comments: data.comments,
+      markedAt,
+    }));
+    try {
+      await queueStudentAttendance(marks);
+    } catch {
+      return { success: false, message: "Could not save the attendance on this phone." };
     }
-    return res;
+    setSessionAttendances((current) => withQueuedMarks(current, marks));
+    sendQueuedStudentAttendance()
+      .then((unsaved) => {
+        for (const answer of unsaved) {
+          const studentName = studentNameById.get(answer.studentId) ?? "A student";
+          toast({
+            variant: "destructive",
+            description:
+              answer.outcome === "superseded"
+                ? `${studentName} was marked again later, so that mark was kept.`
+                : answer.message,
+          });
+        }
+      })
+      .catch(() => {
+        toast({
+          variant: "destructive",
+          description: "Attendance is saved on this phone and will be sent when you sign in again.",
+        });
+      });
+    return {
+      success: true,
+      message: `Marked attendance for ${studentIds.length === 1 ? (studentNameById.get(studentIds[0] ?? "") ?? "1 student") : `${studentIds.length} students`}`,
+    };
   };
 
   const renderTableActions = () => {
@@ -442,12 +494,8 @@ function SessionStudents({
         sessionMode="single"
         isOpen={markAttendanceDialog}
         setIsOpen={setMarkAttendanceDialog}
-        markAttendanceAction={(data) =>
-          saveAttendance(markStudentAttendance(data, { refreshPage: false }))
-        }
-        markBulkAttendanceAction={(ids, data) =>
-          saveAttendance(markManyStudentsAttendance(ids, data))
-        }
+        markAttendanceAction={(data) => saveAttendance(data.id ? [data.id] : [], data)}
+        markBulkAttendanceAction={saveAttendance}
         bulkMode={bulkMode}
         setBulkMode={setBulkMode}
         onSuccess={() => {
@@ -494,6 +542,24 @@ function SessionStudents({
       )}
     </>
   );
+}
+
+/** The session's attendances as they will be once the queued marks are saved. */
+function withQueuedMarks(attendances: SessionAttendance[], marks: QueuedStudentAttendance[]) {
+  const byStudentId = new Map(attendances.map((a) => [a.studentId, a]));
+  for (const mark of marks) {
+    const attended =
+      mark.attended === "attended" ? true : mark.attended === "missed" ? false : null;
+    byStudentId.set(mark.studentId, {
+      id: byStudentId.get(mark.studentId)?.id ?? 0,
+      studentId: mark.studentId,
+      sessionId: mark.sessionId,
+      attended,
+      absenceReason: attended === false ? (mark.absenceReason ?? null) : null,
+      comments: attended === false ? (mark.comments ?? null) : null,
+    });
+  }
+  return [...byStudentId.values()];
 }
 
 const LOADING_ROWS = ["first", "second", "third", "fourth"];

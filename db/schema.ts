@@ -2141,6 +2141,13 @@ export const studentAttendance = pgTable(
     groupId: varchar("group_id", { length: 255 }),
     comments: text(),
     markedBy: text("marked_by"),
+    // When the mark was made on the device, which can be long before a queued mark reaches the
+    // server. A synced mark replaces the stored one only when it was made later.
+    // In UTC, as Drizzle writes dates, whatever the database session's time zone.
+    markedAt: timestamp("marked_at", { precision: 3, mode: "date" })
+      .default(sql`(now() at time zone 'utc')`)
+      .notNull()
+      .$onUpdate(() => new Date()),
   },
   (table) => [
     index("student_attendances_session_id_idx").using("btree", table.sessionId),

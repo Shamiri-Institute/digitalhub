@@ -176,7 +176,7 @@ test("a supervisor marks a student in a group of a fellow they supervise", async
   );
 });
 
-test("a fellow marks only their group's students, and a bulk mark with a student who left the group writes nothing", async ({
+test("a fellow marks only their group's students, and a bulk mark refuses only the student who left the group", async ({
   page,
   context,
   undo,
@@ -211,7 +211,7 @@ test("a fellow marks only their group's students, and a bulk mark with a student
   await page.reload();
   const reopened = await openFellowSessionAttendance(page, school.visibleId);
   await expect(reopened.getByRole("row").filter({ hasText: first.studentName })).toContainText(
-    "Not marked",
+    "Attended",
   );
   // The moved student left the fellow's list, so only the database shows they were not marked.
   expect(await storedAttendances(second.studentId, school.latestSessionId)).toEqual([]);
@@ -252,4 +252,101 @@ test("marking students in bulk starts unmarked, not from the student marked last
   await expect(mark).toContainText("1 students");
   await expect(mark.getByRole("radio", { name: "Unmarked" })).toBeChecked();
   await expect(mark.getByRole("combobox", { name: "Select reason for above" })).toBeHidden();
+});
+
+test("a mark made offline is sent when the fellow opens the app again, after the tab was closed", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const school = await createStudentSchool(undo);
+  const { studentName } = await school.addStudent();
+  await signInWithEmail(context, school.fellowEmail);
+
+  const dialog = await openFellowSessionAttendance(page, school.visibleId);
+  // The dialog loads its students from the server, so it opens only while online.
+  const row = dialog.getByRole("row").filter({ hasText: studentName });
+  await expect(row).toBeVisible();
+  await context.setOffline(true);
+  await expect(page.getByText("You are offline.")).toBeVisible();
+  await chooseRowAction(page, row, "Mark attendance");
+  const mark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
+  await mark.getByRole("radio", { name: "Attended" }).click();
+  await mark.getByRole("button", { name: "Submit" }).click();
+  await expect(mark).toBeHidden();
+  await expect(row).toContainText("Attended");
+  await page.close();
+
+  await context.setOffline(false);
+  const reopenedPage = await context.newPage();
+  await expect(async () => {
+    const reopened = await openFellowSessionAttendance(reopenedPage, school.visibleId);
+    await expect(reopened.getByRole("row").filter({ hasText: studentName })).toContainText(
+      "Attended",
+      { timeout: 1_000 },
+    );
+  }).toPass();
+});
+
+test("a mark made offline does not replace a later mark when it is sent", async ({
+  page,
+  context,
+  browser,
+  undo,
+}) => {
+  const school = await createStudentSchool(undo);
+  const { studentName } = await school.addStudent();
+  await signInWithEmail(context, school.fellowEmail);
+
+  const dialog = await openFellowSessionAttendance(page, school.visibleId);
+  await expect(dialog.getByRole("row").filter({ hasText: studentName })).toBeVisible();
+  await context.setOffline(true);
+  await chooseRowAction(
+    page,
+    dialog.getByRole("row").filter({ hasText: studentName }),
+    "Mark attendance",
+  );
+  const fellowMark = page.getByRole("dialog").filter({ hasText: "Select attendance" });
+  await fellowMark.getByRole("radio", { name: "Attended" }).click();
+  await fellowMark.getByRole("button", { name: "Submit" }).click();
+  await expect(fellowMark).toBeHidden();
+
+  const supervisorContext = await browser.newContext();
+  undo(() => supervisorContext.close());
+  await signInWithEmail(supervisorContext, school.supervisorEmail);
+  const supervisorPage = await supervisorContext.newPage();
+  await supervisorPage.goto(getUrl(`/sc/schools/${school.visibleId}/sessions`));
+  await chooseRowAction(
+    supervisorPage,
+    await rowWithCell(supervisorPage, supervisorPage.getByRole("main"), "S2"),
+    "View student attendance",
+  );
+  const supervisorDialog = supervisorPage
+    .getByRole("dialog", { name: "Mark student attendance" })
+    .first();
+  await supervisorDialog.getByRole("combobox").filter({ hasText: "Select a fellow" }).click();
+  await supervisorPage
+    .getByRole("option", { name: `${school.fellowName} (${school.groupName})`, exact: true })
+    .click();
+  await chooseRowAction(
+    supervisorPage,
+    supervisorDialog.getByRole("row").filter({ hasText: studentName }),
+    "Mark attendance",
+  );
+  const supervisorMark = supervisorPage
+    .getByRole("dialog")
+    .filter({ hasText: "Select attendance" });
+  await supervisorMark.getByRole("radio", { name: "Missed" }).click();
+  await supervisorMark.getByRole("combobox", { name: "Select reason for above" }).click();
+  await supervisorPage.getByRole("option", { name: "Sickness" }).click();
+  await supervisorMark.getByRole("button", { name: "Submit" }).click();
+  await expect(supervisorMark).toBeHidden();
+
+  await context.setOffline(false);
+  await expect(
+    page.getByText(`${studentName} was marked again later, so that mark was kept.`).first(),
+  ).toBeVisible();
+  await page.reload();
+  const reopened = await openFellowSessionAttendance(page, school.visibleId);
+  await expect(reopened.getByRole("row").filter({ hasText: studentName })).toContainText("Missed");
 });

@@ -1,4 +1,5 @@
 import { currentAdminUser, getCurrentPersonnel, getCurrentUserSession } from "#/app/auth";
+import { OfflineStatus } from "#/components/common/offline-status";
 import { LayoutClient } from "#/components/layout-client";
 import { db } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
@@ -51,6 +52,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
       adminProjects={adminProjects}
       personnel={personnel}
     >
+      <OfflineStatus />
       {children}
     </LayoutClient>
   );

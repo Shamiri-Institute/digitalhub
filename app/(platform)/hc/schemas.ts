@@ -320,6 +320,21 @@ export const FellowDetailsSchema = z
     }
   });
 
+/** Student attendance marks queued on the device, sent together when the connection allows. */
+export const QueuedStudentAttendanceSchema = z
+  .array(
+    z.object({
+      studentId: z.string().min(1),
+      sessionId: z.string().min(1),
+      attended: z.enum(ATTENDANCE_STATUS),
+      absenceReason: z.string().optional(),
+      comments: z.string().optional(),
+      /** Epoch milliseconds on the device when the mark was made. */
+      markedAt: z.number().int().positive(),
+    }),
+  )
+  .max(500);
+
 export const MarkAttendanceSchema = z
   .object({
     id: z.string().optional(),
