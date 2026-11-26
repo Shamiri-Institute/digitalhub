@@ -12,13 +12,12 @@ import {
   addTicketComment,
   hideTicketComment,
   startTicketAttachmentUploads,
-  type TicketViewer,
   ticketAttachmentUrl,
 } from "#/lib/ticket-comments";
 
-let creator: TicketViewer;
-let holder: TicketViewer;
-let outsider: TicketViewer;
+let creator: string;
+let holder: string;
+let outsider: string;
 const ticketIds: string[] = [];
 
 const png = { fileName: "photo.png", contentType: "image/png", byteSize: 4 };
@@ -32,9 +31,9 @@ beforeAll(async () => {
     .limit(3);
   const [a, b, c] = members;
   if (!a || !b || !c) throw new Error("Seed the database first");
-  creator = a;
-  holder = b;
-  outsider = c;
+  creator = a.userId;
+  holder = b.userId;
+  outsider = c.userId;
 });
 
 afterAll(async () => {
@@ -54,8 +53,8 @@ async function newTicket() {
   const [ticket] = await db
     .insert(tickets)
     .values({
-      createdById: creator.userId,
-      holderId: holder.userId,
+      createdById: creator,
+      holderId: holder,
       subject: "Raised by the ticket comment tests",
       description: "Raised by the ticket comment tests.",
       category: "TECH",
@@ -66,14 +65,14 @@ async function newTicket() {
   await db.insert(ticketEvents).values({
     ticketId: ticket.id,
     kind: "CREATED",
-    actorId: creator.userId,
-    assigneeId: holder.userId,
+    actorId: creator,
+    assigneeId: holder,
   });
   return ticket.id;
 }
 
-async function uploadPng(viewer: TicketViewer, ticketId: string) {
-  const [started] = await startTicketAttachmentUploads(viewer, ticketId, [png]);
+async function uploadPng(userId: string, ticketId: string) {
+  const [started] = await startTicketAttachmentUploads(userId, ticketId, [png]);
   if (!started) throw new Error("no upload started");
   const response = await fetch(started.url, {
     method: "PUT",
@@ -110,7 +109,7 @@ describe("ticket comments", () => {
       eventId: comment?.id,
       contentType: "image/png",
       byteSize: 4,
-      uploadedById: creator.userId,
+      uploadedById: creator,
     });
 
     const url = await ticketAttachmentUrl(holder, attachment?.id ?? "");
@@ -170,7 +169,7 @@ describe("ticket comments", () => {
       addTicketComment(creator, ticketId, {
         body: "",
         files: Array.from({ length: 6 }, (_, i) => ({
-          key: `tickets/${ticketId}/${creator.userId}/x${i}`,
+          key: `tickets/${ticketId}/${creator}/x${i}`,
           fileName: "a.png",
         })),
       }),
@@ -179,7 +178,7 @@ describe("ticket comments", () => {
 
   it("checks what S3 holds, not what the browser said it would send", async () => {
     const ticketId = await newTicket();
-    const key = `tickets/${ticketId}/${creator.userId}/sneaky`;
+    const key = `tickets/${ticketId}/${creator}/sneaky`;
     await getS3Client("ticket-attachments").send(
       new PutObjectCommand({
         Bucket: getBucket("ticket-attachments").bucket,
@@ -198,7 +197,7 @@ describe("ticket comments", () => {
     await expect(
       addTicketComment(creator, ticketId, {
         body: "",
-        files: [{ key: `tickets/${ticketId}/${creator.userId}/missing`, fileName: "gone.png" }],
+        files: [{ key: `tickets/${ticketId}/${creator}/missing`, fileName: "gone.png" }],
       }),
     ).rejects.toThrow("didn't finish uploading");
     expect(await commentsOn(ticketId)).toHaveLength(0);
@@ -233,7 +232,7 @@ describe("ticket comments", () => {
     await expect(hideTicketComment(creator, comment?.id ?? "")).rejects.toThrow("already hidden");
 
     const [hidden] = await commentsOn(ticketId);
-    expect(hidden?.archivedById).toBe(creator.userId);
+    expect(hidden?.archivedById).toBe(creator);
     await expect(ticketAttachmentUrl(creator, attachment?.id ?? "")).rejects.toThrow(
       "File not found",
     );

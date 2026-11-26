@@ -256,10 +256,7 @@ export function TicketComposer({
     });
 
   return (
-    <section
-      aria-label="Comment and actions"
-      className="sticky bottom-0 z-10 border-t bg-white shadow-[0_-6px_16px_rgb(0_0_0/0.04)]"
-    >
+    <section aria-label="Comment and actions" className="sticky bottom-0 z-10 border-t bg-white">
       <div className={cn("space-y-2.5 py-3", contained && "container")}>
         {modes.length > 1 && (
           <div className="flex w-fit gap-1 rounded-lg border bg-background-secondary p-0.5">

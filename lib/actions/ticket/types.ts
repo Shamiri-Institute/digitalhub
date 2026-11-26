@@ -181,7 +181,6 @@ export interface TicketEvent {
   /** A comment's text; null once the comment is hidden. */
   reason: string | null;
   createdAt: Date;
-  /** When a comment was hidden, and by whom. */
   archivedAt: Date | null;
   archivedBy: TicketPerson | null;
   /** A comment's files; empty once the comment is hidden. */

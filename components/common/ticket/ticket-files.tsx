@@ -46,7 +46,7 @@ export function TicketFileLink({
         type="button"
         onClick={() => void open()}
         aria-busy={isOpening}
-        className="truncate text-shamiri-new-blue underline underline-offset-[3px] hover:no-underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue"
+        className="truncate text-shamiri-new-blue underline underline-offset-2 hover:no-underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue"
       >
         {attachment.fileName}
       </button>

@@ -18,6 +18,7 @@ import {
 } from "#/db/schema";
 import { NotFoundError, requireAuthRole } from "#/lib/auth/require-auth-role";
 import { canViewTicket } from "#/lib/ticket-access";
+import { ticketTakesComments } from "#/lib/ticket-comments";
 import { mayReopenTicket, REOPEN_WINDOW_DAYS, REOPEN_WINDOW_MS } from "#/lib/ticket-reopen-window";
 import type { ActionResponse } from "#/types/actions.types";
 import {
@@ -770,7 +771,7 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
       canResolve: callerHoldsTicketAs(ESCALATION_RECIPIENT_ROLES),
       canReopen,
       canCancel: callerCreatedTicket && mayCancelTicket(ticket),
-      canComment: ticket.status !== "CLOSED" && ticket.status !== "CANCELLED",
+      canComment: ticketTakesComments(ticket.status),
     };
 
     return {

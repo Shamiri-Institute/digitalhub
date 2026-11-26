@@ -2,8 +2,11 @@
 
 import { FileText, ImageIcon, Paperclip, X } from "lucide-react";
 import { useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { Button } from "#/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "#/components/ui/form";
 import { toast } from "#/components/ui/use-toast";
 import { addTicketComment, startTicketAttachmentUploads } from "#/lib/actions/ticket/comments";
 import { putWithProgress } from "#/lib/s3/put-with-progress";
@@ -16,6 +19,7 @@ import {
   ticketAttachmentProblem,
 } from "#/lib/ticket-attachment-files";
 import { cn } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 
 // The comment box's frame, text area and toolbar, which every form in the composer shares. The
 // frame takes the ring the app's inputs take, while its text area has focus.
@@ -26,6 +30,9 @@ export const composerTextareaClass =
 export const composerToolbarClass =
   "flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-background-secondary px-1.5 py-1.5";
 export const composerErrorClass = "px-3 pb-2 text-sm text-pretty text-shamiri-light-red";
+
+const CommentFormSchema = z.object({ body: z.string().max(MAX_TICKET_COMMENT_LENGTH) });
+type CommentFormValues = z.infer<typeof CommentFormSchema>;
 
 // Names the file whose upload failed, so the message can say which one.
 class UploadFailed extends Error {}
@@ -53,7 +60,11 @@ function pendingFile(file: File, tooMany: boolean): PendingFile {
 
 export function TicketCommentForm({ ticketId }: { ticketId: string }) {
   const fileInput = useRef<HTMLInputElement>(null);
-  const [body, setBody] = useState("");
+  const form = useForm<CommentFormValues>({
+    resolver: zodResolver(CommentFormSchema),
+    defaultValues: { body: "" },
+  });
+  const body = form.watch("body");
   const [files, setFiles] = useState<PendingFile[]>([]);
   const [isPosting, setIsPosting] = useState(false);
   // Shown beside the box rather than in a toast, so it stays until the problem is fixed.
@@ -76,7 +87,7 @@ export function TicketCommentForm({ ticketId }: { ticketId: string }) {
   const setUploaded = (id: string, uploaded: number) =>
     setFiles((current) => current.map((f) => (f.id === id ? { ...f, uploaded } : f)));
 
-  const post = async () => {
+  const post = async ({ body }: CommentFormValues) => {
     if (files.some((f) => f.problem)) {
       setError("Remove the files that can't be attached, then post again.");
       return;
@@ -119,7 +130,7 @@ export function TicketCommentForm({ ticketId }: { ticketId: string }) {
       const result = await addTicketComment(ticketId, { body, files: uploaded });
       if (result.success) {
         toast({ description: result.message });
-        setBody("");
+        form.reset();
         setFiles([]);
       } else {
         setError(result.message);
@@ -135,99 +146,112 @@ export function TicketCommentForm({ ticketId }: { ticketId: string }) {
   };
 
   return (
-    <form
-      noValidate
-      aria-label="Add a comment"
-      onSubmit={(e) => {
-        e.preventDefault();
-        void post();
-      }}
-      className={composerBoxClass}
-    >
-      <textarea
+    <Form {...form}>
+      <form
+        noValidate
         aria-label="Add a comment"
-        value={body}
-        onChange={(e) => {
-          setBody(e.target.value);
-          setError(null);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) e.currentTarget.form?.requestSubmit();
-        }}
-        maxLength={MAX_TICKET_COMMENT_LENGTH}
-        placeholder="Write a comment for everyone on this ticket"
-        rows={2}
-        disabled={isPosting}
-        className={cn(composerTextareaClass, "max-sm:min-h-11 max-sm:pb-2 max-sm:focus:min-h-20")}
-      />
-      {files.length > 0 && (
-        <ul aria-label="Files to attach" className="flex flex-wrap gap-2 px-3 pb-2">
-          {files.map((f) => (
-            <PendingFileChip
-              key={f.id}
-              pending={f}
-              isPosting={isPosting}
-              remove={() => removeFile(f.id)}
-            />
-          ))}
-        </ul>
-      )}
-      {error && (
-        <p role="alert" className={composerErrorClass}>
-          {error}
-        </p>
-      )}
-      {/* On phones the toolbar waits until the box is in use, to leave room for the thread. */}
-      <div
-        className={cn(
-          composerToolbarClass,
-          "max-sm:hidden max-sm:group-focus-within:flex max-sm:group-has-[li]:flex max-sm:group-has-[textarea:not(:placeholder-shown)]:flex",
-        )}
+        onSubmit={form.handleSubmit(post)}
+        className={composerBoxClass}
       >
-        <input
-          ref={fileInput}
-          type="file"
-          aria-label="File"
-          accept={TICKET_ATTACHMENT_ACCEPT}
-          multiple
-          hidden
-          onChange={(e) => {
-            addFiles(Array.from(e.target.files ?? []));
-            e.target.value = "";
-          }}
+        <FormField
+          control={form.control}
+          name="body"
+          render={({ field }) => (
+            <FormItem className="space-y-0">
+              <FormLabel className="sr-only">Add a comment</FormLabel>
+              <FormControl>
+                <textarea
+                  {...field}
+                  onChange={(e) => {
+                    field.onChange(e);
+                    setError(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey))
+                      e.currentTarget.form?.requestSubmit();
+                  }}
+                  maxLength={MAX_TICKET_COMMENT_LENGTH}
+                  placeholder="Write a comment for everyone on this ticket"
+                  rows={2}
+                  disabled={isPosting}
+                  className={cn(
+                    composerTextareaClass,
+                    "max-sm:min-h-11 max-sm:pb-2 max-sm:focus:min-h-20",
+                  )}
+                />
+              </FormControl>
+            </FormItem>
+          )}
         />
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-8 gap-1.5 text-sm text-shamiri-text-dark-grey max-sm:h-11"
-          disabled={isPosting}
-          onClick={() => fileInput.current?.click()}
-        >
-          <Paperclip aria-hidden className="h-4 w-4" />
-          Attach
-        </Button>
         {files.length > 0 && (
-          <span className="hidden text-xs text-shamiri-text-dark-grey sm:inline">
-            PNG, JPEG, WebP or PDF · 10 MB · {MAX_TICKET_ATTACHMENTS} files
-          </span>
+          <ul aria-label="Files to attach" className="flex flex-wrap gap-2 px-3 pb-2">
+            {files.map((f) => (
+              <PendingFileChip
+                key={f.id}
+                pending={f}
+                isPosting={isPosting}
+                remove={() => removeFile(f.id)}
+              />
+            ))}
+          </ul>
         )}
-        {/* The count only matters near the limit. */}
-        <span className="ml-auto text-xs tabular-nums text-shamiri-text-dark-grey">
-          {body.length >= MAX_TICKET_COMMENT_LENGTH * 0.8 &&
-            `${body.length} / ${MAX_TICKET_COMMENT_LENGTH}`}
-        </span>
-        <Button
-          type="submit"
-          variant="brand"
-          className="h-8 max-sm:h-11"
-          disabled={isPosting || (!body.trim() && files.length === 0)}
-          loading={isPosting}
+        {error && (
+          <p role="alert" className={composerErrorClass}>
+            {error}
+          </p>
+        )}
+        {/* On phones the toolbar waits until the box is in use, to leave room for the thread. */}
+        <div
+          className={cn(
+            composerToolbarClass,
+            "max-sm:hidden max-sm:group-focus-within:flex max-sm:group-has-[li]:flex max-sm:group-has-[textarea:not(:placeholder-shown)]:flex",
+          )}
         >
-          Post comment
-        </Button>
-      </div>
-    </form>
+          <input
+            ref={fileInput}
+            type="file"
+            aria-label="File"
+            accept={TICKET_ATTACHMENT_ACCEPT}
+            multiple
+            hidden
+            onChange={(e) => {
+              addFiles(Array.from(e.target.files ?? []));
+              e.target.value = "";
+            }}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 text-sm text-shamiri-text-dark-grey max-sm:h-11"
+            disabled={isPosting}
+            onClick={() => fileInput.current?.click()}
+          >
+            <Paperclip aria-hidden className="h-4 w-4" />
+            Attach
+          </Button>
+          {files.length > 0 && (
+            <span className="hidden text-xs text-shamiri-text-dark-grey sm:inline">
+              PNG, JPEG, WebP or PDF · 10 MB · {MAX_TICKET_ATTACHMENTS} files
+            </span>
+          )}
+          {/* The count only matters near the limit. */}
+          <span className="ml-auto text-xs tabular-nums text-shamiri-text-dark-grey">
+            {body.length >= MAX_TICKET_COMMENT_LENGTH * 0.8 &&
+              `${body.length} / ${MAX_TICKET_COMMENT_LENGTH}`}
+          </span>
+          <Button
+            type="submit"
+            variant="brand"
+            className="h-8 max-sm:h-11"
+            disabled={isPosting || (!body.trim() && files.length === 0)}
+            loading={isPosting}
+          >
+            Post comment
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }
 

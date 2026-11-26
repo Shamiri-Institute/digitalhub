@@ -34,9 +34,8 @@ const CommentSchema = z.object({
     .max(MAX_TICKET_ATTACHMENTS),
 });
 
-async function viewer() {
-  const { userId } = await requireAuthRole(...Object.values(ImplementerRole));
-  return { userId };
+async function viewerId() {
+  return (await requireAuthRole(...Object.values(ImplementerRole))).userId;
 }
 
 async function respond<T>(
@@ -59,7 +58,7 @@ export async function startTicketAttachmentUploads(
   files: z.input<typeof NewAttachmentsSchema>,
 ): Promise<ActionResponse<StartedTicketAttachment[]>> {
   return respond("Upload started", async () =>
-    startUploads(await viewer(), ticketId, NewAttachmentsSchema.parse(files)),
+    startUploads(await viewerId(), ticketId, NewAttachmentsSchema.parse(files)),
   );
 }
 
@@ -68,14 +67,14 @@ export async function addTicketComment(
   input: z.input<typeof CommentSchema>,
 ): Promise<ActionResponse> {
   return respond("Comment added", async () => {
-    await addComment(await viewer(), ticketId, CommentSchema.parse(input));
+    await addComment(await viewerId(), ticketId, CommentSchema.parse(input));
     refresh();
   });
 }
 
 export async function hideTicketComment(eventId: string): Promise<ActionResponse> {
   return respond("Comment hidden", async () => {
-    await hideComment(await viewer(), eventId);
+    await hideComment(await viewerId(), eventId);
     refresh();
   });
 }
@@ -83,5 +82,5 @@ export async function hideTicketComment(eventId: string): Promise<ActionResponse
 export async function getTicketAttachmentUrl(
   attachmentId: string,
 ): Promise<ActionResponse<string>> {
-  return respond("Link ready", async () => ticketAttachmentUrl(await viewer(), attachmentId));
+  return respond("Link ready", async () => ticketAttachmentUrl(await viewerId(), attachmentId));
 }
