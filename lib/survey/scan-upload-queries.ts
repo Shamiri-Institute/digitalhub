@@ -10,6 +10,7 @@ import { surveyScanPage } from "#/db/schema";
 import { implementerHubsInProject } from "#/lib/auth/require-hub-role";
 import type { SurveyViewer } from "#/lib/auth/survey-access";
 import { isStuck } from "#/lib/survey/pipeline-deadlines";
+import type { PageOutcome } from "#/lib/survey/scan-upload-status";
 
 /** The viewer's uploads, newest first. PENDING ones are left out: their file isn't checked yet. */
 export async function fetchScanUploads(viewer: SurveyViewer) {
@@ -41,6 +42,20 @@ export async function fetchScanUploads(viewer: SurveyViewer) {
         u.id,
         sql`"survey_scan_pages"."page_index" < ${u.pageCount}`,
       ).as("pages_posted"),
+      // Counted over the same pages, by outcome and reason. The scan pages' columns are written raw,
+      // as in countOf: drizzle would rewrite them to the uploads' alias.
+      pageOutcomes: sql<PageOutcome[]>`(
+        select coalesce(json_agg(json_build_object(
+          'status', outcome.status, 'rejectedReason', outcome.rejected_reason, 'pages', outcome.pages
+        )), '[]'::json)
+        from (
+          select status, rejected_reason, count(*)::int as pages
+          from "survey_scan_pages"
+          where "survey_scan_pages"."upload_id" = ${u.id}
+            and "survey_scan_pages"."page_index" < ${u.pageCount}
+          group by status, rejected_reason
+        ) outcome
+      )`.as("page_outcomes"),
     }),
     with: {
       hub: { columns: { hubName: true } },
