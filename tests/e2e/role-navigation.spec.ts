@@ -51,7 +51,7 @@ const viewers: Viewer[] = [
     who: "a clinical team member",
     signIn: byRole("CLINICAL_TEAM"),
     home: "/ct/clinical",
-    tabs: ["Supervisors", "Fellows", "Students", "Clinical cases"],
+    tabs: ["Supervisors", "Fellows", "Students", "Clinical cases", "Tickets"],
   },
   {
     who: "a super admin",

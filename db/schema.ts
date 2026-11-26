@@ -3101,22 +3101,32 @@ export const surveyUpload = pgTable(
     sha256: text().notNull(),
     contentType: text("content_type").notNull(),
     byteSize: integer("byte_size").notNull(),
-    // Null for a PDF until the pipeline counts its pages.
+    // Null until the pipeline counts the scan's pages.
     pageCount: integer("page_count"),
     status: surveyUploadStatusEnum().default(SurveyUploadStatus.PENDING).notNull(),
     error: text(),
     uploadedAt: timestamp("uploaded_at", { withTimezone: true, mode: "date" }),
     attempt: integer().default(1).notNull(),
     lastHeartbeatAt: timestamp("last_heartbeat_at", { withTimezone: true, mode: "date" }),
+    // The rest track telling the pipeline about the current attempt (lib/survey/pipeline-notify.ts).
+    notifyTries: integer("notify_tries").default(0).notNull(),
+    // When the next try is due. Null once the pipeline has the job, or once the tries ran out.
+    notifyNextAt: timestamp("notify_next_at", { withTimezone: true, mode: "date" }),
+    notifiedAt: timestamp("notified_at", { withTimezone: true, mode: "date" }),
+    notifyError: text("notify_error"),
+    // Past this, the unfinished job counts as stuck (lib/survey/pipeline-deadlines.ts).
+    stuckAfter: timestamp("stuck_after", { withTimezone: true, mode: "date" }),
   },
   (table) => [
     uniqueIndex("survey_uploads_sha256_key").on(table.sha256),
     uniqueIndex("survey_uploads_s3_key_key").on(table.s3Key),
     index("survey_uploads_hub_id_uploaded_at_idx").on(table.hubId, table.uploadedAt),
     index("survey_uploads_uploaded_by_idx").on(table.uploadedBy),
+    index("survey_uploads_status_notify_next_at_idx").on(table.status, table.notifyNextAt),
     check("survey_uploads_sha256_check", sql`${table.sha256} ~ '^[0-9a-f]{64}$'`),
     check("survey_uploads_byte_size_check", sql`${table.byteSize} > 0`),
     check("survey_uploads_attempt_check", sql`${table.attempt} >= 1`),
+    check("survey_uploads_notify_tries_check", sql`${table.notifyTries} >= 0`),
     check(
       "survey_uploads_uploaded_check",
       sql`${table.status} = 'PENDING' or ${table.uploadedAt} is not null`,

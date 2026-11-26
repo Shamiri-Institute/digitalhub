@@ -102,7 +102,7 @@ function roleTabs(mainRoute: string, adminTabs: AdminTabs) {
     case "cl":
       return [supervisorsTab, fellowsTab, studentsTab, clinicalTab, triageTab, ticketsTab];
     case "ct":
-      return [supervisorsTab, fellowsTab, studentsTab, clinicalTab];
+      return [supervisorsTab, fellowsTab, studentsTab, clinicalTab, ticketsTab];
     default:
       return [];
   }

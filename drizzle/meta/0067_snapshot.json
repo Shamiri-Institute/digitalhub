@@ -1,5 +1,5 @@
 {
-  "id": "f4de10ed-9af9-4b81-bcdd-39ea0561b203",
+  "id": "ce2f198c-7010-4b3a-8006-ece91bc19fb9",
   "prevId": "a24c5125-0a9a-4eab-91b4-6552950b1ceb",
   "version": "7",
   "dialect": "postgresql",
@@ -9442,22 +9442,6 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
-        },
-        "survey_answers_needs_review_idx": {
-          "name": "survey_answers_needs_review_idx",
-          "columns": [
-            {
-              "expression": "questionnaire_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"survey_answers\".\"review_status\" = 'NEEDS_REVIEW'",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
         }
       },
       "foreignKeys": {
@@ -11039,6 +11023,37 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
+        },
+        "notify_tries": {
+          "name": "notify_tries",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "notify_next_at": {
+          "name": "notify_next_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notified_at": {
+          "name": "notified_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notify_error": {
+          "name": "notify_error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stuck_after": {
+          "name": "stuck_after",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -11107,6 +11122,27 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "survey_uploads_status_notify_next_at_idx": {
+          "name": "survey_uploads_status_notify_next_at_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "notify_next_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -11144,6 +11180,10 @@
         "survey_uploads_attempt_check": {
           "name": "survey_uploads_attempt_check",
           "value": "\"survey_uploads\".\"attempt\" >= 1"
+        },
+        "survey_uploads_notify_tries_check": {
+          "name": "survey_uploads_notify_tries_check",
+          "value": "\"survey_uploads\".\"notify_tries\" >= 0"
         },
         "survey_uploads_uploaded_check": {
           "name": "survey_uploads_uploaded_check",

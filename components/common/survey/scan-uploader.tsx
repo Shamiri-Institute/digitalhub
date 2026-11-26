@@ -69,7 +69,7 @@ function refused(reason: string): ScanState {
 
 function checkBeforeSending(file: File, contentType: ScanContentType | undefined): ScanState {
   if (!contentType) {
-    return refused("Not a PDF, JPEG or PNG file");
+    return refused("Not a PDF file");
   }
   if (file.size > MAX_SCAN_BYTES) {
     return refused(`Larger than ${formatBytes(MAX_SCAN_BYTES)}`);
@@ -310,7 +310,7 @@ export function ScanUploader({ hubs }: { hubs?: UploadHubs }) {
           )}
         </span>
         <span className="text-sm text-shamiri-text-dark-grey">
-          PDF, JPEG or PNG, up to {formatBytes(MAX_SCAN_BYTES)} each. Add as many as you like.
+          PDFs, up to {formatBytes(MAX_SCAN_BYTES)} each. Add as many as you like.
         </span>
         <input
           type="file"

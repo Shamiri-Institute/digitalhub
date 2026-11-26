@@ -256,7 +256,6 @@ export async function finishScanUpload(viewer: SurveyViewer, uploadId: string) {
       .set({
         status: SurveyUploadStatus.UPLOADED,
         uploadedAt: new Date(),
-        pageCount: upload.contentType === "application/pdf" ? null : 1,
       })
       .where(
         and(
