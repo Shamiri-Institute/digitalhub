@@ -1,0 +1,1 @@
+CREATE INDEX "survey_answers_needs_review_idx" ON "survey_answers" USING btree ("questionnaire_id") WHERE "survey_answers"."review_status" = 'NEEDS_REVIEW';

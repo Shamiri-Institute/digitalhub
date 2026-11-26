@@ -379,6 +379,14 @@ export const SurveyAnswerReadStatus = {
 export type SurveyAnswerReadStatus =
   (typeof SurveyAnswerReadStatus)[keyof typeof SurveyAnswerReadStatus];
 
+/** What the pipeline made of a field, in the words a reviewer reads. */
+export const SURVEY_ANSWER_READ_STATUS_LABELS: Record<SurveyAnswerReadStatus, string> = {
+  OK: "Read",
+  UNCERTAIN: "Unsure",
+  BLANK: "Blank",
+  NO_PREDICTION: "Not read",
+};
+
 export const SurveyAnswerFlag = {
   UNCERTAIN: "UNCERTAIN",
   NO_PREDICTION: "NO_PREDICTION",
@@ -391,6 +399,18 @@ export const SurveyAnswerFlag = {
 } as const;
 export type SurveyAnswerFlag = (typeof SurveyAnswerFlag)[keyof typeof SurveyAnswerFlag];
 
+/** Why an answer is waiting for a person. */
+export const SURVEY_ANSWER_FLAG_LABELS: Record<SurveyAnswerFlag, string> = {
+  UNCERTAIN: "Unclear marking",
+  NO_PREDICTION: "Not read",
+  BLANK_REQUIRED: "Required, left blank",
+  BREAKS_FORM_RULE: "Breaks the form's rules",
+  NOT_ALIGNED: "Page not straightened",
+  VERIFY_ALWAYS: "Always checked",
+  LOW_CONFIDENCE: "Low confidence",
+  KIND_UNDER_REVIEW: "Kind under review",
+};
+
 export const SurveyAnswerSource = { PIPELINE: "PIPELINE", MANUAL: "MANUAL" } as const;
 export type SurveyAnswerSource = (typeof SurveyAnswerSource)[keyof typeof SurveyAnswerSource];
 
@@ -402,6 +422,13 @@ export const SurveyAnswerReviewStatus = {
 } as const;
 export type SurveyAnswerReviewStatus =
   (typeof SurveyAnswerReviewStatus)[keyof typeof SurveyAnswerReviewStatus];
+
+export const SURVEY_ANSWER_REVIEW_STATUS_LABELS: Record<SurveyAnswerReviewStatus, string> = {
+  AUTO_ACCEPTED: "Accepted automatically",
+  NEEDS_REVIEW: "Needs review",
+  VERIFIED: "Verified",
+  CORRECTED: "Corrected",
+};
 
 export const SURVEY_QUESTIONNAIRE_STATUS_LABELS: Record<SurveyQuestionnaireStatus, string> = {
   ISSUED: "Issued",

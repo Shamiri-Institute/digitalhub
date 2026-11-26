@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { eq, inArray } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import { PDFDocument } from "pdf-lib";
 
 import { db } from "#/db/client";
@@ -9,13 +9,23 @@ import {
   school,
   student,
   survey,
+  surveyAnswer,
   surveyPrintFile,
   surveyPrintRun,
+  surveyQuestionnaire,
+  surveyQuestionnairePage,
+  surveyScanPage,
   surveyUpload,
   surveyVersion,
 } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { deleteObject } from "#/lib/s3/s3.service";
+import { hexChecksum } from "#/lib/s3/utils/checksum";
+import { type CheckedPageImage, ingestPages, pageImageRef } from "#/lib/survey/ingest-pages";
+import { issuePrintFile, recordPrintRun } from "#/lib/survey/print-run";
+import { pageQrText } from "#/lib/survey/print-qr";
+import { scanPageImageKey } from "#/lib/survey/scan-files";
+import type { FieldRead, PostedPage } from "#/lib/survey/scan-wire";
 import { printFileKey } from "#/lib/survey/print-files";
 import type { SurveyForm } from "#/lib/survey/form";
 import { checkPublish } from "#/lib/survey/publish";
@@ -215,4 +225,136 @@ export async function uniqueScanPdf(label: string) {
   pdf.addPage([595, 842]).drawText(`${label} ${objectId("scan")}`, { x: 50, y: 780, size: 12 });
   const bytes = await pdf.save();
   return { bytes, sha256: createHash("sha256").update(bytes).digest("hex") };
+}
+
+const okRead = (field: string, value: NonNullable<FieldRead["value"]>): FieldRead => ({
+  field,
+  value,
+  status: "ok",
+  confidence: 0.99,
+});
+
+/**
+ * What the pipeline reads on each page of PRINT_FORM (tests/unit/fixtures/survey-print-form.ts):
+ * three answers need a person (an unclear mood, an age past its maximum, unread notes), the rest
+ * are clean.
+ */
+export const FLAGGED_PRINT_FORM_READS: Record<number, FieldRead[]> = {
+  1: [
+    { field: "mood", value: null, status: "uncertain", confidence: null },
+    okRead("home", "1"),
+    okRead("sport", ["football"]),
+  ],
+  2: [
+    ...["1", "2", "3", "4", "5"].map((row) => okRead(`phq.${row}`, "0")),
+    okRead("age", "150"),
+    okRead("dob", "2011-02-28"),
+  ],
+  3: [
+    { field: "notes", value: null, status: "no_prediction", confidence: null },
+    okRead("sign", true),
+  ],
+};
+
+/**
+ * One printed copy of a published version whose scanned pages are ingested as the pipeline would
+ * post them, so its answers are stored and flagged as a real scan's are. No image is uploaded: each
+ * page names one, counted as stored. `remove` deletes the answers, scan and upload it made.
+ */
+export async function createScannedCopy({
+  scope,
+  versionId,
+  schoolId,
+  reads = FLAGGED_PRINT_FORM_READS,
+}: {
+  scope: { hubId: string; implementerId: string; projectId: string; userId: string };
+  versionId: string;
+  schoolId: string;
+  reads?: Record<number, FieldRead[]>;
+}) {
+  const questionnaireId = await db.transaction(async (tx) => {
+    const issued = await recordPrintRun(tx, scope, {
+      printRunId: objectId("surveyprintrun"),
+      versionId,
+      request: { kind: "COUNTS", schools: [{ schoolId, copies: 1 }] },
+    });
+    const [file] = await tx
+      .select({ id: surveyPrintFile.id })
+      .from(surveyPrintFile)
+      .where(eq(surveyPrintFile.printRunId, issued.printRunId));
+    if (!file) throw new Error("The print run has no file");
+    await issuePrintFile(tx, file.id);
+    const [copy] = await tx
+      .select({ id: surveyQuestionnaire.id })
+      .from(surveyQuestionnaire)
+      .where(eq(surveyQuestionnaire.printRunId, issued.printRunId));
+    if (!copy) throw new Error("The print run issued no copy");
+    return copy.id;
+  });
+  const pages = await db
+    .select({ id: surveyQuestionnairePage.id, pageNumber: surveyQuestionnairePage.pageNumber })
+    .from(surveyQuestionnairePage)
+    .where(eq(surveyQuestionnairePage.questionnaireId, questionnaireId))
+    .orderBy(asc(surveyQuestionnairePage.pageNumber));
+
+  const uploadId = objectId("surveyupload");
+  await db.insert(surveyUpload).values({
+    id: uploadId,
+    hubId: scope.hubId,
+    uploadedBy: scope.userId,
+    s3Key: `scans/${uploadId}`,
+    fileName: "batch.pdf",
+    sha256: createHash("sha256").update(uploadId).digest("hex"),
+    contentType: "application/pdf",
+    byteSize: 1000,
+    pageCount: pages.length,
+    status: "PROCESSING",
+    uploadedAt: new Date(),
+  });
+  const imageSha256 = createHash("sha256").update(`page image ${uploadId}`).digest("base64");
+  const imageHex = hexChecksum(imageSha256);
+  const posted: PostedPage[] = pages.map((page, pageIndex) => ({
+    pageIndex,
+    qrs: [pageQrText(page.id)],
+    imageSha256,
+    rotation: 0,
+    aligned: true,
+    quality: 0.95,
+    fields: reads[page.pageNumber] ?? [],
+  }));
+  const pageImages = new Map<string, CheckedPageImage>(
+    posted.map(({ pageIndex }) => [
+      pageImageRef(pageIndex, imageHex),
+      {
+        ok: true,
+        key: scanPageImageKey(uploadId, 1, pageIndex, imageHex),
+        width: 1654,
+        height: 2339,
+      },
+    ]),
+  );
+  const ingested = await db.transaction((tx) =>
+    ingestPages(tx, { uploadId, attempt: 1, pageImages }, posted),
+  );
+  if (ingested.kind !== "ingested") {
+    throw new Error(`The scan wasn't ingested: ${ingested.kind}`);
+  }
+
+  const answers = await db
+    .select({ id: surveyAnswer.id, field: surveyAnswer.field })
+    .from(surveyAnswer)
+    .where(eq(surveyAnswer.questionnaireId, questionnaireId));
+  return {
+    questionnaireId,
+    answerId(field: string) {
+      const answer = answers.find((candidate) => candidate.field === field);
+      if (!answer) throw new Error(`The copy has no answer for ${field}`);
+      return answer.id;
+    },
+    async remove() {
+      await db.delete(surveyAnswer).where(eq(surveyAnswer.questionnaireId, questionnaireId));
+      await db.delete(surveyScanPage).where(eq(surveyScanPage.uploadId, uploadId));
+      await db.delete(surveyUpload).where(eq(surveyUpload.id, uploadId));
+    },
+  };
 }

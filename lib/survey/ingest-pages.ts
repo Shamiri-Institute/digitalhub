@@ -609,7 +609,7 @@ type AnswerCounts = {
   keptReviewed: number;
 };
 
-async function recomputeCopyStatuses(tx: Transaction, copyIds: string[]) {
+export async function recomputeCopyStatuses(tx: Transaction, copyIds: string[]) {
   if (copyIds.length === 0) {
     return;
   }

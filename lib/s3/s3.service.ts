@@ -80,7 +80,14 @@ export async function getPresignedUrl(
   key: string,
   bucket: S3Bucket,
   expiresIn = 3600,
-  { downloadName }: { downloadName?: string } = {},
+  {
+    downloadName,
+    signingDate,
+  }: {
+    downloadName?: string;
+    /** Signs as of this time rather than now, so links signed in the same window are identical. */
+    signingDate?: Date;
+  } = {},
 ): Promise<string> {
   const s3Client = getS3Client(bucket);
   const command = new GetObjectCommand({
@@ -90,7 +97,7 @@ export async function getPresignedUrl(
       ResponseContentDisposition: `attachment; filename*=UTF-8''${rfc5987(downloadName)}`,
     }),
   });
-  return getSignedUrl(s3Client, command, { expiresIn });
+  return getSignedUrl(s3Client, command, { expiresIn, signingDate });
 }
 
 export async function putObject(
