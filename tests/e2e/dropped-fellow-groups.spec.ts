@@ -125,7 +125,7 @@ test("adding a school leaves dropped-out fellows without groups", async ({
   await expect(dialog).toBeHidden();
 
   await chooseRowAction(page, await searchRows(page, schoolName), "View school");
-  await page.getByRole("radio", { name: "Select Groups", exact: true }).click();
+  await page.getByRole("button", { name: "Select Groups", exact: true }).click();
   // Sixteen students make one group, which goes to an active fellow.
   const groups = dataRows(page);
   await expect(groups).toHaveCount(1);
