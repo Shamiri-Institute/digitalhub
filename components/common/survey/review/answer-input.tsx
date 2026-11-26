@@ -12,7 +12,6 @@ import { cn } from "#/lib/utils";
 
 type Mark = { code: string; fill: number };
 
-/** The value a reviewer reads on the paper, in the input for the question's kind. */
 export function AnswerInput({
   input,
   marks,

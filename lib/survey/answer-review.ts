@@ -1,8 +1,3 @@
-// The review of scanned answers the SDH flagged: the queue, one answer in focus, and a decision on
-// it. A decision changes the answer's value and review status, never what the pipeline read, and
-// records both in the audit log. Every read and write is held to the viewer: a Research admin to
-// their implementer's surveys in their project, a hub coordinator further to their hub's copies.
-
 import "server-only";
 
 import { and, asc, count, eq, inArray, notInArray, type SQL, sql } from "drizzle-orm";
@@ -409,12 +404,13 @@ export type ReviewDecision = { kind: "accept" } | { kind: "correct"; value: Answ
 export type SeenReview = { reviewedAt: string | null };
 
 /**
- * Accepts an answer as it stands, or stores a corrected value. Accepting needs its value to keep
- * the form's rules; a blank is always storable, since the paper decides, even for a required
- * question. A correction that, tidied, is the value it already has counts as accepting it, and the
- * stored value is kept as it is. A decision made on a page that showed an older review than the
- * answer now has is refused, so no one's review is overwritten unseen. The copy's status follows:
- * its last answer reviewed makes it READY.
+ * Accepts an answer as it stands, or stores a corrected value beside what the pipeline read, and
+ * records the decision in the audit log. Accepting needs its value to keep the form's rules; a
+ * blank is always storable, since the paper decides, even for a required question. A correction
+ * that, tidied, is the value it already has counts as accepting it, and the stored value is kept
+ * as it is. A decision made on a page that showed an older review than the answer now has is
+ * refused, so no one's review is overwritten unseen. The copy's status follows: its last answer
+ * reviewed makes it READY.
  */
 export async function reviewAnswer(
   viewer: SurveyViewer,

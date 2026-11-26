@@ -2,11 +2,14 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 
 import { Badge } from "#/components/ui/badge";
 import { Button, buttonVariants } from "#/components/ui/button";
-import { toastOnFailure } from "#/components/ui/use-toast";
+import { Form, FormField, FormItem, FormMessage } from "#/components/ui/form";
+import { toastOnError } from "#/components/ui/use-toast";
 import {
   SURVEY_ANSWER_FLAG_LABELS,
   SURVEY_ANSWER_READ_STATUS_LABELS,
@@ -16,8 +19,8 @@ import {
   SurveyQuestionnaireStatus,
 } from "#/db/enums";
 import { acceptAnswer, correctAnswer } from "#/lib/actions/survey/answer-review";
+import { CorrectAnswerSchema } from "#/lib/actions/survey/schemas";
 import {
-  type AnswerValue,
   changesAnswer,
   isSettledCopy,
   normalisedAnswer,
@@ -26,9 +29,13 @@ import {
 } from "#/lib/survey/answer-fields";
 import type { AnswerForReview } from "#/lib/survey/answer-review";
 import { cn } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
 import { AnswerCutout } from "./answer-cutout";
 import { AnswerHistory } from "./answer-history";
 import { AnswerInput } from "./answer-input";
+
+const ReviewDraftSchema = CorrectAnswerSchema.pick({ value: true });
+type ReviewDraft = z.infer<typeof ReviewDraftSchema>;
 
 export type QueuePosition = {
   /** From 1; null when this answer isn't in the filtered queue, such as one just reviewed. */
@@ -47,13 +54,15 @@ export function AnswerPanel({
   answer: AnswerForReview;
   position: QueuePosition;
   timeZone: string | null;
-  /** Moves on once a decision is saved. */
   onDone: () => void;
 }) {
-  const [draft, setDraft] = useState<AnswerValue | null>(answer.value);
+  const form = useForm<ReviewDraft>({
+    resolver: zodResolver(ReviewDraftSchema),
+    defaultValues: { value: answer.value },
+  });
   const [wholePage, setWholePage] = useState(false);
-  const [problem, setProblem] = useState<string | null>(null);
-  const [isSaving, startSaving] = useTransition();
+  const draft = form.watch("value");
+  const isSaving = form.formState.isSubmitting;
   const question = answer.question;
   const waiting = answer.reviewStatus === SurveyAnswerReviewStatus.NEEDS_REVIEW;
   const acceptable = !reviewedByAPerson(answer.reviewStatus);
@@ -65,24 +74,20 @@ export function AnswerPanel({
   const seenReviewedAt = answer.reviewedAt?.toISOString() ?? null;
 
   // One decision: accept the value as it stands, or save the reviewer's change to it.
-  const decide = () =>
-    startSaving(() =>
-      toastOnFailure(async () => {
-        setProblem(null);
-        const response = changed
-          ? await correctAnswer({
-              answerId: answer.id,
-              value: normalisedAnswer(draft),
-              seenReviewedAt,
-            })
-          : await acceptAnswer({ answerId: answer.id, seenReviewedAt });
-        if (response.success) {
-          onDone();
-        } else {
-          setProblem(response.message);
-        }
-      }),
-    );
+  const decide = form.handleSubmit(async ({ value }) => {
+    const response = changed
+      ? await correctAnswer({
+          answerId: answer.id,
+          value: normalisedAnswer(value),
+          seenReviewedAt,
+        })
+      : await acceptAnswer({ answerId: answer.id, seenReviewedAt });
+    if (response.success) {
+      onDone();
+    } else {
+      form.setError("value", { message: response.message });
+    }
+  });
 
   return (
     <article
@@ -167,62 +172,65 @@ export function AnswerPanel({
             Someone else reviewed this answer, so only the Research team can change it.
           </p>
         ) : question ? (
-          <form
-            className="space-y-4"
-            onSubmit={(event) => {
-              event.preventDefault();
-              decide();
-            }}
-          >
-            <AnswerInput
-              input={question.input}
-              marks={answer.readDetail?.marks ?? []}
-              value={draft}
-              onChange={(value) => {
-                setProblem(null);
-                setDraft(value);
-              }}
-              disabled={isSaving}
-            />
-            {problem && (
-              <p role="alert" className="rounded-md bg-red-bg px-3 py-2 text-sm text-red-base">
-                {problem}
-              </p>
-            )}
-            <div className="flex flex-wrap items-center gap-3 border-t border-grey-border pt-4">
-              <Button
-                type="submit"
-                // Accepting a blank is the decision most worth a second look, so it isn't the bold one.
-                variant={!changed && draftIsBlank ? "outline" : "brand"}
-                disabled={isSaving || (!changed && (!acceptable || breaksRules))}
-                loading={isSaving}
-              >
-                {changed ? "Save correction" : draftIsBlank ? "Accept as blank" : "Accept"}
-              </Button>
-              {position.nextHref && (
-                <Link
-                  href={position.nextHref}
-                  scroll={false}
-                  className={buttonVariants({ variant: "ghost" })}
+          <Form {...form}>
+            <form noValidate className="space-y-4" onSubmit={toastOnError(decide)}>
+              <FormField
+                control={form.control}
+                name="value"
+                render={({ field }) => (
+                  <FormItem>
+                    <AnswerInput
+                      input={question.input}
+                      marks={answer.readDetail?.marks ?? []}
+                      value={field.value}
+                      onChange={(value) => {
+                        form.clearErrors("value");
+                        field.onChange(value);
+                      }}
+                      disabled={isSaving}
+                    />
+                    <FormMessage
+                      role="alert"
+                      className="rounded-md bg-red-bg px-3 py-2 text-sm font-normal text-red-base"
+                    />
+                  </FormItem>
+                )}
+              />
+              <div className="flex flex-wrap items-center gap-3 border-t border-grey-border pt-4">
+                <Button
+                  type="submit"
+                  // Accepting a blank is the decision most worth a second look, so it isn't the bold one.
+                  variant={!changed && draftIsBlank ? "outline" : "brand"}
+                  disabled={isSaving || (!changed && (!acceptable || breaksRules))}
+                  loading={isSaving}
                 >
-                  Skip for now
-                </Link>
-              )}
-              <p className="ml-auto text-sm text-shamiri-text-grey" aria-live="polite">
-                {changed
-                  ? "You changed the value; saving records your correction."
-                  : !acceptable
-                    ? "Already reviewed. Change the value to correct it."
-                    : breaksRules
-                      ? "This value breaks the form's rules: enter what the page shows."
-                      : draftIsBlank && question.required
-                        ? "Required, but blank on the page? Accept it as blank to confirm."
-                        : draftIsBlank
-                          ? "Enter what is written, or accept it as blank if the page is empty."
-                          : "Accept if the page shows this value."}
-              </p>
-            </div>
-          </form>
+                  {changed ? "Save correction" : draftIsBlank ? "Accept as blank" : "Accept"}
+                </Button>
+                {position.nextHref && (
+                  <Link
+                    href={position.nextHref}
+                    scroll={false}
+                    className={buttonVariants({ variant: "ghost" })}
+                  >
+                    Skip for now
+                  </Link>
+                )}
+                <p className="ml-auto text-sm text-shamiri-text-grey" aria-live="polite">
+                  {changed
+                    ? "You changed the value; saving records your correction."
+                    : !acceptable
+                      ? "Already reviewed. Change the value to correct it."
+                      : breaksRules
+                        ? "This value breaks the form's rules: enter what the page shows."
+                        : draftIsBlank && question.required
+                          ? "Required, but blank on the page? Accept it as blank to confirm."
+                          : draftIsBlank
+                            ? "Enter what is written, or accept it as blank if the page is empty."
+                            : "Accept if the page shows this value."}
+                </p>
+              </div>
+            </form>
+          </Form>
         ) : (
           <p className="text-sm text-red-base">
             The form has no question for {answer.field}, so this answer can&apos;t be reviewed here.

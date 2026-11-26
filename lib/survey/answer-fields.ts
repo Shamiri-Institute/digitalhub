@@ -1,7 +1,3 @@
-// What a reviewer needs to know about one answer field: the question as printed, the input its
-// value takes, and where on the page to cut it from. Fields are a question's key, or `key.row` for
-// a grid row, as answers store them.
-
 import {
   SurveyAnswerReadStatus,
   SurveyAnswerReviewStatus,
@@ -48,7 +44,6 @@ export function reviewedByAPerson(reviewStatus: SurveyAnswerReviewStatus) {
   );
 }
 
-/** Copies whose answers no longer change. */
 export const SETTLED_COPY_STATUSES: readonly SurveyQuestionnaireStatus[] = [
   SurveyQuestionnaireStatus.VOID,
   SurveyQuestionnaireStatus.VERIFIED,
