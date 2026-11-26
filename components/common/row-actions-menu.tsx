@@ -21,6 +21,7 @@ export function RowActionsTrigger({ label, className }: { label: string; classNa
 
 // For an item that is the `render` of a `DialogTrigger` inside the menu: selecting an item closes
 // the menu, which would unmount the dialog it just opened, so the menu stays open behind the dialog.
+// The trigger passes role="button"; the item keeps its own role.
 export function NestedDialogMenuItem(props: ComponentProps<typeof DropdownMenuItem>) {
-  return <DropdownMenuItem {...props} closeOnClick={false} />;
+  return <DropdownMenuItem {...props} role="menuitem" closeOnClick={false} />;
 }

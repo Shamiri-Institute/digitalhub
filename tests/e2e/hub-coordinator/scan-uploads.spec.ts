@@ -59,7 +59,7 @@ test("a hub coordinator uploads a scan once, and sees only their hub's uploads",
   const addedFiles = page.getByRole("list", { name: "Files added" });
 
   await page.goto(getUrl("/hc/surveys"));
-  await page.getByRole("radio", { name: "Select Scans" }).click();
+  await page.getByRole("button", { name: "Select Scans" }).click();
   await expect(page).toHaveURL(/\/hc\/surveys\/scans$/);
   await chooseScan();
   await expect(addedFiles.getByRole("listitem")).toContainText([`${fileName}`]);

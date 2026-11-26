@@ -19,9 +19,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={cn("h-full", inter.variable, figtree.variable)}>
-      <body className="flex min-h-full antialiased" suppressHydrationWarning>
+      <body className="relative flex min-h-full antialiased" suppressHydrationWarning>
         <Providers>
-          <div className="w-full">{children}</div>
+          <div className="isolate w-full">{children}</div>
         </Providers>
       </body>
       <SpeedInsights />

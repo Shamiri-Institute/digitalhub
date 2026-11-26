@@ -52,7 +52,7 @@ export default function HubTabs({ hub }: { hub: AdminHubDetail }) {
               key={segment}
               href={`/admin/hubs/${hub.id}/${segment}`}
               aria-current={active ? "page" : undefined}
-              data-state={active ? "on" : "off"}
+              data-pressed={active || undefined}
               ref={active ? centreInRow : undefined}
               className={cn(toggleVariants(), "form-toggle-button gap-2")}
             >

@@ -54,7 +54,7 @@ import { cn, stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { ActionResponse } from "#/types/actions.types";
 import { sentenceLabel, hasHolderActions, personName, roleLabel } from "./format";
-import { RecipientOptions } from "./recipient-options";
+import { RecipientOptions, recipientLabels } from "./recipient-options";
 
 const ReasonFormSchema = z.object({
   reason: stringValidation("A reason is required"),
@@ -462,7 +462,11 @@ function ReasonForm({
                     No one is available to take this ticket. Ask an administrator for help.
                   </p>
                 ) : (
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    items={recipientLabels(recipients)}
+                  >
                     <FormControl>
                       <SelectTrigger className="bg-white">
                         <SelectValue placeholder="Choose who should take it" />

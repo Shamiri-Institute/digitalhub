@@ -16,6 +16,9 @@ function Checkbox({
   return (
     <CheckboxPrimitive.Root
       data-slot="checkbox"
+      // As a button the control takes the id, so a `<Label htmlFor>` names it and not the hidden input.
+      nativeButton
+      render={(buttonProps) => <button type="button" {...buttonProps} />}
       checked={checked === undefined ? undefined : checked === true}
       indeterminate={checked === "indeterminate"}
       className={cn(

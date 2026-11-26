@@ -7,7 +7,7 @@ import { X } from "lucide-react";
 import { toastManager } from "#/components/ui/use-toast";
 
 const toastVariants = cva(
-  "group absolute inset-x-0 top-0 flex w-full items-center justify-between gap-2 overflow-hidden rounded-md border p-4 pr-6 shadow-lg transition-[transform,opacity] duration-300 [transform:translateX(var(--toast-swipe-movement-x))_translateY(var(--toast-swipe-movement-y))] data-limited:opacity-0 data-starting-style:opacity-0 data-ending-style:opacity-0 motion-safe:data-starting-style:[transform:translateY(-100%)] sm:top-auto sm:bottom-0 sm:motion-safe:data-starting-style:[transform:translateY(100%)] motion-safe:data-ending-style:data-[swipe-direction=right]:[transform:translateX(calc(var(--toast-swipe-movement-x)+100%))] motion-safe:data-ending-style:data-[swipe-direction=down]:[transform:translateY(calc(var(--toast-swipe-movement-y)+100%))]",
+  "group absolute inset-x-0 top-0 flex w-full items-center justify-between gap-2 overflow-hidden rounded-md border p-4 pr-6 shadow-lg transition-[transform,opacity] duration-300 [transform:translateX(var(--toast-swipe-movement-x))_translateY(var(--toast-swipe-movement-y))] data-limited:opacity-0 data-starting-style:opacity-0 data-ending-style:opacity-0 motion-safe:data-starting-style:[transform:translateY(-100%)] sm:top-auto sm:bottom-0 sm:motion-safe:data-starting-style:[transform:translateY(100%)] motion-safe:data-ending-style:data-[swipe-direction=right]:[transform:translateX(calc(var(--toast-swipe-movement-x)+100%))]",
   {
     variants: {
       variant: {
@@ -27,6 +27,7 @@ function ToastList() {
     <ToastPrimitive.Root
       key={toast.id}
       toast={toast}
+      swipeDirection="right"
       // The viewport's live region announces the toast; it is not a dialog to the page.
       render={({ role: _dialogRole, "aria-modal": _modal, ...props }) => <section {...props} />}
       data-slot="toast"
@@ -55,7 +56,7 @@ export function Toaster() {
   return (
     <ToastPrimitive.Provider toastManager={toastManager} limit={1}>
       <ToastPrimitive.Portal>
-        <ToastPrimitive.Viewport className="fixed right-1/2 top-0 z-100 w-[calc(100%-2rem)] translate-x-1/2 sm:bottom-4 sm:right-4 sm:top-auto sm:translate-x-0 md:max-w-[420px]">
+        <ToastPrimitive.Viewport className="fixed right-1/2 top-4 z-100 w-[calc(100%-2rem)] translate-x-1/2 sm:bottom-4 sm:right-4 sm:top-auto sm:translate-x-0 md:max-w-[420px]">
           <ToastList />
         </ToastPrimitive.Viewport>
       </ToastPrimitive.Portal>

@@ -156,7 +156,7 @@ function PublishSteps({
           <Label
             key={option}
             htmlFor={`prefill-${option}`}
-            className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 has-[[data-state=checked]]:border-shamiri-new-blue has-[[data-state=checked]]:bg-blue-bg"
+            className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 has-data-checked:border-shamiri-new-blue has-data-checked:bg-blue-bg"
           >
             <RadioGroupItem id={`prefill-${option}`} value={option} className="mt-0.5" />
             <span className="space-y-1">

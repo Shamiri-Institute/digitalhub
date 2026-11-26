@@ -10,6 +10,10 @@ export function groupLabel(person: TicketPerson) {
   return person.role ? roleLabel(person.role) : "Other";
 }
 
+export function recipientLabels(people: TicketPerson[]) {
+  return Object.fromEntries(people.map((person) => [person.userId, personName(person)]));
+}
+
 function PersonOption({ person }: { person: TicketPerson }) {
   return <SelectItem value={person.userId}>{personName(person)}</SelectItem>;
 }

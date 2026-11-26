@@ -31,6 +31,9 @@ function RadioGroupItem({
   return (
     <RadioPrimitive.Root
       data-slot="radio-group-item"
+      // As a button the control takes the id, so a `<Label htmlFor>` names it and not the hidden input.
+      nativeButton
+      render={(buttonProps) => <button type="button" {...buttonProps} />}
       className={cn(
         "inline-flex aspect-square h-4 w-4 items-center justify-center rounded-full border border-primary text-primary shadow-sm focus:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue data-disabled:cursor-not-allowed data-disabled:opacity-50",
         className,
