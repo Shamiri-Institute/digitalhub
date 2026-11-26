@@ -1,5 +1,3 @@
-// What a file on a ticket comment may be. Shared by the comment form and the comment actions.
-
 import { normalizeContentType } from "#/lib/s3/utils/normalize-content-type";
 
 const EXTENSION_CONTENT_TYPES = {

@@ -11,7 +11,6 @@ export function Person({
   person: TicketPerson;
   viewerId: string | null;
   emphasis?: boolean;
-  /** Off where the role was already shown, such as a person's later rows in a thread. */
   withRole?: boolean;
 }) {
   const isViewer = person.userId === viewerId;

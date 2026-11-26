@@ -156,7 +156,6 @@ const modeClass = (chosen: boolean, recommended: boolean) =>
     chosen && "border-border bg-white text-shamiri-black shadow-xs",
   );
 
-// Switching mode focuses the new form's first field, so the keyboard follows the choice.
 const focusMode = () =>
   requestAnimationFrame(() =>
     document
@@ -196,11 +195,9 @@ export function TicketComposer({
       : []),
     ...available,
   ];
-  // The step that moves the ticket on opens selected, so its holder lands on what's next.
   const recommended = (["start", "resolve", "reopen"] as const).find((kind) =>
     modes.some((m) => m.kind === kind),
   );
-  // Null follows the default: the recommended step, else the first mode.
   const [mode, setMode] = useState<Mode | null>(null);
   const [isStarting, startTransition] = useTransition();
   if (modes.length === 0) {
@@ -219,8 +216,6 @@ export function TicketComposer({
 
   const current =
     modes.find((m) => m.kind === mode) ?? modes.find((m) => m.kind === recommended) ?? modes[0];
-  // The row holds Comment, the step that moves the ticket on, and the handovers; the rest wait
-  // under More, unless there's only one of them.
   const inRow = (kind: Mode) =>
     kind === "comment" || kind === recommended || kind === "escalate" || kind === "reassign";
   const overflow = modes.filter((m) => !inRow(m.kind));

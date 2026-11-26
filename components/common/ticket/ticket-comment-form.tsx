@@ -22,8 +22,6 @@ import {
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
-// The comment box's frame, text area and toolbar, which every form in the composer shares. The
-// frame takes the ring the app's inputs take, while its text area has focus.
 export const composerBoxClass =
   "group rounded-md border border-input bg-white font-normal shadow-xs has-[textarea:focus]:ring-2 has-[textarea:focus]:ring-shamiri-new-blue has-[textarea:focus]:ring-offset-2";
 export const composerTextareaClass =
@@ -35,7 +33,6 @@ export const composerErrorClass = "px-3 pb-2 text-sm text-pretty text-shamiri-li
 const CommentFormSchema = z.object({ body: z.string().max(MAX_TICKET_COMMENT_LENGTH) });
 type CommentFormValues = z.infer<typeof CommentFormSchema>;
 
-// Names the file whose upload failed, so the message can say which one.
 class UploadFailed extends Error {}
 
 type PendingFile = {
