@@ -7,7 +7,15 @@ import { REOPEN_WINDOW_MS } from "#/lib/ticket-reopen-window";
 import { expect, test, type Undo } from "#/tests/fixtures";
 import { required, signableMember, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { getUrl, searchRows } from "#/tests/pages/helpers";
-import { activity, fillAction, openTicket, submitAction, takeAction } from "#/tests/pages/tickets";
+import {
+  activity,
+  chooseMode,
+  composerModes,
+  fillAction,
+  openTicket,
+  submitAction,
+  takeAction,
+} from "#/tests/pages/tickets";
 
 type FellowAndSupervisor = {
   fellowEmail: string;
@@ -69,9 +77,9 @@ async function expectRowAfterReload(page: Page, path: string, ticketSubject: str
 }
 
 async function expectNoActions(page: Page, path: string, ticketSubject: string, actions: string[]) {
-  const step = await openTicket(page, path, ticketSubject);
-  for (const action of actions)
-    await expect(step.getByRole("button", { name: action, exact: true })).toHaveCount(0);
+  await openTicket(page, path, ticketSubject);
+  const modes = await composerModes(page);
+  for (const action of actions) expect(modes).not.toContain(action);
 }
 
 test("the holder starts, reprioritises and resolves a ticket, and its creator reopens it", async ({
@@ -88,7 +96,7 @@ test("the holder starts, reprioritises and resolves a ticket, and its creator re
   await page.goto(getUrl("/sc/tickets"));
   await expect(await searchRows(page, ticketSubject)).toContainText(/open/i);
   const step = await openTicket(page, "/sc/tickets", ticketSubject);
-  await step.getByRole("button", { name: "Start", exact: true }).click();
+  await chooseMode(page, "Start");
   await step.getByRole("button", { name: "Start ticket" }).click();
   await expect(page.getByText("Ticket started").first()).toBeVisible();
   await expectRowAfterReload(page, "/sc/tickets", ticketSubject, /in progress/i);
@@ -115,7 +123,7 @@ test("the holder starts, reprioritises and resolves a ticket, and its creator re
   // The holder is still active, so the reopen names the supervisor who resolved it.
   await expect(
     activity(page).getByRole("listitem").filter({ hasText: "Reopened" }).last(),
-  ).toContainText("Sent to");
+  ).toContainText("reopened it for");
   await expect(activity(page)).toContainText("The device still drops the connection.");
 });
 
@@ -167,7 +175,7 @@ test("the creator cancels an open ticket with a reason", async ({ page, context,
     "Reassign",
   ]);
 
-  await expect(activity(page)).toContainText("Cancelled");
+  await expect(activity(page)).toContainText("cancelled it");
   await expect(activity(page)).toContainText("Raised by mistake.");
 });
 
@@ -200,9 +208,49 @@ test("the creator can cancel a clinical ticket only until it is started", async 
   await db.update(tickets).set({ category: "CLINICAL" }).where(eq(tickets.id, ticketId));
 
   await signInWithEmail(context, fellowAndSupervisor.fellowEmail);
-  const step = await openTicket(page, "/fel/tickets", ticketSubject);
-  await expect(step.getByRole("button", { name: "Cancel ticket" })).toBeVisible();
+  await openTicket(page, "/fel/tickets", ticketSubject);
+  expect(await composerModes(page)).toContain("Cancel ticket");
 
   await db.update(tickets).set({ status: "IN_PROGRESS" }).where(eq(tickets.id, ticketId));
   await expectNoActions(page, "/fel/tickets", ticketSubject, ["Cancel ticket"]);
+});
+
+test("the holder's drafts survive switching modes, and discarding a reason asks first", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fellowAndSupervisor = await pickFellowAndSupervisor();
+  required(fellowAndSupervisor, "a fellow and their supervisor who can both sign in");
+  const { ticketSubject } = await insertHeldTicket(fellowAndSupervisor, undo);
+
+  await signInWithEmail(context, fellowAndSupervisor.supervisorEmail);
+  const step = await openTicket(page, "/sc/tickets", ticketSubject);
+  // The holder lands on their next step, with Comment a click away.
+  await expect(step.getByRole("button", { name: "Start", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await chooseMode(page, "Comment");
+  await step.getByRole("textbox", { name: "Add a comment" }).fill("Half-written comment");
+  const resolve = await fillAction(page, "Resolve", "Half-written fix");
+  await resolve.getByLabel("Reason").press("Escape");
+  await expect(resolve).toBeVisible();
+
+  await chooseMode(page, "Comment");
+  await expect(step.getByRole("textbox", { name: "Add a comment" })).toHaveValue(
+    "Half-written comment",
+  );
+  await chooseMode(page, "Resolve");
+  await expect(resolve.getByLabel("Reason")).toHaveValue("Half-written fix");
+
+  await resolve.getByRole("button", { name: "Discard" }).click();
+  await resolve.getByRole("button", { name: "Keep writing" }).click();
+  await expect(resolve.getByLabel("Reason")).toHaveValue("Half-written fix");
+  await resolve.getByRole("button", { name: "Discard" }).click();
+  await resolve.getByRole("button", { name: "Discard reason" }).click();
+  await expect(resolve).toBeHidden();
+  await chooseMode(page, "Resolve");
+  await expect(resolve.getByLabel("Reason")).toHaveValue("");
+  await expect(resolve.getByRole("button", { name: "Resolve", exact: true })).toBeDisabled();
 });

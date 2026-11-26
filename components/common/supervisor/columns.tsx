@@ -50,9 +50,7 @@ export const columns = (state: SupervisorTableState): ColumnDef<SupervisorsData>
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
-        className={
-          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-        }
+        className={"h-5 w-5 border-shamiri-light-grey bg-white data-checked:bg-shamiri-new-blue"}
       />
     ),
     cell: ({ row }) => {
@@ -63,7 +61,7 @@ export const columns = (state: SupervisorTableState): ColumnDef<SupervisorsData>
             onCheckedChange={(val) => row.toggleSelected(!!val)}
             aria-label="Select row"
             className={
-              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+              "h-5 w-5 border-shamiri-light-grey bg-white data-checked:bg-shamiri-new-blue"
             }
           />
         </div>
@@ -92,14 +90,11 @@ export const columns = (state: SupervisorTableState): ColumnDef<SupervisorsData>
           <div className="relative flex items-center">
             <span>{schools[0]?.schoolName},</span>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  aria-label={`${schools.length - 1} more schools`}
-                  className="ml-2 cursor-pointer select-none rounded-sm text-shamiri-new-blue hover:underline focus-visible:outline-2 focus-visible:outline-shamiri-new-blue"
-                >
-                  +{schools.length - 1}
-                </button>
+              <DropdownMenuTrigger
+                aria-label={`${schools.length - 1} more schools`}
+                className="ml-2 cursor-pointer select-none rounded-sm text-shamiri-new-blue hover:underline focus-visible:outline-2 focus-visible:outline-shamiri-new-blue"
+              >
+                +{schools.length - 1}
               </DropdownMenuTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuContent>

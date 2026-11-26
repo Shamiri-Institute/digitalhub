@@ -24,7 +24,7 @@ The Shamiri Digital Hub is a comprehensive digital platform designed to manage y
 - **Language**: TypeScript
 - **Database**: PostgreSQL
 - **Authentication**: NextAuth.js with Google OAuth
-- **UI Components**: Radix UI + TailwindCSS
+- **UI Components**: Base UI + TailwindCSS
 
 ## Open Science & Licensing
 
@@ -173,7 +173,7 @@ NEXT_PUBLIC_ENABLE_PERF_PROFILER="0"  # Set to 1 to enable the performance profi
 # ====================================
 # RECORDING TRANSCRIPTION
 # ====================================
-FIDELITY_AB_TEST_SUPERVISOR_IDS=""  # Comma-separated supervisor IDs whose uploads are transcribed
+FIDELITY_AB_TEST_SUPERVISOR_IDS=""  # Comma-separated supervisor IDs whose uploads are transcribed, or "*" for all
 CRON_SECRET="your-cron-secret"      # Bearer token Vercel Cron sends to /api/cron/*; 16+ characters
 # Gemini: Vertex AI in production, an AI Studio key for local development
 GOOGLE_GENAI_USE_VERTEXAI="true"
@@ -221,7 +221,7 @@ When `NEXT_PUBLIC_ENV=development` and `TEST_USER_PASSWORD` is set, sign in as a
 
 ### Recording Transcription
 
-Uploads from supervisors in `FIDELITY_AB_TEST_SUPERVISOR_IDS` are queued in the `transcriptions` table. Vercel Cron calls `/api/cron/transcriptions` every minute, and the worker transcribes queued recordings with Gemini (`lib/transcription/`). Cron runs only on production deployments. Elsewhere, run the worker by hand:
+Uploads from supervisors in `FIDELITY_AB_TEST_SUPERVISOR_IDS` are queued in the `transcriptions` table. A Vercel Schedule (`transcriptions` in `vercel.json`) calls `/api/cron/transcriptions` every minute, and the worker transcribes queued recordings with Gemini (`lib/transcription/`). The schedule is active in production and staging; in a preview, enable it with `vercel schedules enable transcriptions --git-branch <branch>` or run the worker by hand:
 
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/transcriptions
@@ -230,7 +230,7 @@ curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/tran
 For uploads in development, run a local S3 server with [SeaweedFS](https://github.com/seaweedfs/seaweedfs). Put its `weed` binary on your `PATH`: `brew install seaweedfs` with Homebrew, or download `weed` for your platform from the [releases page](https://github.com/seaweedfs/seaweedfs/releases). Then put the values from the header of `scripts/local-s3.sh` in `.env.development.local`. CI runs the same script.
 
 ```bash
-scripts/local-s3.sh   # S3 on http://localhost:8333, buckets "recordings", "survey-print-files", "survey-scans" and "student-attendance"
+scripts/local-s3.sh   # S3 on http://localhost:8333, buckets "recordings", "survey-print-files", "survey-scans", "student-attendance" and "ticket-attachments"
 ```
 
 `tests/e2e/recording-transcription.spec.ts` uploads, transcribes and reads back a recording. Its upload test runs wherever the local S3 server is configured, CI included. Its transcription test calls Gemini, so it needs credentials, costs a few cents a run, and never runs in CI.

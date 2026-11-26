@@ -72,7 +72,7 @@ export default function TreatmentPlanForm({
   clinicalCase,
   role,
 }: {
-  children: React.ReactNode;
+  children: React.ReactElement;
   clinicalCase: ClinicalCases;
   role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
@@ -80,7 +80,7 @@ export default function TreatmentPlanForm({
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} nativeButton={false} />
       <DialogContent className="z-10 max-h-[90%] max-w-[60vw] overflow-x-auto bg-white p-5">
         <TreatmentPlanFields
           clinicalCase={clinicalCase}
@@ -271,11 +271,7 @@ function TreatmentPlanFields({
           />
 
           <div className="flex justify-end space-x-4">
-            <DialogClose asChild>
-              <Button variant="ghost" type="button">
-                Cancel
-              </Button>
-            </DialogClose>
+            <DialogClose render={<Button variant="ghost" type="button" />}>Cancel</DialogClose>
             <Button variant="brand" type="submit" loading={isSaving} disabled={isSaving}>
               Submit
             </Button>

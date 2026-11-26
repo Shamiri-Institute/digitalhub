@@ -6,5 +6,6 @@ const supervisorIds = new Set(
 );
 
 export function isSupervisorInFidelityAbTest(supervisorId: string): boolean {
-  return supervisorIds.has(supervisorId);
+  // "*" puts every supervisor in the test; staging sets it so any test upload is transcribed.
+  return supervisorIds.has("*") || supervisorIds.has(supervisorId);
 }

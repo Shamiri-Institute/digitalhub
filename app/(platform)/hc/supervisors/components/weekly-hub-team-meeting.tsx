@@ -67,10 +67,8 @@ export default function WeeklyHubTeamMeetingButton({
   const [open, setDialogOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        <Button variant="brand">
-          <span className="text-white">Weekly team meeting</span>
-        </Button>
+      <DialogTrigger render={<Button variant="brand" />}>
+        <span className="text-white">Weekly team meeting</span>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <WeeklyHubTeamMeetingForm

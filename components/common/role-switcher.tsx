@@ -82,36 +82,38 @@ export function RoleSwitcher({ loading, setLoading, user, implementerMembers }: 
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          aria-expanded={open}
-          className="-mt-1 w-full lg:min-w-[300px] justify-between bg-white px-2 text-left filter disabled:pointer-events-none disabled:grayscale"
-          disabled={loading || !activeMembership}
-        >
-          <div className="flex flex-col items-start">
-            <span className="text-base font-medium">
-              {activeMembership ? (
-                <div className="flex flex-row items-baseline gap-3">
-                  <span className="font-medium">
-                    {
-                      implementerMembers.personnel.find(
-                        (member) => member.id === implementerMembers.activePersonnelId,
-                      )?.label
-                    }
-                  </span>
-                  <span className="text-xs uppercase tracking-caps text-shamiri-new-blue">
-                    {" - "}
-                    {activeMembership.role.replace("_", " ")}
-                  </span>
-                </div>
-              ) : (
-                "Select member"
-              )}
-            </span>
-          </div>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="outline"
+            aria-expanded={open}
+            className="-mt-1 w-full lg:min-w-[300px] justify-between bg-white px-2 text-left filter disabled:pointer-events-none disabled:grayscale"
+            disabled={loading || !activeMembership}
+          />
+        }
+      >
+        <div className="flex flex-col items-start">
+          <span className="text-base font-medium">
+            {activeMembership ? (
+              <div className="flex flex-row items-baseline gap-3">
+                <span className="font-medium">
+                  {
+                    implementerMembers.personnel.find(
+                      (member) => member.id === implementerMembers.activePersonnelId,
+                    )?.label
+                  }
+                </span>
+                <span className="text-xs uppercase tracking-caps text-shamiri-new-blue">
+                  {" - "}
+                  {activeMembership.role.replace("_", " ")}
+                </span>
+              </div>
+            ) : (
+              "Select member"
+            )}
+          </span>
+        </div>
+        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
         <Command>
@@ -125,20 +127,23 @@ export function RoleSwitcher({ loading, setLoading, user, implementerMembers }: 
               className="h-9 w-full"
             />
             <DropdownMenu>
-              <DropdownMenuTrigger asChild className="absolute right-1 top-0.5">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-8 w-8 p-0",
-                    selectedRoles.size > 0
-                      ? "text-shamiri-new-blue"
-                      : "text-muted-foreground hover:text-shamiri-new-blue",
-                  )}
-                  aria-label="Filter by role"
-                >
-                  <Filter className="h-3.5 w-3.5" />
-                </Button>
+              <DropdownMenuTrigger
+                className="absolute right-1 top-0.5"
+                render={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "h-8 w-8 p-0",
+                      selectedRoles.size > 0
+                        ? "text-shamiri-new-blue"
+                        : "text-muted-foreground hover:text-shamiri-new-blue",
+                    )}
+                    aria-label="Filter by role"
+                  />
+                }
+              >
+                <Filter className="h-3.5 w-3.5" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" side="right" className="w-48">
                 {availableRoles.map((role) => (

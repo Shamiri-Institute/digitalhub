@@ -95,13 +95,8 @@ export function SessionList({
         // A popover, not a menu: Tab moves between the chips inside it, and each chip opens its
         // own menu.
         <Popover>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="pointer-events-auto w-full rounded-sm text-left text-sm font-semibold text-grey-c3 hover:underline focus-visible:outline-2 focus-visible:outline-shamiri-new-blue"
-            >
-              + {moreSessions.length} more
-            </button>
+          <PopoverTrigger className="pointer-events-auto w-full rounded-sm text-left text-sm font-semibold text-grey-c3 hover:underline focus-visible:outline-2 focus-visible:outline-shamiri-new-blue">
+            + {moreSessions.length} more
           </PopoverTrigger>
           <PopoverContent className="max-h-[250px] min-w-72 overflow-auto p-2" align="start">
             <div className="flex flex-col gap-2">
@@ -240,16 +235,13 @@ export function SessionDetail({
   return withDropdown ? (
     <div>
       <SessionDropDown state={state} role={role} fellowId={fellowId} supervisorId={supervisorId}>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            className={cn(
-              chipBoxClassName,
-              "group/chip pointer-events-auto block w-full rounded-lg text-left focus-visible:outline-2 focus-visible:outline-shamiri-new-blue",
-            )}
-          >
-            {chipFace}
-          </button>
+        <DropdownMenuTrigger
+          className={cn(
+            chipBoxClassName,
+            "group/chip pointer-events-auto block w-full rounded-lg text-left focus-visible:outline-2 focus-visible:outline-shamiri-new-blue",
+          )}
+        >
+          {chipFace}
         </DropdownMenuTrigger>
       </SessionDropDown>
     </div>
@@ -416,7 +408,7 @@ export function SessionDropDown({
               Mark student attendance
             </DropdownMenuItem>
             <DropdownMenuItem
-              onSelect={() => {
+              onClick={() => {
                 if (!fellowId) return;
                 void countSessionGroupAttendance(session.id, fellowId)
                   .then((count) => {

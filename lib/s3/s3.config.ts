@@ -40,6 +40,12 @@ const BUCKET_ENV: Record<
     regionVar: "S3_SURVEY_SCANS_REGION",
     regionValue: env.S3_SURVEY_SCANS_REGION,
   },
+  "ticket-attachments": {
+    bucketVar: "S3_TICKET_ATTACHMENTS_BUCKET",
+    bucketValue: env.S3_TICKET_ATTACHMENTS_BUCKET,
+    regionVar: "S3_TICKET_ATTACHMENTS_REGION",
+    regionValue: env.S3_TICKET_ATTACHMENTS_REGION,
+  },
 };
 
 export const getS3Credentials = (): S3Credentials => {

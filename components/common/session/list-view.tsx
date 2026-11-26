@@ -124,7 +124,7 @@ export function ListView({
                               onCheckedChange={() => {}}
                               aria-label="Select row"
                               className={
-                                "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+                                "h-5 w-5 border-shamiri-light-grey bg-white data-checked:bg-shamiri-new-blue"
                               }
                             />
                           </div>

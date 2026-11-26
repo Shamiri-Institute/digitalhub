@@ -12,7 +12,7 @@ for (const [role, { reporting, removed }] of Object.entries(removedPages)) {
     await signInAs(context, role as keyof typeof removedPages);
     await page.goto(getUrl(reporting));
     // The expenses section offers fellows' payouts and nothing else.
-    await expect(page.getByRole("main").getByRole("radio")).toHaveText([
+    await expect(page.getByRole("main").getByRole("group").getByRole("button")).toHaveText([
       "Fellows",
       "Payout history",
     ]);

@@ -27,22 +27,24 @@ export default function SchoolTableDropdown({
           <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link
-            href={
-              role === "HUB_COORDINATOR"
-                ? `/hc/schools/${schoolRow.visibleId}/supervisors`
-                : role === "SUPERVISOR"
-                  ? `/sc/schools/${schoolRow.visibleId}/fellows`
-                  : role === "FELLOW"
-                    ? `/fel/schools/${schoolRow.visibleId}/group`
-                    : role === "ADMIN"
-                      ? `/admin/schools/${schoolRow.visibleId}/supervisors`
-                      : "#"
-            }
-          >
-            View school
-          </Link>
+        <DropdownMenuItem
+          render={
+            <Link
+              href={
+                role === "HUB_COORDINATOR"
+                  ? `/hc/schools/${schoolRow.visibleId}/supervisors`
+                  : role === "SUPERVISOR"
+                    ? `/sc/schools/${schoolRow.visibleId}/fellows`
+                    : role === "FELLOW"
+                      ? `/fel/schools/${schoolRow.visibleId}/group`
+                      : role === "ADMIN"
+                        ? `/admin/schools/${schoolRow.visibleId}/supervisors`
+                        : "#"
+              }
+            />
+          }
+        >
+          View school
         </DropdownMenuItem>
         {role === "HUB_COORDINATOR" &&
           (!schoolRow.droppedOut ? (

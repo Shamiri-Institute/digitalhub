@@ -1,22 +1,22 @@
 import { formatDistanceToNowStrict } from "date-fns";
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
 
 import type { ImplementerRole } from "#/db/enums";
+import { Note, StatCell } from "#/components/common/stats";
 import { ViewerTimeZoneCookie } from "#/components/common/viewer-time-zone";
 import { Badge } from "#/components/ui/badge";
 import PageFooter from "#/components/ui/page-footer";
 import { getTicketDetails } from "#/lib/actions/ticket";
-import { RESOLVED_TICKET_STATUSES } from "#/lib/actions/ticket/types";
-import { formatDateIn } from "#/lib/date-utils";
+import { ACTIVE_TICKET_STATUSES, RESOLVED_TICKET_STATUSES } from "#/lib/actions/ticket/types";
+import { formatDateIn, formatDateTimeIn } from "#/lib/date-utils";
 import { cn } from "#/lib/utils";
 import { viewerTimeZone } from "#/lib/viewer-time-zone";
-import { sentenceLabel, hasHolderActions, statusBadgeVariant } from "./format";
+import { sentenceLabel, statusBadgeVariant } from "./format";
 import { Person } from "./person";
 import { PriorityBadge } from "./priority-badge";
 import { TicketActivity } from "./ticket-activity";
 import { TicketBreadcrumb } from "./ticket-breadcrumb";
-import { TicketNextStep } from "./ticket-next-step";
+import { TicketComposer } from "./ticket-composer";
 
 export default async function TicketPage({
   ticketId,
@@ -45,76 +45,115 @@ export default async function TicketPage({
     viewerId,
     recipients,
     reassignRecipients,
+    creatorHub,
   } = detailsResult.data;
-  const isClosed = RESOLVED_TICKET_STATUSES.includes(ticket.status);
-
+  const isActive = ACTIVE_TICKET_STATUSES.includes(ticket.status);
   const holdsThis = ticket.holder.userId === viewerId;
+  // Cancelling sets no date on the ticket, so its event carries it.
+  const endedAt =
+    ticket.status === "RESOLVED"
+      ? ticket.resolvedAt
+      : ticket.status === "CLOSED"
+        ? ticket.closedAt
+        : (events.findLast((e) => e.kind === "CANCELLED")?.createdAt ?? null);
+  const holderLabel = RESOLVED_TICKET_STATUSES.includes(ticket.status)
+    ? "Resolved by"
+    : ticket.status === "CANCELLED"
+      ? "Last held by"
+      : "Held by";
+  const priorityTint =
+    isActive &&
+    {
+      HIGH: "bg-linear-to-b from-shamiri-light-orange/10 to-shamiri-light-orange/10",
+      URGENT:
+        "bg-linear-to-b from-shamiri-light-red-background-base/10 to-shamiri-light-red-background-base/10",
+    }[ticket.priority as string];
 
   const body = (
-    <main className={cn("w-full space-y-6", !bare && "container grow py-10")}>
-      <TicketBreadcrumb
-        basePath={basePath}
-        visibleId={ticket.visibleId}
-        previous={previous ?? undefined}
-        next={next ?? undefined}
-        scope={holdsThis ? "you hold" : undefined}
-      />
-      <h1 className="max-w-4xl text-2xl font-semibold text-balance text-shamiri-black sm:text-4xl">
-        {ticket.subject}
-      </h1>
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22.5rem]">
-        <TicketActivity ticket={ticket} events={events} viewerId={viewerId} timeZone={timeZone} />
-        <aside
-          aria-label="Ticket details"
-          className="-order-1 overflow-hidden rounded-lg border bg-white lg:sticky lg:top-6 lg:order-none"
-        >
-          <h2 className="border-b bg-background-secondary px-4 py-2.5 font-semibold text-shamiri-black">
-            Details
-          </h2>
-          <dl className="grid grid-cols-[7rem_minmax(0,1fr)] text-sm [&>*]:border-b [&>*]:py-2 [&>*:nth-last-child(-n+2)]:border-b-0 [&>dd]:pr-4 [&>dt]:pl-4">
-            <Detail label="Status">
-              <Badge variant={statusBadgeVariant[ticket.status]} className="select-none">
-                {sentenceLabel(ticket.status)}
-              </Badge>
-            </Detail>
-            <Detail label="Priority">
-              <PriorityBadge priority={ticket.priority} status={ticket.status} />
-            </Detail>
-            <Detail
-              label={
-                isClosed ? "Resolved by" : ticket.status === "CANCELLED" ? "Was with" : "Held by"
-              }
-            >
-              <Person person={ticket.holder} viewerId={viewerId} />
-            </Detail>
-            <Detail label="Raised by">
-              <Person person={ticket.createdBy} viewerId={viewerId} />
-            </Detail>
-            <Detail label="Category">{sentenceLabel(ticket.category)}</Detail>
-            <Detail label="Opened">
-              {timeZone && formatDateIn(ticket.createdAt, timeZone)}
-              <Muted aria-hidden>·</Muted>
-              <Muted>
-                {formatDistanceToNowStrict(ticket.createdAt, {
-                  addSuffix: true,
-                  roundingMethod: "floor",
-                })}
-              </Muted>
-            </Detail>
-          </dl>
-          {(hasHolderActions(actions) || actions.canReopen || actions.canCancel) && (
-            <TicketNextStep
-              ticket={ticket}
-              actions={actions}
-              role={role}
-              recipients={recipients}
-              reassignRecipients={reassignRecipients}
-              reopenableUntil={reopenableUntil}
-              timeZone={timeZone}
-            />
+    <main className="flex w-full grow flex-col">
+      <div className={cn("w-full grow space-y-6", !bare && "container py-10")}>
+        <TicketBreadcrumb
+          basePath={basePath}
+          visibleId={ticket.visibleId}
+          previous={previous ?? undefined}
+          next={next ?? undefined}
+          scope={holdsThis ? "you hold" : undefined}
+        />
+        <div className="space-y-2">
+          <h1 className="max-w-4xl text-2xl font-semibold text-balance text-shamiri-black sm:text-4xl">
+            {ticket.subject}
+          </h1>
+          <p className="text-sm leading-normal font-normal text-shamiri-text-dark-grey">
+            {/* Who raised it and when lead the thread below, so this says only what and where. */}
+            {sentenceLabel(ticket.category)} request
+            {creatorHub && (
+              <>
+                {" "}
+                from <strong className="font-semibold text-shamiri-black">{creatorHub}</strong>
+              </>
+            )}
+          </p>
+        </div>
+        {/* Phones get the details as one line, so the conversation starts on the first screen. */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-shamiri-text-dark-grey sm:hidden">
+          <Badge variant={statusBadgeVariant[ticket.status]} className="select-none">
+            {sentenceLabel(ticket.status)}
+          </Badge>
+          <PriorityBadge priority={ticket.priority} status={ticket.status} />
+          <span>
+            {holderLabel} <Person person={ticket.holder} viewerId={viewerId} />
+          </span>
+          {isActive && (
+            <span>
+              Open for {formatDistanceToNowStrict(ticket.createdAt, { roundingMethod: "floor" })}
+            </span>
           )}
-        </aside>
+        </div>
+        <section
+          aria-label="Ticket details"
+          className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border max-sm:hidden lg:grid-cols-4"
+        >
+          <StatCell label="Status">
+            <Badge variant={statusBadgeVariant[ticket.status]} className="select-none">
+              {sentenceLabel(ticket.status)}
+            </Badge>
+            {reopenableUntil && timeZone && (
+              <Note>Reopenable until {formatDateTimeIn(reopenableUntil, timeZone)}</Note>
+            )}
+          </StatCell>
+          <StatCell label="Priority" className={priorityTint || undefined}>
+            <PriorityBadge priority={ticket.priority} status={ticket.status} />
+          </StatCell>
+          <StatCell label={holderLabel}>
+            <p className="text-lg">
+              <Person person={ticket.holder} viewerId={viewerId} />
+            </p>
+          </StatCell>
+          {/* The thread opens with the raised date, so a finished ticket shows when it ended. */}
+          <StatCell label={isActive ? "Open for" : `${sentenceLabel(ticket.status)} on`}>
+            <p className="text-lg text-shamiri-black">
+              {isActive
+                ? formatDistanceToNowStrict(ticket.createdAt, { roundingMethod: "floor" })
+                : endedAt && timeZone && formatDateIn(endedAt, timeZone)}
+            </p>
+          </StatCell>
+        </section>
+        <TicketActivity
+          ticket={ticket}
+          events={events}
+          viewerId={viewerId}
+          timeZone={timeZone}
+          canComment={actions.canComment}
+        />
       </div>
+      <TicketComposer
+        ticket={ticket}
+        actions={actions}
+        role={role}
+        recipients={recipients}
+        reassignRecipients={reassignRecipients}
+        contained={!bare}
+      />
       <ViewerTimeZoneCookie serverTimeZone={timeZone} />
     </main>
   );
@@ -125,24 +164,5 @@ export default async function TicketPage({
       {body}
       <PageFooter />
     </div>
-  );
-}
-
-function Detail({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <>
-      <dt className="font-medium leading-6 text-shamiri-text-dark-grey">{label}</dt>
-      <dd className="flex min-w-0 flex-wrap items-center gap-x-2 leading-6 break-words text-shamiri-black">
-        {children}
-      </dd>
-    </>
-  );
-}
-
-function Muted({ children, ...props }: { children: ReactNode; "aria-hidden"?: boolean }) {
-  return (
-    <span className="text-shamiri-text-dark-grey" {...props}>
-      {children}
-    </span>
   );
 }

@@ -7,7 +7,8 @@ import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
 import { Badge } from "#/components/ui/badge";
-import { Button, buttonVariants } from "#/components/ui/button";
+import { Button } from "#/components/ui/button";
+import { buttonVariants } from "#/components/ui/button-variants";
 import { Form, FormField, FormItem, FormMessage } from "#/components/ui/form";
 import { toastOnError } from "#/components/ui/use-toast";
 import {

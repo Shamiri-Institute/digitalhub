@@ -24,7 +24,7 @@ export function TicketViewTabs({
               key={tab.view}
               href={tab.view === "all" ? basePath : `${basePath}?view=${tab.view}`}
               aria-current={active ? "page" : undefined}
-              data-state={active ? "on" : "off"}
+              data-pressed={active || undefined}
               className={cn(toggleVariants(), "form-toggle-button gap-2")}
             >
               <span className="text-nowrap">{tab.label}</span>

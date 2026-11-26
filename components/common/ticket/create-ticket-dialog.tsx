@@ -52,11 +52,9 @@ export default function CreateTicketDialog({
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="brand" className="flex gap-1" disabled={disabled}>
-          <Icons.plusCircle className="h-4 w-4" />
-          <span>New ticket</span>
-        </Button>
+      <DialogTrigger render={<Button variant="brand" className="flex gap-1" disabled={disabled} />}>
+        <Icons.plusCircle className="h-4 w-4" />
+        <span>New ticket</span>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <CreateTicketForm assignees={assignees} close={() => setOpen(false)} />
@@ -232,14 +230,16 @@ function CreateTicketForm({
         </div>
         <Separator className="my-6" />
         <DialogFooter className="flex justify-end gap-2">
-          <DialogClose asChild>
-            <Button
-              variant="ghost"
-              type="button"
-              className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
-            >
-              Cancel
-            </Button>
+          <DialogClose
+            render={
+              <Button
+                variant="ghost"
+                type="button"
+                className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+              />
+            }
+          >
+            Cancel
           </DialogClose>
           <Button variant="brand" type="submit" disabled={isSaving} loading={isSaving}>
             Submit

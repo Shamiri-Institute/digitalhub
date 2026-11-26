@@ -46,11 +46,9 @@ export default async function ClinicalPage() {
           supervisorsInHub={supervisorsInHub}
           hubs={hubs}
         >
-          <DialogTrigger asChild={true}>
-            <Button variant="brand">
-              <Plus className="mr-2 h-4 w-4" />
-              New case
-            </Button>
+          <DialogTrigger render={<Button variant="brand" />}>
+            <Plus className="mr-2 h-4 w-4" />
+            New case
           </DialogTrigger>
         </AddNewClinicalCaseForm>
       </PageHeading>

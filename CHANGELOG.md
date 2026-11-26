@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.15.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.14.0...v2.15.0) (2026-11-26)
+
+### Features
+
+- **health:** check the database in /api/health ([#1096](https://github.com/Shamiri-Institute/digitalhub/issues/1096)) ([4ce3fac](https://github.com/Shamiri-Institute/digitalhub/commit/4ce3fac5c3cd664365246ed793621be2a8cb3ecb))
+- **survey:** accept only PDF scans for the first version ([#1099](https://github.com/Shamiri-Institute/digitalhub/issues/1099)) ([09c0288](https://github.com/Shamiri-Institute/digitalhub/commit/09c0288b132330c5b7290e5c58b6938d6e24de0a))
+- **survey:** notify the pipeline of scans, re-run uploads, show stuck jobs ([#1100](https://github.com/Shamiri-Institute/digitalhub/issues/1100)) ([ceb67c9](https://github.com/Shamiri-Institute/digitalhub/commit/ceb67c93984c6e24ffd3de6af4e3979c62c37344))
+- **survey:** review queue for answers a scan left unsure ([#1101](https://github.com/Shamiri-Institute/digitalhub/issues/1101)) ([4dffcab](https://github.com/Shamiri-Institute/digitalhub/commit/4dffcab68c1a9a751ae6423176bb42514e7a4118))
+- **survey:** show what happened to each page of a processed scan ([#1103](https://github.com/Shamiri-Institute/digitalhub/issues/1103)) ([a684262](https://github.com/Shamiri-Institute/digitalhub/commit/a6842627d41feec94c22d8deadc22d9031278b94))
+- **survey:** signed API for the scan extraction pipeline ([#1094](https://github.com/Shamiri-Institute/digitalhub/issues/1094)) ([2386fe8](https://github.com/Shamiri-Institute/digitalhub/commit/2386fe8e70111f8e068dc9e9561b942aa8acb128))
+- **tickets:** let clinical team members raise, receive and reassign tickets ([#1097](https://github.com/Shamiri-Institute/digitalhub/issues/1097)) ([7393f0f](https://github.com/Shamiri-Institute/digitalhub/commit/7393f0f30e6237b7ccb2e33e7aafb524bd1475b1))
+- **transcription:** let "*" put every supervisor in the fidelity A/B test ([#1106](https://github.com/Shamiri-Institute/digitalhub/issues/1106)) ([2730fc0](https://github.com/Shamiri-Institute/digitalhub/commit/2730fc028f5ce5eb7a8d2d12acd2c405ed862569))
+- **transcription:** run the transcription worker from a Vercel Schedule ([#1107](https://github.com/Shamiri-Institute/digitalhub/issues/1107)) ([7828dbf](https://github.com/Shamiri-Institute/digitalhub/commit/7828dbff9f232c16cda56760ea779dc20273d29e))
+
 ## [2.14.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.13.0...v2.14.0) (2026-11-23)
 
 ### Features

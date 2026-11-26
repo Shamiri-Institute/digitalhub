@@ -60,20 +60,22 @@ export function ProjectSwitcher({
   return (
     <div className={className}>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            aria-expanded={open}
-            className="-mt-1 w-full min-w-[200px] justify-between bg-white px-2 text-left filter disabled:pointer-events-none disabled:grayscale"
-            disabled={loading}
-          >
-            <div className="flex flex-col items-start">
-              <span className="text-base font-medium">
-                {loading ? "Loading..." : (activeProject?.name ?? "Select project...")}
-              </span>
-            </div>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
+        <PopoverTrigger
+          render={
+            <Button
+              variant="outline"
+              aria-expanded={open}
+              className="-mt-1 w-full min-w-[200px] justify-between bg-white px-2 text-left filter disabled:pointer-events-none disabled:grayscale"
+              disabled={loading}
+            />
+          }
+        >
+          <div className="flex flex-col items-start">
+            <span className="text-base font-medium">
+              {loading ? "Loading..." : (activeProject?.name ?? "Select project...")}
+            </span>
+          </div>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </PopoverTrigger>
         <PopoverContent className="w-full p-0" align="start">
           <Command>

@@ -3,7 +3,7 @@
 import type * as React from "react";
 import { I18nProvider } from "react-aria";
 
-import { Toaster } from "#/components/ui/toaster";
+import { Toaster } from "#/components/ui/toast";
 import { TooltipProvider } from "#/components/ui/tooltip";
 
 export function Providers({ children }: { children: React.ReactNode }) {

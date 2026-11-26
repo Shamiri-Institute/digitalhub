@@ -60,6 +60,7 @@ import {
   supervisor,
   supervisorAttendance,
   supervisorComplaints,
+  ticketAttachments,
   ticketEvents,
   tickets,
   triageEvent,
@@ -1099,7 +1100,7 @@ export const supervisorComplaintsRelations = relations(supervisorComplaints, ({ 
   }),
 }));
 
-export const ticketEventsRelations = relations(ticketEvents, ({ one }) => ({
+export const ticketEventsRelations = relations(ticketEvents, ({ one, many }) => ({
   ticket: one(tickets, {
     fields: [ticketEvents.ticketId],
     references: [tickets.id],
@@ -1108,6 +1109,15 @@ export const ticketEventsRelations = relations(ticketEvents, ({ one }) => ({
   actor: one(user, {
     fields: [ticketEvents.actorId],
     references: [user.id],
+  }),
+  attachments: many(ticketAttachments, { relationName: "TicketAttachments_event" }),
+}));
+
+export const ticketAttachmentsRelations = relations(ticketAttachments, ({ one }) => ({
+  event: one(ticketEvents, {
+    fields: [ticketAttachments.eventId],
+    references: [ticketEvents.id],
+    relationName: "TicketAttachments_event",
   }),
 }));
 

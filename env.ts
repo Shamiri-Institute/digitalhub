@@ -29,6 +29,10 @@ const schema = z.object({
   S3_SURVEY_SCANS_BUCKET: z.string().default(""),
   S3_SURVEY_SCANS_REGION: z.string(),
 
+  // Files on ticket comments, uploaded by the browser through presigned PUTs. Needs CORS.
+  S3_TICKET_ATTACHMENTS_BUCKET: z.string().default(""),
+  S3_TICKET_ATTACHMENTS_REGION: z.string().default(""),
+
   // Vercel Cron sends it as a bearer token. Unset, the cron routes refuse every request.
   CRON_SECRET: z.string().min(16).optional(),
 

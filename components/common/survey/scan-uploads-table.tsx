@@ -154,11 +154,7 @@ function ConfirmRerun({ upload, onDone }: { upload: ScanUploadRow; onDone: () =>
         </DialogDescription>
       </DialogHeader>
       <DialogFooter className="flex justify-end gap-2">
-        <DialogClose asChild>
-          <Button type="button" variant="ghost">
-            Cancel
-          </Button>
-        </DialogClose>
+        <DialogClose render={<Button type="button" variant="ghost" />}>Cancel</DialogClose>
         <Button
           type="button"
           variant="destructive"

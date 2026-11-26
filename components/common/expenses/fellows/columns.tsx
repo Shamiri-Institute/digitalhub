@@ -84,9 +84,7 @@ export const subColumns: ColumnDef<
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
-        className={
-          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-        }
+        className={"h-5 w-5 border-shamiri-light-grey bg-white data-checked:bg-shamiri-new-blue"}
       />
     ),
     cell: ({ row }) => {
@@ -97,7 +95,7 @@ export const subColumns: ColumnDef<
             onCheckedChange={(val) => row.toggleSelected(!!val)}
             aria-label="Select row"
             className={
-              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+              "h-5 w-5 border-shamiri-light-grey bg-white data-checked:bg-shamiri-new-blue"
             }
           />
         </div>

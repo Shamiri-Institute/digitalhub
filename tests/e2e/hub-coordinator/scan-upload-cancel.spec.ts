@@ -64,12 +64,12 @@ test("a coordinator cancels one scan, and leaving the page asks first and gives 
     prompts.push(dialog.message());
     void dialog.dismiss();
   });
-  await page.getByRole("radio", { name: "Select Print" }).click();
+  await page.getByRole("button", { name: "Select Print" }).click();
   await expect.poll(() => prompts).toEqual(["Scans are still uploading. Leave and stop them?"]);
   await expect(page).toHaveURL(/\/hc\/surveys\/scans$/);
 
   page.once("dialog", (dialog) => void dialog.accept());
-  await page.getByRole("radio", { name: "Select Print" }).click();
+  await page.getByRole("button", { name: "Select Print" }).click();
   await expect(page).toHaveURL(/\/hc\/surveys$/);
   await expect.poll(() => unfinishedUploadOf(leftBehind)).toBe(0);
 });

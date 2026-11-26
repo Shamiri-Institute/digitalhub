@@ -29,8 +29,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { ToastAction } from "#/components/ui/toast";
-import { toastOnError, useToast } from "#/components/ui/use-toast";
+import { toastOnError, toast } from "#/components/ui/use-toast";
 import { createNewSession } from "#/lib/actions/session/session";
 import { cn, handleMinutesChange } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
@@ -49,8 +48,6 @@ export function ScheduleNewSession({
   hubSessionTypes: Pick<typeof sessionName.$inferSelect, "id" | "sessionType" | "sessionLabel">[];
   role: ImplementerRole;
 }) {
-  const { toast } = useToast();
-
   const [hour, setHour] = useState("9");
   const [minutes, setMinutes] = useState("00");
   const [time, setTime] = useState("AM");
@@ -104,16 +101,7 @@ export function ScheduleNewSession({
           toast({
             variant: "destructive",
             description: response.message,
-            action: (
-              <ToastAction
-                altText="Reschedule"
-                onClick={() => {
-                  setClashingSession(clash);
-                }}
-              >
-                Reschedule
-              </ToastAction>
-            ),
+            action: { label: "Reschedule", onClick: () => setClashingSession(clash) },
           });
         } else {
           toast({
@@ -255,17 +243,19 @@ export function ScheduleNewSession({
                 <div>
                   <FormLabel required>Date</FormLabel>
                   <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "mt-1.5 w-full justify-start px-3 text-left font-medium active:scale-100",
-                          !field.value && "text-muted-foreground",
-                        )}
-                      >
-                        <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                        {field.value ? format(field.value, DISPLAY_DATE) : <span>Pick a date</span>}
-                      </Button>
+                    <PopoverTrigger
+                      render={
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "mt-1.5 w-full justify-start px-3 text-left font-medium active:scale-100",
+                            !field.value && "text-muted-foreground",
+                          )}
+                        />
+                      }
+                    >
+                      <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                      {field.value ? format(field.value, DISPLAY_DATE) : <span>Pick a date</span>}
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
@@ -288,17 +278,19 @@ export function ScheduleNewSession({
                 <div>
                   <FormLabel>Start time</FormLabel>
                   <Popover open={timePicker} onOpenChange={setTimePicker}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "mt-1.5 w-full justify-start px-3 text-left font-medium active:scale-100",
-                          !field.value && "text-muted-foreground",
-                        )}
-                      >
-                        <Icons.clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                        {field.value ? field.value : <span>Pick a time</span>}
-                      </Button>
+                    <PopoverTrigger
+                      render={
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "mt-1.5 w-full justify-start px-3 text-left font-medium active:scale-100",
+                            !field.value && "text-muted-foreground",
+                          )}
+                        />
+                      }
+                    >
+                      <Icons.clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                      {field.value ? field.value : <span>Pick a time</span>}
                     </PopoverTrigger>
                     <PopoverContent className="w-auto px-4 py-3" align="start">
                       <div className="flex flex-col gap-2">

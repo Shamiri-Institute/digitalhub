@@ -6,7 +6,7 @@ import { type CaseToReview, markClinicalCaseReviewed } from "#/app/(platform)/sc
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
-import { toastOnFailure, useToast } from "#/components/ui/use-toast";
+import { toastOnFailure, toast } from "#/components/ui/use-toast";
 import { DISPLAY_DATE_TIME } from "#/lib/date-utils";
 
 export function CasesToReview({ reviews }: { reviews: CaseToReview[] }) {
@@ -25,7 +25,6 @@ export function CasesToReview({ reviews }: { reviews: CaseToReview[] }) {
 }
 
 function CaseReviewCard({ review }: { review: CaseToReview }) {
-  const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const { termination, reopening } = review;
   const reviewedChange = termination

@@ -84,10 +84,10 @@ function ArchiveGroupConfirm({
       <Separator />
       <div className="space-y-5">
         <DialogFooter className="flex justify-end">
-          <DialogClose asChild>
-            <Button className="text-shamiri-light-red" type="button" variant="ghost">
-              Cancel
-            </Button>
+          <DialogClose
+            render={<Button className="text-shamiri-light-red" type="button" variant="ghost" />}
+          >
+            Cancel
           </DialogClose>
           <Button
             type="submit"

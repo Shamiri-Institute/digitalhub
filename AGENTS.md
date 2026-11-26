@@ -17,7 +17,7 @@ and the tests that cover the change pass. `pnpm install` sets up a pre-push hook
 
 ## UI
 
-- Build from `components/ui` (shadcn on Radix, variants through `cva`) and `components/common` (feature components, `data-table.tsx`). Extend an existing component through props or composition before writing a new one.
+- Build from `components/ui` (shadcn on Base UI, variants through `cva`; compose a part with another component through its `render` prop) and `components/common` (feature components, `data-table.tsx`). Extend an existing component through props or composition before writing a new one.
 - Style with Tailwind classes merged through `cn()`. The design tokens (`shamiri-new-blue`, `red-bg`, `blue-border`, ...) are the `@theme` colors in `app/globals.css`; use them in place of the default palette (`bg-red-500`) or arbitrary values. No inline `style`, no new CSS files.
 - Forms use React Hook Form with Zod.
 
@@ -30,7 +30,7 @@ oxlint's `hooks-policy/justify` rule (`lint/hooks-policy.mjs`) fails any `useEff
 - Data comes from a Server Component or a server action.
 - An effect is for a real external subscription only: a DOM listener, a timer, a third-party widget.
 - Memoize only for a measured or obvious hot path, and say why in the PR. A lint rule whose only fix is memoization is not enforced.
-- A dialog's form lives in a component inside `DialogContent`, so Radix unmounts it on close and each open starts from the row's values.
+- A dialog's form lives in a component inside `DialogContent`, so Base UI unmounts it on close and each open starts from the row's values.
 - A multi-step dialog (form, then confirm) keeps its steps as state in one `Dialog`. Example: `components/common/fellow/fellow-dropout-form.tsx`.
 - Clear a dependent field (sub-county, absence reason) in the parent field's `onValueChange`. `hooks-policy/no-form-reset-in-effect` fails on `reset` or `setValue` (`form.reset`, or destructured from `useForm`) in an effect.
 

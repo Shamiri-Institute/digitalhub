@@ -371,11 +371,11 @@ function DataTableContent<TData, TValue>({
           {renderTableActions}
           {editColumns && (
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex gap-1 bg-white">
-                  <Icons.settings className="h-4 w-4 text-shamiri-text-grey" />
-                  <span>Edit columns</span>
-                </Button>
+              <DropdownMenuTrigger
+                render={<Button variant="outline" className="flex gap-1 bg-white" />}
+              >
+                <Icons.settings className="h-4 w-4 text-shamiri-text-grey" />
+                <span>Edit columns</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align={"end"}>
                 {table
@@ -386,9 +386,6 @@ function DataTableContent<TData, TValue>({
                       key={col.id}
                       checked={col.getIsVisible()}
                       onCheckedChange={(val) => col.toggleVisibility(!!val)}
-                      onSelect={(e) => {
-                        e.preventDefault();
-                      }}
                     >
                       {typeof col.columnDef.header === "string" ? col.columnDef.header : col.id}
                     </DropdownMenuCheckboxItem>

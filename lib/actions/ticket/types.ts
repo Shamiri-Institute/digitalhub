@@ -178,8 +178,20 @@ export interface TicketEvent {
   assignee: TicketPerson | null;
   fromValue: string | null;
   toValue: string | null;
+  /** A comment's text; null once the comment is hidden. */
   reason: string | null;
   createdAt: Date;
+  archivedAt: Date | null;
+  archivedBy: TicketPerson | null;
+  /** A comment's files; empty once the comment is hidden. */
+  attachments: TicketAttachment[];
+}
+
+export interface TicketAttachment {
+  id: string;
+  fileName: string;
+  contentType: string;
+  byteSize: number;
 }
 
 /** What the viewer may do to a ticket, so the page never offers an action that would be refused. */
@@ -191,6 +203,7 @@ export interface TicketActions {
   canResolve: boolean;
   canReopen: boolean;
   canCancel: boolean;
+  canComment: boolean;
 }
 
 export interface TicketDetails {
@@ -207,20 +220,38 @@ export interface TicketDetails {
   actions: TicketActions;
   /** When the creator's chance to reopen a resolved ticket ends, or null when it has none. */
   reopenableUntil: Date | null;
+  /** The hub the creator raised it from; null for an admin, who works across hubs. */
+  creatorHub: string | null;
 }
 
 export type UserRoleNameMap = Map<
   string,
-  { role: ImplementerRole; name: string | null; team: AdminTeam | null } | null
+  { role: ImplementerRole; name: string | null; team: AdminTeam | null; hub: string | null } | null
 >;
 
-export const ROLE_NAME_CONFIG: { role: ImplementerRole; table: string; column: string }[] = [
-  { role: "FELLOW", table: "fellows", column: "fellow_name" },
-  { role: "SUPERVISOR", table: "supervisors", column: "supervisor_name" },
-  { role: "HUB_COORDINATOR", table: "hub_coordinators", column: "coordinator_name" },
-  { role: "CLINICAL_LEAD", table: "clinical_leads", column: "clinical_lead_name" },
-  { role: "CLINICAL_TEAM", table: "clinical_teams", column: "name" },
-  { role: "ADMIN", table: "admin_users", column: "name" },
+// `hubColumn` is the membership's hub; admins work across hubs, so have none.
+export const ROLE_NAME_CONFIG: {
+  role: ImplementerRole;
+  table: string;
+  column: string;
+  hubColumn: string | null;
+}[] = [
+  { role: "FELLOW", table: "fellows", column: "fellow_name", hubColumn: "hub_id" },
+  { role: "SUPERVISOR", table: "supervisors", column: "supervisor_name", hubColumn: "hub_id" },
+  {
+    role: "HUB_COORDINATOR",
+    table: "hub_coordinators",
+    column: "coordinator_name",
+    hubColumn: "assigned_hub_id",
+  },
+  {
+    role: "CLINICAL_LEAD",
+    table: "clinical_leads",
+    column: "clinical_lead_name",
+    hubColumn: "assigned_hub_id",
+  },
+  { role: "CLINICAL_TEAM", table: "clinical_teams", column: "name", hubColumn: "assigned_hub_id" },
+  { role: "ADMIN", table: "admin_users", column: "name", hubColumn: null },
 ];
 
 export const REASSIGNMENT_REASON_MAX_LENGTH = 1000;

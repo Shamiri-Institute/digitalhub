@@ -346,22 +346,20 @@ function ProfileForm({ onOpenChange, profile }: Omit<ProfileDialogProps, "isOpen
                       Date of birth <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "mt-1.5 w-full justify-start px-3 text-left font-medium",
-                            !field.value && "text-muted-foreground",
-                          )}
-                          disabled={isFellow}
-                        >
-                          <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                          {field.value ? (
-                            format(field.value, DISPLAY_DATE)
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                        </Button>
+                      <PopoverTrigger
+                        render={
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "mt-1.5 w-full justify-start px-3 text-left font-medium",
+                              !field.value && "text-muted-foreground",
+                            )}
+                            disabled={isFellow}
+                          />
+                        }
+                      >
+                        <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                        {field.value ? format(field.value, DISPLAY_DATE) : <span>Pick a date</span>}
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
                         <Calendar

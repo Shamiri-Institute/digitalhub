@@ -526,11 +526,7 @@ function UploadRecordingForm({
           )}
 
           <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="ghost">
-                Cancel
-              </Button>
-            </DialogClose>
+            <DialogClose render={<Button type="button" variant="ghost" />}>Cancel</DialogClose>
             <Button
               type="submit"
               variant="brand"

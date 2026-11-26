@@ -1,5 +1,5 @@
 {
-  "id": "48679836-5ab0-4a79-96e8-6f2d10efd64a",
+  "id": "aeb7ea17-1bf3-4e3c-89e7-43c9af4834dd",
   "prevId": "87684b68-afc5-4be5-af26-9c9be27cccb7",
   "version": "7",
   "dialect": "postgresql",
@@ -7094,13 +7094,6 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
-        },
-        "marked_at": {
-          "name": "marked_at",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "(now() at time zone 'utc')"
         }
       },
       "indexes": {
@@ -11539,6 +11532,163 @@
       },
       "isRLSEnabled": false
     },
+    "public.ticket_attachments": {
+      "name": "ticket_attachments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "ticket_id": {
+          "name": "ticket_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "uploaded_by": {
+          "name": "uploaded_by",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "s3_key": {
+          "name": "s3_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "file_name": {
+          "name": "file_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content_type": {
+          "name": "content_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "byte_size": {
+          "name": "byte_size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {
+        "ticket_attachments_s3_key_key": {
+          "name": "ticket_attachments_s3_key_key",
+          "columns": [
+            {
+              "expression": "s3_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ticket_attachments_ticket_id_idx": {
+          "name": "ticket_attachments_ticket_id_idx",
+          "columns": [
+            {
+              "expression": "ticket_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ticket_attachments_event_id_idx": {
+          "name": "ticket_attachments_event_id_idx",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ticket_attachments_uploaded_by_idx": {
+          "name": "ticket_attachments_uploaded_by_idx",
+          "columns": [
+            {
+              "expression": "uploaded_by",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "ticket_attachments_ticket_id_fkey": {
+          "name": "ticket_attachments_ticket_id_fkey",
+          "tableFrom": "ticket_attachments",
+          "tableTo": "tickets",
+          "columnsFrom": ["ticket_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "ticket_attachments_event_id_fkey": {
+          "name": "ticket_attachments_event_id_fkey",
+          "tableFrom": "ticket_attachments",
+          "tableTo": "ticket_events",
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "ticket_attachments_uploaded_by_fkey": {
+          "name": "ticket_attachments_uploaded_by_fkey",
+          "tableFrom": "ticket_attachments",
+          "tableTo": "users",
+          "columnsFrom": ["uploaded_by"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.ticket_events": {
       "name": "ticket_events",
       "schema": "",
@@ -11589,6 +11739,18 @@
         "reason": {
           "name": "reason",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "archived_by": {
+          "name": "archived_by",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false
         },
@@ -11651,6 +11813,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "ticket_events_archived_by_idx": {
+          "name": "ticket_events_archived_by_idx",
+          "columns": [
+            {
+              "expression": "archived_by",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -11680,19 +11857,32 @@
           "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
+        },
+        "ticket_events_archived_by_fkey": {
+          "name": "ticket_events_archived_by_fkey",
+          "tableFrom": "ticket_events",
+          "tableTo": "users",
+          "columnsFrom": ["archived_by"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
+        "ticket_events_archived_check": {
+          "name": "ticket_events_archived_check",
+          "value": "(\"ticket_events\".\"archived_at\" is null) = (\"ticket_events\".\"archived_by\" is null) and (\"ticket_events\".\"archived_at\" is null or \"ticket_events\".\"kind\"::text = 'COMMENTED')"
+        },
         "ticket_events_assignee_check": {
           "name": "ticket_events_assignee_check",
           "value": "\"ticket_events\".\"kind\"::text = 'REOPENED' or (\"ticket_events\".\"kind\"::text in ('CREATED', 'ESCALATED', 'REASSIGNED')) = (\"ticket_events\".\"assignee_id\" is not null)"
         },
         "ticket_events_reason_check": {
           "name": "ticket_events_reason_check",
-          "value": "\"ticket_events\".\"kind\"::text in ('CREATED', 'STARTED', 'CLOSED') or \"ticket_events\".\"reason\" is not null"
+          "value": "\"ticket_events\".\"kind\"::text in ('CREATED', 'STARTED', 'CLOSED', 'COMMENTED') or \"ticket_events\".\"reason\" is not null"
         },
         "ticket_events_actor_check": {
           "name": "ticket_events_actor_check",
@@ -13344,7 +13534,8 @@
         "PRIORITY_CHANGED",
         "REOPENED",
         "CANCELLED",
-        "CLOSED"
+        "CLOSED",
+        "COMMENTED"
       ]
     },
     "public.ticket_priority_level": {

@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { toastOnError, useToast } from "#/components/ui/use-toast";
+import { toastOnError, toast } from "#/components/ui/use-toast";
 
 interface TriggerConfirmPayoutProps {
   dateAdded: Date;
@@ -21,7 +21,6 @@ interface TriggerConfirmPayoutProps {
 export default function TriggerConfirmPayout({ dateAdded, disabled }: TriggerConfirmPayoutProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
 
   const handleConfirm = async () => {
     try {
@@ -45,10 +44,8 @@ export default function TriggerConfirmPayout({ dateAdded, disabled }: TriggerCon
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" disabled={disabled}>
-          {disabled ? "Confirmed" : "Confirm Payout"}
-        </Button>
+      <DialogTrigger render={<Button variant="outline" disabled={disabled} />}>
+        {disabled ? "Confirmed" : "Confirm Payout"}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

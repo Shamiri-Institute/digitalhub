@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { useDialogSave } from "#/components/ui/dialog";
 import { Skeleton } from "#/components/ui/skeleton";
-import { useToast } from "#/components/ui/use-toast";
+import { toast } from "#/components/ui/use-toast";
 import { deleteAttendanceFile, getAttendanceDocument } from "#/lib/actions/file/student-attendance";
 import { NO_ATTENDANCE_DOCUMENT_MESSAGE } from "#/lib/actions/file/student-attendance/types";
 import PdfViewerModal from "#/lib/utils/pdf/pdf-viewer-modal";
@@ -23,7 +23,6 @@ export default function ViewAttendanceDocument({
   role: ImplementerRole;
   onDeleteSuccess?: () => void;
 }) {
-  const { toast } = useToast();
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const { isSaving: isDeleting, save } = useDialogSave();
   const documentKey = `${sessionId}:${groupId}`;
