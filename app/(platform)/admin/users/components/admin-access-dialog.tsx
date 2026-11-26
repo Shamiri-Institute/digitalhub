@@ -160,7 +160,7 @@ function AdminAccessForm({ admin, onDone }: { admin?: ImplementerAdmin; onDone: 
                   <Checkbox
                     checked={field.value}
                     onCheckedChange={(checked) => field.onChange(checked === true)}
-                    className="h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+                    className="h-5 w-5 border-shamiri-light-grey bg-white data-checked:bg-shamiri-new-blue"
                   />
                 </FormControl>
                 <FormLabel className="font-medium">Is super admin?</FormLabel>

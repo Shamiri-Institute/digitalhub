@@ -634,11 +634,7 @@ function ReportFormBody({
     >
       {children}
       <DialogFooter className="flex items-center justify-end gap-2 border-t px-6 py-4">
-        <DialogClose asChild>
-          <Button type="button" variant="ghost">
-            Cancel
-          </Button>
-        </DialogClose>
+        <DialogClose render={<Button type="button" variant="ghost" />}>Cancel</DialogClose>
         <Button
           type="submit"
           variant="brand"

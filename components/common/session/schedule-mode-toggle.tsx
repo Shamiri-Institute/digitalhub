@@ -13,11 +13,8 @@ export function ScheduleModeToggle({
 }) {
   return (
     <ToggleGroup
-      type="single"
       value={mode}
-      onValueChange={(nextMode) => {
-        if (nextMode) onModeChange(nextMode as Mode);
-      }}
+      onValueChange={(nextMode) => onModeChange(nextMode as Mode)}
       className="gap-0 divide-x divide-grey-border overflow-hidden rounded-lg border border-border py-0 shadow-xs"
     >
       <ToggleGroupItem

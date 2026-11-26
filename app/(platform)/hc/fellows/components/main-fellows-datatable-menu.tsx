@@ -35,25 +35,25 @@ export default function MainFellowsDatatableMenu({
         <DropdownMenuSeparator />
         {role === ImplementerRole.ADMIN ? (
           <>
-            <DropdownMenuItem onSelect={() => openEditDialog(fellow)}>
+            <DropdownMenuItem onClick={() => openEditDialog(fellow)}>
               View fellow information
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => openWeeklyEvaluationDialog(fellow)}>
+            <DropdownMenuItem onClick={() => openWeeklyEvaluationDialog(fellow)}>
               View weekly fellow evaluation
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => openDialog("complaints", fellow)} disabled={true}>
+            <DropdownMenuItem onClick={() => openDialog("complaints", fellow)} disabled={true}>
               View complaints
             </DropdownMenuItem>
           </>
         ) : (
           <>
-            <DropdownMenuItem onSelect={() => openEditDialog(fellow)}>
+            <DropdownMenuItem onClick={() => openEditDialog(fellow)}>
               Edit fellow information
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => openDialog("complaints", fellow)}>
+            <DropdownMenuItem onClick={() => openDialog("complaints", fellow)}>
               Submit complaint
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => openWeeklyEvaluationDialog(fellow)}>
+            <DropdownMenuItem onClick={() => openWeeklyEvaluationDialog(fellow)}>
               View weekly fellow evaluation
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => openDialog("dropout", fellow)}>

@@ -179,7 +179,7 @@ function MarkSessionOccurrenceSteps({
                       aria-label="Attended"
                       value="attended"
                       id="mark_attended"
-                      className="custom-radio border-grey-border data-[state=checked]:border-shamiri-green"
+                      className="custom-radio border-grey-border data-checked:border-shamiri-green"
                     />
                   </div>
                   <div className="relative">
@@ -188,7 +188,7 @@ function MarkSessionOccurrenceSteps({
                       aria-label="Unmarked"
                       value="unmarked"
                       id="Unmarked_"
-                      className="custom-radio border-grey-border  data-[state=checked]:border-shamiri-new-blue"
+                      className="custom-radio border-grey-border  data-checked:border-shamiri-new-blue"
                     />
                   </div>
                 </RadioGroup>

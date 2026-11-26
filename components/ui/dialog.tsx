@@ -1,18 +1,12 @@
 "use client";
 
-import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { X } from "lucide-react";
 import type * as React from "react";
 import { createContext, use, useRef, useTransition } from "react";
 
 import { toastOnFailure } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
-
-const Dialog = DialogPrimitive.Root;
-
-const DialogTrigger = DialogPrimitive.Trigger;
-
-const DialogPortal = DialogPrimitive.Portal;
 
 type DialogSave = {
   isSaving: boolean;
@@ -22,19 +16,44 @@ type DialogSave = {
 const DialogSaveContext = createContext<DialogSave | null>(null);
 
 /**
- * The save of a form inside `DialogContent`. `save` runs the work in a transition and toasts a
- * failure. Until the work settles the dialog cannot be closed: Escape, a click outside, the close
- * button and `DialogClose` all do nothing, because closing would hide the outcome of a write that
- * still lands, and reopening could send it again. The work closes the dialog itself once it
- * succeeds.
+ * Until the work passed to `useDialogSave().save` settles the dialog cannot be closed: Escape, a
+ * click outside, the close button and `DialogClose` all do nothing, because closing would hide the
+ * outcome of a write that still lands, and reopening could send it again. The work closes the
+ * dialog itself once it succeeds.
+ */
+function Dialog({ onOpenChange, ...props }: DialogPrimitive.Root.Props) {
+  const [isSaving, startSaving] = useTransition();
+  const save = (work: () => Promise<unknown>) => startSaving(() => toastOnFailure(work));
+  return (
+    <DialogSaveContext value={{ isSaving, save }}>
+      <DialogPrimitive.Root
+        onOpenChange={(open, eventDetails) => {
+          if (isSaving && !open) {
+            eventDetails.cancel();
+            return;
+          }
+          onOpenChange?.(open, eventDetails);
+        }}
+        {...props}
+      />
+    </DialogSaveContext>
+  );
+}
+
+const DialogTrigger = DialogPrimitive.Trigger;
+
+const DialogPortal = DialogPrimitive.Portal;
+
+/**
+ * The save of a form inside `Dialog`. `save` runs the work in a transition and toasts a failure.
  */
 function useDialogSave() {
   const dialogSave = use(DialogSaveContext);
-  if (!dialogSave) throw new Error("useDialogSave is only available inside DialogContent");
+  if (!dialogSave) throw new Error("useDialogSave is only available inside Dialog");
   return dialogSave;
 }
 
-function DialogClose({ disabled, ...props }: React.ComponentProps<typeof DialogPrimitive.Close>) {
+function DialogClose({ disabled, ...props }: DialogPrimitive.Close.Props) {
   const isSaving = use(DialogSaveContext)?.isSaving ?? false;
   return <DialogPrimitive.Close disabled={disabled || isSaving} {...props} />;
 }
@@ -42,12 +61,12 @@ function DialogClose({ disabled, ...props }: React.ComponentProps<typeof DialogP
 function DialogOverlay({
   className,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+}: Omit<DialogPrimitive.Backdrop.Props, "className"> & { className?: string }) {
   return (
-    <DialogPrimitive.Overlay
+    <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/50 py-4 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+        "fixed inset-0 z-50 bg-black/50 data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0",
         className,
       )}
       {...props}
@@ -58,62 +77,44 @@ function DialogOverlay({
 function DialogContent({
   className,
   children,
-  onOpenAutoFocus,
-  onCloseAutoFocus,
-  onEscapeKeyDown,
-  onInteractOutside,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content>) {
+}: Omit<DialogPrimitive.Popup.Props, "className" | "initialFocus" | "finalFocus"> & {
+  className?: string;
+}) {
   const openerRef = useRef<HTMLElement | null>(null);
-  const [isSaving, startSaving] = useTransition();
-  const save = (work: () => Promise<unknown>) => startSaving(() => toastOnFailure(work));
+  const isSaving = use(DialogSaveContext)?.isSaving ?? false;
   return (
     <DialogPortal>
-      <DialogOverlay>
-        <DialogPrimitive.Content
+      <DialogOverlay />
+      <DialogPrimitive.Viewport className="fixed inset-0 z-50 grid place-items-center overflow-y-auto py-4">
+        <DialogPrimitive.Popup
           data-slot="dialog-content"
           className={cn(
-            "relative z-50 grid w-full max-w-lg gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:motion-safe:zoom-out-95 data-[state=open]:motion-safe:zoom-in-95 sm:rounded-lg",
+            "relative z-50 grid w-full max-w-lg gap-4 border bg-background p-6 shadow-lg duration-200 outline-none data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:motion-safe:zoom-out-95 data-open:motion-safe:zoom-in-95 sm:rounded-lg",
             className,
           )}
-          onOpenAutoFocus={(event) => {
+          initialFocus={() => {
             // A menu item that opens a dialog is gone once the menu closes; use the menu's button.
             const focused = document.activeElement;
             const menuButtonId = focused?.closest("[role=menu]")?.getAttribute("aria-labelledby");
             const opener = menuButtonId ? document.getElementById(menuButtonId) : focused;
             openerRef.current = opener instanceof HTMLElement ? opener : null;
-            onOpenAutoFocus?.(event);
+            return true;
           }}
-          onCloseAutoFocus={(event) => {
-            onCloseAutoFocus?.(event);
-            if (event.defaultPrevented) return;
-            const opener = openerRef.current;
-            // Radix's own handler runs next and focuses the DialogTrigger. A dialog opened from state
-            // has none, so focus falls to body.
-            queueMicrotask(() => {
-              if (document.activeElement === document.body) opener?.focus();
-            });
-          }}
-          onEscapeKeyDown={(event) => {
-            if (isSaving) event.preventDefault();
-            onEscapeKeyDown?.(event);
-          }}
-          onInteractOutside={(event) => {
-            if (isSaving) event.preventDefault();
-            onInteractOutside?.(event);
-          }}
+          // A dialog opened from state has no trigger to return focus to.
+          finalFocus={() => (openerRef.current?.isConnected ? openerRef.current : true)}
           {...props}
         >
-          <DialogSaveContext value={{ isSaving, save }}>{children}</DialogSaveContext>
+          {children}
           <DialogPrimitive.Close
             disabled={isSaving}
-            className="absolute right-2 top-2 rounded-sm p-2 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-30 data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+            className="absolute right-2 top-2 rounded-sm p-2 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-30"
           >
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
-        </DialogPrimitive.Content>
-      </DialogOverlay>
+        </DialogPrimitive.Popup>
+      </DialogPrimitive.Viewport>
     </DialogPortal>
   );
 }
@@ -128,7 +129,10 @@ const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 );
 DialogFooter.displayName = "DialogFooter";
 
-function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
+function DialogTitle({
+  className,
+  ...props
+}: Omit<DialogPrimitive.Title.Props, "className"> & { className?: string }) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
@@ -141,7 +145,7 @@ function DialogTitle({ className, ...props }: React.ComponentProps<typeof Dialog
 function DialogDescription({
   className,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Description>) {
+}: Omit<DialogPrimitive.Description.Props, "className"> & { className?: string }) {
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"

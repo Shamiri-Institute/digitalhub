@@ -15,7 +15,7 @@ test("R-SURV-UPLOAD: a Research admin uploads a scan for a hub they choose, and 
   undo(() => removeScanUploads([scan.sha256]));
 
   await page.goto(getUrl("/admin/surveys"));
-  await page.getByRole("radio", { name: "Select Scans" }).click();
+  await page.getByRole("button", { name: "Select Scans" }).click();
   await expect(page.getByText("Choose a hub to upload its scans")).toBeVisible();
   await expect(page.getByLabel("Scanned files")).toBeDisabled();
 

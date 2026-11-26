@@ -433,7 +433,7 @@ function StudentDetailsFormContent({
                   <RadioGroupItem
                     value={index.toString()}
                     id={student.id}
-                    className="h-5 w-5 rounded border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue data-[state=checked]:text-white"
+                    className="h-5 w-5 rounded border-shamiri-light-grey bg-white data-checked:bg-shamiri-new-blue data-checked:text-white"
                   />
                   <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
                     <span className="capitalize">{student.studentName?.toLowerCase()}</span>
@@ -463,7 +463,7 @@ function StudentDetailsFormContent({
               <RadioGroupItem
                 value={"-1"}
                 id="none"
-                className="h-5 w-5 rounded border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue data-[state=checked]:text-white"
+                className="h-5 w-5 rounded border-shamiri-light-grey bg-white data-checked:bg-shamiri-new-blue data-checked:text-white"
               />
               <span>None of the above</span>
             </label>

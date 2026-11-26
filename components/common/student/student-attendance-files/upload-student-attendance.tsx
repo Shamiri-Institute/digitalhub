@@ -5,7 +5,7 @@ import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { DialogClose, DialogFooter, useDialogSave } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
-import { useToast } from "#/components/ui/use-toast";
+import { toast } from "#/components/ui/use-toast";
 import {
   createAttendanceDocument,
   getAttendanceDocument,
@@ -26,7 +26,6 @@ export default function UploadStudentAttendanceDocument({
   const [photos, setPhotos] = useState<{ file: File; previewUrl: string }[]>([]);
   const createdPreviewUrls = useRef<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const { toast } = useToast();
   const { uploadToS3 } = useS3Upload();
   const { isSaving: uploading, save } = useDialogSave();
 
@@ -237,10 +236,8 @@ export default function UploadStudentAttendanceDocument({
 
       <Separator />
       <DialogFooter className="flex justify-end">
-        <DialogClose asChild>
-          <Button className="text-shamiri-new-blue" variant="ghost">
-            Cancel
-          </Button>
+        <DialogClose render={<Button className="text-shamiri-new-blue" variant="ghost" />}>
+          Cancel
         </DialogClose>
         <Button
           type="button"

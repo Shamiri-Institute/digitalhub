@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getCurrentUserSession } from "#/app/auth";
-import { buttonVariants } from "#/components/ui/button";
+import { buttonVariants } from "#/components/ui/button-variants";
 import { roleHome } from "#/lib/auth/role-home";
 
 export default async function PlatformNotFound() {

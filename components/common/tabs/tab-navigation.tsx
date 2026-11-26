@@ -32,16 +32,11 @@ export default function TabToggleNavigation({
   return (
     <div className={cn("container flex", className)}>
       <ToggleGroup
-        type="single"
         className="form-toggle"
         defaultValue={currentTab?.name ?? ""}
         onValueChange={(value) => {
-          if (value) {
-            const tab = options.find((tab) => tab.name === value);
-            if (tab) {
-              router.push(tab.href);
-            }
-          }
+          const tab = options.find((tab) => tab.name === value);
+          if (tab) router.push(tab.href);
         }}
       >
         {options.map((option) => {

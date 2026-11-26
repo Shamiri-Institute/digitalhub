@@ -1,6 +1,5 @@
 "use client";
 
-import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import parsePhoneNumberFromString, { isValidPhoneNumber } from "libphonenumber-js";
 import { useForm } from "react-hook-form";
@@ -27,7 +26,7 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import { Popover, PopoverContent } from "#/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -251,22 +250,20 @@ function SupervisorDetailsFormForm({
                   <FormItem required={!isViewMode}>
                     <FormLabel>Date of birth</FormLabel>
                     <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          disabled={isViewMode}
-                          className={cn(
-                            "mt-1.5 w-full justify-start px-3 text-left font-medium",
-                            !field.value && "text-muted-foreground",
-                          )}
-                        >
-                          <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                          {field.value ? (
-                            format(field.value, DISPLAY_DATE)
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                        </Button>
+                      <PopoverTrigger
+                        render={
+                          <Button
+                            variant={"outline"}
+                            disabled={isViewMode}
+                            className={cn(
+                              "mt-1.5 w-full justify-start px-3 text-left font-medium",
+                              !field.value && "text-muted-foreground",
+                            )}
+                          />
+                        }
+                      >
+                        <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                        {field.value ? format(field.value, DISPLAY_DATE) : <span>Pick a date</span>}
                       </PopoverTrigger>
                       {!isViewMode && (
                         <PopoverContent className="w-auto p-0">

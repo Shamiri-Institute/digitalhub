@@ -40,20 +40,17 @@ export default function VersionMenu({ surveyId, surveyCode, version, hasDraft }:
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          aria-label={`Actions for v${version.versionNumber}`}
-          className="absolute inset-0 flex items-center justify-center border-l focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-shamiri-new-blue"
-        >
-          <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
-        </button>
+      <DropdownMenuTrigger
+        aria-label={`Actions for v${version.versionNumber}`}
+        className="absolute inset-0 flex items-center justify-center border-l focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-shamiri-new-blue"
+      >
+        <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem asChild>
-          <Link href={`/admin/surveys/${surveyId}/versions/${version.versionNumber}`}>
-            {isDraft ? "Edit form" : "View form"}
-          </Link>
+        <DropdownMenuItem
+          render={<Link href={`/admin/surveys/${surveyId}/versions/${version.versionNumber}`} />}
+        >
+          {isDraft ? "Edit form" : "View form"}
         </DropdownMenuItem>
         {!isDraft && (
           <DropdownMenuItem disabled={hasDraft} onClick={handleCreateDraft}>

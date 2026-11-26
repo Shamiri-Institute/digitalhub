@@ -48,11 +48,11 @@ export default function CreateGroup(props: CreateGroupProps) {
   const [open, setOpen] = React.useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="brand" className="flex gap-1" disabled={props.disabled}>
-          <Icons.plusCircle className="h-4 w-4" />
-          <span>New group</span>
-        </Button>
+      <DialogTrigger
+        render={<Button variant="brand" className="flex gap-1" disabled={props.disabled} />}
+      >
+        <Icons.plusCircle className="h-4 w-4" />
+        <span>New group</span>
       </DialogTrigger>
       <DialogContent className="w-2/5 max-w-none">
         <CreateGroupForm {...props} close={() => setOpen(false)} />

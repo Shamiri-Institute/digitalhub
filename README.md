@@ -24,7 +24,7 @@ The Shamiri Digital Hub is a comprehensive digital platform designed to manage y
 - **Language**: TypeScript
 - **Database**: PostgreSQL
 - **Authentication**: NextAuth.js with Google OAuth
-- **UI Components**: Radix UI + TailwindCSS
+- **UI Components**: Base UI + TailwindCSS
 
 ## Open Science & Licensing
 

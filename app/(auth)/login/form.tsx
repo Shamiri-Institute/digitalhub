@@ -6,7 +6,7 @@ import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
-import { toastOnError, useToast } from "#/components/ui/use-toast";
+import { toastOnError, toast } from "#/components/ui/use-toast";
 import { isCredentialAuthAllowedClient } from "#/lib/auth/client-credential-auth";
 import { devLogin } from "#/lib/auth/dev-login";
 import { authClient } from "#/lib/auth-client";
@@ -24,7 +24,6 @@ export function LoginForm() {
   const [isCredentialLogin, setIsCredentialLogin] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { toast } = useToast();
 
   const showCredentialAuth = isCredentialAuthAllowedClient();
 
@@ -37,7 +36,7 @@ export function LoginForm() {
         (error === "signup_disabled" ? "No account exists for this Google email" : error);
       toast({ title: errorMessage, variant: "destructive" });
     }
-  }, [searchParams, toast]);
+  }, [searchParams]);
 
   const handleCredentialSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();

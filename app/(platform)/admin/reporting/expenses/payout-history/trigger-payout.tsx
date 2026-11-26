@@ -11,12 +11,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { toastOnError, useToast } from "#/components/ui/use-toast";
+import { toastOnError, toast } from "#/components/ui/use-toast";
 
 export default function TriggerPayout() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
 
   const handleConfirm = async () => {
     try {
@@ -41,9 +40,7 @@ export default function TriggerPayout() {
   return (
     <div className="container flex w-full grow justify-end space-y-3">
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button>Manually Trigger Payout</Button>
-        </DialogTrigger>
+        <DialogTrigger render={<Button />}>Manually Trigger Payout</DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Confirm Payout Trigger</DialogTitle>

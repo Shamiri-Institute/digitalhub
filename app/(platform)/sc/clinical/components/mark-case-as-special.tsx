@@ -17,7 +17,7 @@ import { Form, FormField } from "#/components/ui/form";
 import { Label } from "#/components/ui/label";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { toastOnError, useToast } from "#/components/ui/use-toast";
+import { toastOnError, toast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 
@@ -32,13 +32,13 @@ export default function MarkCaseAsSpecial({
 }: {
   caseId: string;
   reason: string | null;
-  children: React.ReactNode;
+  children: React.ReactElement;
 }) {
   const [dialogOpen, setDialogOpen] = React.useState(false);
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} nativeButton={false} />
       <DialogContent className="gap-0 p-0">
         <FlagCaseForm caseId={caseId} reason={reason} close={() => setDialogOpen(false)} />
       </DialogContent>
@@ -55,7 +55,6 @@ function FlagCaseForm({
   reason: string | null;
   close: () => void;
 }) {
-  const { toast } = useToast();
   const { isSaving, save } = useDialogSave();
 
   const form = useForm<z.infer<typeof FormSchema>>({

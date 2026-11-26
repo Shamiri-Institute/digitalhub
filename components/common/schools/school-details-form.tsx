@@ -402,26 +402,28 @@ function SchoolDetailsFormContent({ school, setOpen }: SchoolDetailsFormProps) {
                     <FormItem required className="col-span-3">
                       <FormLabel>Pre-session date</FormLabel>
                       <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "mt-1.5 w-full justify-start px-3 text-left font-medium",
-                                !field.value && "text-muted-foreground",
-                              )}
-                              // ARIA does not allow aria-required on a button.
-                              aria-required={undefined}
-                            >
-                              <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                              {field.value ? (
-                                format(field.value, DISPLAY_DATE)
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
+                        <FormControl>
+                          <PopoverTrigger
+                            render={
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "mt-1.5 w-full justify-start px-3 text-left font-medium",
+                                  !field.value && "text-muted-foreground",
+                                )}
+                                // ARIA does not allow aria-required on a button.
+                                aria-required={undefined}
+                              />
+                            }
+                          >
+                            <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                            {field.value ? (
+                              format(field.value, DISPLAY_DATE)
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                          </PopoverTrigger>
+                        </FormControl>
                         <PopoverContent className="w-auto p-0">
                           <Calendar
                             mode="single"

@@ -81,11 +81,7 @@ function UnarchiveGroupConfirm({
       <Separator />
       <div className="space-y-6 pt-2">
         <DialogFooter className="flex justify-end">
-          <DialogClose asChild>
-            <Button type="button" variant="ghost">
-              Cancel
-            </Button>
-          </DialogClose>
+          <DialogClose render={<Button type="button" variant="ghost" />}>Cancel</DialogClose>
           <Button
             type="button"
             variant="brand"

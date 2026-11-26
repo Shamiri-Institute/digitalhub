@@ -1,6 +1,5 @@
 "use client";
 
-import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { Plus } from "lucide-react";
@@ -28,7 +27,7 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import { Popover, PopoverContent } from "#/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -49,11 +48,9 @@ export default function AddNewSupervisor() {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="brand" className="flex gap-2">
-          <Plus className="h-4 w-4" />
-          Add supervisor
-        </Button>
+      <DialogTrigger render={<Button variant="brand" className="flex gap-2" />}>
+        <Plus className="h-4 w-4" />
+        Add supervisor
       </DialogTrigger>
       <DialogContent className="w-2/5 max-w-none">
         <AddNewSupervisorForm close={() => setIsOpen(false)} />
@@ -208,21 +205,19 @@ function AddNewSupervisorForm({ close }: { close: () => void }) {
                   <FormItem required>
                     <FormLabel>Date of birth</FormLabel>
                     <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "mt-1.5 w-full justify-start px-3 text-left font-medium",
-                            !field.value && "text-muted-foreground",
-                          )}
-                        >
-                          <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                          {field.value ? (
-                            format(field.value, DISPLAY_DATE)
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                        </Button>
+                      <PopoverTrigger
+                        render={
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "mt-1.5 w-full justify-start px-3 text-left font-medium",
+                              !field.value && "text-muted-foreground",
+                            )}
+                          />
+                        }
+                      >
+                        <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                        {field.value ? format(field.value, DISPLAY_DATE) : <span>Pick a date</span>}
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
                         <Calendar
