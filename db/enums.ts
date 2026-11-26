@@ -370,6 +370,15 @@ export const SCAN_REJECTIONS_NAMING_A_PAGE = [
 ] as const satisfies readonly SurveyScanRejection[];
 export type ScanRejectionNamingAPage = (typeof SCAN_REJECTIONS_NAMING_A_PAGE)[number];
 
+export const SURVEY_SCAN_REJECTION_LABELS: Record<SurveyScanRejection, string> = {
+  UNREADABLE: "unreadable",
+  UNKNOWN_CODE: "unknown code",
+  CODES_DISAGREE: "codes disagree",
+  VOID_COPY: "void copy",
+  OTHER_HUB: "another hub's copy",
+  VERIFIED_COPY: "verified copy",
+};
+
 export const SurveyAnswerReadStatus = {
   OK: "OK",
   UNCERTAIN: "UNCERTAIN",

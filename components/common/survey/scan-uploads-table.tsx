@@ -23,7 +23,11 @@ import { formatDateTimeIn } from "#/lib/date-utils";
 import { useRefreshWhile } from "#/lib/hooks/use-refresh-while";
 import type { SurveyViewer } from "#/lib/auth/survey-access";
 import type { ScanUploads } from "#/lib/survey/scan-upload-queries";
-import { isUploadUnfinished, mayRunAgain } from "#/lib/survey/scan-upload-status";
+import {
+  isUploadUnfinished,
+  mayRunAgain,
+  pageOutcomeSummary,
+} from "#/lib/survey/scan-upload-status";
 import { formatBytes } from "#/lib/utils";
 
 // The pipeline is notified each minute and reports at least every 5, so faster gains little.
@@ -196,7 +200,14 @@ function UploadStatusCell({ upload }: { upload: ScanUploadRow }) {
       {upload.attempt > 1 && (
         <p className="text-xs text-shamiri-text-grey">Attempt {upload.attempt}</p>
       )}
-      {reason && <p className="max-w-xs text-xs text-shamiri-text-grey">{reason}</p>}
+      {reason && (
+        <p className="text-xs break-words whitespace-normal text-shamiri-text-grey">{reason}</p>
+      )}
+      {upload.status === SurveyUploadStatus.PROCESSED && upload.pageOutcomes.length > 0 && (
+        <p className="text-xs break-words whitespace-normal text-shamiri-text-grey">
+          {pageOutcomeSummary(upload.pageOutcomes)}
+        </p>
+      )}
     </div>
   );
 }
