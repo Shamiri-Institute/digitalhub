@@ -56,7 +56,7 @@ import { cn, stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { ActionResponse } from "#/types/actions.types";
 import { sentenceLabel, personName, roleLabel } from "./format";
-import { RecipientOptions } from "./recipient-options";
+import { RecipientOptions, recipientLabels } from "./recipient-options";
 import {
   composerBoxClass,
   composerErrorClass,
@@ -257,11 +257,9 @@ export function TicketComposer({
         {modes.length > 1 && (
           <div className="flex w-fit gap-1 rounded-lg border bg-background-secondary p-0.5">
             <ToggleGroup
-              type="single"
               aria-label="What to do"
               value={inMore ? "" : (current?.kind ?? "")}
-              // A single toggle group lets its pressed item be unpressed; a mode stays chosen.
-              onValueChange={(kind) => kind && choose(kind as Mode)}
+              onValueChange={(kind) => choose(kind as Mode)}
               className="gap-1"
             >
               {rowModes.map(({ kind, label, icon: Icon, tone }) => (
@@ -296,7 +294,7 @@ export function TicketComposer({
                 <DropdownMenuContent
                   align="start"
                   // Focus goes to the chosen mode's form, not back to the trigger.
-                  onCloseAutoFocus={(e) => e.preventDefault()}
+                  finalFocus={false}
                 >
                   <DropdownMenuRadioGroup
                     value={current?.kind}
@@ -306,6 +304,7 @@ export function TicketComposer({
                       <DropdownMenuRadioItem
                         key={kind}
                         value={kind}
+                        closeOnClick
                         className={cn(
                           "gap-1.5 max-sm:py-3",
                           !moreModes.some((m) => m.kind === kind) && "sm:hidden",
@@ -509,7 +508,11 @@ function ReasonForm({
                       <FormLabel className="pl-1.5 text-sm whitespace-nowrap text-shamiri-text-dark-grey">
                         Send to
                       </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        items={recipientLabels(recipients)}
+                      >
                         <FormControl>
                           <SelectTrigger className="h-8 w-64 bg-white max-sm:h-11 max-sm:w-full">
                             <SelectValue
@@ -521,7 +524,7 @@ function ReasonForm({
                             />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent position="popper">
+                        <SelectContent>
                           <RecipientOptions people={recipients} />
                         </SelectContent>
                       </Select>
@@ -544,7 +547,7 @@ function ReasonForm({
                           <SelectValue placeholder="Select priority" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent position="popper">
+                      <SelectContent>
                         {Object.values(TicketPriorityLevel).map((priority) => (
                           <SelectItem key={priority} value={priority}>
                             {sentenceLabel(priority)}
