@@ -200,9 +200,9 @@ function UploadStatusCell({ upload }: { upload: ScanUploadRow }) {
       {upload.attempt > 1 && (
         <p className="text-xs text-shamiri-text-grey">Attempt {upload.attempt}</p>
       )}
-      {reason && <p className="max-w-xs text-xs text-shamiri-text-grey">{reason}</p>}
+      {reason && <p className="text-xs whitespace-normal text-shamiri-text-grey">{reason}</p>}
       {upload.status === SurveyUploadStatus.PROCESSED && upload.pageOutcomes.length > 0 && (
-        <p className="max-w-xs text-xs text-shamiri-text-grey">
+        <p className="text-xs whitespace-normal text-shamiri-text-grey">
           {pageOutcomeSummary(upload.pageOutcomes)}
         </p>
       )}

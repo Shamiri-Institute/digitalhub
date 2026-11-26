@@ -45,7 +45,7 @@ export function pageOutcomeSummary(outcomes: PageOutcome[]) {
       .toSorted((a, b) => b.pages - a.pages)
       .map(({ pages: reasonPages, rejectedReason }) => {
         const label = SURVEY_SCAN_REJECTION_LABELS[rejectedReason];
-        return reasonPages === pages ? label : `${reasonPages} ${label}`;
+        return reasonPages === pages ? label : `${label}: ${reasonPages}`;
       });
     const summary = `${pages} ${status.toLowerCase()}`;
     return [reasons.length > 0 ? `${summary} (${reasons.join(", ")})` : summary];

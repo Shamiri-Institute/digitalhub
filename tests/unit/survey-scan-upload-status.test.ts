@@ -11,7 +11,7 @@ describe("a processed upload's page outcomes", () => {
         { status: "MATCHED", rejectedReason: null, pages: 40 },
         { status: "REJECTED", rejectedReason: "UNKNOWN_CODE", pages: 2 },
       ]),
-    ).toBe("40 matched · 2 unidentified · 3 rejected (2 unknown code, 1 another hub's copy)");
+    ).toBe("40 matched · 2 unidentified · 3 rejected (unknown code: 2, another hub's copy: 1)");
   });
 
   it("leaves out a lone reason's count, and outcomes that didn't occur", () => {
