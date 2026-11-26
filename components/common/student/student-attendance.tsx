@@ -341,25 +341,13 @@ function SessionStudents({
       return { success: false, message: "Could not save the attendance on this phone." };
     }
     setSessionAttendances((current) => withQueuedMarks(current, marks));
-    sendQueuedStudentAttendance()
-      .then((unsaved) => {
-        for (const answer of unsaved) {
-          const studentName = studentNameById.get(answer.studentId) ?? "A student";
-          toast({
-            variant: "destructive",
-            description:
-              answer.outcome === "superseded"
-                ? `${studentName} was marked again later, so that mark was kept.`
-                : answer.message,
-          });
-        }
-      })
-      .catch(() => {
-        toast({
-          variant: "destructive",
-          description: "Attendance is saved on this phone and will be sent when you sign in again.",
-        });
+    sendQueuedStudentAttendance().catch(() => {
+      toast({
+        variant: "destructive",
+        description:
+          "Attendance is saved on this phone and will be sent when the connection returns.",
       });
+    });
     return {
       success: true,
       message: `Marked attendance for ${studentIds.length === 1 ? (studentNameById.get(studentIds[0] ?? "") ?? "1 student") : `${studentIds.length} students`}`,

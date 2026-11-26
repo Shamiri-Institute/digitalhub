@@ -292,10 +292,11 @@ export type SyncedStudentAttendance = {
   studentId: string;
   sessionId: string;
   markedAt: number;
+} & (
+  | { outcome: "saved" }
   /** "superseded": the stored mark was made later than this one, so it was kept. */
-  outcome: "saved" | "superseded" | "rejected";
-  message?: string;
-};
+  | { outcome: "superseded" | "rejected"; message: string }
+);
 
 /**
  * Writes the marks a device queued, in one request. Each mark is checked and written on its own,
@@ -411,12 +412,17 @@ export async function syncStudentAttendance(
           });
   const writtenKeys = new Set(written.map((w) => `${w.studentId}:${w.sessionId}`));
   for (const { studentId, sessionId, markedAt } of writableMarks) {
-    results.push({
-      studentId,
-      sessionId,
-      markedAt,
-      outcome: writtenKeys.has(`${studentId}:${sessionId}`) ? "saved" : "superseded",
-    });
+    results.push(
+      writtenKeys.has(`${studentId}:${sessionId}`)
+        ? { studentId, sessionId, markedAt, outcome: "saved" }
+        : {
+            studentId,
+            sessionId,
+            markedAt,
+            outcome: "superseded",
+            message: `${studentById.get(studentId)?.studentName ?? "A student"} was marked again later, so that mark was kept.`,
+          },
+    );
   }
   return results;
 }

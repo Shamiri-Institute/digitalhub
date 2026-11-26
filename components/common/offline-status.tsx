@@ -1,28 +1,42 @@
 "use client";
 
-import { useOffline } from "next/offline";
-import { useEffect } from "react";
-import { toast } from "#/components/ui/use-toast";
+import { useEffect, useSyncExternalStore } from "react";
 import { sendQueuedStudentAttendance } from "#/lib/offline/student-attendance-outbox";
 
-export function OfflineStatus() {
-  const isOffline = useOffline();
+// A phone in a dead zone can report itself online, so the queue is also retried on a timer.
+const RETRY_INTERVAL_MS = 30_000;
 
-  // effect: sends the attendance marks that a closed or killed tab left queued on this phone.
+function subscribeToConnection(onChange: () => void) {
+  window.addEventListener("online", onChange);
+  window.addEventListener("offline", onChange);
+  return () => {
+    window.removeEventListener("online", onChange);
+    window.removeEventListener("offline", onChange);
+  };
+}
+
+function sendQueue() {
+  sendQueuedStudentAttendance().catch(() => {});
+}
+
+export function OfflineStatus() {
+  const isOffline = useSyncExternalStore(
+    subscribeToConnection,
+    () => !navigator.onLine,
+    () => false,
+  );
+
+  // Sends marks queued on this phone, including those a killed tab left, when the page opens, when
+  // the connection returns, and on a timer.
+  // effect: subscribes to the online event and a retry timer.
   useEffect(() => {
-    sendQueuedStudentAttendance()
-      .then((unsaved) => {
-        for (const answer of unsaved) {
-          toast({
-            variant: "destructive",
-            description:
-              answer.outcome === "superseded"
-                ? "An attendance mark saved on this phone was older than one already saved, so it was not sent."
-                : answer.message,
-          });
-        }
-      })
-      .catch(() => {});
+    sendQueue();
+    window.addEventListener("online", sendQueue);
+    const retry = window.setInterval(sendQueue, RETRY_INTERVAL_MS);
+    return () => {
+      window.removeEventListener("online", sendQueue);
+      window.clearInterval(retry);
+    };
   }, []);
 
   if (!isOffline) return null;

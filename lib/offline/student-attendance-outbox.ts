@@ -1,8 +1,10 @@
 import type { z } from "zod";
+import { toast } from "#/components/ui/use-toast";
 import type { QueuedStudentAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import { type SyncedStudentAttendance, syncStudentAttendance } from "#/lib/actions/student";
 
 export type QueuedStudentAttendance = z.infer<typeof QueuedStudentAttendanceSchema>[number];
+type UnsavedStudentAttendance = Exclude<SyncedStudentAttendance, { outcome: "saved" }>;
 
 const DATABASE_NAME = "digitalhub-offline";
 const STORE_NAME = "student-attendance";
@@ -66,25 +68,33 @@ function removeAnswered(answers: SyncedStudentAttendance[]) {
 
 /** Marks queued while a request is out are sent by the next one. */
 async function sendQueue(
-  unsaved: SyncedStudentAttendance[] = [],
-): Promise<SyncedStudentAttendance[]> {
+  unsaved: UnsavedStudentAttendance[] = [],
+): Promise<UnsavedStudentAttendance[]> {
   const marks = await queuedStudentAttendance();
   if (marks.length === 0) return unsaved;
   const answers = await syncStudentAttendance(marks.slice(0, MARKS_PER_REQUEST));
   await removeAnswered(answers);
-  return sendQueue([...unsaved, ...answers.filter((answer) => answer.outcome !== "saved")]);
+  return sendQueue([
+    ...unsaved,
+    ...answers.filter((answer): answer is UnsavedStudentAttendance => answer.outcome !== "saved"),
+  ]);
 }
 
-let sending: Promise<SyncedStudentAttendance[]> | null = null;
+async function sendAndReport() {
+  for (const answer of await sendQueue()) {
+    toast({ variant: "destructive", description: answer.message });
+  }
+}
+
+let sending: Promise<void> | null = null;
 
 /**
- * Sends the queued marks until none are left, one request at a time, and resolves with the ones
- * not saved: refused, or older than the stored mark. Rejects and keeps the queue when the caller
- * may not mark attendance (signed out). While the connection is down, Next holds the request and
- * retries it when the connection returns.
+ * Sends the queued marks until none are left, one request at a time, and shows a toast for each
+ * mark not saved: refused, or older than the stored mark. Keeps the queue and rejects when the
+ * caller may not mark attendance or the request fails, as it does offline.
  */
 export function sendQueuedStudentAttendance() {
-  sending ??= sendQueue().finally(() => {
+  sending ??= sendAndReport().finally(() => {
     sending = null;
   });
   return sending;
