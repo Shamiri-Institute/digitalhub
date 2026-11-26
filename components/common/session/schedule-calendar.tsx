@@ -231,34 +231,34 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   return (
     <>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
-          <div className="flex items-start justify-between gap-6 lg:items-center">
-            <h2 className="text-2xl font-semibold leading-8">{title}</h2>
-            <NavigationButtons prevProps={prevButtonProps} nextProps={nextButtonProps} />
-          </div>
-          <div className="flex lg:mx-2">
+        <div className="flex items-center gap-4">
+          <NavigationButtons prevProps={prevButtonProps} nextProps={nextButtonProps} />
+          <h2 className="text-2xl font-semibold leading-8">{title}</h2>
+        </div>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+          <div className="flex">
             <ScheduleModeToggle
               role={props.role}
               mode={mode}
               onModeChange={(nextMode) => navigate({ mode: nextMode }, "push")}
             />
           </div>
-        </div>
-        {props.role === "HUB_COORDINATOR" || props.role === "SUPERVISOR" ? (
-          <div className="flex items-center gap-4">
+          {props.role === "HUB_COORDINATOR" || props.role === "SUPERVISOR" ? (
+            <div className="flex items-center gap-4">
+              <SessionsLoader loading={loading} />
+              <CreateSessionButton
+                open={newScheduleDialog}
+                setDialogOpen={setNewScheduleDialog}
+                schools={schools ?? []}
+                hubSessionTypes={props.hubSessionTypes}
+                role={props.role}
+                loading={loading}
+              />
+            </div>
+          ) : props.role === "ADMIN" ? (
             <SessionsLoader loading={loading} />
-            <CreateSessionButton
-              open={newScheduleDialog}
-              setDialogOpen={setNewScheduleDialog}
-              schools={schools ?? []}
-              hubSessionTypes={props.hubSessionTypes}
-              role={props.role}
-              loading={loading}
-            />
-          </div>
-        ) : props.role === "ADMIN" ? (
-          <SessionsLoader loading={loading} />
-        ) : null}
+          ) : null}
+        </div>
       </div>
       <div className="mt-4 w-full">
         {sessions ? (
