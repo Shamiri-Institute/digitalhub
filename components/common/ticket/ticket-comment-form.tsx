@@ -7,7 +7,7 @@ import { z } from "zod";
 
 import { Button } from "#/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "#/components/ui/form";
-import { toast } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { addTicketComment, startTicketAttachmentUploads } from "#/lib/actions/ticket/comments";
 import { putWithProgress } from "#/lib/s3/put-with-progress";
 import {
@@ -150,7 +150,7 @@ export function TicketCommentForm({ ticketId }: { ticketId: string }) {
       <form
         noValidate
         aria-label="Add a comment"
-        onSubmit={form.handleSubmit(post)}
+        onSubmit={toastOnError(form.handleSubmit(post))}
         className={composerBoxClass}
       >
         <FormField
