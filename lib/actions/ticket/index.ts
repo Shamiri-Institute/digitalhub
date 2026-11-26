@@ -12,7 +12,6 @@ import {
   hubCoordinator,
   implementerMember,
   supervisor,
-  ticketAttachments,
   ticketEvents,
   tickets,
 } from "#/db/schema";
@@ -41,7 +40,6 @@ import {
   type FullTicket,
   type TicketActions,
   type TicketAssignees,
-  type TicketAttachment,
   type TicketDetails,
   type TicketEvent,
   type TicketPerson,
@@ -695,7 +693,7 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
     const thisTicket = sql`(SELECT ${tickets.createdAt}, ${tickets.id} FROM ${tickets} WHERE ${tickets.id} = ${ticketId})`;
     const sibling = { id: tickets.id, visibleId: tickets.visibleId };
 
-    const [routedRecipients, events, attachments, holderIsActive, reassignIds, [previous], [next]] =
+    const [routedRecipients, events, holderIsActive, reassignIds, [previous], [next]] =
       await Promise.all([
         (canEscalate || canReopen) && initiatorRole
           ? routeRecipients(
@@ -708,20 +706,13 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
         db.query.ticketEvents.findMany({
           where: (e, { eq }) => eq(e.ticketId, ticketId),
           orderBy: (e, { asc }) => [asc(e.createdAt), asc(e.id)],
+          with: {
+            attachments: {
+              columns: { id: true, fileName: true, contentType: true, byteSize: true },
+              orderBy: (a, { asc }) => [asc(a.createdAt), asc(a.id)],
+            },
+          },
         }),
-        // Files on hidden comments never leave the server.
-        db
-          .select({
-            id: ticketAttachments.id,
-            eventId: ticketAttachments.eventId,
-            fileName: ticketAttachments.fileName,
-            contentType: ticketAttachments.contentType,
-            byteSize: ticketAttachments.byteSize,
-          })
-          .from(ticketAttachments)
-          .innerJoin(ticketEvents, eq(ticketEvents.id, ticketAttachments.eventId))
-          .where(and(eq(ticketAttachments.ticketId, ticketId), isNull(ticketEvents.archivedAt)))
-          .orderBy(asc(ticketAttachments.createdAt), asc(ticketAttachments.id)),
         canReopen && isActiveHolder(db, holderId, implementerId, callerUserId),
         canReassign
           ? listReassignmentRecipients(db, {
@@ -808,14 +799,8 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
           createdAt: e.createdAt,
           archivedAt: e.archivedAt,
           archivedBy: e.archivedById ? personOf(e.archivedById, people) : null,
-          attachments: attachments
-            .filter((attachment) => attachment.eventId === e.id)
-            .map(({ id, fileName, contentType, byteSize }): TicketAttachment => ({
-              id,
-              fileName,
-              contentType,
-              byteSize,
-            })),
+          // Files on hidden comments never leave the server.
+          attachments: e.archivedAt ? [] : e.attachments,
         })),
       },
     };
