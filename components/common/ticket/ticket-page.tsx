@@ -49,6 +49,11 @@ export default async function TicketPage({
   const isActive = ACTIVE_TICKET_STATUSES.includes(ticket.status);
   const holdsThis = ticket.holder.userId === viewerId;
   const { createdBy } = ticket;
+  const holderLabel = RESOLVED_TICKET_STATUSES.includes(ticket.status)
+    ? "Resolved by"
+    : ticket.status === "CANCELLED"
+      ? "Was with"
+      : "Held by";
 
   const body = (
     <main className="flex w-full grow flex-col">
@@ -70,9 +75,24 @@ export default async function TicketPage({
             {timeZone && ` · ${formatDateIn(ticket.createdAt, timeZone)}`}
           </p>
         </div>
+        {/* Phones get the details as one line, so the conversation starts on the first screen. */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-shamiri-text-dark-grey sm:hidden">
+          <Badge variant={statusBadgeVariant[ticket.status]} className="select-none">
+            {sentenceLabel(ticket.status)}
+          </Badge>
+          <PriorityBadge priority={ticket.priority} status={ticket.status} />
+          <span>
+            {holderLabel} <Person person={ticket.holder} viewerId={viewerId} />
+          </span>
+          {isActive && (
+            <span>
+              Open for {formatDistanceToNowStrict(ticket.createdAt, { roundingMethod: "floor" })}
+            </span>
+          )}
+        </div>
         <section
           aria-label="Ticket details"
-          className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border lg:grid-cols-4"
+          className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border max-sm:hidden lg:grid-cols-4"
         >
           <StatCell label="Status">
             <Badge variant={statusBadgeVariant[ticket.status]} className="select-none">
@@ -85,15 +105,7 @@ export default async function TicketPage({
           <StatCell label="Priority">
             <PriorityBadge priority={ticket.priority} status={ticket.status} />
           </StatCell>
-          <StatCell
-            label={
-              RESOLVED_TICKET_STATUSES.includes(ticket.status)
-                ? "Resolved by"
-                : ticket.status === "CANCELLED"
-                  ? "Was with"
-                  : "Held by"
-            }
-          >
+          <StatCell label={holderLabel}>
             <p className="text-lg">
               <Person person={ticket.holder} viewerId={viewerId} />
             </p>

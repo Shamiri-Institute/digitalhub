@@ -172,7 +172,7 @@ type Mode = ReasonAction["kind"] | "comment" | "start";
 
 const modeClass = (chosen: boolean, recommended: boolean) =>
   cn(
-    "flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-transparent px-3 text-sm font-medium text-shamiri-text-dark-grey transition-colors hover:bg-transparent hover:text-shamiri-black focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue data-[state=on]:bg-white data-[state=on]:text-shamiri-black",
+    "flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-transparent px-3 text-sm font-medium text-shamiri-text-dark-grey transition-colors hover:bg-transparent hover:text-shamiri-black focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue data-[state=on]:bg-white data-[state=on]:text-shamiri-black max-sm:h-11",
     recommended && "font-semibold text-shamiri-black",
     chosen && "border-border bg-white text-shamiri-black shadow-xs",
   );
@@ -250,6 +250,20 @@ export function TicketComposer({
   const rowModes = overflow.length > 1 ? modes.filter((m) => inRow(m.kind)) : modes;
   const moreModes = overflow.length > 1 ? overflow : [];
   const inMore = moreModes.some((m) => m.kind === current?.kind);
+  // On phones only Comment and the next step sit beside More, so the row fits without scrolling.
+  const others = modes.filter((m) => m.kind !== "comment" && m.kind !== recommended);
+  const phoneMoreModes = others.length > 1 ? others : [];
+  const inPhoneMore = phoneMoreModes.some((m) => m.kind === current?.kind);
+  const menuModes = modes.filter((m) => moreModes.includes(m) || phoneMoreModes.includes(m));
+  const menuLabel = (chosen: boolean) =>
+    chosen && current ? (
+      <>
+        <current.icon aria-hidden className={cn("h-4 w-4", current.tone)} />
+        {current.label}
+      </>
+    ) : (
+      "More"
+    );
   const choose = (kind: Mode) => {
     setMode(kind);
     focusMode();
@@ -271,7 +285,7 @@ export function TicketComposer({
     >
       <div className={cn("space-y-2.5 py-3", contained && "container")}>
         {modes.length > 1 && (
-          <div className="flex items-center gap-3 overflow-x-auto max-sm:-mx-4 max-sm:px-4">
+          <div className="flex items-center gap-3">
             <div className="flex shrink-0 gap-1 rounded-lg border bg-background-secondary p-0.5">
               <ToggleGroup
                 type="single"
@@ -286,24 +300,28 @@ export function TicketComposer({
                     key={kind}
                     value={kind}
                     aria-controls="ticket-composer-form"
-                    className={modeClass(kind === current?.kind, kind === recommended)}
+                    className={cn(
+                      modeClass(kind === current?.kind, kind === recommended),
+                      phoneMoreModes.some((m) => m.kind === kind) && "max-sm:hidden",
+                    )}
                   >
                     <Icon aria-hidden className={cn("h-4 w-4", tone)} />
                     {label}
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
-              {moreModes.length > 0 && (
+              {menuModes.length > 0 && (
                 <DropdownMenu>
-                  <DropdownMenuTrigger className={modeClass(inMore, false)}>
-                    {inMore && current ? (
-                      <>
-                        <current.icon aria-hidden className={cn("h-4 w-4", current.tone)} />
-                        {current.label}
-                      </>
-                    ) : (
-                      "More"
+                  <DropdownMenuTrigger
+                    className={cn(
+                      modeClass(inMore, false),
+                      inPhoneMore &&
+                        "max-sm:border-border max-sm:bg-white max-sm:text-shamiri-black max-sm:shadow-xs",
+                      moreModes.length === 0 && "sm:hidden",
                     )}
+                  >
+                    <span className="contents sm:hidden">{menuLabel(inPhoneMore)}</span>
+                    <span className="contents max-sm:hidden">{menuLabel(inMore)}</span>
                     <ChevronDown aria-hidden className="h-4 w-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
@@ -315,8 +333,15 @@ export function TicketComposer({
                       value={current?.kind}
                       onValueChange={(kind) => choose(kind as Mode)}
                     >
-                      {moreModes.map(({ kind, label, icon: Icon, tone }) => (
-                        <DropdownMenuRadioItem key={kind} value={kind} className="gap-1.5">
+                      {menuModes.map(({ kind, label, icon: Icon, tone }) => (
+                        <DropdownMenuRadioItem
+                          key={kind}
+                          value={kind}
+                          className={cn(
+                            "gap-1.5 max-sm:py-3",
+                            !moreModes.some((m) => m.kind === kind) && "sm:hidden",
+                          )}
+                        >
                           <Icon aria-hidden className={cn("h-4 w-4", tone)} />
                           {label}
                         </DropdownMenuRadioItem>

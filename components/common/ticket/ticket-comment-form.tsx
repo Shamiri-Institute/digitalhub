@@ -122,7 +122,7 @@ export function TicketCommentForm({ ticketId }: { ticketId: string }) {
         e.preventDefault();
         void post();
       }}
-      className="rounded-lg border bg-white shadow-xs focus-within:border-shamiri-new-lighter-blue focus-within:ring-2 focus-within:ring-shamiri-new-light-blue"
+      className="group rounded-lg border bg-white shadow-xs focus-within:border-shamiri-new-lighter-blue focus-within:ring-2 focus-within:ring-shamiri-new-light-blue"
     >
       <textarea
         aria-label="Add a comment"
@@ -135,7 +135,7 @@ export function TicketCommentForm({ ticketId }: { ticketId: string }) {
         placeholder="Write a comment for everyone on this ticket"
         rows={2}
         disabled={isPosting}
-        className="block max-h-48 min-h-14 w-full resize-none bg-transparent px-3 pt-2.5 text-sm leading-6 field-sizing-content placeholder:text-shamiri-text-grey focus:outline-hidden disabled:opacity-60"
+        className="block max-h-48 min-h-14 w-full max-sm:min-h-11 max-sm:pb-2 max-sm:focus:min-h-20 resize-none bg-transparent px-3 pt-2.5 text-sm leading-6 field-sizing-content placeholder:text-shamiri-text-grey focus:outline-hidden disabled:opacity-60"
       />
       {files.length > 0 && (
         <ul aria-label="Files to attach" className="flex flex-wrap gap-2 px-3 pb-2">
@@ -149,7 +149,8 @@ export function TicketCommentForm({ ticketId }: { ticketId: string }) {
           ))}
         </ul>
       )}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-background-secondary px-1.5 py-1.5">
+      {/* On phones the toolbar waits until the box is in use, to leave room for the thread. */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-background-secondary px-1.5 py-1.5 max-sm:hidden max-sm:group-focus-within:flex max-sm:group-has-[li]:flex max-sm:group-has-[textarea:not(:placeholder-shown)]:flex">
         <input
           ref={fileInput}
           type="file"
@@ -166,7 +167,7 @@ export function TicketCommentForm({ ticketId }: { ticketId: string }) {
           type="button"
           variant="ghost"
           size="sm"
-          className="h-8 gap-1.5 text-sm text-shamiri-text-dark-grey"
+          className="h-8 gap-1.5 text-sm text-shamiri-text-dark-grey max-sm:h-11"
           disabled={isPosting}
           onClick={() => fileInput.current?.click()}
         >
@@ -182,7 +183,7 @@ export function TicketCommentForm({ ticketId }: { ticketId: string }) {
         <Button
           type="submit"
           variant="brand"
-          className="h-8"
+          className="h-8 max-sm:h-11"
           disabled={isPosting}
           loading={isPosting}
         >

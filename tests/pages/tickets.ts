@@ -21,19 +21,26 @@ export function activity(page: Page) {
 
 /** Switches the composer to `action`: a choice in its row of modes, or one under More. */
 export async function chooseMode(page: Page, action: string) {
-  const option = ticketPage(page).getByRole("radio", { name: action, exact: true });
+  const option = ticketPage(page)
+    .getByRole("radio", { name: action, exact: true })
+    .filter({ visible: true });
   if ((await option.count()) > 0) return option.click();
-  await ticketPage(page).getByRole("button", { name: "More" }).click();
-  await page.getByRole("menuitemradio", { name: action, exact: true }).click();
+  await ticketPage(page).getByRole("button", { name: "More" }).filter({ visible: true }).click();
+  await page
+    .getByRole("menuitemradio", { name: action, exact: true })
+    .filter({ visible: true })
+    .click();
 }
 
 /** Every mode the composer offers, including those under More. */
 export async function composerModes(page: Page) {
-  const modes = await ticketPage(page).getByRole("radio").allInnerTexts();
-  const more = ticketPage(page).getByRole("button", { name: "More" });
+  const modes = await ticketPage(page).getByRole("radio").filter({ visible: true }).allInnerTexts();
+  const more = ticketPage(page).getByRole("button", { name: "More" }).filter({ visible: true });
   if ((await more.count()) > 0) {
     await more.click();
-    modes.push(...(await page.getByRole("menuitemradio").allInnerTexts()));
+    modes.push(
+      ...(await page.getByRole("menuitemradio").filter({ visible: true }).allInnerTexts()),
+    );
     await page.keyboard.press("Escape");
   }
   return modes.map((mode) => mode.trim());
