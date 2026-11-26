@@ -27,6 +27,8 @@ function ToastList() {
     <ToastPrimitive.Root
       key={toast.id}
       toast={toast}
+      // The viewport's live region announces the toast; it is not a dialog to the page.
+      render={({ role: _dialogRole, "aria-modal": _modal, ...props }) => <section {...props} />}
       data-slot="toast"
       className={toastVariants({
         variant: toast.type === "destructive" ? "destructive" : "default",
