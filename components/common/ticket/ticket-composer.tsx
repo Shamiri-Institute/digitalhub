@@ -1,0 +1,589 @@
+"use client";
+
+import {
+  ArrowLeftRight,
+  ArrowUpFromLine,
+  ChevronDown,
+  CircleCheck,
+  CircleX,
+  Flag,
+  Lock,
+  MessageSquare,
+  Play,
+  RotateCcw,
+  type LucideIcon,
+} from "lucide-react";
+import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import { TicketPriorityLevel, type ImplementerRole } from "#/db/enums";
+import { Button } from "#/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "#/components/ui/form";
+import { Textarea } from "#/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
+import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
+import { toast, toastOnError } from "#/components/ui/use-toast";
+import {
+  cancelTicket,
+  changeTicketPriority,
+  createEscalation,
+  reassignTicket,
+  reopenTicket,
+  resolveTicket,
+  startTicket,
+} from "#/lib/actions/ticket";
+import {
+  type FullTicket,
+  type TicketPerson,
+  type TicketActions,
+  TicketPriorityLevelEnum,
+} from "#/lib/actions/ticket/types";
+import { cn, stringValidation } from "#/lib/utils";
+import { zodResolver } from "#/lib/zod-resolver";
+import type { ActionResponse } from "#/types/actions.types";
+import { sentenceLabel, personName, roleLabel } from "./format";
+import { RecipientOptions, recipientLabels } from "./recipient-options";
+import {
+  composerBoxClass,
+  composerErrorClass,
+  composerTextareaClass,
+  composerToolbarClass,
+  TicketCommentForm,
+} from "./ticket-comment-form";
+
+const ReasonFormSchema = z.object({
+  reason: stringValidation("A reason is required"),
+  priority: TicketPriorityLevelEnum,
+  recipientId: z.string(),
+});
+type ReasonFormValues = z.infer<typeof ReasonFormSchema>;
+
+type ReasonAction = {
+  kind: "resolve" | "escalate" | "reassign" | "changePriority" | "reopen" | "cancel";
+  label: string;
+  placeholder: string;
+  destructive?: boolean;
+  submit: (ticketId: string, values: ReasonFormValues) => Promise<ActionResponse>;
+};
+
+type NextStepAction = ReasonAction & {
+  allowed: keyof TicketActions;
+  icon: LucideIcon;
+  // Matches the colour of the event the action adds to the activity.
+  tone: string;
+};
+
+const nextStepActions: NextStepAction[] = [
+  {
+    kind: "resolve",
+    allowed: "canResolve",
+    label: "Resolve",
+    icon: CircleCheck,
+    tone: "text-shamiri-green",
+    placeholder: "How was this resolved?",
+    submit: (ticketId, { reason }) => resolveTicket(ticketId, reason),
+  },
+  {
+    kind: "escalate",
+    allowed: "canEscalate",
+    label: "Escalate",
+    icon: ArrowUpFromLine,
+    tone: "text-shamiri-light-red",
+    placeholder: "Why does this need to go up a tier?",
+    submit: (ticketId, { reason, recipientId }) => createEscalation(ticketId, reason, recipientId),
+  },
+  {
+    kind: "reassign",
+    allowed: "canReassign",
+    label: "Reassign",
+    icon: ArrowLeftRight,
+    tone: "text-shamiri-text-dark-grey",
+    placeholder: "Why should they take it over?",
+    submit: (ticketId, { reason, recipientId }) =>
+      reassignTicket({ ticketId, reassignedTo: recipientId, reassignmentReason: reason }),
+  },
+  {
+    kind: "changePriority",
+    allowed: "canChangePriority",
+    label: "Change priority",
+    icon: Flag,
+    tone: "text-shamiri-dark-orange",
+    placeholder: "Why is the priority changing?",
+    submit: (ticketId, { reason, priority }) =>
+      changeTicketPriority(ticketId, { priority, reason }),
+  },
+  {
+    kind: "reopen",
+    allowed: "canReopen",
+    label: "Reopen",
+    icon: RotateCcw,
+    tone: "text-shamiri-dark-orange",
+    placeholder: "What still needs to be done?",
+    submit: (ticketId, { reason, recipientId }) => reopenTicket(ticketId, reason, recipientId),
+  },
+  {
+    kind: "cancel",
+    allowed: "canCancel",
+    label: "Cancel ticket",
+    icon: CircleX,
+    tone: "text-shamiri-text-dark-grey",
+    placeholder: "Why is this ticket no longer needed?",
+    destructive: true,
+    submit: (ticketId, { reason }) => cancelTicket(ticketId, reason),
+  },
+];
+
+type Mode = ReasonAction["kind"] | "comment" | "start";
+
+const modeClass = (chosen: boolean, recommended: boolean) =>
+  cn(
+    "flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-transparent px-3 text-sm font-medium text-shamiri-text-dark-grey transition-colors hover:bg-transparent hover:text-shamiri-black focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-shamiri-new-blue data-[state=on]:bg-white data-[state=on]:text-shamiri-black max-sm:h-11",
+    recommended && "font-semibold text-shamiri-black",
+    chosen && "border-border bg-white text-shamiri-black shadow-xs",
+  );
+
+const focusMode = () =>
+  requestAnimationFrame(() =>
+    document
+      .querySelector<HTMLElement>(
+        "#ticket-composer-form > :not([hidden]) :is(textarea, [role=combobox], [data-autofocus])",
+      )
+      ?.focus({ preventScroll: true }),
+  );
+
+/**
+ * The bar pinned to the bottom of the ticket page: a comment box, and each action the viewer may
+ * take as another mode of the same box, so no action needs a dialog or a scroll to reach.
+ */
+export function TicketComposer({
+  ticket,
+  actions,
+  role,
+  recipients,
+  reassignRecipients,
+  contained,
+}: {
+  ticket: FullTicket;
+  actions: TicketActions;
+  role: ImplementerRole;
+  recipients: TicketPerson[];
+  reassignRecipients: TicketPerson[];
+  /** Centre the bar's content in the page container; off inside a layout that has one. */
+  contained: boolean;
+}) {
+  const available = nextStepActions.filter((action) => actions[action.allowed]);
+  const modes: { kind: Mode; label: string; icon: LucideIcon; tone: string }[] = [
+    ...(actions.canComment
+      ? [{ kind: "comment" as const, label: "Comment", icon: MessageSquare, tone: "" }]
+      : []),
+    ...(actions.canStart
+      ? [{ kind: "start" as const, label: "Start", icon: Play, tone: "text-shamiri-new-blue" }]
+      : []),
+    ...available,
+  ];
+  const recommended = (["start", "resolve", "reopen"] as const).find((kind) =>
+    modes.some((m) => m.kind === kind),
+  );
+  const [mode, setMode] = useState<Mode | null>(null);
+  const [isStarting, startTransition] = useTransition();
+  if (modes.length === 0) {
+    return (
+      <p
+        className={cn(
+          "flex items-center gap-2 border-t bg-background-secondary py-3 text-sm text-shamiri-text-dark-grey",
+          contained && "container",
+        )}
+      >
+        <Lock aria-hidden className="h-4 w-4 shrink-0" />
+        This ticket is closed, so no more comments can be added. To follow up, raise a new ticket.
+      </p>
+    );
+  }
+
+  const current =
+    modes.find((m) => m.kind === mode) ?? modes.find((m) => m.kind === recommended) ?? modes[0];
+  const inRow = (kind: Mode) =>
+    kind === "comment" || kind === recommended || kind === "escalate" || kind === "reassign";
+  const overflow = modes.filter((m) => !inRow(m.kind));
+  const rowModes = overflow.length > 1 ? modes.filter((m) => inRow(m.kind)) : modes;
+  const moreModes = overflow.length > 1 ? overflow : [];
+  const inMore = moreModes.some((m) => m.kind === current?.kind);
+  // On phones only Comment and the next step sit beside More, so the row fits without scrolling.
+  const others = modes.filter((m) => m.kind !== "comment" && m.kind !== recommended);
+  const phoneMoreModes = others.length > 1 ? others : [];
+  const inPhoneMore = phoneMoreModes.some((m) => m.kind === current?.kind);
+  const menuModes = modes.filter((m) => moreModes.includes(m) || phoneMoreModes.includes(m));
+  const menuLabel = (chosen: boolean) =>
+    chosen && current ? (
+      <>
+        <current.icon aria-hidden className={cn("h-4 w-4", current.tone)} />
+        {current.label}
+      </>
+    ) : (
+      "More"
+    );
+  const choose = (kind: Mode) => {
+    setMode(kind);
+    focusMode();
+  };
+  // A finished or discarded action hands the box back to the default, which a finished action may
+  // have moved on (Start makes Resolve the next step).
+  const reset = () => setMode(null);
+
+  const start = () =>
+    startTransition(async () => {
+      const result = await startTicket(ticket.id);
+      toast({ variant: result.success ? "default" : "destructive", description: result.message });
+      if (result.success) reset();
+    });
+
+  return (
+    <section aria-label="Comment and actions" className="sticky bottom-0 z-10 border-t bg-white">
+      <div className={cn("space-y-2.5 py-3", contained && "container")}>
+        {modes.length > 1 && (
+          <div className="flex w-fit gap-1 rounded-lg border bg-background-secondary p-0.5">
+            <ToggleGroup
+              aria-label="What to do"
+              value={inMore ? "" : (current?.kind ?? "")}
+              onValueChange={(kind) => choose(kind as Mode)}
+              className="gap-1"
+            >
+              {rowModes.map(({ kind, label, icon: Icon, tone }) => (
+                <ToggleGroupItem
+                  key={kind}
+                  value={kind}
+                  aria-controls="ticket-composer-form"
+                  className={cn(
+                    modeClass(kind === current?.kind, kind === recommended),
+                    phoneMoreModes.some((m) => m.kind === kind) && "max-sm:hidden",
+                  )}
+                >
+                  <Icon aria-hidden className={cn("h-4 w-4", tone)} />
+                  {label}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+            {menuModes.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={cn(
+                    modeClass(inMore, false),
+                    inPhoneMore &&
+                      "max-sm:border-border max-sm:bg-white max-sm:text-shamiri-black max-sm:shadow-xs",
+                    moreModes.length === 0 && "sm:hidden",
+                  )}
+                >
+                  <span className="contents sm:hidden">{menuLabel(inPhoneMore)}</span>
+                  <span className="contents max-sm:hidden">{menuLabel(inMore)}</span>
+                  <ChevronDown aria-hidden className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  // Focus goes to the chosen mode's form, not back to the trigger.
+                  finalFocus={false}
+                >
+                  <DropdownMenuRadioGroup
+                    value={current?.kind}
+                    onValueChange={(kind) => choose(kind as Mode)}
+                  >
+                    {menuModes.map(({ kind, label, icon: Icon, tone }) => (
+                      <DropdownMenuRadioItem
+                        key={kind}
+                        value={kind}
+                        closeOnClick
+                        className={cn(
+                          "gap-1.5 max-sm:py-3",
+                          !moreModes.some((m) => m.kind === kind) && "sm:hidden",
+                        )}
+                      >
+                        <Icon aria-hidden className={cn("h-4 w-4", tone)} />
+                        {label}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+        )}
+        {/* Every mode stays mounted and only the current one shows, so switching keeps each draft. */}
+        <div id="ticket-composer-form">
+          {modes.map(({ kind }) => {
+            const reasonAction = available.find((a) => a.kind === kind);
+            return (
+              <div key={kind} hidden={kind !== current?.kind}>
+                {kind === "comment" ? (
+                  <TicketCommentForm ticketId={ticket.id} />
+                ) : kind === "start" ? (
+                  <div className={composerBoxClass}>
+                    <p className="px-3 py-2.5 text-sm leading-6 text-pretty text-shamiri-text-dark-grey">
+                      Let {personName(ticket.createdBy)} know you&apos;re on it. This ticket will
+                      show as In progress.
+                    </p>
+                    <div className={cn(composerToolbarClass, "justify-end")}>
+                      <Button
+                        data-autofocus
+                        variant="brand"
+                        type="button"
+                        className="h-8 max-sm:h-11"
+                        disabled={isStarting}
+                        loading={isStarting}
+                        onClick={start}
+                      >
+                        Start ticket
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  reasonAction && (
+                    <ReasonForm
+                      ticket={ticket}
+                      action={reasonAction}
+                      role={role}
+                      recipients={
+                        reasonAction.kind === "reassign" ? reassignRecipients : recipients
+                      }
+                      close={reset}
+                    />
+                  )
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ReasonForm({
+  ticket,
+  action,
+  role,
+  recipients,
+  close,
+}: {
+  ticket: FullTicket;
+  action: ReasonAction;
+  role: ImplementerRole;
+  recipients: TicketPerson[];
+  close: () => void;
+}) {
+  const picksRecipient = ["escalate", "reopen", "reassign"].includes(action.kind);
+  const [isSaving, startSaving] = useTransition();
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const form = useForm<ReasonFormValues>({
+    resolver: zodResolver(
+      ReasonFormSchema.refine(
+        (v) => action.kind !== "changePriority" || v.priority !== ticket.priority,
+        {
+          message: "Choose a different priority",
+          path: ["priority"],
+        },
+      ).refine((v) => !picksRecipient || v.recipientId !== "", {
+        message: "Choose who should take it",
+        path: ["recipientId"],
+      }),
+    ),
+    defaultValues: {
+      reason: "",
+      priority: ticket.priority,
+      // The routing's default comes first; a reassign is a deliberate handover, so has none.
+      recipientId: action.kind === "reassign" ? "" : (recipients[0]?.userId ?? ""),
+    },
+  });
+  const noRecipients = picksRecipient && recipients.length === 0;
+  const [reason, recipientId] = form.watch(["reason", "recipientId"]);
+  const incomplete = !reason.trim() || (picksRecipient && !recipientId);
+
+  const discard = () => {
+    form.reset();
+    setServerError(null);
+    setConfirmingDiscard(false);
+    close();
+  };
+
+  const onSubmit = (values: ReasonFormValues) =>
+    startSaving(async () => {
+      setServerError(null);
+      const result = await action.submit(ticket.id, values);
+      if (!result.success) return setServerError(result.message);
+      toast({ description: result.message });
+      discard();
+    });
+
+  const { errors } = form.formState;
+  const problem =
+    serverError ??
+    errors.recipientId?.message ??
+    errors.priority?.message ??
+    errors.reason?.message;
+
+  return (
+    <Form {...form}>
+      <form
+        noValidate
+        aria-label={action.label}
+        onSubmit={toastOnError(form.handleSubmit(onSubmit))}
+        className={composerBoxClass}
+      >
+        <FormField
+          control={form.control}
+          name="reason"
+          render={({ field }) => (
+            <FormItem className="space-y-0">
+              <FormLabel className="sr-only">Reason</FormLabel>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") e.currentTarget.blur();
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey))
+                      e.currentTarget.form?.requestSubmit();
+                  }}
+                  placeholder={action.placeholder}
+                  rows={2}
+                  className={composerTextareaClass}
+                  disabled={isSaving}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        {problem && (
+          <p role="alert" className={composerErrorClass}>
+            {problem}
+          </p>
+        )}
+        {confirmingDiscard ? (
+          <div className={cn(composerToolbarClass, "pl-3")}>
+            <p className="min-w-0 flex-1 text-sm text-pretty text-shamiri-text-dark-grey">
+              Discard the reason you wrote?
+            </p>
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-8 max-sm:h-11"
+              onClick={() => setConfirmingDiscard(false)}
+            >
+              Keep writing
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              className="h-8 max-sm:h-11"
+              onClick={discard}
+            >
+              Discard reason
+            </Button>
+          </div>
+        ) : (
+          <div className={composerToolbarClass}>
+            {picksRecipient &&
+              (noRecipients ? (
+                <p className="px-1.5 text-sm text-shamiri-text-dark-grey">
+                  No one is available to take this ticket. Ask an administrator for help.
+                </p>
+              ) : (
+                <FormField
+                  control={form.control}
+                  name="recipientId"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-2 space-y-0 max-sm:w-full">
+                      <FormLabel className="pl-1.5 text-sm whitespace-nowrap text-shamiri-text-dark-grey">
+                        Send to
+                      </FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        items={recipientLabels(recipients)}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="h-8 w-64 bg-white max-sm:h-11 max-sm:w-full">
+                            <SelectValue
+                              placeholder={
+                                action.kind === "reassign"
+                                  ? `Choose another ${roleLabel(role).toLowerCase()}`
+                                  : "Choose who should take it"
+                              }
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <RecipientOptions people={recipients} />
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+              ))}
+            {action.kind === "changePriority" && (
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-2 space-y-0">
+                    <FormLabel className="pl-1.5 text-sm text-shamiri-text-dark-grey">
+                      Priority
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-8 w-36 bg-white max-sm:h-11">
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(TicketPriorityLevel).map((priority) => (
+                          <SelectItem key={priority} value={priority}>
+                            {sentenceLabel(priority)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+            )}
+            <div className="ml-auto flex gap-2">
+              <Button
+                variant="ghost"
+                type="button"
+                className="h-8 max-sm:h-11"
+                disabled={isSaving}
+                onClick={() =>
+                  form.getValues("reason").trim() ? setConfirmingDiscard(true) : discard()
+                }
+              >
+                Discard
+              </Button>
+              <Button
+                variant={action.destructive ? "destructive" : "brand"}
+                type="submit"
+                className="h-8 max-sm:h-11"
+                disabled={noRecipients || incomplete || isSaving}
+                loading={isSaving}
+              >
+                {action.label}
+              </Button>
+            </div>
+          </div>
+        )}
+      </form>
+    </Form>
+  );
+}

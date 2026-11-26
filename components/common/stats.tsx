@@ -56,14 +56,16 @@ export function Notice({
 export function StatCell({
   label,
   info,
+  className,
   children,
 }: {
   label: string;
   info?: string;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-1 bg-white px-4 py-3 xl:whitespace-nowrap">
+    <div className={cn("space-y-1 bg-white px-4 py-3 xl:whitespace-nowrap", className)}>
       <p className="flex items-center gap-1 text-sm font-medium text-shamiri-black">
         {label}
         {info && <InfoTip label={`What ${label.toLowerCase()} counts`}>{info}</InfoTip>}

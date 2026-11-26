@@ -5,7 +5,11 @@ import { Providers } from "#/components/providers";
 import { cn } from "#/lib/utils";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], weight: ["500", "600"], variable: "--font-inter" });
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-inter",
+});
 const figtree = Figtree({ subsets: ["latin"], weight: ["600"], variable: "--font-figtree" });
 
 export const metadata: Metadata = {
