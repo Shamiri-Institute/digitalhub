@@ -34,7 +34,7 @@ export default async function AdminSurveyScansPage() {
         <ScanUploader hubs={uploadHubs} />
         <section className="space-y-3">
           <h2 className="text-xl font-semibold">Uploaded scans</h2>
-          <ScanUploadsTable uploads={uploads} showHub timeZone={timeZone} />
+          <ScanUploadsTable uploads={uploads} viewerKind="project" timeZone={timeZone} />
         </section>
         <ViewerTimeZoneCookie serverTimeZone={timeZone} />
       </div>

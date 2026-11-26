@@ -1,12 +1,17 @@
 // What the scan upload pages read. Like the print-run queries, each takes a SurveyViewer, so a hub
 // coordinator only ever sees their hub's uploads.
 
+import { sql } from "drizzle-orm";
+
 import { db } from "#/db/client";
+import { countOf } from "#/db/sql";
 import { SurveyUploadStatus } from "#/db/enums";
+import { surveyScanPage } from "#/db/schema";
 import { implementerHubsInProject } from "#/lib/auth/require-hub-role";
 import type { SurveyViewer } from "#/lib/auth/survey-access";
+import { isStuck } from "#/lib/survey/pipeline-deadlines";
 
-/** The viewer's uploads, newest first. Unfinished ones are left out: their file isn't checked yet. */
+/** The viewer's uploads, newest first. PENDING ones are left out: their file isn't checked yet. */
 export async function fetchScanUploads(viewer: SurveyViewer) {
   return db.query.surveyUpload.findMany({
     where: (u, { and, eq, inArray, ne }) =>
@@ -24,7 +29,19 @@ export async function fetchScanUploads(viewer: SurveyViewer) {
       status: true,
       error: true,
       uploadedAt: true,
+      attempt: true,
+      notifyError: true,
+      notifyNextAt: true,
     },
+    extras: (u) => ({
+      stuck: isStuck(u.status, u.stuckAfter).as("stuck"),
+      // Pages within the current count: a re-run may count fewer than an earlier attempt posted.
+      pagesPosted: countOf(
+        surveyScanPage.uploadId,
+        u.id,
+        sql`"survey_scan_pages"."page_index" < ${u.pageCount}`,
+      ).as("pages_posted"),
+    }),
     with: {
       hub: { columns: { hubName: true } },
       uploadedByUser: { columns: { name: true, email: true } },
