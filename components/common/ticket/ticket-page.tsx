@@ -78,10 +78,20 @@ export default async function TicketPage({
           <h1 className="max-w-4xl text-2xl font-semibold text-balance text-shamiri-black sm:text-4xl">
             {ticket.subject}
           </h1>
-          <p className="text-sm font-medium uppercase tracking-caps text-shamiri-text-dark-grey">
-            {sentenceLabel(ticket.category)} request · Raised by {personName(createdBy, viewerId)}
-            {createdBy.role && createdBy.userId !== viewerId && `, ${roleLabel(createdBy.role)}`}
-            {creatorHub && ` at ${creatorHub}`}
+          <p className="text-sm leading-normal font-normal text-shamiri-text-dark-grey">
+            {sentenceLabel(ticket.category)} request · Raised by{" "}
+            <strong className="font-semibold text-shamiri-black">
+              {personName(createdBy, viewerId)}
+            </strong>
+            {createdBy.role &&
+              createdBy.userId !== viewerId &&
+              `, ${roleLabel(createdBy.role).toLowerCase()}`}
+            {creatorHub && (
+              <>
+                {" "}
+                at <strong className="font-semibold text-shamiri-black">{creatorHub}</strong>
+              </>
+            )}
             {timeZone && ` · ${formatDateIn(ticket.createdAt, timeZone)}`}
           </p>
         </div>
@@ -146,8 +156,6 @@ export default async function TicketPage({
         role={role}
         recipients={recipients}
         reassignRecipients={reassignRecipients}
-        reopenableUntil={reopenableUntil}
-        timeZone={timeZone}
         contained={!bare}
       />
       <ViewerTimeZoneCookie serverTimeZone={timeZone} />

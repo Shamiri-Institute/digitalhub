@@ -26,13 +26,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "#/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "#/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -57,7 +51,6 @@ import {
   type TicketActions,
   TicketPriorityLevelEnum,
 } from "#/lib/actions/ticket/types";
-import { formatDateTimeIn } from "#/lib/date-utils";
 import { cn, stringValidation } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import type { ActionResponse } from "#/types/actions.types";
@@ -91,12 +84,6 @@ type NextStepAction = ReasonAction & {
   icon: LucideIcon;
   // Matches the colour of the event the action adds to the activity.
   tone: string;
-  outcome: (context: {
-    ticket: FullTicket;
-    role: ImplementerRole;
-    recipients: TicketPerson[];
-    reopenableUntil: string | null;
-  }) => string;
 };
 
 const nextStepActions: NextStepAction[] = [
@@ -106,7 +93,6 @@ const nextStepActions: NextStepAction[] = [
     label: "Resolve",
     icon: CircleCheck,
     tone: "text-shamiri-green",
-    outcome: () => "Close it with a note on the fix",
     placeholder: "How was this resolved?",
     submit: (ticketId, { reason }) => resolveTicket(ticketId, reason),
   },
@@ -116,13 +102,6 @@ const nextStepActions: NextStepAction[] = [
     label: "Escalate",
     icon: ArrowUpFromLine,
     tone: "text-shamiri-light-red",
-    outcome: ({ recipients }) => {
-      const [first] = recipients;
-      if (!first) return "No one is available to take it";
-      if (recipients.length === 1) return `Send it to ${personName(first)}`;
-      const label = first.role ? roleLabel(first.role).toLowerCase() : "person";
-      return `Choose ${/^[aeiou]/.test(label) ? "an" : "a"} ${label} to send it to`;
-    },
     placeholder: "Why does this need to go up a tier?",
     submit: (ticketId, { reason, recipientId }) => createEscalation(ticketId, reason, recipientId),
   },
@@ -132,7 +111,6 @@ const nextStepActions: NextStepAction[] = [
     label: "Reassign",
     icon: ArrowLeftRight,
     tone: "text-shamiri-text-dark-grey",
-    outcome: ({ role }) => `Hand it to another ${roleLabel(role).toLowerCase()}`,
     placeholder: "Why should they take it over?",
     submit: (ticketId, { reason, recipientId }) =>
       reassignTicket({ ticketId, reassignedTo: recipientId, reassignmentReason: reason }),
@@ -143,7 +121,6 @@ const nextStepActions: NextStepAction[] = [
     label: "Change priority",
     icon: Flag,
     tone: "text-shamiri-dark-orange",
-    outcome: ({ ticket }) => `Currently ${sentenceLabel(ticket.priority).toLowerCase()}`,
     placeholder: "Why is the priority changing?",
     submit: (ticketId, { reason, priority }) =>
       changeTicketPriority(ticketId, { priority, reason }),
@@ -154,8 +131,6 @@ const nextStepActions: NextStepAction[] = [
     label: "Reopen",
     icon: RotateCcw,
     tone: "text-shamiri-dark-orange",
-    outcome: ({ reopenableUntil }) =>
-      reopenableUntil ? `You can reopen until ${reopenableUntil}` : "Send it back to be worked on",
     placeholder: "What still needs to be done?",
     submit: (ticketId, { reason, recipientId }) => reopenTicket(ticketId, reason, recipientId),
   },
@@ -165,7 +140,6 @@ const nextStepActions: NextStepAction[] = [
     label: "Cancel ticket",
     icon: CircleX,
     tone: "text-shamiri-text-dark-grey",
-    outcome: () => "Withdraw it if it's no longer needed",
     placeholder: "Why is this ticket no longer needed?",
     destructive: true,
     submit: (ticketId, { reason }) => cancelTicket(ticketId, reason),
@@ -201,8 +175,6 @@ export function TicketComposer({
   role,
   recipients,
   reassignRecipients,
-  reopenableUntil,
-  timeZone,
   contained,
 }: {
   ticket: FullTicket;
@@ -210,8 +182,6 @@ export function TicketComposer({
   role: ImplementerRole;
   recipients: TicketPerson[];
   reassignRecipients: TicketPerson[];
-  reopenableUntil: Date | null;
-  timeZone: string | null;
   /** Centre the bar's content in the page container; off inside a layout that has one. */
   contained: boolean;
 }) {
@@ -242,7 +212,6 @@ export function TicketComposer({
   }
 
   const current = modes.find((m) => m.kind === mode) ?? modes[0];
-  const action = available.find((a) => a.kind === current?.kind);
   // The row holds Comment, the step that moves the ticket on, and the handovers; the rest wait
   // under More, unless there's only one of them.
   const recommended = (["start", "resolve", "reopen"] as const).find((kind) =>
@@ -289,82 +258,69 @@ export function TicketComposer({
     >
       <div className={cn("space-y-2.5 py-3", contained && "container")}>
         {modes.length > 1 && (
-          <div className="flex items-center gap-3">
-            <div className="flex shrink-0 gap-1 rounded-lg border bg-background-secondary p-0.5">
-              <ToggleGroup
-                type="single"
-                aria-label="What to do"
-                value={inMore ? "" : (current?.kind ?? "")}
-                // A single toggle group lets its pressed item be unpressed; a mode stays chosen.
-                onValueChange={(kind) => kind && choose(kind as Mode)}
-                className="gap-1"
-              >
-                {rowModes.map(({ kind, label, icon: Icon, tone }) => (
-                  <ToggleGroupItem
-                    key={kind}
-                    value={kind}
-                    aria-controls="ticket-composer-form"
-                    className={cn(
-                      modeClass(kind === current?.kind, kind === recommended),
-                      phoneMoreModes.some((m) => m.kind === kind) && "max-sm:hidden",
-                    )}
+          <div className="flex w-fit gap-1 rounded-lg border bg-background-secondary p-0.5">
+            <ToggleGroup
+              type="single"
+              aria-label="What to do"
+              value={inMore ? "" : (current?.kind ?? "")}
+              // A single toggle group lets its pressed item be unpressed; a mode stays chosen.
+              onValueChange={(kind) => kind && choose(kind as Mode)}
+              className="gap-1"
+            >
+              {rowModes.map(({ kind, label, icon: Icon, tone }) => (
+                <ToggleGroupItem
+                  key={kind}
+                  value={kind}
+                  aria-controls="ticket-composer-form"
+                  className={cn(
+                    modeClass(kind === current?.kind, kind === recommended),
+                    phoneMoreModes.some((m) => m.kind === kind) && "max-sm:hidden",
+                  )}
+                >
+                  <Icon aria-hidden className={cn("h-4 w-4", tone)} />
+                  {label}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+            {menuModes.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={cn(
+                    modeClass(inMore, false),
+                    inPhoneMore &&
+                      "max-sm:border-border max-sm:bg-white max-sm:text-shamiri-black max-sm:shadow-xs",
+                    moreModes.length === 0 && "sm:hidden",
+                  )}
+                >
+                  <span className="contents sm:hidden">{menuLabel(inPhoneMore)}</span>
+                  <span className="contents max-sm:hidden">{menuLabel(inMore)}</span>
+                  <ChevronDown aria-hidden className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  // Focus goes to the chosen mode's form, not back to the trigger.
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                >
+                  <DropdownMenuRadioGroup
+                    value={current?.kind}
+                    onValueChange={(kind) => choose(kind as Mode)}
                   >
-                    <Icon aria-hidden className={cn("h-4 w-4", tone)} />
-                    {label}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-              {menuModes.length > 0 && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    className={cn(
-                      modeClass(inMore, false),
-                      inPhoneMore &&
-                        "max-sm:border-border max-sm:bg-white max-sm:text-shamiri-black max-sm:shadow-xs",
-                      moreModes.length === 0 && "sm:hidden",
-                    )}
-                  >
-                    <span className="contents sm:hidden">{menuLabel(inPhoneMore)}</span>
-                    <span className="contents max-sm:hidden">{menuLabel(inMore)}</span>
-                    <ChevronDown aria-hidden className="h-4 w-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="start"
-                    // Focus goes to the chosen mode's form, not back to the trigger.
-                    onCloseAutoFocus={(e) => e.preventDefault()}
-                  >
-                    <DropdownMenuRadioGroup
-                      value={current?.kind}
-                      onValueChange={(kind) => choose(kind as Mode)}
-                    >
-                      {menuModes.map(({ kind, label, icon: Icon, tone }) => (
-                        <DropdownMenuRadioItem
-                          key={kind}
-                          value={kind}
-                          className={cn(
-                            "gap-1.5 max-sm:py-3",
-                            !moreModes.some((m) => m.kind === kind) && "sm:hidden",
-                          )}
-                        >
-                          <Icon aria-hidden className={cn("h-4 w-4", tone)} />
-                          {label}
-                        </DropdownMenuRadioItem>
-                      ))}
-                    </DropdownMenuRadioGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-            {action && (
-              <p className="hidden truncate text-sm text-shamiri-text-dark-grey md:block">
-                {action.outcome({
-                  ticket,
-                  role,
-                  recipients,
-                  reopenableUntil:
-                    reopenableUntil && timeZone && formatDateTimeIn(reopenableUntil, timeZone),
-                })}
-              </p>
+                    {menuModes.map(({ kind, label, icon: Icon, tone }) => (
+                      <DropdownMenuRadioItem
+                        key={kind}
+                        value={kind}
+                        className={cn(
+                          "gap-1.5 max-sm:py-3",
+                          !moreModes.some((m) => m.kind === kind) && "sm:hidden",
+                        )}
+                      >
+                        <Icon aria-hidden className={cn("h-4 w-4", tone)} />
+                        {label}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         )}
