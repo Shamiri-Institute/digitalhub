@@ -49,20 +49,26 @@ test("a Research admin sees what happened to each page of a processed upload", a
   context,
   undo,
 }) => {
-  const [[researchHub], user, admin] = await Promise.all([
-    db
-      .select({ hubId: hub.id, projectId: hub.projectId })
-      .from(hub)
-      .innerJoin(project, eq(project.id, hub.projectId))
-      .where(and(eq(project.isDefault, true), isNull(hub.archivedAt)))
-      .orderBy(asc(hub.id))
-      .limit(1),
+  const [user, admin] = await Promise.all([
     db.query.user.findFirst({ where: (u, { eq }) => eq(u.email, researchAdminEmail) }),
     db.query.adminUser.findFirst({ where: (a, { eq }) => eq(a.email, researchAdminEmail) }),
   ]);
-  required(researchHub, "a hub of the default project");
   required(user, "a Research team admin");
   required(admin, "a Research team admin profile");
+  const [researchHub] = await db
+    .select({ hubId: hub.id, projectId: hub.projectId })
+    .from(hub)
+    .innerJoin(project, eq(project.id, hub.projectId))
+    .where(
+      and(
+        eq(project.isDefault, true),
+        eq(hub.implementerId, admin.implementerId),
+        isNull(hub.archivedAt),
+      ),
+    )
+    .orderBy(asc(hub.id))
+    .limit(1);
+  required(researchHub, "a hub of the admin's implementer in the default project");
   const fileName = await mixedUploadIn(
     { ...researchHub, implementerId: admin.implementerId, userId: user.id },
     `${surveyCode}A`,
@@ -72,9 +78,9 @@ test("a Research admin sees what happened to each page of a processed upload", a
   await signInWithEmail(context, researchAdminEmail);
   await page.goto(getUrl("/admin/surveys/scans"));
 
-  const row = page.getByRole("row", { name: new RegExp(fileName) });
-  await expect(row).toContainText("Processed");
-  await expect(row).toContainText(MIXED_SUMMARY);
+  const uploadRow = page.getByRole("row").filter({ hasText: fileName });
+  await expect(uploadRow).toContainText("Processed");
+  await expect(uploadRow).toContainText(MIXED_SUMMARY);
 });
 
 test("a hub coordinator sees what happened to each page of their hub's processed upload", async ({
@@ -97,7 +103,7 @@ test("a hub coordinator sees what happened to each page of their hub's processed
 
   await page.goto(getUrl("/hc/surveys/scans"));
 
-  const row = page.getByRole("row", { name: new RegExp(fileName) });
-  await expect(row).toContainText("Processed");
-  await expect(row).toContainText(MIXED_SUMMARY);
+  const uploadRow = page.getByRole("row").filter({ hasText: fileName });
+  await expect(uploadRow).toContainText("Processed");
+  await expect(uploadRow).toContainText(MIXED_SUMMARY);
 });

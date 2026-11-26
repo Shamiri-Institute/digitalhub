@@ -59,6 +59,11 @@ export async function createMixedOutcomeUpload({
   });
 
   const uploadId = objectId("surveyupload");
+  const remove = async () => {
+    await db.delete(surveyAnswer).where(eq(surveyAnswer.questionnaireId, questionnaireId));
+    await db.delete(surveyScanPage).where(eq(surveyScanPage.uploadId, uploadId));
+    await db.delete(surveyUpload).where(eq(surveyUpload.id, uploadId));
+  };
   await db.insert(surveyUpload).values({
     id: uploadId,
     hubId: scope.hubId,
@@ -74,11 +79,16 @@ export async function createMixedOutcomeUpload({
   });
   const imageSha256 = createHash("sha256").update(`page image ${uploadId}`).digest("base64");
   const imageHex = hexChecksum(imageSha256);
-  const matched = [pageQrText(firstPageId)];
-  const duplicate = [pageQrText(firstPageId)];
-  const unknownCode = [pageQrText(objectId("surveyquestionnairepage"))];
-  const noCode: string[] = [];
-  const posted: PostedPage[] = [matched, duplicate, unknownCode, noCode].map((qrs, pageIndex) => ({
+  const matchedPageQrs = [pageQrText(firstPageId)];
+  const duplicatePageQrs = [pageQrText(firstPageId)];
+  const unknownCodePageQrs = [pageQrText(objectId("surveyquestionnairepage"))];
+  const noCodePageQrs: string[] = [];
+  const posted: PostedPage[] = [
+    matchedPageQrs,
+    duplicatePageQrs,
+    unknownCodePageQrs,
+    noCodePageQrs,
+  ].map((qrs, pageIndex) => ({
     pageIndex,
     qrs,
     imageSha256,
@@ -98,19 +108,21 @@ export async function createMixedOutcomeUpload({
       },
     ]),
   );
-  const ingested = await db.transaction((tx) =>
-    ingestPages(tx, { uploadId, attempt: 1, pageImages }, posted),
-  );
-  if (ingested.kind !== "ingested") {
-    throw new Error(`The scan wasn't ingested: ${ingested.kind}`);
+  try {
+    const ingested = await db.transaction((tx) =>
+      ingestPages(tx, { uploadId, attempt: 1, pageImages }, posted),
+    );
+    const outcomes =
+      ingested.kind === "ingested"
+        ? ingested.pages.map((page) => ("status" in page ? page.status : page.result))
+        : [ingested.kind];
+    if (outcomes.join() !== "MATCHED,DUPLICATE,REJECTED,UNIDENTIFIED") {
+      throw new Error(`The scan's pages came back as ${outcomes.join(", ")}`);
+    }
+    await db.update(surveyUpload).set({ status: "PROCESSED" }).where(eq(surveyUpload.id, uploadId));
+  } catch (error) {
+    await remove();
+    throw error;
   }
-  await db.update(surveyUpload).set({ status: "PROCESSED" }).where(eq(surveyUpload.id, uploadId));
-
-  return {
-    async remove() {
-      await db.delete(surveyAnswer).where(eq(surveyAnswer.questionnaireId, questionnaireId));
-      await db.delete(surveyScanPage).where(eq(surveyScanPage.uploadId, uploadId));
-      await db.delete(surveyUpload).where(eq(surveyUpload.id, uploadId));
-    },
-  };
+  return { remove };
 }

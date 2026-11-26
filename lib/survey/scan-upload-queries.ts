@@ -4,7 +4,7 @@
 import { sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { countOf } from "#/db/sql";
+import { countOf, qualified } from "#/db/sql";
 import { SurveyUploadStatus } from "#/db/enums";
 import { surveyScanPage } from "#/db/schema";
 import { implementerHubsInProject } from "#/lib/auth/require-hub-role";
@@ -40,9 +40,10 @@ export async function fetchScanUploads(viewer: SurveyViewer) {
       pagesPosted: countOf(
         surveyScanPage.uploadId,
         u.id,
-        sql`"survey_scan_pages"."page_index" < ${u.pageCount}`,
+        sql`"survey_scan_pages"."page_index" < ${qualified(u.pageCount)}`,
       ).as("pages_posted"),
-      // Scan-page columns written raw, as in countOf: drizzle would rewrite them to the uploads' alias.
+      // Every column written qualified, as in countOf: drizzle would rewrite the scan pages' to the
+      // uploads' alias, and leaves the uploads' unqualified in a query without `with`.
       pageOutcomes: sql<PageOutcome[]>`(
         select coalesce(json_agg(json_build_object(
           'status', outcome.status, 'rejectedReason', outcome.rejected_reason, 'pages', outcome.pages
@@ -50,8 +51,8 @@ export async function fetchScanUploads(viewer: SurveyViewer) {
         from (
           select status, rejected_reason, count(*)::int as pages
           from "survey_scan_pages"
-          where "survey_scan_pages"."upload_id" = ${u.id}
-            and "survey_scan_pages"."page_index" < ${u.pageCount}
+          where "survey_scan_pages"."upload_id" = ${qualified(u.id)}
+            and "survey_scan_pages"."page_index" < ${qualified(u.pageCount)}
           group by status, rejected_reason
         ) outcome
       )`.as("page_outcomes"),
