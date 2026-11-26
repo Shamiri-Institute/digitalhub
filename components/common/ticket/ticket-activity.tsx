@@ -256,9 +256,10 @@ function EventBody({
         {change && <span className="text-shamiri-black">{change}</span>}
       </div>
       {isReport ? (
+        // The report leads the thread, so it reads a step larger than the replies.
         <p
           className={cn(
-            "max-w-prose whitespace-pre-line text-pretty",
+            "max-w-prose whitespace-pre-line text-pretty sm:text-lg sm:leading-7",
             ticket.description ? "text-shamiri-black" : "text-shamiri-text-dark-grey",
           )}
         >

@@ -2,7 +2,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { notFound } from "next/navigation";
 
 import type { ImplementerRole } from "#/db/enums";
-import { Figure, Note, StatCell } from "#/components/common/stats";
+import { Note, StatCell } from "#/components/common/stats";
 import { ViewerTimeZoneCookie } from "#/components/common/viewer-time-zone";
 import { Badge } from "#/components/ui/badge";
 import PageFooter from "#/components/ui/page-footer";
@@ -45,6 +45,7 @@ export default async function TicketPage({
     viewerId,
     recipients,
     reassignRecipients,
+    creatorHub,
   } = detailsResult.data;
   const isActive = ACTIVE_TICKET_STATUSES.includes(ticket.status);
   const holdsThis = ticket.holder.userId === viewerId;
@@ -54,6 +55,14 @@ export default async function TicketPage({
     : ticket.status === "CANCELLED"
       ? "Was with"
       : "Held by";
+  // High and urgent tickets that still need work tint their priority, like their badge.
+  const priorityTint =
+    isActive &&
+    {
+      HIGH: "bg-linear-to-b from-shamiri-light-orange/10 to-shamiri-light-orange/10",
+      URGENT:
+        "bg-linear-to-b from-shamiri-light-red-background-base/10 to-shamiri-light-red-background-base/10",
+    }[ticket.priority as string];
 
   const body = (
     <main className="flex w-full grow flex-col">
@@ -70,8 +79,9 @@ export default async function TicketPage({
             {ticket.subject}
           </h1>
           <p className="text-sm font-medium uppercase tracking-caps text-shamiri-text-dark-grey">
-            {sentenceLabel(ticket.category)} · Raised by {personName(createdBy, viewerId)}
+            {sentenceLabel(ticket.category)} request · Raised by {personName(createdBy, viewerId)}
             {createdBy.role && createdBy.userId !== viewerId && `, ${roleLabel(createdBy.role)}`}
+            {creatorHub && ` at ${creatorHub}`}
             {timeZone && ` · ${formatDateIn(ticket.createdAt, timeZone)}`}
           </p>
         </div>
@@ -102,7 +112,7 @@ export default async function TicketPage({
               <Note>Reopenable until {formatDateTimeIn(reopenableUntil, timeZone)}</Note>
             )}
           </StatCell>
-          <StatCell label="Priority">
+          <StatCell label="Priority" className={priorityTint || undefined}>
             <PriorityBadge priority={ticket.priority} status={ticket.status} />
           </StatCell>
           <StatCell label={holderLabel}>
@@ -112,9 +122,9 @@ export default async function TicketPage({
           </StatCell>
           <StatCell label={isActive ? "Open for" : "Opened"}>
             {isActive ? (
-              <Figure
-                value={formatDistanceToNowStrict(ticket.createdAt, { roundingMethod: "floor" })}
-              />
+              <p className="text-lg text-shamiri-black">
+                {formatDistanceToNowStrict(ticket.createdAt, { roundingMethod: "floor" })}
+              </p>
             ) : (
               <p className="text-lg text-shamiri-black">
                 {timeZone && formatDateIn(ticket.createdAt, timeZone)}

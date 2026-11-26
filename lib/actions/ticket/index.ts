@@ -795,6 +795,7 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
         actions,
         reopenableUntil:
           reopenable && resolvedAt ? new Date(resolvedAt.getTime() + REOPEN_WINDOW_MS) : null,
+        creatorHub: people.get(ticket.createdBy.userId)?.hub ?? null,
         events: events.map((e): TicketEvent => ({
           id: e.id,
           kind: e.kind,
@@ -1073,6 +1074,9 @@ async function getUserNamesAndRolesById(
   if (userIds.length === 0) return result;
 
   const coalesceSql = ROLE_NAME_CONFIG.map((c) => `${c.table}.${c.column}`).join(", ");
+  const hubSql = ROLE_NAME_CONFIG.flatMap((c) =>
+    c.hubColumn ? [`${c.table}.${c.hubColumn}`] : [],
+  ).join(", ");
   const joinsSql = ROLE_NAME_CONFIG.map(
     (c) =>
       `LEFT JOIN ${c.table} ON ${c.table}.id = im.identifier AND im.role = '${c.role}'::implementer_roles`,
@@ -1083,14 +1087,17 @@ async function getUserNamesAndRolesById(
     role: ImplementerRole;
     name: string | null;
     team: AdminTeam | null;
+    hub: string | null;
   }>(sql`
     SELECT
       im.user_id,
       im.role::text AS role,
       COALESCE(${sql.raw(coalesceSql)}) AS name,
-      admin_users.team::text AS team
+      admin_users.team::text AS team,
+      hubs.hub_name AS hub
     FROM implementer_members im
     ${sql.raw(joinsSql)}
+    LEFT JOIN hubs ON hubs.id = COALESCE(${sql.raw(hubSql)})
     WHERE ${inArray(sql`im.user_id`, userIds)}
       AND im.implementer_id = ${implementerId}
   `);
@@ -1098,7 +1105,7 @@ async function getUserNamesAndRolesById(
   for (const row of rows) {
     // Another membership's row has no team, so it must not hide the admin one's.
     const team = row.team ?? result.get(row.user_id)?.team ?? null;
-    result.set(`${row.user_id}`, { role: row.role, name: row.name, team });
+    result.set(`${row.user_id}`, { role: row.role, name: row.name, team, hub: row.hub });
   }
 
   return result;
