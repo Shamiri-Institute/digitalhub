@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [2.16.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.15.0...v2.16.0) (2026-11-26)
+
+### Features
+
+- **tickets:** comments with files, and a ticket page built around the conversation ([#1104](https://github.com/Shamiri-Institute/digitalhub/issues/1104)) ([d3023df](https://github.com/Shamiri-Institute/digitalhub/commit/d3023dfa24ef51690202383f1c6f06ca51d57076))
+
+### Bug Fixes
+
+- **ui:** fix the pre-existing issues the Base UI audit found ([#1109](https://github.com/Shamiri-Institute/digitalhub/issues/1109)) ([a81b859](https://github.com/Shamiri-Institute/digitalhub/commit/a81b859a20c06ebc5ae1d7ac1e642caaeb52c14b))
+
 ## [2.15.0](https://github.com/Shamiri-Institute/digitalhub/compare/v2.14.0...v2.15.0) (2026-11-26)
 
 ### Features
