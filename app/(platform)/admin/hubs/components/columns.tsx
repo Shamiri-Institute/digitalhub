@@ -1,13 +1,13 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { ChevronRight, Info } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
 import type { AdminHub } from "../queries";
-import { formatCount } from "#/components/common/stats";
+import { formatCount, InfoTip } from "#/components/common/stats";
 import { StateBar, states } from "./hub-stats";
 
 const countColumn = (
@@ -51,20 +51,16 @@ const sessionsColumn: ColumnDef<AdminHub> = {
   header: () => (
     <div className="flex items-center gap-1">
       Sessions attended
-      <Tooltip>
-        <TooltipTrigger
-          aria-label="What the session colours mean"
-          className="inline-flex h-6 w-6 items-center justify-center rounded-sm text-shamiri-text-dark-grey hover:text-shamiri-black focus-visible:outline-2 focus-visible:outline-shamiri-new-blue"
-        >
-          <Info aria-hidden className="h-3.5 w-3.5" />
-        </TooltipTrigger>
-        <TooltipContent className="max-w-64 space-y-2 font-medium">
-          <SessionStatesLegend className="flex flex-wrap items-center gap-x-3 gap-y-1" />
-          <p>
-            Unmarked: the session date has passed, but nobody has marked it attended or cancelled.
-          </p>
-        </TooltipContent>
-      </Tooltip>
+      <InfoTip
+        label="What the session colours mean"
+        className="my-0"
+        contentClassName="max-w-64 space-y-2 font-medium"
+      >
+        <SessionStatesLegend className="flex flex-wrap items-center gap-x-3 gap-y-1" />
+        <p>
+          Unmarked: the session date has passed, but nobody has marked it attended or cancelled.
+        </p>
+      </InfoTip>
     </div>
   ),
   cell: ({ row }) => {

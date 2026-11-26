@@ -81,7 +81,7 @@ export default function TreatmentPlanForm({
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger render={children} nativeButton={false} />
-      <DialogContent className="z-10 max-h-[90%] max-w-[60vw] overflow-x-auto bg-white p-5">
+      <DialogContent className="z-10 max-h-[90%] w-[calc(100%-2rem)] max-w-3xl overflow-x-auto bg-white p-5">
         <TreatmentPlanFields
           clinicalCase={clinicalCase}
           role={role}

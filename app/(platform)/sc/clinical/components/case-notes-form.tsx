@@ -113,7 +113,7 @@ export default function CaseNotesForm({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger render={children} nativeButton={false} />
-      <DialogContent className="z-10 max-h-[90%] max-w-[60vw] overflow-x-auto bg-white p-5">
+      <DialogContent className="z-10 max-h-[90%] w-[calc(100%-2rem)] max-w-3xl overflow-x-auto bg-white p-5">
         <CaseNotesContent
           clinicalCase={clinicalCase}
           role={role}

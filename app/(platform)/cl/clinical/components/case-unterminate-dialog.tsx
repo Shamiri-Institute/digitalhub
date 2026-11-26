@@ -32,7 +32,7 @@ export default function CaseUnterminateDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={children} nativeButton={false} />
-      <DialogContent className="w-1/3 max-w-none">
+      <DialogContent className="w-[calc(100%-2rem)]">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
             Un-terminate case - {pseudonym}
