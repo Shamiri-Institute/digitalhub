@@ -248,7 +248,7 @@ function EmergencyPresentingIssues({
                       className={cn(
                         "h-6 w-6 border",
                         selectedSeverities[issue.id] === severity
-                          ? "text-white data-[state=checked]:border-brand data-[state=checked]:bg-brand"
+                          ? "text-white data-checked:border-brand data-checked:bg-brand"
                           : "border-grey-border",
                       )}
                     />
@@ -295,13 +295,11 @@ function GeneralPresentingIssues({
                   <Checkbox
                     aria-label={issue.name}
                     checked={selectedIssues[issue.id] || false}
-                    onCheckedChange={(checked) =>
-                      handleSelect(issue.id.toString(), checked as boolean)
-                    }
+                    onCheckedChange={(checked) => handleSelect(issue.id.toString(), checked)}
                     className={cn(
                       "h-6 w-6 border",
                       selectedIssues[issue.id]
-                        ? "text-white data-[state=checked]:border-brand data-[state=checked]:bg-brand"
+                        ? "text-white data-checked:border-brand data-checked:bg-brand"
                         : "border-grey-border",
                     )}
                   />

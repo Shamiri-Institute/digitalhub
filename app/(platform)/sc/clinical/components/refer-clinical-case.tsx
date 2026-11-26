@@ -68,7 +68,7 @@ export default function ReferClinicalCase({
   clinicalCase,
   referralOptions,
 }: {
-  children: React.ReactNode;
+  children: React.ReactElement;
   clinicalCase: ClinicalCases;
   referralOptions: ReferralOptions;
 }) {
@@ -76,7 +76,7 @@ export default function ReferClinicalCase({
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger render={children} nativeButton={false} />
       <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
         <ReferClinicalCaseForm
           clinicalCase={clinicalCase}
@@ -305,11 +305,7 @@ function ReferClinicalCaseForm({
             />
 
             <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="ghost" type="button">
-                  Cancel
-                </Button>
-              </DialogClose>
+              <DialogClose render={<Button variant="ghost" type="button" />}>Cancel</DialogClose>
               <Button variant="brand" type="submit" loading={isSaving} disabled={isSaving}>
                 Save Changes
               </Button>

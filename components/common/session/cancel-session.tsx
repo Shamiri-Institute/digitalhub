@@ -91,13 +91,15 @@ function CancelSessionConfirm({
       </div>
       <Separator />
       <div className="flex justify-end gap-4">
-        <DialogClose asChild>
-          <Button
-            className="text-shamiri-light-red hover:bg-red-bg hover:text-shamiri-light-red"
-            variant="ghost"
-          >
-            Cancel
-          </Button>
+        <DialogClose
+          render={
+            <Button
+              className="text-shamiri-light-red hover:bg-red-bg hover:text-shamiri-light-red"
+              variant="ghost"
+            />
+          }
+        >
+          Cancel
         </DialogClose>
         <Button
           variant="destructive"

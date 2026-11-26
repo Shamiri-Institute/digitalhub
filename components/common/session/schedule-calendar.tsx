@@ -290,11 +290,17 @@ function CreateSessionButton({
 }) {
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        <Button variant="brand" disabled={loading} className="flex items-center gap-2 text-base">
-          <Icons.plusCircle className="h-4 w-4" />
-          <span>Schedule a session</span>
-        </Button>
+      <DialogTrigger
+        render={
+          <Button
+            variant="brand"
+            disabled={loading}
+            className="flex items-center gap-2 text-base"
+          />
+        }
+      >
+        <Icons.plusCircle className="h-4 w-4" />
+        <span>Schedule a session</span>
       </DialogTrigger>
       <DialogPortal>
         <DialogContent>

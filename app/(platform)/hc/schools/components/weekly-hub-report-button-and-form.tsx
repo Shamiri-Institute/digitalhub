@@ -63,18 +63,20 @@ export default function WeeklyHubReportButtonAndForm() {
   const [open, setDialogOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        <Button className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white">
-          <Image
-            unoptimized
-            priority
-            src={AddCircleOutlined}
-            alt="Add icon circle outlined"
-            width={20}
-            height={20}
-          />
-          Weekly Hub Report
-        </Button>
+      <DialogTrigger
+        render={
+          <Button className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white" />
+        }
+      >
+        <Image
+          unoptimized
+          priority
+          src={AddCircleOutlined}
+          alt="Add icon circle outlined"
+          width={20}
+          height={20}
+        />
+        Weekly Hub Report
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <WeeklyHubReportButtonAndFormForm close={() => setDialogOpen(false)} />

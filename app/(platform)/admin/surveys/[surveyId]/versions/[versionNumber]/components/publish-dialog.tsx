@@ -45,11 +45,7 @@ export default function PublishDialog(props: PublishDialogProps) {
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button type="button" variant="brand">
-          Publish
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger render={<Button type="button" variant="brand" />}>Publish</DialogTrigger>
       <DialogContent className="max-w-lg">
         <PublishSteps {...props} close={() => setOpen(false)} />
       </DialogContent>

@@ -468,7 +468,7 @@ function ReasonForm({
                         <SelectValue placeholder="Choose who should take it" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent position="popper">
+                    <SelectContent>
                       <RecipientOptions people={recipients} />
                     </SelectContent>
                   </Select>
@@ -491,7 +491,7 @@ function ReasonForm({
                       <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent position="popper">
+                  <SelectContent>
                     {Object.values(TicketPriorityLevel).map((priority) => (
                       <SelectItem key={priority} value={priority}>
                         {sentenceLabel(priority)}

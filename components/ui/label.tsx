@@ -1,6 +1,3 @@
-"use client";
-
-import * as LabelPrimitive from "@radix-ui/react-label";
 import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
 
@@ -15,17 +12,16 @@ function Label({
   required,
   children,
   ...props
-}: React.ComponentProps<typeof LabelPrimitive.Root> &
-  VariantProps<typeof labelVariants> & { required?: boolean }) {
+}: React.ComponentProps<"label"> & VariantProps<typeof labelVariants> & { required?: boolean }) {
   return (
-    <LabelPrimitive.Root data-slot="label" className={cn(labelVariants(), className)} {...props}>
+    <label data-slot="label" className={cn(labelVariants(), className)} {...props}>
       {children}
       {required && (
         <span aria-hidden="true" className="text-shamiri-light-red">
           {" *"}
         </span>
       )}
-    </LabelPrimitive.Root>
+    </label>
   );
 }
 

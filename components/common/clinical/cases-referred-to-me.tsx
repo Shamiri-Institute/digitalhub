@@ -10,7 +10,7 @@ import {
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
-import { toastOnFailure, useToast } from "#/components/ui/use-toast";
+import { toastOnFailure, toast } from "#/components/ui/use-toast";
 import { riskStatusOptions } from "#/db/enums";
 import { DISPLAY_DATE } from "#/lib/date-utils";
 
@@ -37,7 +37,6 @@ export function CasesReferredToMe({ cases }: { cases: CaseReferredToMe[] }) {
 }
 
 function ReferredCaseCard({ referredCase }: { referredCase: CaseReferredToMe }) {
-  const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const referrerName =
     referredCase.referredFromSupervisor?.supervisorName ?? referredCase.referredFromSpecified;

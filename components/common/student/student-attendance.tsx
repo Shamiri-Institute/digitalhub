@@ -623,9 +623,7 @@ const columns = (state: {
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
-        className={
-          "border-shamiri-light-grey data-[state=checked]:bg-shamiri-new-blue h-5 w-5 bg-white"
-        }
+        className={"border-shamiri-light-grey data-checked:bg-shamiri-new-blue h-5 w-5 bg-white"}
       />
     ),
     cell: ({ row }) => {
@@ -636,7 +634,7 @@ const columns = (state: {
             onCheckedChange={(val) => row.toggleSelected(!!val)}
             aria-label="Select row"
             className={
-              "border-shamiri-light-grey data-[state=checked]:bg-shamiri-new-blue h-5 w-5 bg-white"
+              "border-shamiri-light-grey data-checked:bg-shamiri-new-blue h-5 w-5 bg-white"
             }
           />
         </div>

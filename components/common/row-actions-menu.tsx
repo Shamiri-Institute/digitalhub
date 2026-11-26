@@ -19,8 +19,8 @@ export function RowActionsTrigger({ label, className }: { label: string; classNa
   );
 }
 
-// For an item wrapped in a `DialogTrigger` inside the menu: selecting an item closes the menu,
-// which would unmount the dialog it just opened, so the menu stays open behind the dialog.
+// For an item that is the `render` of a `DialogTrigger` inside the menu: selecting an item closes
+// the menu, which would unmount the dialog it just opened, so the menu stays open behind the dialog.
 export function NestedDialogMenuItem(props: ComponentProps<typeof DropdownMenuItem>) {
-  return <DropdownMenuItem {...props} onSelect={(event) => event.preventDefault()} />;
+  return <DropdownMenuItem {...props} closeOnClick={false} />;
 }

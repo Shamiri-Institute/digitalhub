@@ -44,7 +44,7 @@ export default function HandleSessionAttendanceUpdate({ row }: { row: Row<Attend
           <DropdownMenuLabel>
             <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
           </DropdownMenuLabel>
-          <DropdownMenuItem onSelect={() => setIsOpen(true)}>Mark attendance</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setIsOpen(true)}>Mark attendance</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -106,7 +106,7 @@ function MarkClinicalAttendanceForm({
               aria-label="Attended"
               value="attended"
               id="mark_attended"
-              className="custom-radio border-border data-[state=checked]:border-shamiri-green"
+              className="custom-radio border-border data-checked:border-shamiri-green"
             />
           </div>
           <div className="relative">
@@ -115,7 +115,7 @@ function MarkClinicalAttendanceForm({
               aria-label="Missed"
               value="missed"
               id="mark_missed"
-              className="custom-radio border-border data-[state=checked]:border-shamiri-red"
+              className="custom-radio border-border data-checked:border-shamiri-red"
             />
           </div>
           <div className="relative">
@@ -124,15 +124,13 @@ function MarkClinicalAttendanceForm({
               aria-label="Unmarked"
               value="unmarked"
               id="unmarked"
-              className="custom-radio border-border data-[state=checked]:border-shamiri-new-blue"
+              className="custom-radio border-border data-checked:border-shamiri-new-blue"
             />
           </div>
         </RadioGroup>
 
         <div className="flex justify-end gap-2">
-          <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DialogClose>
+          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
           <Button
             disabled={isSaving}
             loading={isSaving}

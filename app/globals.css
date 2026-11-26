@@ -109,31 +109,12 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
 
-  --animate-accordion-down: accordion-down 0.2s ease-out;
-  --animate-accordion-up: accordion-up 0.2s ease-out;
-
   --z-index-100: 100;
 
   --breakpoint-xs: 375px;
 
   --shadow-inner-2: 6px 0 6px 0 rgba(0, 0, 0, 0.06) inset, -6px 0 6px 0 rgba(0, 0, 0, 0.1) inset;
 
-  @keyframes accordion-down {
-    from {
-      height: 0;
-    }
-    to {
-      height: var(--radix-accordion-content-height);
-    }
-  }
-  @keyframes accordion-up {
-    from {
-      height: var(--radix-accordion-content-height);
-    }
-    to {
-      height: 0;
-    }
-  }
   @keyframes shimmer {
     100% {
       transform: translateX(100%);
@@ -292,7 +273,7 @@
     @apply flex-1 text-base transition ease-in-out;
   }
 
-  & .form-toggle-button[data-state="on"] {
+  & .form-toggle-button[data-pressed] {
     @apply border bg-white text-shamiri-black drop-shadow-xl;
   }
 }
@@ -302,7 +283,7 @@
     @apply flex-1 text-base transition ease-in-out;
   }
 
-  .form-toggle &[data-state="on"] {
+  .form-toggle &[data-pressed] {
     @apply border bg-white text-shamiri-black drop-shadow-xl;
   }
 }
@@ -316,79 +297,79 @@
 }
 
 @utility custom-radio {
-  @apply h-20! w-full! rounded-lg! bg-background-secondary! transition! ease-in! data-[state=checked]:border-2! data-[state=checked]:bg-white!;
+  @apply h-20! w-full! rounded-lg! bg-background-secondary! transition! ease-in! data-checked:border-2! data-checked:bg-white!;
 
   & svg {
     @apply hidden;
   }
 
-  .custom-indicator:has(+ &button[data-state="checked"]) .indicator {
+  .custom-indicator:has(+ &[data-checked]) .indicator {
     @apply border-4;
   }
 
-  .custom-indicator:has(+ &button[data-state="checked"]) .indicator.green {
+  .custom-indicator:has(+ &[data-checked]) .indicator.green {
     @apply border-shamiri-green;
   }
 
-  .custom-indicator:has(+ &button[data-state="checked"]) .indicator.red {
+  .custom-indicator:has(+ &[data-checked]) .indicator.red {
     @apply border-shamiri-red;
   }
 
-  .custom-indicator:has(+ &button[data-state="checked"]) .indicator.blue {
+  .custom-indicator:has(+ &[data-checked]) .indicator.blue {
     @apply border-shamiri-new-blue;
   }
 }
 
 @utility custom-indicator {
-  &:has(+ button.custom-radio[data-state="checked"]) .indicator {
+  &:has(+ .custom-radio[data-checked]) .indicator {
     @apply border-4;
   }
 
-  &:has(+ button.custom-radio[data-state="checked"]) .indicator.green {
+  &:has(+ .custom-radio[data-checked]) .indicator.green {
     @apply border-shamiri-green;
   }
 
-  &:has(+ button.custom-radio[data-state="checked"]) .indicator.red {
+  &:has(+ .custom-radio[data-checked]) .indicator.red {
     @apply border-shamiri-red;
   }
 
-  &:has(+ button.custom-radio[data-state="checked"]) .indicator.blue {
+  &:has(+ .custom-radio[data-checked]) .indicator.blue {
     @apply border-shamiri-new-blue;
   }
 }
 
 @utility indicator {
-  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) & {
+  .custom-indicator:has(+ .custom-radio[data-checked]) & {
     @apply border-4;
   }
 
-  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) &.green {
+  .custom-indicator:has(+ .custom-radio[data-checked]) &.green {
     @apply border-shamiri-green;
   }
 
-  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) &.red {
+  .custom-indicator:has(+ .custom-radio[data-checked]) &.red {
     @apply border-shamiri-red;
   }
 
-  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) &.blue {
+  .custom-indicator:has(+ .custom-radio[data-checked]) &.blue {
     @apply border-shamiri-new-blue;
   }
 }
 
 @utility green {
-  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) &.indicator {
+  .custom-indicator:has(+ .custom-radio[data-checked]) &.indicator {
     @apply border-shamiri-green;
   }
 }
 
 @utility red {
-  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) &.indicator {
+  .custom-indicator:has(+ .custom-radio[data-checked]) &.indicator {
     @apply border-shamiri-red;
   }
 }
 
 @utility blue {
-  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) &.indicator {
+  .custom-indicator:has(+ .custom-radio[data-checked]) &.indicator {
     @apply border-shamiri-new-blue;
   }
 }
