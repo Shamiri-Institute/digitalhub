@@ -32,6 +32,7 @@ const s3RegionOrigins = [
       process.env.S3_RECORDINGS_REGION,
       process.env.S3_STUDENT_ATTENDANCE_REGION,
       process.env.S3_SURVEY_SCANS_REGION,
+      process.env.S3_TICKET_ATTACHMENTS_REGION,
     ].filter(Boolean),
   ),
 ]

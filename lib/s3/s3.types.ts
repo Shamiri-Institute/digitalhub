@@ -9,6 +9,8 @@ export const S3_BUCKETS = [
   "survey-print-files",
   // Uploaded by the browser too, but presigned by the scan upload actions (lib/survey/scan-uploads.ts).
   "survey-scans",
+  // Uploaded by the browser too, but presigned by the ticket comment actions (lib/ticket-comments.ts).
+  "ticket-attachments",
 ] as const;
 
 export type S3Bucket = (typeof S3_BUCKETS)[number];

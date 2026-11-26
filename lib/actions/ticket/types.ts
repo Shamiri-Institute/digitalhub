@@ -178,8 +178,21 @@ export interface TicketEvent {
   assignee: TicketPerson | null;
   fromValue: string | null;
   toValue: string | null;
+  /** A comment's text; null once the comment is hidden. */
   reason: string | null;
   createdAt: Date;
+  /** When a comment was hidden, and by whom. */
+  archivedAt: Date | null;
+  archivedBy: TicketPerson | null;
+  /** A comment's files; empty once the comment is hidden. */
+  attachments: TicketAttachment[];
+}
+
+export interface TicketAttachment {
+  id: string;
+  fileName: string;
+  contentType: string;
+  byteSize: number;
 }
 
 /** What the viewer may do to a ticket, so the page never offers an action that would be refused. */
@@ -191,6 +204,7 @@ export interface TicketActions {
   canResolve: boolean;
   canReopen: boolean;
   canCancel: boolean;
+  canComment: boolean;
 }
 
 export interface TicketDetails {

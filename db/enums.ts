@@ -225,6 +225,7 @@ export const TicketEventKind = {
   REOPENED: "REOPENED",
   CANCELLED: "CANCELLED",
   CLOSED: "CLOSED",
+  COMMENTED: "COMMENTED",
 } as const;
 export type TicketEventKind = (typeof TicketEventKind)[keyof typeof TicketEventKind];
 

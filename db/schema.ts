@@ -3663,7 +3663,11 @@ export const ticketEvents = pgTable(
     assigneeId: varchar("assignee_id", { length: 255 }),
     fromValue: text("from_value"),
     toValue: text("to_value"),
+    // Why the change was made, or a comment's text (null for a comment that is only files).
     reason: text(),
+    // Set when a comment's author hides it; the row stays so the timeline shows that it was hidden.
+    archivedAt: timestamp("archived_at", { withTimezone: true, mode: "date" }),
+    archivedById: varchar("archived_by", { length: 255 }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -3672,13 +3676,18 @@ export const ticketEvents = pgTable(
     index("ticket_events_ticket_id_created_at_idx").on(table.ticketId, table.createdAt),
     index("ticket_events_actor_id_idx").on(table.actorId),
     index("ticket_events_assignee_id_idx").on(table.assigneeId),
+    index("ticket_events_archived_by_idx").on(table.archivedById),
+    check(
+      "ticket_events_archived_check",
+      sql`(${table.archivedAt} is null) = (${table.archivedById} is null) and (${table.archivedAt} is null or ${table.kind}::text = 'COMMENTED')`,
+    ),
     check(
       "ticket_events_assignee_check",
       sql`${table.kind}::text = 'REOPENED' or (${table.kind}::text in ('CREATED', 'ESCALATED', 'REASSIGNED')) = (${table.assigneeId} is not null)`,
     ),
     check(
       "ticket_events_reason_check",
-      sql`${table.kind}::text in ('CREATED', 'STARTED', 'CLOSED') or ${table.reason} is not null`,
+      sql`${table.kind}::text in ('CREATED', 'STARTED', 'CLOSED', 'COMMENTED') or ${table.reason} is not null`,
     ),
     check(
       "ticket_events_actor_check",
@@ -3702,6 +3711,61 @@ export const ticketEvents = pgTable(
       columns: [table.assigneeId],
       foreignColumns: [user.id],
       name: "ticket_events_assignee_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.archivedById],
+      foreignColumns: [user.id],
+      name: "ticket_events_archived_by_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+  ],
+);
+
+// A file on a ticket comment, stored in the ticket-attachments bucket.
+export const ticketAttachments = pgTable(
+  "ticket_attachments",
+  {
+    id: text()
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => objectId("ticketattachment")),
+    ticketId: varchar("ticket_id", { length: 255 }).notNull(),
+    eventId: varchar("event_id", { length: 255 }).notNull(),
+    uploadedById: varchar("uploaded_by", { length: 255 }).notNull(),
+    s3Key: text("s3_key").notNull(),
+    fileName: text("file_name").notNull(),
+    contentType: text("content_type").notNull(),
+    byteSize: integer("byte_size").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("ticket_attachments_s3_key_key").on(table.s3Key),
+    index("ticket_attachments_ticket_id_idx").on(table.ticketId),
+    index("ticket_attachments_event_id_idx").on(table.eventId),
+    index("ticket_attachments_uploaded_by_idx").on(table.uploadedById),
+    foreignKey({
+      columns: [table.ticketId],
+      foreignColumns: [tickets.id],
+      name: "ticket_attachments_ticket_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.eventId],
+      foreignColumns: [ticketEvents.id],
+      name: "ticket_attachments_event_id_fkey",
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+    foreignKey({
+      columns: [table.uploadedById],
+      foreignColumns: [user.id],
+      name: "ticket_attachments_uploaded_by_fkey",
     })
       .onUpdate("cascade")
       .onDelete("restrict"),

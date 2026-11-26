@@ -1,19 +1,6 @@
 "use server";
 
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  exists,
-  inArray,
-  isNotNull,
-  isNull,
-  ne,
-  or,
-  sql,
-  type SQL,
-} from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, isNull, ne, or, sql, type SQL } from "drizzle-orm";
 import { refresh } from "next/cache";
 
 import { db, type Transaction } from "#/db/client";
@@ -25,10 +12,12 @@ import {
   hubCoordinator,
   implementerMember,
   supervisor,
+  ticketAttachments,
   ticketEvents,
   tickets,
 } from "#/db/schema";
 import { NotFoundError, requireAuthRole } from "#/lib/auth/require-auth-role";
+import { canViewTicket } from "#/lib/ticket-access";
 import { mayReopenTicket, REOPEN_WINDOW_DAYS, REOPEN_WINDOW_MS } from "#/lib/ticket-reopen-window";
 import type { ActionResponse } from "#/types/actions.types";
 import {
@@ -51,6 +40,7 @@ import {
   type FullTicket,
   type TicketActions,
   type TicketAssignees,
+  type TicketAttachment,
   type TicketDetails,
   type TicketEvent,
   type TicketPerson,
@@ -168,23 +158,6 @@ export async function getAllTickets(filters: TicketFilters): Promise<ActionRespo
   } catch (error) {
     return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
   }
-}
-
-function canViewTicket(userId: string) {
-  return or(
-    eq(tickets.createdById, userId),
-    exists(
-      db
-        .select({ id: ticketEvents.id })
-        .from(ticketEvents)
-        .where(
-          and(
-            eq(ticketEvents.ticketId, tickets.id),
-            or(eq(ticketEvents.actorId, userId), eq(ticketEvents.assigneeId, userId)),
-          ),
-        ),
-    ),
-  );
 }
 
 async function lockTicket(tx: Transaction, ticketId: string) {
@@ -721,7 +694,7 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
     const thisTicket = sql`(SELECT ${tickets.createdAt}, ${tickets.id} FROM ${tickets} WHERE ${tickets.id} = ${ticketId})`;
     const sibling = { id: tickets.id, visibleId: tickets.visibleId };
 
-    const [routedRecipients, events, holderIsActive, reassignIds, [previous], [next]] =
+    const [routedRecipients, events, attachments, holderIsActive, reassignIds, [previous], [next]] =
       await Promise.all([
         (canEscalate || canReopen) && initiatorRole
           ? routeRecipients(
@@ -735,6 +708,19 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
           where: (e, { eq }) => eq(e.ticketId, ticketId),
           orderBy: (e, { asc }) => [asc(e.createdAt), asc(e.id)],
         }),
+        // Files on hidden comments never leave the server.
+        db
+          .select({
+            id: ticketAttachments.id,
+            eventId: ticketAttachments.eventId,
+            fileName: ticketAttachments.fileName,
+            contentType: ticketAttachments.contentType,
+            byteSize: ticketAttachments.byteSize,
+          })
+          .from(ticketAttachments)
+          .innerJoin(ticketEvents, eq(ticketEvents.id, ticketAttachments.eventId))
+          .where(and(eq(ticketAttachments.ticketId, ticketId), isNull(ticketEvents.archivedAt)))
+          .orderBy(asc(ticketAttachments.createdAt), asc(ticketAttachments.id)),
         canReopen && isActiveHolder(db, holderId, implementerId, callerUserId),
         canReassign
           ? listReassignmentRecipients(db, {
@@ -766,7 +752,9 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
       [
         ticketRow.createdById,
         ticketRow.holderId,
-        ...events.flatMap((e) => [e.actorId, e.assigneeId].filter((id) => id !== null)),
+        ...events.flatMap((e) =>
+          [e.actorId, e.assigneeId, e.archivedById].filter((id) => id !== null),
+        ),
         ...recipientIds,
         ...reassignIds,
       ],
@@ -782,6 +770,7 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
       canResolve: callerHoldsTicketAs(ESCALATION_RECIPIENT_ROLES),
       canReopen,
       canCancel: callerCreatedTicket && mayCancelTicket(ticket),
+      canComment: ticket.status !== "CLOSED" && ticket.status !== "CANCELLED",
     };
 
     return {
@@ -813,8 +802,18 @@ export async function getTicketDetails(ticketId: string): Promise<ActionResponse
           assignee: e.assigneeId ? personOf(e.assigneeId, people) : null,
           fromValue: e.fromValue,
           toValue: e.toValue,
-          reason: e.reason,
+          reason: e.archivedAt ? null : e.reason,
           createdAt: e.createdAt,
+          archivedAt: e.archivedAt,
+          archivedBy: e.archivedById ? personOf(e.archivedById, people) : null,
+          attachments: attachments
+            .filter((attachment) => attachment.eventId === e.id)
+            .map(({ id, fileName, contentType, byteSize }): TicketAttachment => ({
+              id,
+              fileName,
+              contentType,
+              byteSize,
+            })),
         })),
       },
     };
