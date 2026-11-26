@@ -42,8 +42,7 @@ export async function fetchScanUploads(viewer: SurveyViewer) {
         u.id,
         sql`"survey_scan_pages"."page_index" < ${u.pageCount}`,
       ).as("pages_posted"),
-      // Counted over the same pages, by outcome and reason. The scan pages' columns are written raw,
-      // as in countOf: drizzle would rewrite them to the uploads' alias.
+      // Scan-page columns written raw, as in countOf: drizzle would rewrite them to the uploads' alias.
       pageOutcomes: sql<PageOutcome[]>`(
         select coalesce(json_agg(json_build_object(
           'status', outcome.status, 'rejectedReason', outcome.rejected_reason, 'pages', outcome.pages

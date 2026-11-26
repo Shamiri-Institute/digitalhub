@@ -31,7 +31,6 @@ const OUTCOME_ORDER = [
   SurveyScanPageStatus.REJECTED,
 ] as const;
 
-/** Such as "40 matched · 2 unidentified · 3 rejected (2 unknown code, 1 another hub's copy)". */
 export function pageOutcomeSummary(outcomes: PageOutcome[]) {
   return OUTCOME_ORDER.flatMap((status) => {
     const ofStatus = outcomes.filter((outcome) => outcome.status === status);

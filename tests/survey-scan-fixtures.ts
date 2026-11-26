@@ -20,12 +20,6 @@ import { pageQrText } from "#/lib/survey/print-qr";
 import { scanPageImageKey } from "#/lib/survey/scan-files";
 import type { PostedPage } from "#/lib/survey/scan-wire";
 
-/**
- * A processed upload whose four pages come back with every outcome, ingested as the pipeline posts
- * them: a printed copy's first page (matched), that page again (duplicate), a code nothing printed
- * (rejected, unknown code) and a page with no code (unidentified). No image is uploaded: each page
- * names one, counted as stored. `remove` deletes the answers, scan pages and upload it made.
- */
 export async function createMixedOutcomeUpload({
   scope,
   versionId,
@@ -80,12 +74,11 @@ export async function createMixedOutcomeUpload({
   });
   const imageSha256 = createHash("sha256").update(`page image ${uploadId}`).digest("base64");
   const imageHex = hexChecksum(imageSha256);
-  const posted: PostedPage[] = [
-    [pageQrText(firstPageId)],
-    [pageQrText(firstPageId)],
-    [pageQrText(objectId("surveyquestionnairepage"))],
-    [],
-  ].map((qrs, pageIndex) => ({
+  const matched = [pageQrText(firstPageId)];
+  const duplicate = [pageQrText(firstPageId)];
+  const unknownCode = [pageQrText(objectId("surveyquestionnairepage"))];
+  const noCode: string[] = [];
+  const posted: PostedPage[] = [matched, duplicate, unknownCode, noCode].map((qrs, pageIndex) => ({
     pageIndex,
     qrs,
     imageSha256,
