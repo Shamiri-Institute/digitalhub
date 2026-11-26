@@ -92,7 +92,9 @@ function SelectTrigger({
     >
       <span className="overflow-hidden text-ellipsis whitespace-nowrap">{children}</span>
       {!hideIcon && (
-        <SelectPrimitive.Icon render={<Icons.chevronDown className="h-4 w-4 opacity-50" />} />
+        <SelectPrimitive.Icon className="flex">
+          <Icons.chevronDown className="h-4 w-4 opacity-50" />
+        </SelectPrimitive.Icon>
       )}
     </SelectPrimitive.Trigger>
   );
