@@ -6,10 +6,13 @@ export function Person({
   person,
   viewerId,
   emphasis = true,
+  withRole = true,
 }: {
   person: TicketPerson;
   viewerId: string | null;
   emphasis?: boolean;
+  /** Off where the role was already shown, such as a person's later rows in a thread. */
+  withRole?: boolean;
 }) {
   const isViewer = person.userId === viewerId;
   return (
@@ -22,7 +25,7 @@ export function Person({
       >
         {personName(person, viewerId)}
       </span>
-      {person.role && !isViewer && (
+      {withRole && person.role && !isViewer && (
         <span className="text-sm text-shamiri-text-dark-grey"> · {roleLabel(person.role)}</span>
       )}
     </span>

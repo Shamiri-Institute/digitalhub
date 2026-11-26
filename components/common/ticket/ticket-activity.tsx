@@ -38,11 +38,17 @@ const eventIcon: Partial<Record<TicketEvent["kind"], { icon: LucideIcon; tone: s
 };
 
 /** What happened, said as a sentence after the actor's name: "commented", "reassigned it to …". */
-function actionOf(event: TicketEvent, events: TicketEvent[], viewerId: string): ReactNode {
+function actionOf(
+  event: TicketEvent,
+  events: TicketEvent[],
+  viewerId: string,
+  roles: Set<string>,
+): ReactNode {
   const to = (verb: string, person?: TicketPerson | null) =>
     person ? (
       <>
-        {verb} <Person person={person} viewerId={viewerId} />
+        {verb}{" "}
+        <Person person={person} viewerId={viewerId} withRole={hasRole(roles, event, person)} />
       </>
     ) : (
       verb
@@ -77,6 +83,24 @@ function actionOf(event: TicketEvent, events: TicketEvent[], viewerId: string): 
       return "closed it";
   }
 }
+
+// Each person's role shows on the first row that names them; later rows name them alone.
+function firstMentions(events: TicketEvent[]) {
+  const seen = new Set<string>();
+  const roles = new Set<string>();
+  for (const event of events) {
+    const named = [event.archivedAt ? null : event.actor, event.assignee];
+    for (const person of named) {
+      if (!person || seen.has(person.userId)) continue;
+      seen.add(person.userId);
+      roles.add(`${event.id}:${person.userId}`);
+    }
+  }
+  return roles;
+}
+
+const hasRole = (roles: Set<string>, event: TicketEvent, person: TicketPerson) =>
+  roles.has(`${event.id}:${person.userId}`);
 
 function initials(name: string | null) {
   const words = (name ?? "?").trim().split(/\s+/);
@@ -132,6 +156,7 @@ export function TicketActivity({
     timeZone ? formatInTimeZone(date, timeZone, pattern) : "";
   const inZone = (event: TicketEvent, pattern: string) => atTime(event.createdAt, pattern);
   // Not Map.groupBy: it needs Safari 17.4 or Chrome 117, newer than the phones some staff use.
+  const roles = firstMentions(events);
   const days = new Map<string, TicketEvent[]>();
   for (const event of events) {
     const day = inZone(event, "EEE d MMM yyyy");
@@ -174,6 +199,7 @@ export function TicketActivity({
                   <Marker event={event} viewerId={viewerId} />
                   {event.kind === "COMMENTED" ? (
                     <CommentBody
+                      roles={roles}
                       event={event}
                       viewerId={viewerId}
                       canHide={canComment && event.actor?.userId === viewerId}
@@ -182,6 +208,7 @@ export function TicketActivity({
                     />
                   ) : (
                     <EventBody
+                      roles={roles}
                       event={event}
                       events={events}
                       ticket={ticket}
@@ -201,12 +228,15 @@ export function TicketActivity({
 
 function CommentBody({
   event,
+  roles,
   viewerId,
   canHide,
   hiddenAt,
   time,
 }: {
   event: TicketEvent;
+  /** Which rows show a person's role; see `firstMentions`. */
+  roles: Set<string>;
   viewerId: string;
   canHide: boolean;
   /** The time it was hidden, in the viewer's zone, or null while it shows. */
@@ -237,7 +267,14 @@ function CommentBody({
     <div className="space-y-1">
       <div className="flex flex-wrap items-center gap-x-2 text-sm leading-7 text-shamiri-text-dark-grey">
         <span>
-          {event.actor && <Person person={event.actor} viewerId={viewerId} />} commented
+          {event.actor && (
+            <Person
+              person={event.actor}
+              viewerId={viewerId}
+              withRole={hasRole(roles, event, event.actor)}
+            />
+          )}{" "}
+          commented
           <PhoneTime time={time} />
         </span>
         {canHide && !confirming && (
@@ -287,12 +324,15 @@ function CommentBody({
 
 function EventBody({
   event,
+  roles,
   events,
   ticket,
   viewerId,
   time,
 }: {
   event: TicketEvent;
+  /** Which rows show a person's role; see `firstMentions`. */
+  roles: Set<string>;
   events: TicketEvent[];
   ticket: FullTicket;
   viewerId: string;
@@ -307,7 +347,12 @@ function EventBody({
           "Closed automatically when the reopen window ended"
         ) : event.actor ? (
           <>
-            <Person person={event.actor} viewerId={viewerId} /> {actionOf(event, events, viewerId)}
+            <Person
+              person={event.actor}
+              viewerId={viewerId}
+              withRole={hasRole(roles, event, event.actor)}
+            />{" "}
+            {actionOf(event, events, viewerId, roles)}
           </>
         ) : (
           sentenceLabel(event.kind)

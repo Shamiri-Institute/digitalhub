@@ -11,7 +11,7 @@ import { ACTIVE_TICKET_STATUSES, RESOLVED_TICKET_STATUSES } from "#/lib/actions/
 import { formatDateIn, formatDateTimeIn } from "#/lib/date-utils";
 import { cn } from "#/lib/utils";
 import { viewerTimeZone } from "#/lib/viewer-time-zone";
-import { personName, roleLabel, sentenceLabel, statusBadgeVariant } from "./format";
+import { sentenceLabel, statusBadgeVariant } from "./format";
 import { Person } from "./person";
 import { PriorityBadge } from "./priority-badge";
 import { TicketActivity } from "./ticket-activity";
@@ -49,7 +49,13 @@ export default async function TicketPage({
   } = detailsResult.data;
   const isActive = ACTIVE_TICKET_STATUSES.includes(ticket.status);
   const holdsThis = ticket.holder.userId === viewerId;
-  const { createdBy } = ticket;
+  // Cancelling sets no date on the ticket, so its event carries it.
+  const endedAt =
+    ticket.status === "RESOLVED"
+      ? ticket.resolvedAt
+      : ticket.status === "CLOSED"
+        ? ticket.closedAt
+        : (events.findLast((e) => e.kind === "CANCELLED")?.createdAt ?? null);
   const holderLabel = RESOLVED_TICKET_STATUSES.includes(ticket.status)
     ? "Resolved by"
     : ticket.status === "CANCELLED"
@@ -79,20 +85,14 @@ export default async function TicketPage({
             {ticket.subject}
           </h1>
           <p className="text-sm leading-normal font-normal text-shamiri-text-dark-grey">
-            {sentenceLabel(ticket.category)} request · Raised by{" "}
-            <strong className="font-semibold text-shamiri-black">
-              {personName(createdBy, viewerId)}
-            </strong>
-            {createdBy.role &&
-              createdBy.userId !== viewerId &&
-              `, ${roleLabel(createdBy.role).toLowerCase()}`}
+            {/* Who raised it and when lead the thread below, so this says only what and where. */}
+            {sentenceLabel(ticket.category)} request
             {creatorHub && (
               <>
                 {" "}
-                at <strong className="font-semibold text-shamiri-black">{creatorHub}</strong>
+                from <strong className="font-semibold text-shamiri-black">{creatorHub}</strong>
               </>
             )}
-            {timeZone && ` · ${formatDateIn(ticket.createdAt, timeZone)}`}
           </p>
         </div>
         {/* Phones get the details as one line, so the conversation starts on the first screen. */}
@@ -130,16 +130,13 @@ export default async function TicketPage({
               <Person person={ticket.holder} viewerId={viewerId} />
             </p>
           </StatCell>
-          <StatCell label={isActive ? "Open for" : "Opened"}>
-            {isActive ? (
-              <p className="text-lg text-shamiri-black">
-                {formatDistanceToNowStrict(ticket.createdAt, { roundingMethod: "floor" })}
-              </p>
-            ) : (
-              <p className="text-lg text-shamiri-black">
-                {timeZone && formatDateIn(ticket.createdAt, timeZone)}
-              </p>
-            )}
+          {/* The thread opens with the raised date, so a finished ticket shows when it ended. */}
+          <StatCell label={isActive ? "Open for" : `${sentenceLabel(ticket.status)} on`}>
+            <p className="text-lg text-shamiri-black">
+              {isActive
+                ? formatDistanceToNowStrict(ticket.createdAt, { roundingMethod: "floor" })
+                : endedAt && timeZone && formatDateIn(endedAt, timeZone)}
+            </p>
           </StatCell>
         </section>
         <TicketActivity
