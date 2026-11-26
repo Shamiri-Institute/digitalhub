@@ -221,7 +221,7 @@ When `NEXT_PUBLIC_ENV=development` and `TEST_USER_PASSWORD` is set, sign in as a
 
 ### Recording Transcription
 
-Uploads from supervisors in `FIDELITY_AB_TEST_SUPERVISOR_IDS` are queued in the `transcriptions` table. Vercel Cron calls `/api/cron/transcriptions` every minute, and the worker transcribes queued recordings with Gemini (`lib/transcription/`). Cron runs only on production deployments. Elsewhere, run the worker by hand:
+Uploads from supervisors in `FIDELITY_AB_TEST_SUPERVISOR_IDS` are queued in the `transcriptions` table. A Vercel Schedule (`transcriptions` in `vercel.json`) calls `/api/cron/transcriptions` every minute, and the worker transcribes queued recordings with Gemini (`lib/transcription/`). The schedule is active in production and staging; in a preview, enable it with `vercel schedules enable transcriptions --git-branch <branch>` or run the worker by hand:
 
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/transcriptions
