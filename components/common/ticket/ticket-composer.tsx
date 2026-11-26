@@ -540,6 +540,8 @@ function ReasonForm({
                     {...field}
                     onKeyDown={(e) => {
                       if (e.key === "Escape") e.currentTarget.blur();
+                      if (e.key === "Enter" && (e.metaKey || e.ctrlKey))
+                        e.currentTarget.form?.requestSubmit();
                     }}
                     placeholder={action.placeholder}
                     className="min-h-16 bg-white field-sizing-content max-h-48"

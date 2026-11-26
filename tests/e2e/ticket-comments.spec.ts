@@ -142,3 +142,31 @@ test("a closed ticket takes no more comments", async ({ page, context, undo }) =
   ).toBeVisible();
   await expect(page.getByRole("form", { name: "Add a comment" })).toHaveCount(0);
 });
+
+test("posting waits for a comment or file, and a file that can't be attached is named in place", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fixture = await pickPair();
+  required(fixture, "a fellow with a supervisor");
+  const subject = `E2E ticket comments ${uniqueSuffix()}`;
+  await createTicket(fixture, undo, subject);
+
+  await signIn(context, fixture.fellowEmail);
+  await openTicket(page, "/fel/tickets", subject);
+  const form = page.getByRole("form", { name: "Add a comment" });
+  const post = form.getByRole("button", { name: "Post comment" });
+  await expect(post).toBeDisabled();
+
+  await form
+    .getByLabel("File", { exact: true })
+    .setInputFiles({ name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("notes") });
+  await post.click();
+  await expect(form.getByRole("alert")).toHaveText(
+    "Remove the files that can't be attached, then post again.",
+  );
+  await form.getByRole("button", { name: "Remove notes.txt" }).click();
+  await expect(form.getByRole("alert")).toHaveCount(0);
+  await expect(post).toBeDisabled();
+});

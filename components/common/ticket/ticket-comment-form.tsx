@@ -17,6 +17,9 @@ import {
 } from "#/lib/ticket-attachment-files";
 import { cn } from "#/lib/utils";
 
+// Names the file whose upload failed, so the message can say which one.
+class UploadFailed extends Error {}
+
 type PendingFile = {
   id: string;
   file: File;
@@ -43,8 +46,11 @@ export function TicketCommentForm({ ticketId }: { ticketId: string }) {
   const [body, setBody] = useState("");
   const [files, setFiles] = useState<PendingFile[]>([]);
   const [isPosting, setIsPosting] = useState(false);
+  // Shown beside the box rather than in a toast, so it stays until the problem is fixed.
+  const [error, setError] = useState<string | null>(null);
 
-  const addFiles = (picked: File[]) =>
+  const addFiles = (picked: File[]) => {
+    setError(null);
     setFiles((current) => {
       const accepted = current.filter((f) => !f.problem).length;
       return [
@@ -52,19 +58,20 @@ export function TicketCommentForm({ ticketId }: { ticketId: string }) {
         ...picked.map((file, i) => pendingFile(file, accepted + i >= MAX_TICKET_ATTACHMENTS)),
       ];
     });
-  const removeFile = (id: string) => setFiles((current) => current.filter((f) => f.id !== id));
+  };
+  const removeFile = (id: string) => {
+    setError(null);
+    setFiles((current) => current.filter((f) => f.id !== id));
+  };
   const setUploaded = (id: string, uploaded: number) =>
     setFiles((current) => current.map((f) => (f.id === id ? { ...f, uploaded } : f)));
 
   const post = async () => {
     if (files.some((f) => f.problem)) {
-      toast({ variant: "destructive", description: "Remove the files that can't be attached." });
+      setError("Remove the files that can't be attached, then post again.");
       return;
     }
-    if (!body.trim() && files.length === 0) {
-      toast({ variant: "destructive", description: "Write a comment or attach a file." });
-      return;
-    }
+    setError(null);
     setIsPosting(true);
     try {
       let uploaded: { key: string; fileName: string }[] = [];
@@ -78,36 +85,39 @@ export function TicketCommentForm({ ticketId }: { ticketId: string }) {
           })),
         );
         if (!started.success || !started.data) {
-          toast({ variant: "destructive", description: started.message });
+          setError(started.message);
           return;
         }
         const targets = started.data;
         await Promise.all(
           files.map((f, i) => {
             const target = targets[i];
-            if (!target) throw new Error(`${f.file.name} couldn't be uploaded`);
+            if (!target) throw new UploadFailed(f.file.name);
             return putWithProgress(
               target.url,
               target.headers,
               f.file,
               (bytes) => setUploaded(f.id, bytes),
               { stallMs: 30_000, answerMs: 30_000 },
-            );
+            ).catch(() => {
+              throw new UploadFailed(f.file.name);
+            });
           }),
         );
         uploaded = files.map((f, i) => ({ key: targets[i]?.key ?? "", fileName: f.file.name }));
       }
       const result = await addTicketComment(ticketId, { body, files: uploaded });
-      toast({ variant: result.success ? "default" : "destructive", description: result.message });
       if (result.success) {
+        toast({ description: result.message });
         setBody("");
         setFiles([]);
+      } else {
+        setError(result.message);
       }
-    } catch {
-      toast({
-        variant: "destructive",
-        description: "A file didn't finish uploading. Check your connection and try again.",
-      });
+    } catch (e) {
+      setError(
+        `${e instanceof UploadFailed ? e.message : "A file"} didn't finish uploading. Check your connection and try again.`,
+      );
       setFiles((current) => current.map((f) => ({ ...f, uploaded: 0 })));
     } finally {
       setIsPosting(false);
@@ -127,7 +137,10 @@ export function TicketCommentForm({ ticketId }: { ticketId: string }) {
       <textarea
         aria-label="Add a comment"
         value={body}
-        onChange={(e) => setBody(e.target.value)}
+        onChange={(e) => {
+          setBody(e.target.value);
+          setError(null);
+        }}
         onKeyDown={(e) => {
           if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) e.currentTarget.form?.requestSubmit();
         }}
@@ -148,6 +161,11 @@ export function TicketCommentForm({ ticketId }: { ticketId: string }) {
             />
           ))}
         </ul>
+      )}
+      {error && (
+        <p role="alert" className="px-3 pb-2 text-sm text-pretty text-shamiri-light-red">
+          {error}
+        </p>
       )}
       {/* On phones the toolbar waits until the box is in use, to leave room for the thread. */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-background-secondary px-1.5 py-1.5 max-sm:hidden max-sm:group-focus-within:flex max-sm:group-has-[li]:flex max-sm:group-has-[textarea:not(:placeholder-shown)]:flex">
@@ -184,7 +202,7 @@ export function TicketCommentForm({ ticketId }: { ticketId: string }) {
           type="submit"
           variant="brand"
           className="h-8 max-sm:h-11"
-          disabled={isPosting}
+          disabled={isPosting || (!body.trim() && files.length === 0)}
           loading={isPosting}
         >
           Post comment
