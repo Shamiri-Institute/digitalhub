@@ -9,6 +9,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { db, type Transaction } from "#/db/client";
 import type { TicketStatus } from "#/db/enums";
 import { ticketAttachments, ticketEvents, tickets } from "#/db/schema";
+import type { TicketAttachment } from "#/lib/actions/ticket/types";
 import { NotFoundError } from "#/lib/auth/require-auth-role";
 import { objectId } from "#/lib/crypto";
 import { getPresignedUploadUrl, getPresignedUrl } from "#/lib/s3/s3.service";
@@ -21,9 +22,12 @@ import {
   ticketAttachmentProblem,
 } from "#/lib/ticket-attachment-files";
 
-export const TICKET_ATTACHMENT_URL_TTL_SECONDS = 5 * 60;
+const TICKET_ATTACHMENT_URL_TTL_SECONDS = 5 * 60;
 
-export type NewTicketAttachment = { fileName: string; contentType: string; byteSize: number };
+export type NewTicketAttachment = Omit<TicketAttachment, "id">;
+
+/** A refusal whose message is safe to show the commenter. */
+export class TicketCommentError extends Error {}
 
 export type StartedTicketAttachment = {
   key: string;
@@ -47,13 +51,13 @@ async function commentableTicket(tx: Transaction | typeof db, userId: string, ti
     .where(and(eq(tickets.id, ticketId), canViewTicket(userId)))
     .for("update");
   if (!ticket) throw new NotFoundError("Ticket");
-  if (!ticketTakesComments(ticket.status)) throw new Error(CLOSED_MESSAGE);
+  if (!ticketTakesComments(ticket.status)) throw new TicketCommentError(CLOSED_MESSAGE);
   return ticket;
 }
 
 function assertFileCount(count: number) {
   if (count > MAX_TICKET_ATTACHMENTS) {
-    throw new Error(`Attach up to ${MAX_TICKET_ATTACHMENTS} files to a comment.`);
+    throw new TicketCommentError(`Attach up to ${MAX_TICKET_ATTACHMENTS} files to a comment.`);
   }
 }
 
@@ -67,11 +71,11 @@ export async function startTicketAttachmentUploads(
   ticketId: string,
   files: NewTicketAttachment[],
 ): Promise<StartedTicketAttachment[]> {
-  if (files.length === 0) throw new Error("Choose a file to attach.");
+  if (files.length === 0) throw new TicketCommentError("Choose a file to attach.");
   assertFileCount(files.length);
   for (const file of files) {
     const problem = ticketAttachmentProblem(file);
-    if (problem) throw new Error(`${file.fileName}: ${problem}`);
+    if (problem) throw new TicketCommentError(`${file.fileName}: ${problem}`);
   }
   await commentableTicket(db, userId, ticketId);
 
@@ -97,28 +101,31 @@ export async function addTicketComment(
 ) {
   const body = input.body.trim();
   if (body.length > MAX_TICKET_COMMENT_LENGTH) {
-    throw new Error(`Comments can be up to ${MAX_TICKET_COMMENT_LENGTH} characters.`);
+    throw new TicketCommentError(`Comments can be up to ${MAX_TICKET_COMMENT_LENGTH} characters.`);
   }
-  if (!body && input.files.length === 0) throw new Error("Write a comment or attach a file.");
+  if (!body && input.files.length === 0)
+    throw new TicketCommentError("Write a comment or attach a file.");
   assertFileCount(input.files.length);
   const prefix = uploadPrefix(userId, ticketId);
   if (new Set(input.files.map((file) => file.key)).size !== input.files.length) {
-    throw new Error("The same file is attached twice.");
+    throw new TicketCommentError("The same file is attached twice.");
   }
 
   const files = await Promise.all(
     input.files.map(async ({ key, fileName }) => {
       const fileId = key.slice(prefix.length);
       if (!key.startsWith(prefix) || fileId === "" || fileId.includes("/")) {
-        throw new Error(`${fileName}: this file wasn't uploaded for this ticket.`);
+        throw new TicketCommentError(`${fileName}: this file wasn't uploaded for this ticket.`);
       }
       const stored = await verifyUploadedObject(key, "ticket-attachments");
       if (stored.status !== "ok") {
-        throw new Error(`${fileName} didn't finish uploading. Remove it and try again.`);
+        throw new TicketCommentError(
+          `${fileName} didn't finish uploading. Remove it and try again.`,
+        );
       }
       const file = { contentType: stored.contentType ?? "", byteSize: stored.contentLength };
       const problem = ticketAttachmentProblem(file);
-      if (problem) throw new Error(`${fileName}: ${problem}`);
+      if (problem) throw new TicketCommentError(`${fileName}: ${problem}`);
       return { s3Key: key, fileName, ...file };
     }),
   );
@@ -129,7 +136,7 @@ export async function addTicketComment(
       .insert(ticketEvents)
       .values({ ticketId, kind: "COMMENTED", actorId: userId, reason: body || null })
       .returning({ id: ticketEvents.id });
-    if (!event) throw new Error("The comment wasn't saved");
+    if (!event) throw new TicketCommentError("The comment wasn't saved");
     if (files.length > 0) {
       await tx.insert(ticketAttachments).values(
         files.map((file) => ({
@@ -161,14 +168,15 @@ export async function hideTicketComment(userId: string, eventId: string) {
         ),
       );
     if (!comment) throw new NotFoundError("Comment");
-    if (comment.actorId !== userId) throw new Error("Only the comment's author can hide it");
+    if (comment.actorId !== userId)
+      throw new TicketCommentError("Only the comment's author can hide it");
     await commentableTicket(tx, userId, comment.ticketId);
     const [hidden] = await tx
       .update(ticketEvents)
       .set({ archivedAt: new Date(), archivedById: userId })
       .where(and(eq(ticketEvents.id, eventId), isNull(ticketEvents.archivedAt)))
       .returning({ id: ticketEvents.id });
-    if (!hidden) throw new Error("This comment is already hidden");
+    if (!hidden) throw new TicketCommentError("This comment is already hidden");
   });
 }
 

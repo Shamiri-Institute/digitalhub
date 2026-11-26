@@ -4,14 +4,21 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 
 import { ImplementerRole } from "#/db/enums";
-import { requireAuthRole } from "#/lib/auth/require-auth-role";
+import {
+  ForbiddenRoleError,
+  NotFoundError,
+  requireAuthRole,
+  UnauthenticatedError,
+} from "#/lib/auth/require-auth-role";
 import { MAX_TICKET_ATTACHMENTS, MAX_TICKET_COMMENT_LENGTH } from "#/lib/ticket-attachment-files";
 import {
   addTicketComment as addComment,
   hideTicketComment as hideComment,
+  type NewTicketAttachment,
   type StartedTicketAttachment,
   startTicketAttachmentUploads as startUploads,
   ticketAttachmentUrl,
+  TicketCommentError,
 } from "#/lib/ticket-comments";
 import type { ActionResponse } from "#/types/actions.types";
 
@@ -23,7 +30,7 @@ const NewAttachmentsSchema = z
       fileName: FileNameSchema,
       contentType: z.string().max(255),
       byteSize: z.number().int(),
-    }),
+    }) satisfies z.ZodType<NewTicketAttachment>,
   )
   .max(MAX_TICKET_ATTACHMENTS);
 
@@ -34,7 +41,7 @@ const CommentSchema = z.object({
     .max(MAX_TICKET_ATTACHMENTS),
 });
 
-async function viewerId() {
+async function callerUserId() {
   return (await requireAuthRole(...Object.values(ImplementerRole))).userId;
 }
 
@@ -48,7 +55,16 @@ async function respond<T>(
     if (error instanceof z.ZodError) {
       return { success: false, message: "Something about this comment isn't valid" };
     }
-    return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
+    if (
+      error instanceof TicketCommentError ||
+      error instanceof NotFoundError ||
+      error instanceof ForbiddenRoleError ||
+      error instanceof UnauthenticatedError
+    ) {
+      return { success: false, message: error.message };
+    }
+    console.error(error);
+    return { success: false, message: "Something went wrong. Please try again." };
   }
 }
 
@@ -57,7 +73,7 @@ export async function startTicketAttachmentUploads(
   files: z.input<typeof NewAttachmentsSchema>,
 ): Promise<ActionResponse<StartedTicketAttachment[]>> {
   return respond("Upload started", async () =>
-    startUploads(await viewerId(), ticketId, NewAttachmentsSchema.parse(files)),
+    startUploads(await callerUserId(), ticketId, NewAttachmentsSchema.parse(files)),
   );
 }
 
@@ -66,14 +82,14 @@ export async function addTicketComment(
   input: z.input<typeof CommentSchema>,
 ): Promise<ActionResponse> {
   return respond("Comment added", async () => {
-    await addComment(await viewerId(), ticketId, CommentSchema.parse(input));
+    await addComment(await callerUserId(), ticketId, CommentSchema.parse(input));
     refresh();
   });
 }
 
 export async function hideTicketComment(eventId: string): Promise<ActionResponse> {
   return respond("Comment hidden", async () => {
-    await hideComment(await viewerId(), eventId);
+    await hideComment(await callerUserId(), eventId);
     refresh();
   });
 }
@@ -81,5 +97,5 @@ export async function hideTicketComment(eventId: string): Promise<ActionResponse
 export async function getTicketAttachmentUrl(
   attachmentId: string,
 ): Promise<ActionResponse<string>> {
-  return respond("Link ready", async () => ticketAttachmentUrl(await viewerId(), attachmentId));
+  return respond("Link ready", async () => ticketAttachmentUrl(await callerUserId(), attachmentId));
 }
