@@ -514,7 +514,11 @@ test("R-SURV-RUN-HUB, R-SURV-QR, R-SURV-PREFILL: a Research team admin prints co
   expect(new Set(topCodes).size).toBe(topCodes.length);
 
   await page.getByRole("link", { name: published.title }).click();
-  const runRow = page.getByRole("row").filter({ hasText: printedHub.hubName });
+  // The Progress table above lists the hub too, so look in Print runs only.
+  const runRow = page
+    .locator("section", { has: page.getByRole("heading", { name: "Print runs" }) })
+    .getByRole("row")
+    .filter({ hasText: printedHub.hubName });
   // Version shows as "v1", so the only cell that is exactly "3" is Copies.
   await expect(runRow.getByRole("cell", { name: "3", exact: true })).toBeVisible();
 });

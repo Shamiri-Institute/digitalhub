@@ -256,23 +256,19 @@ export const FLAGGED_PRINT_FORM_READS: Record<number, FieldRead[]> = {
   ],
 };
 
-/**
- * One printed copy of a published version whose scanned pages are ingested as the pipeline would
- * post them, so its answers are stored and flagged as a real scan's are. No image is uploaded: each
- * page names one, counted as stored. `remove` deletes the answers, scan and upload it made.
- */
-export async function createScannedCopy({
+type CopyScope = { hubId: string; implementerId: string; projectId: string; userId: string };
+
+/** One printed copy of a published version, issued as the print job issues it, and never scanned. */
+export async function issueCopy({
   scope,
   versionId,
   schoolId,
-  reads = FLAGGED_PRINT_FORM_READS,
 }: {
-  scope: { hubId: string; implementerId: string; projectId: string; userId: string };
+  scope: CopyScope;
   versionId: string;
   schoolId: string;
-  reads?: Record<number, FieldRead[]>;
 }) {
-  const questionnaireId = await db.transaction(async (tx) => {
+  return db.transaction(async (tx) => {
     const issued = await recordPrintRun(tx, scope, {
       printRunId: objectId("surveyprintrun"),
       versionId,
@@ -291,11 +287,36 @@ export async function createScannedCopy({
     if (!copy) throw new Error("The print run issued no copy");
     return copy.id;
   });
-  const pages = await db
+}
+
+/**
+ * One printed copy of a published version whose scanned pages are ingested as the pipeline would
+ * post them, so its answers are stored and flagged as a real scan's are. With `pageNumbers`, only
+ * those pages are scanned. No image is uploaded: each page names one, counted as stored. `remove`
+ * deletes the answers, scan and upload it made.
+ */
+export async function createScannedCopy({
+  scope,
+  versionId,
+  schoolId,
+  reads = FLAGGED_PRINT_FORM_READS,
+  pageNumbers,
+}: {
+  scope: CopyScope;
+  versionId: string;
+  schoolId: string;
+  reads?: Record<number, FieldRead[]>;
+  pageNumbers?: number[];
+}) {
+  const questionnaireId = await issueCopy({ scope, versionId, schoolId });
+  const printedPages = await db
     .select({ id: surveyQuestionnairePage.id, pageNumber: surveyQuestionnairePage.pageNumber })
     .from(surveyQuestionnairePage)
     .where(eq(surveyQuestionnairePage.questionnaireId, questionnaireId))
     .orderBy(asc(surveyQuestionnairePage.pageNumber));
+  const pages = pageNumbers
+    ? printedPages.filter((page) => pageNumbers.includes(page.pageNumber))
+    : printedPages;
 
   const uploadId = objectId("surveyupload");
   await db.insert(surveyUpload).values({
