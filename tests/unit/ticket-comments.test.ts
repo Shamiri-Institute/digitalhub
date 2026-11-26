@@ -48,7 +48,6 @@ afterAll(async () => {
   await db.delete(tickets).where(inArray(tickets.id, ticketIds));
 });
 
-/** A ticket the creator raised and sent to the holder; the outsider has no part in it. */
 async function newTicket() {
   const [ticket] = await db
     .insert(tickets)

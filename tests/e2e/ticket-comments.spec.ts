@@ -35,7 +35,6 @@ async function pickPair() {
   return row;
 }
 
-/** A ticket the fellow raised and sent to their supervisor. */
 async function createTicket(fixture: Fixture, undo: Undo, subject: string) {
   const [ticket] = await db
     .insert(tickets)
@@ -113,7 +112,6 @@ test("the creator and the holder comment with files, and the author hides their 
   await signIn(context, fixture.fellowEmail);
   await openTicket(page, "/fel/tickets", subject);
   await expect(activity(page)).toContainText("Thanks, I'll call the fellow today.");
-  // Only the author's own comment offers Hide.
   await expect(activity(page).getByRole("button", { name: "Hide" })).toHaveCount(1);
   await activity(page).getByRole("button", { name: "Hide" }).click();
   await activity(page).getByRole("button", { name: "Hide comment" }).click();

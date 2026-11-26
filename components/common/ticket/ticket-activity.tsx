@@ -37,18 +37,21 @@ const eventIcon: Partial<Record<TicketEvent["kind"], { icon: LucideIcon; tone: s
   CLOSED: { icon: Lock, tone: "text-shamiri-text-dark-grey" },
 };
 
-/** What happened, said as a sentence after the actor's name: "commented", "reassigned it to …". */
 function actionOf(
   event: TicketEvent,
   events: TicketEvent[],
   viewerId: string,
-  roles: Set<string>,
+  firstMentionKeys: Set<string>,
 ): ReactNode {
   const to = (verb: string, person?: TicketPerson | null) =>
     person ? (
       <>
         {verb}{" "}
-        <Person person={person} viewerId={viewerId} withRole={hasRole(roles, event, person)} />
+        <Person
+          person={person}
+          viewerId={viewerId}
+          withRole={isFirstMention(firstMentionKeys, event, person)}
+        />
       </>
     ) : (
       verb
@@ -87,20 +90,20 @@ function actionOf(
 // Each person's role shows on the first row that names them; later rows name them alone.
 function firstMentions(events: TicketEvent[]) {
   const seen = new Set<string>();
-  const roles = new Set<string>();
+  const keys = new Set<string>();
   for (const event of events) {
     const named = [event.archivedAt ? null : event.actor, event.assignee];
     for (const person of named) {
       if (!person || seen.has(person.userId)) continue;
       seen.add(person.userId);
-      roles.add(`${event.id}:${person.userId}`);
+      keys.add(`${event.id}:${person.userId}`);
     }
   }
-  return roles;
+  return keys;
 }
 
-const hasRole = (roles: Set<string>, event: TicketEvent, person: TicketPerson) =>
-  roles.has(`${event.id}:${person.userId}`);
+const isFirstMention = (firstMentionKeys: Set<string>, event: TicketEvent, person: TicketPerson) =>
+  firstMentionKeys.has(`${event.id}:${person.userId}`);
 
 function initials(name: string | null) {
   const words = (name ?? "?").trim().split(/\s+/);
@@ -155,8 +158,8 @@ export function TicketActivity({
   const atTime = (date: Date, pattern: string) =>
     timeZone ? formatInTimeZone(date, timeZone, pattern) : "";
   const inZone = (event: TicketEvent, pattern: string) => atTime(event.createdAt, pattern);
+  const firstMentionKeys = firstMentions(events);
   // Not Map.groupBy: it needs Safari 17.4 or Chrome 117, newer than the phones some staff use.
-  const roles = firstMentions(events);
   const days = new Map<string, TicketEvent[]>();
   for (const event of events) {
     const day = inZone(event, "EEE d MMM yyyy");
@@ -199,7 +202,7 @@ export function TicketActivity({
                   <Marker event={event} viewerId={viewerId} />
                   {event.kind === "COMMENTED" ? (
                     <CommentBody
-                      roles={roles}
+                      firstMentionKeys={firstMentionKeys}
                       event={event}
                       viewerId={viewerId}
                       canHide={canComment && event.actor?.userId === viewerId}
@@ -208,7 +211,7 @@ export function TicketActivity({
                     />
                   ) : (
                     <EventBody
-                      roles={roles}
+                      firstMentionKeys={firstMentionKeys}
                       event={event}
                       events={events}
                       ticket={ticket}
@@ -228,15 +231,14 @@ export function TicketActivity({
 
 function CommentBody({
   event,
-  roles,
+  firstMentionKeys,
   viewerId,
   canHide,
   hiddenAt,
   time,
 }: {
   event: TicketEvent;
-  /** Which rows show a person's role; see `firstMentions`. */
-  roles: Set<string>;
+  firstMentionKeys: Set<string>;
   viewerId: string;
   canHide: boolean;
   /** The time it was hidden, in the viewer's zone, or null while it shows. */
@@ -271,7 +273,7 @@ function CommentBody({
             <Person
               person={event.actor}
               viewerId={viewerId}
-              withRole={hasRole(roles, event, event.actor)}
+              withRole={isFirstMention(firstMentionKeys, event, event.actor)}
             />
           )}{" "}
           commented
@@ -324,15 +326,14 @@ function CommentBody({
 
 function EventBody({
   event,
-  roles,
+  firstMentionKeys,
   events,
   ticket,
   viewerId,
   time,
 }: {
   event: TicketEvent;
-  /** Which rows show a person's role; see `firstMentions`. */
-  roles: Set<string>;
+  firstMentionKeys: Set<string>;
   events: TicketEvent[];
   ticket: FullTicket;
   viewerId: string;
@@ -350,9 +351,9 @@ function EventBody({
             <Person
               person={event.actor}
               viewerId={viewerId}
-              withRole={hasRole(roles, event, event.actor)}
+              withRole={isFirstMention(firstMentionKeys, event, event.actor)}
             />{" "}
-            {actionOf(event, events, viewerId, roles)}
+            {actionOf(event, events, viewerId, firstMentionKeys)}
           </>
         ) : (
           sentenceLabel(event.kind)

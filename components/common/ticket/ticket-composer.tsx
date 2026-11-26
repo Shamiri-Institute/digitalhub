@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "#/components/ui/form";
+import { Textarea } from "#/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -413,7 +414,6 @@ function ReasonForm({
     },
   });
   const noRecipients = picksRecipient && recipients.length === 0;
-  // Like Post comment, the action waits until what it needs is filled in.
   const [reason, recipientId] = form.watch(["reason", "recipientId"]);
   const incomplete = !reason.trim() || (picksRecipient && !recipientId);
 
@@ -455,7 +455,7 @@ function ReasonForm({
             <FormItem className="space-y-0">
               <FormLabel className="sr-only">Reason</FormLabel>
               <FormControl>
-                <textarea
+                <Textarea
                   {...field}
                   onKeyDown={(e) => {
                     if (e.key === "Escape") e.currentTarget.blur();

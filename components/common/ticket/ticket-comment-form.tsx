@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import { Button } from "#/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "#/components/ui/form";
+import { Textarea } from "#/components/ui/textarea";
 import { toast, toastOnError } from "#/components/ui/use-toast";
 import { addTicketComment, startTicketAttachmentUploads } from "#/lib/actions/ticket/comments";
 import { putWithProgress } from "#/lib/s3/put-with-progress";
@@ -26,7 +27,7 @@ import { zodResolver } from "#/lib/zod-resolver";
 export const composerBoxClass =
   "group rounded-md border border-input bg-white font-normal shadow-xs has-[textarea:focus]:ring-2 has-[textarea:focus]:ring-shamiri-new-blue has-[textarea:focus]:ring-offset-2";
 export const composerTextareaClass =
-  "block max-h-48 min-h-14 w-full resize-none bg-transparent px-3 pt-2.5 text-sm leading-6 field-sizing-content placeholder:text-shamiri-text-grey focus:outline-hidden disabled:opacity-60";
+  "block max-h-48 min-h-14 w-full resize-none rounded-none border-0 bg-transparent px-3 pt-2.5 pb-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 leading-6 field-sizing-content placeholder:text-shamiri-text-grey focus:outline-hidden disabled:opacity-60";
 export const composerToolbarClass =
   "flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-background-secondary px-1.5 py-1.5";
 export const composerErrorClass = "px-3 pb-2 text-sm text-pretty text-shamiri-light-red";
@@ -160,7 +161,7 @@ export function TicketCommentForm({ ticketId }: { ticketId: string }) {
             <FormItem className="space-y-0">
               <FormLabel className="sr-only">Add a comment</FormLabel>
               <FormControl>
-                <textarea
+                <Textarea
                   {...field}
                   onChange={(e) => {
                     field.onChange(e);
@@ -235,7 +236,6 @@ export function TicketCommentForm({ ticketId }: { ticketId: string }) {
               PNG, JPEG, WebP or PDF · 10 MB · {MAX_TICKET_ATTACHMENTS} files
             </span>
           )}
-          {/* The count only matters near the limit. */}
           <span className="ml-auto text-xs tabular-nums text-shamiri-text-dark-grey">
             {body.length >= MAX_TICKET_COMMENT_LENGTH * 0.8 &&
               `${body.length} / ${MAX_TICKET_COMMENT_LENGTH}`}

@@ -52,7 +52,6 @@ async function respond<T>(
   }
 }
 
-/** Presigned PUTs for the files about to go on a comment, in the same order. */
 export async function startTicketAttachmentUploads(
   ticketId: string,
   files: z.input<typeof NewAttachmentsSchema>,

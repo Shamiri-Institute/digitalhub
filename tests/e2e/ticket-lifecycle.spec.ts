@@ -249,6 +249,5 @@ test("the holder's drafts survive switching modes, and discarding a reason asks 
   await expect(resolve).toBeHidden();
   await chooseMode(page, "Resolve");
   await expect(resolve.getByLabel("Reason")).toHaveValue("");
-  // Like Post comment, the action waits for a reason.
   await expect(resolve.getByRole("button", { name: "Resolve", exact: true })).toBeDisabled();
 });

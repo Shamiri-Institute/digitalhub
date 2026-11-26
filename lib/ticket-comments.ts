@@ -40,9 +40,8 @@ export function ticketTakesComments(status: TicketStatus) {
   return status !== "CLOSED" && status !== "CANCELLED";
 }
 
-// The ticket, when the viewer can see it and it still takes comments.
-async function commentableTicket(q: Transaction | typeof db, userId: string, ticketId: string) {
-  const [ticket] = await q
+async function commentableTicket(tx: Transaction | typeof db, userId: string, ticketId: string) {
+  const [ticket] = await tx
     .select({ status: tickets.status })
     .from(tickets)
     .where(and(eq(tickets.id, ticketId), canViewTicket(userId)))
@@ -63,7 +62,6 @@ function uploadPrefix(userId: string, ticketId: string) {
   return `tickets/${ticketId}/${userId}/`;
 }
 
-/** Presigns a PUT for each file, or refuses them all when one can't be attached. */
 export async function startTicketAttachmentUploads(
   userId: string,
   ticketId: string,
@@ -91,11 +89,7 @@ export async function startTicketAttachmentUploads(
   );
 }
 
-// shortcut: abandoned uploads are never deleted; add a lifecycle rule or sweep if the bucket grows.
-/**
- * Adds a comment with the files already uploaded for it. A file that was uploaded but never posted
- * stays in S3, linked to nothing.
- */
+// shortcut: a file uploaded but never posted stays in S3, linked to nothing; add a lifecycle rule or sweep if the bucket grows.
 export async function addTicketComment(
   userId: string,
   ticketId: string,
@@ -149,7 +143,6 @@ export async function addTicketComment(
   });
 }
 
-/** Hides the viewer's own comment and its files from everyone. It can't be undone. */
 export async function hideTicketComment(userId: string, eventId: string) {
   await db.transaction(async (tx) => {
     const [comment] = await tx
@@ -179,7 +172,6 @@ export async function hideTicketComment(userId: string, eventId: string) {
   });
 }
 
-/** A short-lived link to a file on a comment the viewer can still see. */
 export async function ticketAttachmentUrl(userId: string, attachmentId: string) {
   const [attachment] = await db
     .select({ s3Key: ticketAttachments.s3Key })

@@ -26,10 +26,6 @@ export function isTicketAttachmentContentType(
   return (Object.values(EXTENSION_CONTENT_TYPES) as string[]).includes(contentType);
 }
 
-/**
- * The attachment type of a file, from the browser's type or, when the browser gives none, from its
- * extension. Undefined for a file that can't be attached.
- */
 export function ticketAttachmentContentTypeOf(file: { type: string; name: string }) {
   const browserType = normalizeContentType(file.type);
   if (isTicketAttachmentContentType(browserType)) {
@@ -42,7 +38,6 @@ export function ticketAttachmentContentTypeOf(file: { type: string; name: string
     : undefined;
 }
 
-/** Why a file can't be attached, or null when it can. */
 export function ticketAttachmentProblem(file: { contentType: string; byteSize: number }) {
   if (!isTicketAttachmentContentType(file.contentType)) {
     return "Only PNG, JPEG, WebP or PDF files can be attached.";

@@ -32,7 +32,6 @@ export async function chooseMode(page: Page, action: string) {
     .click();
 }
 
-/** Every mode the composer offers, including those under More. */
 export async function composerModes(page: Page) {
   const modes = await ticketPage(page).getByRole("radio").filter({ visible: true }).allInnerTexts();
   const more = ticketPage(page).getByRole("button", { name: "More" }).filter({ visible: true });

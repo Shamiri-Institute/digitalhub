@@ -3724,7 +3724,6 @@ export const ticketEvents = pgTable(
   ],
 );
 
-// A file on a ticket comment, stored in the ticket-attachments bucket.
 export const ticketAttachments = pgTable(
   "ticket_attachments",
   {
