@@ -412,6 +412,9 @@ function ReasonForm({
     },
   });
   const noRecipients = picksRecipient && recipients.length === 0;
+  // Like Post comment, the action waits until what it needs is filled in.
+  const [reason, recipientId] = form.watch(["reason", "recipientId"]);
+  const incomplete = !reason.trim() || (picksRecipient && !recipientId);
 
   const discard = () => {
     form.reset();
@@ -573,7 +576,7 @@ function ReasonForm({
                 variant={action.destructive ? "destructive" : "brand"}
                 type="submit"
                 className="h-8 max-sm:h-11"
-                disabled={noRecipients || isSaving}
+                disabled={noRecipients || incomplete || isSaving}
                 loading={isSaving}
               >
                 {action.label}
