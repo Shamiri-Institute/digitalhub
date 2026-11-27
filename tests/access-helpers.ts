@@ -6,7 +6,10 @@ import { adminUser, hub, project, school } from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { createAdminCopy, uniqueSuffix } from "#/tests/helpers";
 
-/** A new super admin of each implementer the seeded super admin belongs to. */
+/**
+ * A new super admin of each implementer the seeded super admin belongs to, starting in
+ * `activeProjectId` when given.
+ */
 export async function createSuperAdminCopy(activeProjectId?: string) {
   const seeded = await db.query.user.findFirst({
     where: (u, { eq }) => eq(u.email, superAdminEmail),

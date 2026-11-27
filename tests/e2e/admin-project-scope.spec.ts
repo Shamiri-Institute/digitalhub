@@ -1,9 +1,18 @@
 import type { Page } from "@playwright/test";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
+import { ImplementerRole } from "#/db/enums";
 import { plainAdminEmail, superAdminEmail } from "#/db/seed/fixtures";
-import { fellow, hub, interventionSession, school, sessionName, user } from "#/db/schema";
+import {
+  fellow,
+  hub,
+  implementerMember,
+  interventionSession,
+  school,
+  sessionName,
+  user,
+} from "#/db/schema";
 import { objectId } from "#/lib/crypto";
 import { createProjectWithHub, createSuperAdminCopy } from "#/tests/access-helpers";
 import { expect, test } from "#/tests/fixtures";
@@ -196,18 +205,23 @@ test("a super admin cannot save a hub's settings after switching to another proj
   undo,
 }) => {
   const activeProject = await defaultProject();
-  const {
-    rows: [seededHub],
-  } = await db.execute<{ implementerId: string }>(sql`
-    select h.implementer_id as "implementerId"
-    from hubs h
-    join implementer_members m on m.implementer_id = h.implementer_id
-    join users u on u.id = m.user_id and u.email = ${superAdminEmail}
-    where h.project_id = ${activeProject.id}
-    order by h.id
-    limit 1`);
-  required(seededHub, "a hub of the super admin's implementer in the default project");
-  const otherProject = await createProjectWithHub(seededHub.implementerId);
+  // ADMIN only, as createSuperAdminCopy copies only ADMIN memberships.
+  const [superAdminImplementer] = await db
+    .select({ implementerId: hub.implementerId })
+    .from(hub)
+    .innerJoin(
+      implementerMember,
+      and(
+        eq(implementerMember.implementerId, hub.implementerId),
+        eq(implementerMember.role, ImplementerRole.ADMIN),
+      ),
+    )
+    .innerJoin(user, and(eq(user.id, implementerMember.userId), eq(user.email, superAdminEmail)))
+    .where(eq(hub.projectId, activeProject.id))
+    .orderBy(hub.id)
+    .limit(1);
+  required(superAdminImplementer, "a hub of the super admin's implementer in the default project");
+  const otherProject = await createProjectWithHub(superAdminImplementer.implementerId);
   undo(otherProject.remove);
   const [sessionOne] = await db
     .insert(sessionName)
@@ -243,6 +257,8 @@ test("a super admin cannot save a hub's settings after switching to another proj
     .click();
   await expect(page.getByText("Hub not found").first()).toBeVisible();
 
+  // Read from the database: these are writes that must not happen, and the admin can no longer
+  // open this hub's page to see them.
   const savedHub = await db.query.hub.findFirst({
     where: (h, { eq }) => eq(h.id, otherProject.hubId),
     columns: { hubName: true },

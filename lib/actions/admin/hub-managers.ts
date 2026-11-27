@@ -7,28 +7,15 @@ import type { z } from "zod";
 import { db, isUniqueViolation, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { hubCoordinator, implementerMember } from "#/db/schema";
-import { getActiveProjectId } from "#/lib/active-project-id";
 import { requireSuperAdmin } from "#/lib/auth/admin-access";
 import { objectId } from "#/lib/crypto";
 import type { ActionResponse } from "#/types/actions.types";
 import { actionFailure, AdminActionError } from "./action-error";
+import { findCallerHub } from "./caller-hub";
 import { CreateHubManagerSchema, HubManagerRefSchema } from "./hub-manager-schemas";
 import { addImplementerMember } from "./members";
 
 const NOT_FOUND_MESSAGE = "Hub manager not found";
-
-async function findCallerHub(tx: Transaction, hubId: string, implementerId: string) {
-  const projectId = await getActiveProjectId();
-  const callerHub = await tx.query.hub.findFirst({
-    where: (h, { and, eq }) =>
-      and(eq(h.id, hubId), eq(h.implementerId, implementerId), eq(h.projectId, projectId)),
-    columns: { id: true },
-  });
-  if (!callerHub) {
-    throw new AdminActionError("Hub not found");
-  }
-  return callerHub;
-}
 
 // Not checked for a deleted row: older hub managers may never have had a membership.
 async function removeHubAccess(tx: Transaction, implementerId: string, hubManagerId: string) {
