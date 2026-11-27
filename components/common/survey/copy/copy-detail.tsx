@@ -2,14 +2,14 @@ import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { QuestionnaireStatusBadge } from "#/components/common/survey/questionnaires-table";
+import { QuestionnaireStatusBadge } from "#/components/common/survey/questionnaire-status-badge";
 import { SurveyAnswerReviewStatus, SurveyQuestionnaireStatus } from "#/db/enums";
 import type { SurveyViewer } from "#/lib/auth/survey-access";
 import { formatDateIn, formatDateTimeIn } from "#/lib/date-utils";
 import { isSettledCopy } from "#/lib/survey/answer-fields";
 import { SurveyAuditAction } from "#/lib/survey/audit";
 import type { CopyAnswer, CopyHistoryEvent, CopyPage, CopyView } from "#/lib/survey/copy/copy";
-import { refusalMessage } from "#/lib/survey/copy/decide";
+import { progressOf, refusalMessage } from "#/lib/survey/copy/decide";
 import { printRunHref, reviewAnswerHref } from "#/lib/survey/copy/paths";
 import { cn } from "#/lib/utils";
 import { CopyReopenDialog, CopyVerifyDialog } from "./copy-actions";
@@ -48,7 +48,7 @@ export function CopyDetail({
           <h1 className="font-mono text-2xl font-semibold text-shamiri-black tabular-nums">
             {copy.serial}
           </h1>
-          <QuestionnaireStatusBadge status={copy.status} />
+          <QuestionnaireStatusBadge status={settled ? copy.status : progressOf(copy.facts)} />
         </div>
         <p className="text-sm text-shamiri-text-grey">{headerFacts.join(" · ")}</p>
       </header>
@@ -290,7 +290,7 @@ function CopyState({
       verify.kind === "change" ? (
         <>
           <p>Every page is scanned and every answer checked.</p>
-          <CopyVerifyDialog copy={copyRef} />
+          <CopyVerifyDialog copy={copyRef} seenEventId={copy.history[0]?.id ?? null} />
         </>
       ) : verify.kind === "refused" ? (
         <>
@@ -339,7 +339,7 @@ function CopyHistory({
       {history.length === 0 ? (
         <p className="text-shamiri-text-grey">Nothing has been reviewed or changed yet.</p>
       ) : (
-        <ol className="space-y-3">
+        <ol className="max-h-[60vh] space-y-3 overflow-y-auto">
           {history.map((event) => (
             <li key={event.id} className="space-y-0.5">
               <p className="text-shamiri-text-grey">

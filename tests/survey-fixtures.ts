@@ -348,8 +348,9 @@ export async function createScannedCopy({
 
 /**
  * Another upload with pages of a copy already scanned, ingested as the pipeline would post it.
- * `remove` deletes the answers read from its pages, then its scans and upload, so it runs before or
- * after the copy's own `remove`.
+ * `remove` deletes the answers read from its pages, then its scans and upload. Run it before the
+ * copy's own `remove`: a rescan of a page that already has a matched scan is stored DUPLICATE, and
+ * its restrict foreign key to that scan blocks deleting the original first.
  */
 export async function rescanCopyPages({
   scope,

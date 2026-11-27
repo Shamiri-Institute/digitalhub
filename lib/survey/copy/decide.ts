@@ -8,15 +8,21 @@ export type CopyFacts = {
   /** Printed pages with no matched scan, in page order. */
   missingPageNumbers: readonly number[];
   answersNeedingReview: number;
+  /** The history has moved past the newest event the verifier was shown. */
+  changedSinceSeen: boolean;
 };
 
-export type CopyCommand = { kind: "verify" } | { kind: "reopen"; reason: string };
+/** `seenEventId` is the newest history event the page showed, or null when it showed none. */
+export type CopyCommand =
+  | { kind: "verify"; seenEventId: number | null }
+  | { kind: "reopen"; reason: string };
 
 export type CopyRefusal =
   | { kind: "void" }
   | { kind: "pages-missing"; pageNumbers: readonly number[]; printedPages: number }
   | { kind: "answers-need-review"; count: number }
-  | { kind: "research-only" };
+  | { kind: "research-only" }
+  | { kind: "changed-since-seen" };
 
 export type CopyDecision =
   | { kind: "change"; to: SurveyQuestionnaireStatus }
@@ -48,6 +54,9 @@ export function decideCopyAction(
   switch (action) {
     case "verify":
       if (isVerified) return { kind: "unchanged", because: "already-verified" };
+      if (facts.changedSinceSeen) {
+        return { kind: "refused", refusal: { kind: "changed-since-seen" } };
+      }
       if (facts.missingPageNumbers.length > 0) {
         return {
           kind: "refused",
@@ -89,6 +98,8 @@ export function refusalMessage(refusal: CopyRefusal): string {
         : `${refusal.count} answers still need review`;
     case "research-only":
       return "Only the Research team can reopen a verified copy";
+    case "changed-since-seen":
+      return "This copy changed since you opened it. Reload to see the latest";
     default:
       return refusal satisfies never;
   }

@@ -18,8 +18,9 @@ export async function verifyQuestionnaire(
     if (!input.success) {
       return invalid(input.error);
     }
+    const { questionnaireId, seenEventId } = input.data;
     const result = await db.transaction((tx) =>
-      applyCopyCommand(tx, viewer, input.data.questionnaireId, { kind: "verify" }),
+      applyCopyCommand(tx, viewer, questionnaireId, { kind: "verify", seenEventId }),
     );
     return copyActionResponse(result);
   } catch (error) {

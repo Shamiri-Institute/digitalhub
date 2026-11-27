@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, count, eq } from "drizzle-orm";
+import { type AnyColumn, and, asc, count, eq, inArray, max, or } from "drizzle-orm";
 
 import { db, type Transaction } from "#/db/client";
 import {
@@ -16,6 +16,7 @@ import {
   student,
   survey,
   surveyAnswer,
+  surveyAuditEvent,
   surveyPrintRun,
   surveyQuestionnaire,
   surveyQuestionnairePage,
@@ -67,7 +68,7 @@ export async function applyCopyCommand(
   }
   // A separate statement after the lock: under READ COMMITTED it sees every scan and review that
   // committed before the lock was granted.
-  const facts = await factsOf(tx, copy);
+  const facts = await factsOf(tx, copy, command);
   const decision = decideCopyAction(facts, command.kind, viewer.kind);
   if (decision.kind === "unchanged") return { kind: "unchanged", because: decision.because };
   if (decision.kind === "refused") return { kind: "refused", refusal: decision.refusal };
@@ -99,6 +100,7 @@ export async function applyCopyCommand(
 async function factsOf(
   tx: Transaction,
   copy: { id: string; status: SurveyQuestionnaireStatus },
+  command: CopyCommand,
 ): Promise<CopyFacts> {
   const printed = await tx
     .select({ pageNumber: surveyQuestionnairePage.pageNumber, matchedScanId: surveyScanPage.id })
@@ -121,6 +123,10 @@ async function factsOf(
         eq(surveyAnswer.reviewStatus, SurveyAnswerReviewStatus.NEEDS_REVIEW),
       ),
     );
+  const [newest] = await tx
+    .select({ id: max(surveyAuditEvent.id) })
+    .from(surveyAuditEvent)
+    .where(inCopyHistory(surveyAuditEvent, copy.id));
   return {
     status: copy.status,
     printedPages: printed.length,
@@ -128,11 +134,32 @@ async function factsOf(
       .filter((page) => page.matchedScanId === null)
       .map((page) => page.pageNumber),
     answersNeedingReview: waiting?.count ?? 0,
+    changedSinceSeen: command.kind === "verify" && command.seenEventId !== (newest?.id ?? null),
   };
+}
+
+/** The copy's own events and those of its answers: what its page lists as history. */
+function inCopyHistory(event: { entityType: AnyColumn; entityId: AnyColumn }, copyId: string) {
+  return or(
+    and(eq(event.entityType, SurveyAuditEntity.QUESTIONNAIRE), eq(event.entityId, copyId)),
+    and(
+      eq(event.entityType, SurveyAuditEntity.ANSWER),
+      inArray(
+        event.entityId,
+        db
+          .select({ id: surveyAnswer.id })
+          .from(surveyAnswer)
+          .where(eq(surveyAnswer.questionnaireId, copyId)),
+      ),
+    ),
+  );
 }
 
 /** Null when the copy is missing or outside the viewer's scope, alike. */
 export async function loadCopy(viewer: SurveyViewer, copyId: string) {
+  // Joined in the core builder rather than a relational query: `inScope` is written against the
+  // imported survey and copy tables, shared with the review queue, so it can't go in a relational
+  // `where`.
   const [header] = await db
     .select({
       id: surveyQuestionnaire.id,
@@ -222,6 +249,8 @@ export async function loadCopy(viewer: SurveyViewer, copyId: string) {
     printedPages: pages.length,
     missingPageNumbers: pages.filter((page) => !page.scan).map((page) => page.pageNumber),
     answersNeedingReview: answersNeedingReview.length,
+    // The page is what its viewer sees, so it is never behind itself.
+    changedSinceSeen: false,
   };
   const { form: _, studentName, admissionNumber, ...copy } = header;
   return {
@@ -297,20 +326,7 @@ async function copyEvents(copyId: string) {
       after: true,
       reason: true,
     },
-    where: (event, { and, eq, inArray, or }) =>
-      or(
-        and(eq(event.entityType, SurveyAuditEntity.QUESTIONNAIRE), eq(event.entityId, copyId)),
-        and(
-          eq(event.entityType, SurveyAuditEntity.ANSWER),
-          inArray(
-            event.entityId,
-            db
-              .select({ id: surveyAnswer.id })
-              .from(surveyAnswer)
-              .where(eq(surveyAnswer.questionnaireId, copyId)),
-          ),
-        ),
-      ),
+    where: (event) => inCopyHistory(event, copyId),
     orderBy: (event, { desc }) => desc(event.id),
     with: { actorUser: { columns: { name: true } } },
   });

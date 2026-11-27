@@ -1,17 +1,19 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -22,14 +24,21 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Textarea } from "#/components/ui/textarea";
-import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import { reopenQuestionnaire, verifyQuestionnaire } from "#/lib/actions/survey/copies";
 import { ReopenQuestionnaireSchema } from "#/lib/actions/survey/schemas";
 import { zodResolver } from "#/lib/zod-resolver";
 
 type Copy = { id: string; serial: string };
 
-export function CopyVerifyDialog({ copy }: { copy: Copy }) {
+export function CopyVerifyDialog({
+  copy,
+  seenEventId,
+}: {
+  copy: Copy;
+  /** The newest history event the page shows, or null when it shows none. */
+  seenEventId: number | null;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -38,28 +47,34 @@ export function CopyVerifyDialog({ copy }: { copy: Copy }) {
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <VerifyConfirm copy={copy} onDone={() => setOpen(false)} />
+          <VerifyConfirm copy={copy} seenEventId={seenEventId} onDone={() => setOpen(false)} />
         </DialogContent>
       </Dialog>
     </>
   );
 }
 
-function VerifyConfirm({ copy, onDone }: { copy: Copy; onDone: () => void }) {
-  const [isVerifying, startVerifying] = useTransition();
+function VerifyConfirm({
+  copy,
+  seenEventId,
+  onDone,
+}: {
+  copy: Copy;
+  seenEventId: number | null;
+  onDone: () => void;
+}) {
+  const { isSaving, save } = useDialogSave();
   const verify = () =>
-    startVerifying(() =>
-      toastOnFailure(async () => {
-        const response = await verifyQuestionnaire({ questionnaireId: copy.id });
-        toast({
-          variant: response.success ? "default" : "destructive",
-          description: response.message,
-        });
-        if (response.success) {
-          onDone();
-        }
-      }),
-    );
+    save(async () => {
+      const response = await verifyQuestionnaire({ questionnaireId: copy.id, seenEventId });
+      toast({
+        variant: response.success ? "default" : "destructive",
+        description: response.message,
+      });
+      if (response.success) {
+        onDone();
+      }
+    });
   return (
     <>
       <DialogHeader>
@@ -72,10 +87,8 @@ function VerifyConfirm({ copy, onDone }: { copy: Copy; onDone: () => void }) {
         </DialogDescription>
       </DialogHeader>
       <DialogFooter className="flex justify-end gap-2">
-        <Button variant="ghost" type="button" onClick={onDone}>
-          Cancel
-        </Button>
-        <Button type="button" onClick={verify} disabled={isVerifying} loading={isVerifying}>
+        <DialogClose render={<Button variant="ghost" type="button" />}>Cancel</DialogClose>
+        <Button type="button" onClick={verify} disabled={isSaving} loading={isSaving}>
           Verify copy
         </Button>
       </DialogFooter>
@@ -105,13 +118,18 @@ function ReopenForm({ copy, onDone }: { copy: Copy; onDone: () => void }) {
     defaultValues: { questionnaireId: copy.id, reason: "" },
   });
 
-  const onSubmit = async (values: z.infer<typeof ReopenQuestionnaireSchema>) => {
-    const response = await reopenQuestionnaire(values);
-    toast({ variant: response.success ? "default" : "destructive", description: response.message });
-    if (response.success) {
-      onDone();
-    }
-  };
+  const { isSaving, save } = useDialogSave();
+  const onSubmit = (values: z.infer<typeof ReopenQuestionnaireSchema>) =>
+    save(async () => {
+      const response = await reopenQuestionnaire(values);
+      toast({
+        variant: response.success ? "default" : "destructive",
+        description: response.message,
+      });
+      if (response.success) {
+        onDone();
+      }
+    });
 
   return (
     <Form {...form}>
@@ -139,14 +157,8 @@ function ReopenForm({ copy, onDone }: { copy: Copy; onDone: () => void }) {
           )}
         />
         <DialogFooter className="flex justify-end gap-2">
-          <Button variant="ghost" type="button" onClick={onDone}>
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            disabled={form.formState.isSubmitting}
-            loading={form.formState.isSubmitting}
-          >
+          <DialogClose render={<Button variant="ghost" type="button" />}>Cancel</DialogClose>
+          <Button type="submit" disabled={isSaving} loading={isSaving}>
             Reopen copy
           </Button>
         </DialogFooter>

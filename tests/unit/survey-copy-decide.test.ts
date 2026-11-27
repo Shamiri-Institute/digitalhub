@@ -8,7 +8,14 @@ const facts = (
   status: SurveyQuestionnaireStatus,
   missingPageNumbers: number[] = [],
   answersNeedingReview = 0,
-): CopyFacts => ({ status, printedPages: 3, missingPageNumbers, answersNeedingReview });
+  changedSinceSeen = false,
+): CopyFacts => ({
+  status,
+  printedPages: 3,
+  missingPageNumbers,
+  answersNeedingReview,
+  changedSinceSeen,
+});
 
 describe("deciding whether a copy may be verified or reopened", () => {
   it.each([
@@ -40,6 +47,19 @@ describe("deciding whether a copy may be verified or reopened", () => {
       { kind: "refused", refusal: { kind: "pages-missing", pageNumbers: [3], printedPages: 3 } },
     ],
     ["VERIFIED", facts("VERIFIED"), "project", { kind: "unchanged", because: "already-verified" }],
+    // A retry after someone else verified it is not refused for the event that verify added.
+    [
+      "VERIFIED since it was seen",
+      facts("VERIFIED", [], 0, true),
+      "project",
+      { kind: "unchanged", because: "already-verified" },
+    ],
+    [
+      "READY, changed since it was seen",
+      facts("READY", [], 0, true),
+      "hub",
+      { kind: "refused", refusal: { kind: "changed-since-seen" } },
+    ],
     ["VOID", facts("VOID"), "project", { kind: "refused", refusal: { kind: "void" } }],
   ] as const)("verify: %s", (_, copy, viewerKind, decision) => {
     expect(decideCopyAction(copy, "verify", viewerKind)).toEqual(decision);
@@ -92,6 +112,10 @@ describe("what a refusal says", () => {
     ],
     [{ kind: "research-only" }, "Only the Research team can reopen a verified copy"],
     [{ kind: "void" }, "This copy is void, so it can't be verified or reopened"],
+    [
+      { kind: "changed-since-seen" },
+      "This copy changed since you opened it. Reload to see the latest",
+    ],
   ] as const)("%o", (refusal, message) => {
     expect(refusalMessage(refusal)).toBe(message);
   });

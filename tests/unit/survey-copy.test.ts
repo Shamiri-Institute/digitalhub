@@ -91,6 +91,12 @@ function apply(viewer: SurveyViewer, copyId: string, command: CopyCommand) {
   return db.transaction((tx) => applyCopyCommand(tx, viewer, copyId, command));
 }
 
+// The verify the copy's page sends: the newest history event it shows.
+async function shownVerify(copyId: string): Promise<CopyCommand> {
+  const view = await loadCopy(admin, copyId);
+  return { kind: "verify", seenEventId: view?.history[0]?.id ?? null };
+}
+
 async function storedStatus(copyId: string) {
   const [stored] = await db
     .select({ status: surveyQuestionnaire.status })
@@ -119,12 +125,12 @@ describe("verifying a copy", () => {
     const { questionnaireId } = await cleanCopy();
     expect(await storedStatus(questionnaireId)).toBe("READY");
 
-    expect(await apply(coordinator, questionnaireId, { kind: "verify" })).toEqual({
+    expect(await apply(coordinator, questionnaireId, await shownVerify(questionnaireId))).toEqual({
       kind: "changed",
       from: "READY",
       to: "VERIFIED",
     });
-    expect(await apply(admin, questionnaireId, { kind: "verify" })).toEqual({
+    expect(await apply(admin, questionnaireId, await shownVerify(questionnaireId))).toEqual({
       kind: "unchanged",
       because: "already-verified",
     });
@@ -142,7 +148,7 @@ describe("verifying a copy", () => {
 
   it("refuses a copy with answers waiting for review, and says how many", async () => {
     const { questionnaireId } = await copy();
-    expect(await apply(admin, questionnaireId, { kind: "verify" })).toEqual({
+    expect(await apply(admin, questionnaireId, await shownVerify(questionnaireId))).toEqual({
       kind: "refused",
       refusal: { kind: "answers-need-review", count: 3 },
     });
@@ -152,7 +158,7 @@ describe("verifying a copy", () => {
 
   it("refuses a copy with pages not scanned, and names them", async () => {
     const { questionnaireId } = await copy({ reads: CLEAN_PRINT_FORM_READS, pageNumbers: [1] });
-    expect(await apply(admin, questionnaireId, { kind: "verify" })).toEqual({
+    expect(await apply(admin, questionnaireId, await shownVerify(questionnaireId))).toEqual({
       kind: "refused",
       refusal: { kind: "pages-missing", pageNumbers: [2, 3], printedPages: 3 },
     });
@@ -164,16 +170,42 @@ describe("verifying a copy", () => {
       .update(surveyQuestionnaire)
       .set({ status: "READY" })
       .where(eq(surveyQuestionnaire.id, questionnaireId));
-    expect(await apply(admin, questionnaireId, { kind: "verify" })).toMatchObject({
+    expect(await apply(admin, questionnaireId, await shownVerify(questionnaireId))).toMatchObject({
       kind: "refused",
       refusal: { kind: "answers-need-review", count: 3 },
+    });
+  });
+
+  it("refuses a verify sent from a page that predates a correction, and writes nothing", async () => {
+    const { questionnaireId, answerId } = await cleanCopy();
+    const stale = await shownVerify(questionnaireId);
+    await reviewAnswer(
+      admin,
+      answerId("mood"),
+      { kind: "correct", value: "2" },
+      { reviewedAt: null },
+    );
+
+    expect(await apply(admin, questionnaireId, stale)).toEqual({
+      kind: "refused",
+      refusal: { kind: "changed-since-seen" },
+    });
+    expect(await storedStatus(questionnaireId)).toBe("READY");
+    expect(await copyEvents(questionnaireId)).toEqual([]);
+
+    expect(await apply(admin, questionnaireId, await shownVerify(questionnaireId))).toEqual({
+      kind: "changed",
+      from: "READY",
+      to: "VERIFIED",
     });
   });
 
   it("finds no copy of another hub for a hub coordinator", async () => {
     const { questionnaireId } = await cleanCopy();
     const otherHubCoordinator = { ...coordinator, hubId: objectId("hub") };
-    expect(await apply(otherHubCoordinator, questionnaireId, { kind: "verify" })).toEqual({
+    expect(
+      await apply(otherHubCoordinator, questionnaireId, await shownVerify(questionnaireId)),
+    ).toEqual({
       kind: "not-found",
     });
     expect(await loadCopy(otherHubCoordinator, questionnaireId)).toBeNull();
@@ -183,7 +215,7 @@ describe("verifying a copy", () => {
   it("refuses a void copy", async () => {
     const { questionnaireId } = await cleanCopy();
     await db.transaction((tx) => voidCopy(tx, admin, { questionnaireId, reason: "Torn" }));
-    expect(await apply(admin, questionnaireId, { kind: "verify" })).toEqual({
+    expect(await apply(admin, questionnaireId, await shownVerify(questionnaireId))).toEqual({
       kind: "refused",
       refusal: { kind: "void" },
     });
@@ -191,7 +223,7 @@ describe("verifying a copy", () => {
 
   it("locks the answers, and keeps a later scan aside where the copy shows it", async () => {
     const scanned = await cleanCopy();
-    await apply(admin, scanned.questionnaireId, { kind: "verify" });
+    await apply(admin, scanned.questionnaireId, await shownVerify(scanned.questionnaireId));
 
     await expect(
       reviewAnswer(admin, scanned.answerId("age"), { kind: "accept" }, { reviewedAt: null }),
@@ -221,7 +253,7 @@ describe("verifying a copy", () => {
 describe("reopening a copy", () => {
   it("is for the Research team only", async () => {
     const { questionnaireId } = await cleanCopy();
-    await apply(admin, questionnaireId, { kind: "verify" });
+    await apply(admin, questionnaireId, await shownVerify(questionnaireId));
     expect(await apply(coordinator, questionnaireId, { kind: "reopen", reason: "Mine" })).toEqual({
       kind: "refused",
       refusal: { kind: "research-only" },
@@ -231,7 +263,7 @@ describe("reopening a copy", () => {
 
   it("returns the copy to what its pages and answers say, with the reason in its history", async () => {
     const { questionnaireId } = await cleanCopy();
-    await apply(admin, questionnaireId, { kind: "verify" });
+    await apply(admin, questionnaireId, await shownVerify(questionnaireId));
 
     expect(
       await apply(admin, questionnaireId, { kind: "reopen", reason: "Age looks wrong on paper" }),
@@ -263,7 +295,7 @@ describe("what a copy's page shows", () => {
         { reviewedAt: null },
       );
     }
-    await apply(admin, flagged.questionnaireId, { kind: "verify" });
+    await apply(admin, flagged.questionnaireId, await shownVerify(flagged.questionnaireId));
     await apply(admin, flagged.questionnaireId, { kind: "reopen", reason: "Second look" });
 
     const view = await loadCopy(admin, flagged.questionnaireId);

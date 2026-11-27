@@ -4,34 +4,14 @@ import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 
 import DataTable from "#/components/data-table";
-import { Badge } from "#/components/ui/badge";
-import {
-  SURVEY_QUESTIONNAIRE_STATUS_LABELS,
-  SurveyQuestionnaireStatus,
-  SurveyVersionPrefill,
-} from "#/db/enums";
+import { SurveyQuestionnaireStatus, SurveyVersionPrefill } from "#/db/enums";
 import type { SurveyViewer } from "#/lib/auth/survey-access";
 import { copyHref } from "#/lib/survey/copy/paths";
 import type { PrintRunCopies, PrintRunCopy } from "#/lib/survey/print-run-queries";
+import { QuestionnaireStatusBadge } from "./questionnaire-status-badge";
 import { QuestionnaireVoidDialog } from "./questionnaire-void-dialog";
 
 type LinkedCopy = PrintRunCopy & { href: string; viewerMayVoid: boolean };
-
-export function QuestionnaireStatusBadge({ status }: { status: SurveyQuestionnaireStatus }) {
-  return (
-    <Badge
-      variant={
-        status === SurveyQuestionnaireStatus.VOID
-          ? "destructive"
-          : status === SurveyQuestionnaireStatus.VERIFIED
-            ? "shamiri-green"
-            : "outline-solid"
-      }
-    >
-      {SURVEY_QUESTIONNAIRE_STATUS_LABELS[status]}
-    </Badge>
-  );
-}
 
 function copyColumns(showsStudent: boolean): ColumnDef<LinkedCopy>[] {
   return [

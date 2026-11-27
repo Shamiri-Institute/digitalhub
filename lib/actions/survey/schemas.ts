@@ -96,6 +96,8 @@ export const VoidQuestionnaireSchema = z.object({
 
 export const VerifyQuestionnaireSchema = z.object({
   questionnaireId: stringValidation("Missing copy"),
+  /** The newest history event the page showed; the verify is refused if the copy has moved on. */
+  seenEventId: z.int().nullable(),
 });
 
 export const ReopenQuestionnaireSchema = z.object({
