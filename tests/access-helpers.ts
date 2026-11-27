@@ -7,13 +7,13 @@ import { objectId } from "#/lib/crypto";
 import { createAdminCopy, uniqueSuffix } from "#/tests/helpers";
 
 /** A new super admin of each implementer the seeded super admin belongs to. */
-export async function createSuperAdminCopy() {
+export async function createSuperAdminCopy(activeProjectId?: string) {
   const seeded = await db.query.user.findFirst({
     where: (u, { eq }) => eq(u.email, superAdminEmail),
     columns: { id: true },
   });
   if (!seeded) throw new Error(`seed the database first: no user ${superAdminEmail}`);
-  const copy = await createAdminCopy(seeded.id);
+  const copy = await createAdminCopy(seeded.id, activeProjectId);
   await db.update(adminUser).set({ isSuperAdmin: true }).where(eq(adminUser.email, copy.email));
   return copy;
 }

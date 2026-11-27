@@ -7,28 +7,15 @@ import type { z } from "zod";
 import { db, isUniqueViolation, type Transaction } from "#/db/client";
 import { ImplementerRole } from "#/db/enums";
 import { hubCoordinator, implementerMember } from "#/db/schema";
-import { getActiveProjectId } from "#/lib/active-project-id";
 import { requireSuperAdmin } from "#/lib/auth/admin-access";
 import { objectId } from "#/lib/crypto";
 import type { ActionResponse } from "#/types/actions.types";
 import { actionFailure, AdminActionError } from "./action-error";
+import { lockCallerHub } from "./caller-hub";
 import { CreateHubManagerSchema, HubManagerRefSchema } from "./hub-manager-schemas";
 import { addImplementerMember } from "./members";
 
 const NOT_FOUND_MESSAGE = "Hub manager not found";
-
-async function findCallerHub(tx: Transaction, hubId: string, implementerId: string) {
-  const projectId = await getActiveProjectId();
-  const callerHub = await tx.query.hub.findFirst({
-    where: (h, { and, eq }) =>
-      and(eq(h.id, hubId), eq(h.implementerId, implementerId), eq(h.projectId, projectId)),
-    columns: { id: true },
-  });
-  if (!callerHub) {
-    throw new AdminActionError("Hub not found");
-  }
-  return callerHub;
-}
 
 // Not checked for a deleted row: older hub managers may never have had a membership.
 async function removeHubAccess(tx: Transaction, implementerId: string, hubManagerId: string) {
@@ -73,7 +60,7 @@ export async function createHubManager(
     const parsed = CreateHubManagerSchema.parse(data);
 
     await db.transaction(async (tx) => {
-      const callerHub = await findCallerHub(tx, hubId, implementerId);
+      const callerHub = await lockCallerHub(tx, hubId, implementerId);
       await assertHubManagerEmailIsFree(tx, parsed.coordinatorEmail, implementerId);
 
       // visible_id is deprecated but NOT NULL and unique, so a new row reuses its id.
@@ -112,7 +99,7 @@ export async function archiveHubManager(
     const parsed = HubManagerRefSchema.parse(data);
 
     const archived = await db.transaction(async (tx) => {
-      const callerHub = await findCallerHub(tx, parsed.hubId, implementerId);
+      const callerHub = await lockCallerHub(tx, parsed.hubId, implementerId);
       const [archivedManager] = await tx
         .update(hubCoordinator)
         .set({ archivedAt: new Date() })
@@ -148,7 +135,7 @@ export async function restoreHubManager(
     const parsed = HubManagerRefSchema.parse(data);
 
     const restored = await db.transaction(async (tx) => {
-      const callerHub = await findCallerHub(tx, parsed.hubId, implementerId);
+      const callerHub = await lockCallerHub(tx, parsed.hubId, implementerId);
       const [restoredManager] = await tx
         .update(hubCoordinator)
         .set({ archivedAt: null })

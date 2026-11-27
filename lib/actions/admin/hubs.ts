@@ -16,6 +16,7 @@ import { requireSuperAdmin } from "#/lib/auth/admin-access";
 import { objectId } from "#/lib/crypto";
 import type { ActionResponse } from "#/types/actions.types";
 import { actionFailure, AdminActionError } from "./action-error";
+import { lockCallerHub } from "./caller-hub";
 import { CreateHubSchema, UpdateHubSchema } from "./hub-schemas";
 
 const DUPLICATE_NAME_MESSAGE = "A hub with this name already exists in this project";
@@ -187,14 +188,7 @@ export async function updateHub(data: z.infer<typeof UpdateHubSchema>): Promise<
     await db.transaction(async (tx) => {
       // Locked, so two edits of one hub run one after the other and cannot give two new session
       // types the same code.
-      const [existing] = await tx
-        .select({ hubName: hub.hubName, projectId: hub.projectId })
-        .from(hub)
-        .where(and(eq(hub.id, parsed.hubId), eq(hub.implementerId, implementerId)))
-        .for("update");
-      if (!existing) {
-        throw new AdminActionError("Hub not found");
-      }
+      const existing = await lockCallerHub(tx, parsed.hubId, implementerId);
 
       if (parsed.hubName !== existing.hubName) {
         await assertHubNameIsFree(tx, {
@@ -203,10 +197,7 @@ export async function updateHub(data: z.infer<typeof UpdateHubSchema>): Promise<
           hubName: parsed.hubName,
           exceptHubId: parsed.hubId,
         });
-        await tx
-          .update(hub)
-          .set({ hubName: parsed.hubName })
-          .where(and(eq(hub.id, parsed.hubId), eq(hub.implementerId, implementerId)));
+        await tx.update(hub).set({ hubName: parsed.hubName }).where(eq(hub.id, existing.id));
       }
 
       await updateSessionNames(tx, parsed.hubId, parsed.sessionTypes, parsed.loadedSessionNameIds);

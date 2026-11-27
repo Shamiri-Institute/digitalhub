@@ -1,11 +1,20 @@
 import type { Page } from "@playwright/test";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { plainAdminEmail } from "#/db/seed/fixtures";
-import { fellow, hub, interventionSession, school, sessionName, user } from "#/db/schema";
+import { ImplementerRole } from "#/db/enums";
+import { plainAdminEmail, superAdminEmail } from "#/db/seed/fixtures";
+import {
+  fellow,
+  hub,
+  implementerMember,
+  interventionSession,
+  school,
+  sessionName,
+  user,
+} from "#/db/schema";
 import { objectId } from "#/lib/crypto";
-import { createProjectWithHub } from "#/tests/access-helpers";
+import { createProjectWithHub, createSuperAdminCopy } from "#/tests/access-helpers";
 import { expect, test } from "#/tests/fixtures";
 import { createAdminCopy, required, signInWithEmail, uniqueSuffix } from "#/tests/helpers";
 import { getUrl, rowWithCell, scheduleUrl } from "#/tests/pages/helpers";
@@ -188,4 +197,76 @@ test("an admin cannot switch to a project that no longer holds a hub of their im
   await page.reload();
   await expect(headerButton(page, activeProject.name)).toBeVisible();
   await expect(headerButton(page, otherProject.projectName)).toHaveCount(0);
+});
+
+test("a super admin cannot save a hub's settings after switching to another project", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const activeProject = await defaultProject();
+  // ADMIN only, as createSuperAdminCopy copies only ADMIN memberships.
+  const [superAdminImplementer] = await db
+    .select({ implementerId: hub.implementerId })
+    .from(hub)
+    .innerJoin(
+      implementerMember,
+      and(
+        eq(implementerMember.implementerId, hub.implementerId),
+        eq(implementerMember.role, ImplementerRole.ADMIN),
+      ),
+    )
+    .innerJoin(user, and(eq(user.id, implementerMember.userId), eq(user.email, superAdminEmail)))
+    .where(eq(hub.projectId, activeProject.id))
+    .orderBy(hub.id)
+    .limit(1);
+  required(superAdminImplementer, "a hub of the super admin's implementer in the default project");
+  const otherProject = await createProjectWithHub(superAdminImplementer.implementerId);
+  undo(otherProject.remove);
+  const [sessionOne] = await db
+    .insert(sessionName)
+    .values({
+      hubId: otherProject.hubId,
+      sessionName: "s1",
+      sessionLabel: "Session 1",
+      sessionType: "INTERVENTION",
+      amount: 1500,
+    })
+    .returning({ id: sessionName.id });
+  required(sessionOne, "the inserted session type");
+  undo(() => db.delete(sessionName).where(eq(sessionName.hubId, otherProject.hubId)));
+  const admin = await createSuperAdminCopy(otherProject.projectId);
+  undo(admin.remove);
+
+  await signInWithEmail(context, admin.email);
+  await page.goto(getUrl(`/admin/hubs/${otherProject.hubId}/settings`));
+  await expect(page.getByLabel("Hub name")).toHaveValue(otherProject.hubName);
+  await page.getByLabel("Hub name").fill(`${otherProject.hubName} renamed`);
+  await page.getByLabel("s1 amount").fill("1800");
+  await page.getByRole("button", { name: "Review and save" }).click();
+
+  const switcher = await context.newPage();
+  await switcher.goto(getUrl("/admin/hubs"));
+  await headerButton(switcher, otherProject.projectName).click();
+  await switcher.getByRole("option").filter({ hasText: activeProject.name }).click();
+  await expect(headerButton(switcher, activeProject.name)).toBeVisible();
+
+  await page
+    .getByRole("dialog", { name: "Save changes to hub?" })
+    .getByRole("button", { name: "Save changes" })
+    .click();
+  await expect(page.getByText("Hub not found").first()).toBeVisible();
+
+  // Read from the database: these are writes that must not happen, and the admin can no longer
+  // open this hub's page to see them.
+  const savedHub = await db.query.hub.findFirst({
+    where: (h, { eq }) => eq(h.id, otherProject.hubId),
+    columns: { hubName: true },
+  });
+  expect(savedHub?.hubName).toBe(otherProject.hubName);
+  const savedSession = await db.query.sessionName.findFirst({
+    where: (n, { eq }) => eq(n.id, sessionOne.id),
+    columns: { amount: true },
+  });
+  expect(savedSession?.amount).toBe(1500);
 });
