@@ -83,6 +83,11 @@ test.afterAll(async () => {
   }
   await removeSurvey({ code: surveyCode });
   await removeSchool?.();
+  // With fullyParallel, a worker can run this hook and then be handed more of this file's tests
+  // while the module stays loaded, so the next test must build the survey again.
+  copyRemovals.length = 0;
+  removeSchool = undefined;
+  setup = undefined;
 });
 
 test("R-SURV-COPY: a Research admin opens a copy from its print run and verifies it", async ({
