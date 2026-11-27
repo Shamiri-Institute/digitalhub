@@ -94,9 +94,11 @@ async function surveyWithCopiesAtEachStage(undo: Undo) {
 
   await issueCopy(at);
   const partial = await createScannedCopy({ ...at, pageNumbers: [1] });
+  undo(partial.remove);
   const unsure = await createScannedCopy(at);
+  undo(unsure.remove);
   const clean = await createScannedCopy({ ...at, reads: CLEAN_READS });
-  undo(partial.remove, unsure.remove, clean.remove);
+  undo(clean.remove);
   await issueCopy({
     ...at,
     scope: { ...scope, hubId: otherHub.id },
@@ -154,7 +156,10 @@ test("R-SURV-PROGRESS: a Research admin sees each school's progress and exports 
   await dialog.getByRole("button", { name: "Download" }).click();
   const file = await download;
   expect(file.suggestedFilename()).toBe(`${setup.published.code}-answers.csv`);
-  const lines = (await readFile(await file.path(), "utf8")).split("\r\n");
+  const csv = await readFile(await file.path(), "utf8");
+  // Excel on Windows needs the byte order mark to read the file as UTF-8.
+  expect(csv.startsWith("\uFEFF")).toBe(true);
+  const lines = csv.slice(1).split("\r\n");
   expect(lines[0]).toBe(
     "serial,hub,school,student_id,version,status,mood,home,sport,phq.1,phq.2,phq.3,phq.4,phq.5,age,dob,notes,sign",
   );
@@ -162,6 +167,13 @@ test("R-SURV-PROGRESS: a Research admin sees each school's progress and exports 
     `${setup.cleanSerial},${csvName(setup.hubName)},${csvName(setup.schoolName)},,1,READY,3,1,football;netball,0,0,0,0,0,14,2011-02-28,,1`,
   );
   expect(lines).toHaveLength(1 + 5 + 1);
+
+  // A page on another site can't make the admin's browser download students' answers.
+  const fromElsewhere = await page.request.get(
+    getUrl(`/api/surveys/${setup.published.id}/export/answers?versions=1&values=codes&copies=all`),
+    { headers: { "sec-fetch-site": "cross-site" } },
+  );
+  expect(fromElsewhere.status()).toBe(403);
 });
 
 test("R-SURV-PROGRESS: a hub coordinator sees only their hub's progress and cannot export", async ({
@@ -192,11 +204,11 @@ test("R-SURV-PROGRESS: a hub coordinator sees only their hub's progress and cann
   await expect(progress.getByText(setup.otherSchoolName)).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Export data" })).toHaveCount(0);
 
-  // The proxy sends a hub coordinator back to their own pages before the route runs; either way,
-  // no CSV comes back.
+  // The route refuses anyone but a Research admin.
   const exported = await page.request.get(
     getUrl(`/api/surveys/${setup.published.id}/export/answers?versions=1&values=codes&copies=all`),
   );
+  expect(exported.status()).toBe(403);
   expect(exported.headers()["content-type"]).not.toContain("text/csv");
   expect(await exported.text()).not.toContain("serial,hub,school");
 });

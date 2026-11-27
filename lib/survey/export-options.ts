@@ -12,11 +12,33 @@ export function isSurveyExportFile(file: string): file is SurveyExportFile {
 /** Between the codes, or labels, of a multiple-choice answer, in one cell. */
 export const MULTIPLE_CODES_SEPARATOR = ";";
 
+/** The answers file's columns for each copy, ahead of one column per question key. */
+export const COPY_COLUMNS = ["serial", "hub", "school", "student_id", "version", "status"] as const;
+
+export function isCopyColumn(name: string) {
+  return (COPY_COLUMNS as readonly string[]).includes(name);
+}
+
 /**
- * A cell for a question the copy's version didn't print, so it can't be read as a question the
- * student left blank, which is empty.
+ * A field's column in the answers file and the codebook. A version published before such keys were
+ * refused may have a question keyed like a copy column, which gets a prefix so no column repeats.
  */
-export const NOT_ASKED = "NOT_ASKED";
+export function fieldColumnOf(field: string) {
+  return isCopyColumn(field) ? `answer_${field}` : field;
+}
+
+/**
+ * Cells that hold no answer yet, each named so none can be read as a question the student left
+ * blank, which is empty.
+ */
+export const EXPORT_MARKERS = {
+  /** The copy's version didn't print the question. */
+  notAsked: "NOT_ASKED",
+  /** The question's page of the copy hasn't been scanned. */
+  notScanned: "NOT_SCANNED",
+  /** What the pipeline read is waiting for a reviewer, and may be wrong. */
+  needsReview: "NEEDS_REVIEW",
+} as const;
 
 export const EXPORT_CELL_VALUES = ["codes", "text", "both"] as const;
 export type ExportCellValues = (typeof EXPORT_CELL_VALUES)[number];

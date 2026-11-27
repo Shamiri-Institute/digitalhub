@@ -1,29 +1,38 @@
-import { and, asc, count, eq, inArray, isNotNull, ne } from "drizzle-orm";
+import { and, asc, count, eq, inArray, ne } from "drizzle-orm";
 
 import { db, type Transaction } from "#/db/client";
-import { SurveyAuditActor, SurveyQuestionnaireStatus } from "#/db/enums";
+import {
+  SurveyAnswerReviewStatus,
+  SurveyAuditActor,
+  SurveyQuestionnaireStatus,
+  SurveyScanPageStatus,
+} from "#/db/enums";
 import {
   hub,
   type JsonValue,
   school,
   surveyAnswer,
   surveyQuestionnaire,
+  surveyQuestionnairePage,
+  surveyScanPage,
   surveyVersion,
+  surveyVersionField,
 } from "#/db/schema";
 import type { AdminScope } from "#/lib/auth/admin-access";
 import { type FieldQuestion, fieldQuestionsOf } from "#/lib/survey/answer-fields";
 import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
 import {
+  COPY_COLUMNS,
   type ExportCellValues,
+  fieldColumnOf,
+  EXPORT_MARKERS,
   EXPORTED_COPY_STATUSES,
   MULTIPLE_CODES_SEPARATOR,
-  NOT_ASKED,
   type SurveyExportFile,
   type SurveyExportOptions,
 } from "#/lib/survey/export-options";
 import type { SurveyForm } from "#/lib/survey/form";
 
-const COPY_COLUMNS = ["serial", "hub", "school", "student_id", "version", "status"];
 const CODEBOOK_COLUMNS = ["version", "field", "kind", "required", "prompt", "row", "code", "label"];
 
 /**
@@ -155,7 +164,8 @@ async function answersTable(
     ),
     inArray(surveyQuestionnaire.status, EXPORTED_COPY_STATUSES[exportedCopies]),
   );
-  const [copies, answers] = await Promise.all([
+  const versionIds = newestFirst.map((version) => version.id);
+  const [copies, answers, scannedPages, fieldPages] = await Promise.all([
     tx
       .select({
         id: surveyQuestionnaire.id,
@@ -178,22 +188,55 @@ async function answersTable(
         questionnaireId: surveyAnswer.questionnaireId,
         field: surveyAnswer.field,
         value: surveyAnswer.value,
+        reviewStatus: surveyAnswer.reviewStatus,
       })
       .from(surveyAnswer)
       .innerJoin(surveyQuestionnaire, eq(surveyQuestionnaire.id, surveyAnswer.questionnaireId))
-      .where(and(chosenCopies, isNotNull(surveyAnswer.value))),
+      .where(chosenCopies),
+    tx
+      .select({
+        questionnaireId: surveyQuestionnairePage.questionnaireId,
+        pageNumber: surveyQuestionnairePage.pageNumber,
+      })
+      .from(surveyQuestionnairePage)
+      .innerJoin(
+        surveyScanPage,
+        and(
+          eq(surveyScanPage.questionnairePageId, surveyQuestionnairePage.id),
+          eq(surveyScanPage.status, SurveyScanPageStatus.MATCHED),
+        ),
+      )
+      .innerJoin(
+        surveyQuestionnaire,
+        eq(surveyQuestionnaire.id, surveyQuestionnairePage.questionnaireId),
+      )
+      .where(chosenCopies),
+    tx
+      .select({
+        versionId: surveyVersionField.versionId,
+        field: surveyVersionField.field,
+        pageNumber: surveyVersionField.pageNumber,
+      })
+      .from(surveyVersionField)
+      .where(inArray(surveyVersionField.versionId, versionIds)),
   ]);
-  const answersByCopy = new Map<string, Map<string, JsonValue | null>>();
-  for (const answer of answers) {
-    const copyAnswers =
-      answersByCopy.get(answer.questionnaireId) ?? new Map<string, JsonValue | null>();
-    copyAnswers.set(answer.field, answer.value);
-    answersByCopy.set(answer.questionnaireId, copyAnswers);
-  }
+  const answersByCopy = Map.groupBy(answers, (answer) => answer.questionnaireId);
+  const scannedPagesByCopy = Map.groupBy(scannedPages, (page) => page.questionnaireId);
+  const pageOfField = new Map(
+    fieldPages.map((fieldPage) => [
+      `${fieldPage.versionId} ${fieldPage.field}`,
+      fieldPage.pageNumber,
+    ]),
+  );
   return [
-    [...COPY_COLUMNS, ...fields],
+    [...COPY_COLUMNS, ...fields.map(fieldColumnOf)],
     ...copies.map((copy) => {
-      const copyAnswers = answersByCopy.get(copy.id);
+      const copyAnswers = new Map(
+        (answersByCopy.get(copy.id) ?? []).map((answer) => [answer.field, answer]),
+      );
+      const copyScannedPages = new Set(
+        (scannedPagesByCopy.get(copy.id) ?? []).map((page) => page.pageNumber),
+      );
       const questions = questionsByVersion.get(copy.versionId);
       return [
         copy.serial,
@@ -203,25 +246,49 @@ async function answersTable(
         String(copy.versionNumber),
         copy.status,
         ...fields.map((field) =>
-          answerCell(questions?.get(field), copyAnswers?.get(field) ?? null, values),
+          fieldCell(
+            {
+              question: questions?.get(field),
+              answer: copyAnswers.get(field),
+              pageScanned: copyScannedPages.has(pageOfField.get(`${copy.versionId} ${field}`) ?? 0),
+            },
+            values,
+          ),
         ),
       ];
     }),
   ];
 }
 
+type CopyField = {
+  question: FieldQuestion | undefined;
+  answer: { value: JsonValue | null; reviewStatus: SurveyAnswerReviewStatus } | undefined;
+  pageScanned: boolean;
+};
+
 /**
- * An answer as a cell: option codes, their labels, or both, and digits, a date or text as written.
- * A question the copy's version didn't print is NOT_ASKED; one left blank is empty.
+ * A copy's cell for one field. An answer typed in by a reviewer counts even when its page wasn't
+ * scanned.
  */
+export function fieldCell({ question, answer, pageScanned }: CopyField, values: ExportCellValues) {
+  if (!question) {
+    return EXPORT_MARKERS.notAsked;
+  }
+  if (answer?.reviewStatus === SurveyAnswerReviewStatus.NEEDS_REVIEW) {
+    return EXPORT_MARKERS.needsReview;
+  }
+  if (!answer && !pageScanned) {
+    return EXPORT_MARKERS.notScanned;
+  }
+  return answerCell(question, answer?.value ?? null, values);
+}
+
+/** An answer as a cell: option codes, their labels, or both, and digits, a date or text as written. */
 export function answerCell(
-  question: FieldQuestion | undefined,
+  question: FieldQuestion,
   value: JsonValue | null,
   values: ExportCellValues,
 ): string {
-  if (!question) {
-    return NOT_ASKED;
-  }
   if (value === null) {
     return "";
   }
@@ -236,10 +303,13 @@ export function answerCell(
       .join(MULTIPLE_CODES_SEPARATOR);
   }
   if (input.kind === "signature" && value === true) {
-    return cellOf("1", "Signed", values);
+    return cellOf(SIGNED.code, SIGNED.label, values);
   }
   return typeof value === "object" ? JSON.stringify(value) : String(value);
 }
+
+/** A signed signature, as the answers file writes it and the codebook explains it. */
+const SIGNED = { code: "1", label: "Signed" };
 
 function cellOf(code: string, label: string | undefined, values: ExportCellValues) {
   if (values === "codes" || label === undefined) {
@@ -256,15 +326,24 @@ function codebookTable(oldestFirst: PublishedVersion[]) {
       [...fieldQuestionsOf(version.form).values()].flatMap((question) => {
         const described = [
           String(version.versionNumber),
-          question.field,
+          fieldColumnOf(question.field),
           codebookKind(question),
           question.required ? "yes" : "no",
           question.prompt,
           question.rowLabel ?? "",
         ];
-        return question.input.kind === "choice"
-          ? question.input.options.map((option) => [...described, option.code, option.label])
-          : [[...described, "", ""]];
+        switch (question.input.kind) {
+          case "choice":
+            return question.input.options.map((option) => [
+              ...described,
+              option.code,
+              option.label,
+            ]);
+          case "signature":
+            return [[...described, SIGNED.code, SIGNED.label]];
+          default:
+            return [[...described, "", ""]];
+        }
       }),
     ),
   ];

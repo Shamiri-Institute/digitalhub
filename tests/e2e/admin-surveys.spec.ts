@@ -688,7 +688,7 @@ test("R-SURV-PUBLISH: a page that doesn't fit is named and can't be published", 
     }) as const;
   const draft = await createDraftSurvey(scope, userId, {
     format: 1,
-    pages: [{ items: [text("home")] }, { items: [text("school"), text("friends")] }],
+    pages: [{ items: [text("home")] }, { items: [text("lessons"), text("friends")] }],
   });
   await page.goto(getUrl(`/admin/surveys/${draft.id}/versions/1`));
 

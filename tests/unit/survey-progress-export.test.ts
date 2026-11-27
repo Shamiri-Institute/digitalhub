@@ -12,7 +12,7 @@ import { fieldQuestionOf } from "#/lib/survey/answer-fields";
 import type { SurveyExportOptions } from "#/lib/survey/export-options";
 import type { SurveyForm } from "#/lib/survey/form";
 import type { FieldRead } from "#/lib/survey/scan-wire";
-import { answerCell, csvOf, exportSurvey } from "#/lib/survey/survey-export";
+import { answerCell, csvOf, exportSurvey, fieldCell } from "#/lib/survey/survey-export";
 import { fetchSurveyProgress } from "#/lib/survey/survey-progress";
 import {
   createPrintSchool,
@@ -152,6 +152,7 @@ beforeAll(async () => {
     createdBy: member.userId,
     forms: [PRINT_FORM, PRINT_FORM_V2],
   });
+  removals.push(() => removeSurvey({ code: surveyCode }));
   const [, v2VersionId] = published.versionIds;
   if (!v2VersionId) throw new Error("v2 wasn't published");
   surveyId = published.id;
@@ -160,14 +161,18 @@ beforeAll(async () => {
 
   copyIds.printed = await issueCopy({ scope, ...at });
   const partial = await createScannedCopy({ scope, ...at, pageNumbers: [1] });
+  removals.push(partial.remove);
   const unsure = await createScannedCopy({ scope, ...at });
+  removals.push(unsure.remove);
   const clean = await createScannedCopy({ scope, ...at, reads: CLEAN_READS });
+  removals.push(clean.remove);
   const cleanV2 = await createScannedCopy({
     scope,
     versionId: v2VersionId,
     schoolId: school.schoolId,
     reads: CLEAN_READS_V2,
   });
+  removals.push(cleanV2.remove);
   copyIds.otherHub = await issueCopy({
     scope: { ...otherHub, userId: member.userId },
     versionId: published.versionId,
@@ -177,15 +182,12 @@ beforeAll(async () => {
   copyIds.unsure = unsure.questionnaireId;
   copyIds.clean = clean.questionnaireId;
   copyIds.cleanV2 = cleanV2.questionnaireId;
-  // Scans first, then the survey and its copies, then the schools the copies name.
-  removals.unshift(partial.remove, unsure.remove, clean.remove, cleanV2.remove, () =>
-    removeSurvey({ code: surveyCode }),
-  );
 });
 
 afterAll(async () => {
-  for (const remove of removals) {
-    // oxlint-disable-next-line eslint/no-await-in-loop -- in order: scans, survey, schools
+  // Last made, first removed: scans, then the survey and its copies, then the schools they name.
+  for (const remove of removals.toReversed()) {
+    // oxlint-disable-next-line eslint/no-await-in-loop -- each removal needs the ones before it done
     await remove();
   }
 });
@@ -203,34 +205,37 @@ describe("fetchSurveyProgress", () => {
   it("counts each school's copies by how far they have come back", async () => {
     const progress = await fetchSurveyProgress(admin, surveyId);
 
-    expect(progress.map(({ schoolName, ...counts }) => ({ schoolName, ...counts }))).toEqual([
-      expect.objectContaining({
-        schoolName,
-        issued: 5,
-        returned: 4,
-        missingPages: 1,
-        // The copy missing pages has an unsure answer on the page that came back.
-        needsReview: 2,
-        ready: 2,
-        verified: 0,
-      }),
-      expect.objectContaining({
-        schoolName: otherSchoolName,
-        issued: 1,
-        returned: 0,
-        missingPages: 0,
-        needsReview: 0,
-        ready: 0,
-        verified: 0,
-      }),
-    ]);
+    expect(progress).toHaveLength(2);
+    expect(progress).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          schoolName,
+          issued: 5,
+          returned: 4,
+          missingPages: 1,
+          // The copy missing pages has an unsure answer on the page that came back.
+          needsReview: 2,
+          ready: 2,
+          verified: 0,
+        }),
+        expect.objectContaining({
+          schoolName: otherSchoolName,
+          issued: 1,
+          returned: 0,
+          missingPages: 0,
+          needsReview: 0,
+          ready: 0,
+          verified: 0,
+        }),
+      ]),
+    );
   });
 
   it("shows a hub coordinator only their hub's schools", async () => {
     const progress = await fetchSurveyProgress(coordinator);
 
-    const ofThisSurvey = progress.filter((row) => row.surveyId === surveyId);
-    expect(ofThisSurvey.map((row) => row.schoolName)).toEqual([schoolName]);
+    const ofThisSurvey = progress.filter((schoolProgress) => schoolProgress.surveyId === surveyId);
+    expect(ofThisSurvey.map((schoolProgress) => schoolProgress.schoolName)).toEqual([schoolName]);
   });
 
   it("shows nothing of a survey outside the viewer's project", async () => {
@@ -276,12 +281,23 @@ describe("exportSurvey", () => {
     expect(lines).toContain(
       `${await serialOf(copyIds.clean)},${csvName(hubName)},${csvName(schoolName)},,1,READY,3,1,football;netball,0,0,0,0,0,14,2011-02-28,,1`,
     );
+    const notScanned = (fields: number) => Array.from({ length: fields }, () => "NOT_SCANNED");
+    const copyColumns = `${csvName(hubName)},${csvName(schoolName)},,1`;
     expect(lines).toContain(
-      `${await serialOf(copyIds.printed)},${csvName(hubName)},${csvName(schoolName)},,1,ISSUED,,,,,,,,,,,,`,
+      [await serialOf(copyIds.printed), copyColumns, "ISSUED", ...notScanned(12)].join(","),
     );
-    // The unsure mood has no value until someone reviews it; the clean answers on its page do.
+    // Only page 1 came back, and its unsure mood waits for a reviewer.
     expect(lines).toContain(
-      `${await serialOf(copyIds.unsure)},${csvName(hubName)},${csvName(schoolName)},,1,NEEDS_REVIEW,,1,football,0,0,0,0,0,150,2011-02-28,,1`,
+      [
+        await serialOf(copyIds.partial),
+        copyColumns,
+        "PARTIAL,NEEDS_REVIEW,1,football",
+        ...notScanned(9),
+      ].join(","),
+    );
+    // The unsure mood, the age of 150 past the maximum and the unreadable notes wait for a reviewer.
+    expect(lines).toContain(
+      `${await serialOf(copyIds.unsure)},${copyColumns},NEEDS_REVIEW,NEEDS_REVIEW,1,football,0,0,0,0,0,NEEDS_REVIEW,2011-02-28,NEEDS_REVIEW,1`,
     );
     expect(lines).toHaveLength(1 + 5 + 1);
     expect(await latestExportEvent()).toEqual({
@@ -331,7 +347,7 @@ describe("exportSurvey", () => {
       '2,phq.1,grid_row,yes,"Over the last two weeks, how often have you been bothered by:",Little interest or pleasure in doing things,3,Nearly every day',
     );
     expect(lines).toContain("2,club,single_choice,yes,Are you in a school club?,,2,No");
-    expect(lines).toContain("2,sign,signature,yes,Signature,,,");
+    expect(lines).toContain("2,sign,signature,yes,Signature,,1,Signed");
     expect(lines.filter((line) => line.startsWith("1,"))).toEqual([]);
   });
 
@@ -343,9 +359,37 @@ describe("exportSurvey", () => {
   });
 });
 
+describe("fieldCell", () => {
+  const mood = fieldQuestionOf(PRINT_FORM, "mood");
+
+  it("shows an answer a reviewer typed in, though its page wasn't scanned", () => {
+    expect(
+      fieldCell(
+        { question: mood, answer: { value: "2", reviewStatus: "VERIFIED" }, pageScanned: false },
+        "codes",
+      ),
+    ).toBe("2");
+  });
+
+  it("keeps a blank on a scanned page empty", () => {
+    expect(
+      fieldCell(
+        {
+          question: mood,
+          answer: { value: null, reviewStatus: "AUTO_ACCEPTED" },
+          pageScanned: true,
+        },
+        "codes",
+      ),
+    ).toBe("");
+  });
+});
+
 describe("answerCell", () => {
   it("writes each code with its label for both", () => {
-    expect(answerCell(fieldQuestionOf(PRINT_FORM, "sport"), ["football", "netball"], "both")).toBe(
+    const sport = fieldQuestionOf(PRINT_FORM, "sport");
+    if (!sport) throw new Error("PRINT_FORM has no sport question");
+    expect(answerCell(sport, ["football", "netball"], "both")).toBe(
       "football: Football;netball: Netball",
     );
   });

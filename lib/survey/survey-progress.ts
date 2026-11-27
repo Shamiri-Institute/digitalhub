@@ -78,9 +78,9 @@ export type ProgressCounts = Record<(typeof PROGRESS_COUNTS)[number], number>;
 
 export function progressTotals(rows: readonly ProgressCounts[]): ProgressCounts {
   const totals = Object.fromEntries(PROGRESS_COUNTS.map((count) => [count, 0])) as ProgressCounts;
-  for (const row of rows) {
+  for (const schoolCounts of rows) {
     for (const count of PROGRESS_COUNTS) {
-      totals[count] += row[count];
+      totals[count] += schoolCounts[count];
     }
   }
   return totals;
@@ -92,15 +92,15 @@ export function progressBySurvey(rows: SurveyProgressRows) {
     string,
     { surveyId: string; surveyCode: string; surveyTitle: string; schools: SurveyProgressRow[] }
   >();
-  for (const row of rows) {
-    const entry = surveys.get(row.surveyId) ?? {
-      surveyId: row.surveyId,
-      surveyCode: row.surveyCode,
-      surveyTitle: row.surveyTitle,
+  for (const schoolProgress of rows) {
+    const surveyProgress = surveys.get(schoolProgress.surveyId) ?? {
+      surveyId: schoolProgress.surveyId,
+      surveyCode: schoolProgress.surveyCode,
+      surveyTitle: schoolProgress.surveyTitle,
       schools: [],
     };
-    entry.schools.push(row);
-    surveys.set(row.surveyId, entry);
+    surveyProgress.schools.push(schoolProgress);
+    surveys.set(schoolProgress.surveyId, surveyProgress);
   }
   return [...surveys.values()];
 }

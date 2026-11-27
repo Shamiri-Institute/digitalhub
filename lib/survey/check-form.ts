@@ -11,6 +11,7 @@ import {
   type SurveyForm,
   SurveyFormSchema,
 } from "#/lib/survey/form";
+import { isCopyColumn } from "#/lib/survey/export-options";
 import { isBlank } from "#/lib/survey/rich-text";
 
 /**
@@ -118,6 +119,18 @@ export function checkForm(input: unknown, locked: LockedQuestion[]): FormCheck {
       });
     }
     keys.add(question.key);
+    // A grid's columns are `key.row`, and a key published before this rule must stay as it was.
+    if (
+      question.kind !== "grid" &&
+      isCopyColumn(question.key) &&
+      !publishedQuestion(locked, question.key)
+    ) {
+      issues.push({
+        itemId: question.id,
+        field: "key",
+        message: `The export already has a ${question.key} column for each copy`,
+      });
+    }
     issues.push(...entryIssues(question), ...lockIssues(question, locked));
   }
 

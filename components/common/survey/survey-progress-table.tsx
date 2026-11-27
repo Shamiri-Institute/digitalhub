@@ -49,13 +49,13 @@ export function SurveyProgressTable({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {rows.map((row) => (
-          <TableRow key={`${row.hubId} ${row.schoolId}`}>
-            {showHub && <TableCell>{row.hubName}</TableCell>}
-            <TableCell>{row.schoolName}</TableCell>
+        {rows.map((schoolProgress) => (
+          <TableRow key={`${schoolProgress.hubId} ${schoolProgress.schoolId}`}>
+            {showHub && <TableCell>{schoolProgress.hubName}</TableCell>}
+            <TableCell>{schoolProgress.schoolName}</TableCell>
             {PROGRESS_COUNTS.map((count) => (
               <TableCell key={count} className="text-right tabular-nums">
-                {row[count]}
+                {schoolProgress[count]}
               </TableCell>
             ))}
           </TableRow>

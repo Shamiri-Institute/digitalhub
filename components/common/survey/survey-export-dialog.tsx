@@ -14,6 +14,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  useDialogSave,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -26,13 +27,13 @@ import {
 import { Label } from "#/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
 import { Separator } from "#/components/ui/separator";
-import { toastOnError } from "#/components/ui/use-toast";
+import { toast, toastOnError } from "#/components/ui/use-toast";
 import {
   type ExportCellValues,
   type ExportCopies,
+  EXPORT_MARKERS,
   EXPORTED_COPY_STATUSES,
   MULTIPLE_CODES_SEPARATOR,
-  NOT_ASKED,
   SURVEY_EXPORT_FILES,
   type SurveyExportFile,
   SurveyExportOptionsSchema,
@@ -45,14 +46,14 @@ import { zodResolver } from "#/lib/zod-resolver";
 type Choice<T extends string> = { value: T; label: string; hint: string };
 
 const FILE_CHOICES: Choice<SurveyExportFile>[] = [
-  { value: "answers", label: "Answers", hint: "A row per copy, a column per question" },
-  { value: "codebook", label: "Codebook", hint: "What each column and code means" },
+  { value: "answers", label: "Answers", hint: "A row per copy" },
+  { value: "codebook", label: "Codebook", hint: "What each code means" },
 ];
 
 const COPIES_CHOICES: Choice<ExportCopies>[] = [
-  { value: "returned", label: "Scanned", hint: "At least one page back" },
+  { value: "returned", label: "Scanned", hint: "Any page back" },
   { value: "verified", label: "Verified", hint: "Every answer checked" },
-  { value: "all", label: "All printed", hint: "Unscanned ones left empty" },
+  { value: "all", label: "All printed", hint: "Even unscanned" },
 ];
 
 const CELL_VALUE_CHOICES: Choice<ExportCellValues>[] = [
@@ -129,13 +130,34 @@ function SurveyExportForm({
   const isAnswers = file === "answers";
   const nothingToExport = isAnswers && copyTotal === 0;
 
+  const { isSaving: isDownloading, save } = useDialogSave();
   const onDownload = (values: ExportFormValues) => {
     const { file: chosenFile, ...options } = ExportFormSchema.parse(values);
-    const link = document.createElement("a");
-    link.href = surveyExportPath(surveyId, chosenFile, options);
-    link.download = "";
-    link.click();
-    onDone();
+    save(async () => {
+      const response = await fetch(surveyExportPath(surveyId, chosenFile, options));
+      if (!response.ok) {
+        toast({
+          variant: "destructive",
+          // The route's refusals are plain text; anything else, such as a platform error page,
+          // is not for the reader.
+          description: response.headers.get("content-type")?.startsWith("text/plain")
+            ? await response.text()
+            : "Sorry, the file could not be made. Try again, or choose fewer copies.",
+        });
+        return;
+      }
+      const fileName =
+        /filename="([^"]+)"/.exec(response.headers.get("content-disposition") ?? "")?.[1] ??
+        `${chosenFile}.csv`;
+      const fileUrl = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      link.href = fileUrl;
+      link.download = fileName;
+      link.click();
+      // Safari and some Firefox versions lose a download whose URL is revoked straight after it starts.
+      setTimeout(() => URL.revokeObjectURL(fileUrl), 60_000);
+      onDone();
+    });
   };
 
   return (
@@ -247,23 +269,29 @@ function SurveyExportForm({
                         className="sm:grid-cols-3"
                       />
                     </FormControl>
-                    <p className="text-sm text-shamiri-text-grey">
-                      A multiple-choice answer separates its choices with &ldquo;
-                      {MULTIPLE_CODES_SEPARATOR}&rdquo;.
-                    </p>
                   </FormItem>
                 )}
               />
-              {askDifferentQuestions && (
-                <p
-                  role="note"
-                  className="rounded-md bg-shamiri-new-light-blue px-3 py-2 text-sm text-shamiri-dark-blue"
-                >
-                  These versions ask different questions. Where a copy&rsquo;s version didn&rsquo;t
-                  print a question, its cell reads <span className="font-medium">{NOT_ASKED}</span>;
-                  a question the student left blank is empty.
+              <div className="space-y-2 rounded-md bg-background-secondary px-3 py-2 text-sm">
+                <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+                  <dt className="text-shamiri-text-grey">Empty</dt>
+                  <dd>The student left it blank</dd>
+                  <dt className="font-medium">{EXPORT_MARKERS.needsReview}</dt>
+                  <dd>Read, but not checked by a reviewer yet</dd>
+                  <dt className="font-medium">{EXPORT_MARKERS.notScanned}</dt>
+                  <dd>Its page hasn&rsquo;t been scanned</dd>
+                  {askDifferentQuestions && (
+                    <>
+                      <dt className="font-medium">{EXPORT_MARKERS.notAsked}</dt>
+                      <dd>The copy&rsquo;s version didn&rsquo;t print it</dd>
+                    </>
+                  )}
+                </dl>
+                <p className="text-shamiri-text-grey">
+                  Choices are separated by &ldquo;{MULTIPLE_CODES_SEPARATOR}&rdquo;, which labels
+                  may also hold. Typed answers starting with = + - @ get a leading &rsquo;.
                 </p>
-              )}
+              </div>
             </>
           )}
         </div>
@@ -277,10 +305,15 @@ function SurveyExportForm({
               : `Codebook of ${chosen.map((choice) => `v${choice.versionNumber}`).join(", ") || "no versions"}`}
           </span>
           <div className="flex gap-2">
-            <Button variant="ghost" type="button" onClick={onDone}>
+            <Button variant="ghost" type="button" onClick={onDone} disabled={isDownloading}>
               Cancel
             </Button>
-            <Button type="submit" className="gap-2" disabled={nothingToExport}>
+            <Button
+              type="submit"
+              className="gap-2"
+              disabled={nothingToExport}
+              loading={isDownloading}
+            >
               <Download className="h-4 w-4" />
               Download
             </Button>

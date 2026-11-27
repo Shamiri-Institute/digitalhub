@@ -224,6 +224,30 @@ describe("checkForm", () => {
     expect(checkForm(FORM, []).success).toBe(true);
   });
 
+  it("refuses a key the answers export already uses for each copy", () => {
+    const form = structuredClone(FORM);
+    const age = form.pages[0]?.items[1];
+    if (age?.kind !== "number") throw new Error("FORM's age question moved");
+    age.key = "school";
+
+    expect(checkForm(form, []).issues).toEqual([
+      {
+        itemId: "age",
+        field: "key",
+        message: "The export already has a school column for each copy",
+      },
+    ]);
+  });
+
+  it("keeps a key a published version used before export columns were reserved", () => {
+    const form = structuredClone(FORM);
+    const age = form.pages[0]?.items[1];
+    if (age?.kind !== "number") throw new Error("FORM's age question moved");
+    age.key = "school";
+
+    expect(checkForm(form, lockedQuestions([{ versionNumber: 1, form }])).issues).toEqual([]);
+  });
+
   it("puts each problem on its item and field", () => {
     const form: SurveyForm = {
       format: 1,
