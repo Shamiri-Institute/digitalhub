@@ -134,7 +134,7 @@ async function factsOf(
       .filter((page) => page.matchedScanId === null)
       .map((page) => page.pageNumber),
     answersNeedingReview: waiting?.count ?? 0,
-    changedSinceSeen: command.kind === "verify" && command.seenEventId !== (newest?.id ?? null),
+    changedSinceSeen: command.seenEventId !== (newest?.id ?? null),
   };
 }
 
@@ -186,10 +186,13 @@ export async function loadCopy(viewer: SurveyViewer, copyId: string) {
     return null;
   }
 
-  const [printedPages, answers, events] = await Promise.all([
+  // History first: a change that lands while the pages and answers are read is then newer than
+  // the newest event the page shows, so a verify or reopen sent from it is refused, never the
+  // other way round.
+  const events = await copyEvents(header.id);
+  const [printedPages, answers] = await Promise.all([
     copyPrintedPages(header.id),
     copyAnswers(header.id),
-    copyEvents(header.id),
   ]);
   const questions = fieldQuestionsOf(header.form);
   const printedOrder = [...questions.keys()];
@@ -207,7 +210,7 @@ export async function loadCopy(viewer: SurveyViewer, copyId: string) {
           : JSON.stringify(answer.value),
         isBlank: answer.value === null,
         reviewStatus: answer.reviewStatus,
-        reviewerName: answer.reviewedByUser?.name ?? null,
+        reviewer: shownPerson(answer.reviewedByUser, viewer),
       };
     })
     .toSorted((a, b) => printedOrder.indexOf(a.field) - printedOrder.indexOf(b.field));
@@ -262,7 +265,7 @@ export async function loadCopy(viewer: SurveyViewer, copyId: string) {
     answersNeedingReview,
     history: events.map(({ actorUser, ...event }) => ({
       ...event,
-      actorName: actorUser?.name ?? null,
+      actor: shownPerson(actorUser, viewer),
       answerLabel:
         event.entityType === SurveyAuditEntity.ANSWER
           ? (answerLabels.get(event.entityId) ?? null)
@@ -275,6 +278,25 @@ export async function loadCopy(viewer: SurveyViewer, copyId: string) {
   };
 }
 export type CopyView = NonNullable<Awaited<ReturnType<typeof loadCopy>>>;
+
+export type ShownPerson =
+  | { kind: "viewer" }
+  | { kind: "named"; name: string }
+  | { kind: "unnamed" };
+
+/**
+ * Who acted, as this viewer may see them. A hub coordinator sees names only, never addresses, so a
+ * person without a name stays unnamed to them; the Research team sees the address instead.
+ */
+function shownPerson(
+  person: { id: string; name: string | null; email: string | null } | null,
+  viewer: SurveyViewer,
+): ShownPerson {
+  if (!person) return { kind: "unnamed" };
+  if (person.id === viewer.userId) return { kind: "viewer" };
+  const name = person.name || (viewer.kind === "project" ? person.email : null);
+  return name ? { kind: "named", name } : { kind: "unnamed" };
+}
 export type CopyPage = CopyView["pages"][number];
 export type CopyAnswer = CopyPage["answers"][number];
 export type CopyHistoryEvent = CopyView["history"][number];
@@ -306,10 +328,11 @@ async function copyAnswers(copyId: string) {
   return db.query.surveyAnswer.findMany({
     columns: { id: true, field: true, value: true, reviewStatus: true },
     where: (answer, { eq }) => eq(answer.questionnaireId, copyId),
+    orderBy: (answer, { asc }) => asc(answer.field),
     with: {
       versionField: { columns: { pageNumber: true } },
-      // Names only: hub coordinators see who reviewed an answer, not their address.
-      reviewedByUser: { columns: { name: true } },
+      // The address only reaches the page through shownPerson, for the Research team.
+      reviewedByUser: { columns: { id: true, name: true, email: true } },
     },
   });
 }
@@ -328,6 +351,6 @@ async function copyEvents(copyId: string) {
     },
     where: (event) => inCopyHistory(event, copyId),
     orderBy: (event, { desc }) => desc(event.id),
-    with: { actorUser: { columns: { name: true } } },
+    with: { actorUser: { columns: { id: true, name: true, email: true } } },
   });
 }

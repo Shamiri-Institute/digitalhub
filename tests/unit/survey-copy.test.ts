@@ -91,10 +91,15 @@ function apply(viewer: SurveyViewer, copyId: string, command: CopyCommand) {
   return db.transaction((tx) => applyCopyCommand(tx, viewer, copyId, command));
 }
 
-// The verify the copy's page sends: the newest history event it shows.
+// What the copy's page sends: the newest history event it shows.
 async function shownVerify(copyId: string): Promise<CopyCommand> {
   const view = await loadCopy(admin, copyId);
   return { kind: "verify", seenEventId: view?.history[0]?.id ?? null };
+}
+
+async function shownReopen(copyId: string, reason: string): Promise<CopyCommand> {
+  const view = await loadCopy(admin, copyId);
+  return { kind: "reopen", reason, seenEventId: view?.history[0]?.id ?? null };
 }
 
 async function storedStatus(copyId: string) {
@@ -166,10 +171,12 @@ describe("verifying a copy", () => {
 
   it("decides on the copy's answers, not a stored status that fell behind them", async () => {
     const { questionnaireId } = await copy();
-    await db
+    const fellBehind = await db
       .update(surveyQuestionnaire)
       .set({ status: "READY" })
-      .where(eq(surveyQuestionnaire.id, questionnaireId));
+      .where(eq(surveyQuestionnaire.id, questionnaireId))
+      .returning({ id: surveyQuestionnaire.id });
+    if (fellBehind.length === 0) throw new Error("The copy's stored status wasn't set up");
     expect(await apply(admin, questionnaireId, await shownVerify(questionnaireId))).toMatchObject({
       kind: "refused",
       refusal: { kind: "answers-need-review", count: 3 },
@@ -254,7 +261,9 @@ describe("reopening a copy", () => {
   it("is for the Research team only", async () => {
     const { questionnaireId } = await cleanCopy();
     await apply(admin, questionnaireId, await shownVerify(questionnaireId));
-    expect(await apply(coordinator, questionnaireId, { kind: "reopen", reason: "Mine" })).toEqual({
+    expect(
+      await apply(coordinator, questionnaireId, await shownReopen(questionnaireId, "Mine")),
+    ).toEqual({
       kind: "refused",
       refusal: { kind: "research-only" },
     });
@@ -266,9 +275,15 @@ describe("reopening a copy", () => {
     await apply(admin, questionnaireId, await shownVerify(questionnaireId));
 
     expect(
-      await apply(admin, questionnaireId, { kind: "reopen", reason: "Age looks wrong on paper" }),
+      await apply(
+        admin,
+        questionnaireId,
+        await shownReopen(questionnaireId, "Age looks wrong on paper"),
+      ),
     ).toEqual({ kind: "changed", from: "VERIFIED", to: "READY" });
-    expect(await apply(admin, questionnaireId, { kind: "reopen", reason: "Again" })).toEqual({
+    expect(
+      await apply(admin, questionnaireId, await shownReopen(questionnaireId, "Again")),
+    ).toEqual({
       kind: "unchanged",
       because: "not-verified",
     });
@@ -279,6 +294,32 @@ describe("reopening a copy", () => {
     ).toEqual([
       ["QUESTIONNAIRE_VERIFIED", null],
       ["QUESTIONNAIRE_REOPENED", "Age looks wrong on paper"],
+    ]);
+  });
+
+  it("refuses a reopen sent from a page that predates a later verify, and writes nothing", async () => {
+    const { questionnaireId, answerId } = await cleanCopy();
+    await apply(admin, questionnaireId, await shownVerify(questionnaireId));
+    const stale = await shownReopen(questionnaireId, "Age looks wrong on paper");
+    // Someone else reopens it, corrects the age and verifies it again before the stale reopen.
+    await apply(admin, questionnaireId, await shownReopen(questionnaireId, "Checking the age"));
+    await reviewAnswer(
+      admin,
+      answerId("age"),
+      { kind: "correct", value: "15" },
+      { reviewedAt: null },
+    );
+    await apply(admin, questionnaireId, await shownVerify(questionnaireId));
+
+    expect(await apply(admin, questionnaireId, stale)).toEqual({
+      kind: "refused",
+      refusal: { kind: "changed-since-seen" },
+    });
+    expect(await storedStatus(questionnaireId)).toBe("VERIFIED");
+    expect((await copyEvents(questionnaireId)).map(({ action }) => action)).toEqual([
+      "QUESTIONNAIRE_VERIFIED",
+      "QUESTIONNAIRE_REOPENED",
+      "QUESTIONNAIRE_VERIFIED",
     ]);
   });
 });
@@ -296,7 +337,11 @@ describe("what a copy's page shows", () => {
       );
     }
     await apply(admin, flagged.questionnaireId, await shownVerify(flagged.questionnaireId));
-    await apply(admin, flagged.questionnaireId, { kind: "reopen", reason: "Second look" });
+    await apply(
+      admin,
+      flagged.questionnaireId,
+      await shownReopen(flagged.questionnaireId, "Second look"),
+    );
 
     const view = await loadCopy(admin, flagged.questionnaireId);
     expect(
@@ -315,6 +360,34 @@ describe("what a copy's page shows", () => {
       valueText: "2",
       reviewStatus: "CORRECTED",
     });
+  });
+
+  it("names who acted: 'you' for the viewer, and an address only for the Research team", async () => {
+    const { questionnaireId } = await cleanCopy();
+    await apply(coordinator, questionnaireId, await shownVerify(questionnaireId));
+    const [coordinatorUser, adminUser] = await Promise.all(
+      [coordinator.userId, admin.userId].map((id) =>
+        db.query.user.findFirst({
+          where: (u, { eq }) => eq(u.id, id),
+          columns: { name: true, email: true },
+        }),
+      ),
+    );
+
+    const ownView = await loadCopy(coordinator, questionnaireId);
+    expect(ownView?.history[0]?.actor).toEqual({ kind: "viewer" });
+    const researchView = await loadCopy(admin, questionnaireId);
+    const coordinatorShown = coordinatorUser?.name || coordinatorUser?.email;
+    expect(researchView?.history[0]?.actor).toEqual(
+      coordinatorShown ? { kind: "named", name: coordinatorShown } : { kind: "unnamed" },
+    );
+
+    await apply(admin, questionnaireId, await shownReopen(questionnaireId, "Second look"));
+    const coordinatorView = await loadCopy(coordinator, questionnaireId);
+    // Never the admin's address, for a hub coordinator.
+    expect(coordinatorView?.history[0]?.actor).toEqual(
+      adminUser?.name ? { kind: "named", name: adminUser.name } : { kind: "unnamed" },
+    );
   });
 
   it("derives each open copy's status as its stored status from the same facts", async () => {

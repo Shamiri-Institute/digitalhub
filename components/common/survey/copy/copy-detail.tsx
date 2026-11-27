@@ -8,7 +8,13 @@ import type { SurveyViewer } from "#/lib/auth/survey-access";
 import { formatDateIn, formatDateTimeIn } from "#/lib/date-utils";
 import { isSettledCopy } from "#/lib/survey/answer-fields";
 import { SurveyAuditAction } from "#/lib/survey/audit";
-import type { CopyAnswer, CopyHistoryEvent, CopyPage, CopyView } from "#/lib/survey/copy/copy";
+import type {
+  CopyAnswer,
+  CopyHistoryEvent,
+  CopyPage,
+  CopyView,
+  ShownPerson,
+} from "#/lib/survey/copy/copy";
 import { progressOf, refusalMessage } from "#/lib/survey/copy/decide";
 import { printRunHref, reviewAnswerHref } from "#/lib/survey/copy/paths";
 import { cn } from "#/lib/utils";
@@ -235,13 +241,13 @@ function ReviewWord({ answer, reviewHref }: { answer: CopyAnswer; reviewHref: st
     case SurveyAnswerReviewStatus.VERIFIED:
       return (
         <span className="text-xs text-shamiri-text-grey">
-          Checked by {answer.reviewerName ?? "someone"}
+          Checked by {personWord(answer.reviewer)}
         </span>
       );
     case SurveyAnswerReviewStatus.CORRECTED:
       return (
         <span className="text-xs text-shamiri-text-grey">
-          Corrected by {answer.reviewerName ?? "someone"}
+          Corrected by {personWord(answer.reviewer)}
         </span>
       );
     case SurveyAnswerReviewStatus.AUTO_ACCEPTED:
@@ -272,12 +278,12 @@ function CopyState({
       <>
         <p>
           {verified
-            ? `Verified by ${verified.actorName ?? "someone"}${when(verified.occurredAt)}.`
+            ? `Verified by ${personWord(verified.actor)}${when(verified.occurredAt)}.`
             : "Verified."}{" "}
           Its answers are locked.
         </p>
         {copy.actions.reopen.kind === "change" ? (
-          <CopyReopenDialog copy={copyRef} />
+          <CopyReopenDialog copy={copyRef} seenEventId={copy.history[0]?.id ?? null} />
         ) : (
           <p className="text-shamiri-text-grey">The Research team can reopen it.</p>
         )}
@@ -343,7 +349,9 @@ function CopyHistory({
           {history.map((event) => (
             <li key={event.id} className="space-y-0.5">
               <p className="text-shamiri-text-grey">
-                <span className="text-shamiri-black">{event.actorName ?? "Someone"}</span>{" "}
+                <span className="text-shamiri-black">
+                  {personWord(event.actor, { startsSentence: true })}
+                </span>{" "}
                 {EVENT_WORDS[event.action] ?? event.action.toLowerCase()}
                 {event.answerLabel && (
                   <span className="text-shamiri-black"> {event.answerLabel}</span>
@@ -361,4 +369,15 @@ function CopyHistory({
       )}
     </section>
   );
+}
+
+function personWord(person: ShownPerson, { startsSentence = false } = {}) {
+  switch (person.kind) {
+    case "viewer":
+      return startsSentence ? "You" : "you";
+    case "named":
+      return person.name;
+    case "unnamed":
+      return startsSentence ? "Someone" : "someone";
+  }
 }

@@ -8,14 +8,14 @@ export type CopyFacts = {
   /** Printed pages with no matched scan, in page order. */
   missingPageNumbers: readonly number[];
   answersNeedingReview: number;
-  /** The history has moved past the newest event the verifier was shown. */
+  /** The history has moved past the newest event the page that sent the command showed. */
   changedSinceSeen: boolean;
 };
 
 /** `seenEventId` is the newest history event the page showed, or null when it showed none. */
 export type CopyCommand =
   | { kind: "verify"; seenEventId: number | null }
-  | { kind: "reopen"; reason: string };
+  | { kind: "reopen"; reason: string; seenEventId: number | null };
 
 export type CopyRefusal =
   | { kind: "void" }
@@ -77,6 +77,9 @@ export function decideCopyAction(
     case "reopen":
       if (!isVerified) return { kind: "unchanged", because: "not-verified" };
       if (viewerKind !== "project") return { kind: "refused", refusal: { kind: "research-only" } };
+      if (facts.changedSinceSeen) {
+        return { kind: "refused", refusal: { kind: "changed-since-seen" } };
+      }
       return { kind: "change", to: progressOf(facts) };
   }
 }
@@ -99,7 +102,7 @@ export function refusalMessage(refusal: CopyRefusal): string {
     case "research-only":
       return "Only the Research team can reopen a verified copy";
     case "changed-since-seen":
-      return "This copy changed since you opened it. Reload to see the latest";
+      return "This copy changed since you opened it. Look over the latest, then try again";
     default:
       return refusal satisfies never;
   }

@@ -127,10 +127,12 @@ test("R-SURV-COPY: reopening a verified copy needs a reason, which its history k
 }) => {
   const copy = await scannedCopy(CLEAN_PRINT_FORM_READS);
   // Verified in setup; the test above verifies through the page.
-  await db
+  const verified = await db
     .update(surveyQuestionnaire)
     .set({ status: "VERIFIED" })
-    .where(eq(surveyQuestionnaire.id, copy.questionnaireId));
+    .where(eq(surveyQuestionnaire.id, copy.questionnaireId))
+    .returning({ id: surveyQuestionnaire.id });
+  if (verified.length === 0) throw new Error("The copy to reopen wasn't set up");
   await signInWithEmail(context, researchAdminEmail);
   await page.goto(copy.url);
 

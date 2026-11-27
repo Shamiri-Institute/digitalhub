@@ -103,6 +103,8 @@ export const VerifyQuestionnaireSchema = z.object({
 export const ReopenQuestionnaireSchema = z.object({
   questionnaireId: stringValidation("Missing copy"),
   reason: copyChangeReason("Say why this copy is reopened"),
+  /** As for verify: the reopen is refused if the copy has moved on since the page showed it. */
+  seenEventId: z.int().nullable(),
 });
 
 export const RetryPrintRunSchema = z.object({

@@ -37,9 +37,9 @@ export async function reopenQuestionnaire(
     if (!input.success) {
       return invalid(input.error);
     }
-    const { questionnaireId, reason } = input.data;
+    const { questionnaireId, reason, seenEventId } = input.data;
     const result = await db.transaction((tx) =>
-      applyCopyCommand(tx, viewer, questionnaireId, { kind: "reopen", reason }),
+      applyCopyCommand(tx, viewer, questionnaireId, { kind: "reopen", reason, seenEventId }),
     );
     return copyActionResponse(result);
   } catch (error) {

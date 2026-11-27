@@ -87,6 +87,19 @@ describe("deciding whether a copy may be verified or reopened", () => {
       "hub",
       { kind: "unchanged", because: "not-verified" },
     ],
+    [
+      "VERIFIED, changed since it was seen",
+      facts("VERIFIED", [], 0, true),
+      "project",
+      { kind: "refused", refusal: { kind: "changed-since-seen" } },
+    ],
+    // A retry after someone else reopened it is not refused for the event that reopen added.
+    [
+      "READY since it was seen",
+      facts("READY", [], 0, true),
+      "project",
+      { kind: "unchanged", because: "not-verified" },
+    ],
     ["VOID", facts("VOID"), "project", { kind: "refused", refusal: { kind: "void" } }],
   ] as const)("reopen: %s", (_, copy, viewerKind, decision) => {
     expect(decideCopyAction(copy, "reopen", viewerKind)).toEqual(decision);
@@ -114,7 +127,7 @@ describe("what a refusal says", () => {
     [{ kind: "void" }, "This copy is void, so it can't be verified or reopened"],
     [
       { kind: "changed-since-seen" },
-      "This copy changed since you opened it. Reload to see the latest",
+      "This copy changed since you opened it. Look over the latest, then try again",
     ],
   ] as const)("%o", (refusal, message) => {
     expect(refusalMessage(refusal)).toBe(message);

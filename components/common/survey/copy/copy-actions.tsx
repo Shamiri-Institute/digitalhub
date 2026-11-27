@@ -71,9 +71,10 @@ function VerifyConfirm({
         variant: response.success ? "default" : "destructive",
         description: response.message,
       });
-      if (response.success) {
-        onDone();
-      }
+      // A refusal means the copy changed behind this page, which has now refreshed to show the
+      // change. Closing makes the viewer look again before verifying, rather than verifying
+      // straight away against the refreshed page.
+      onDone();
     });
   return (
     <>
@@ -96,7 +97,13 @@ function VerifyConfirm({
   );
 }
 
-export function CopyReopenDialog({ copy }: { copy: Copy }) {
+export function CopyReopenDialog({
+  copy,
+  seenEventId,
+}: {
+  copy: Copy;
+  seenEventId: number | null;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -105,17 +112,25 @@ export function CopyReopenDialog({ copy }: { copy: Copy }) {
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <ReopenForm copy={copy} onDone={() => setOpen(false)} />
+          <ReopenForm copy={copy} seenEventId={seenEventId} onDone={() => setOpen(false)} />
         </DialogContent>
       </Dialog>
     </>
   );
 }
 
-function ReopenForm({ copy, onDone }: { copy: Copy; onDone: () => void }) {
+function ReopenForm({
+  copy,
+  seenEventId,
+  onDone,
+}: {
+  copy: Copy;
+  seenEventId: number | null;
+  onDone: () => void;
+}) {
   const form = useForm<z.infer<typeof ReopenQuestionnaireSchema>>({
     resolver: zodResolver(ReopenQuestionnaireSchema),
-    defaultValues: { questionnaireId: copy.id, reason: "" },
+    defaultValues: { questionnaireId: copy.id, reason: "", seenEventId },
   });
 
   const { isSaving, save } = useDialogSave();
@@ -126,9 +141,8 @@ function ReopenForm({ copy, onDone }: { copy: Copy; onDone: () => void }) {
         variant: response.success ? "default" : "destructive",
         description: response.message,
       });
-      if (response.success) {
-        onDone();
-      }
+      // As for verify: after a refusal the viewer looks at the refreshed copy before trying again.
+      onDone();
     });
 
   return (
