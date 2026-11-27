@@ -28,6 +28,7 @@ export const SurveyAuditAction = {
   SCAN_RERUN: "SCAN_RERUN",
   ANSWER_VERIFIED: "ANSWER_VERIFIED",
   ANSWER_CORRECTED: "ANSWER_CORRECTED",
+  SURVEY_EXPORTED: "SURVEY_EXPORTED",
 } as const;
 export type SurveyAuditAction = (typeof SurveyAuditAction)[keyof typeof SurveyAuditAction];
 

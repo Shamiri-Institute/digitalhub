@@ -11,6 +11,7 @@ import {
   type SurveyForm,
   SurveyFormSchema,
 } from "#/lib/survey/form";
+import { isReservedKey } from "#/lib/survey/export-options";
 import { isBlank } from "#/lib/survey/rich-text";
 
 /**
@@ -118,6 +119,18 @@ export function checkForm(input: unknown, locked: LockedQuestion[]): FormCheck {
       });
     }
     keys.add(question.key);
+    // A grid's columns are `key.row`, and a key published before this rule must stay as it was.
+    if (
+      question.kind !== "grid" &&
+      isReservedKey(question.key) &&
+      !publishedQuestion(locked, question.key)
+    ) {
+      issues.push({
+        itemId: question.id,
+        field: "key",
+        message: `The export uses ${question.key} as a column of its own`,
+      });
+    }
     issues.push(...entryIssues(question), ...lockIssues(question, locked));
   }
 

@@ -224,6 +224,26 @@ describe("checkForm", () => {
     expect(checkForm(FORM, []).success).toBe(true);
   });
 
+  it.each(["school", "answer_school"])("refuses %s, a column the answers export uses", (key) => {
+    const form = structuredClone(FORM);
+    const age = form.pages[0]?.items[1];
+    if (age?.kind !== "number") throw new Error("FORM's age question moved");
+    age.key = key;
+
+    expect(checkForm(form, []).issues).toEqual([
+      { itemId: "age", field: "key", message: `The export uses ${key} as a column of its own` },
+    ]);
+  });
+
+  it("keeps a key a published version used before export columns were reserved", () => {
+    const form = structuredClone(FORM);
+    const age = form.pages[0]?.items[1];
+    if (age?.kind !== "number") throw new Error("FORM's age question moved");
+    age.key = "school";
+
+    expect(checkForm(form, lockedQuestions([{ versionNumber: 1, form }])).issues).toEqual([]);
+  });
+
   it("puts each problem on its item and field", () => {
     const form: SurveyForm = {
       format: 1,

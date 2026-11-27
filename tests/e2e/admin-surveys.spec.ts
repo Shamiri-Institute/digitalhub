@@ -514,7 +514,11 @@ test("R-SURV-RUN-HUB, R-SURV-QR, R-SURV-PREFILL: a Research team admin prints co
   expect(new Set(topCodes).size).toBe(topCodes.length);
 
   await page.getByRole("link", { name: published.title }).click();
-  const runRow = page.getByRole("row").filter({ hasText: printedHub.hubName });
+  // The Progress table above lists the hub too, so look in Print runs only.
+  const runRow = page
+    .locator("section", { has: page.getByRole("heading", { name: "Print runs" }) })
+    .getByRole("row")
+    .filter({ hasText: printedHub.hubName });
   // Version shows as "v1", so the only cell that is exactly "3" is Copies.
   await expect(runRow.getByRole("cell", { name: "3", exact: true })).toBeVisible();
 });
@@ -684,7 +688,7 @@ test("R-SURV-PUBLISH: a page that doesn't fit is named and can't be published", 
     }) as const;
   const draft = await createDraftSurvey(scope, userId, {
     format: 1,
-    pages: [{ items: [text("home")] }, { items: [text("school"), text("friends")] }],
+    pages: [{ items: [text("home")] }, { items: [text("lessons"), text("friends")] }],
   });
   await page.goto(getUrl(`/admin/surveys/${draft.id}/versions/1`));
 

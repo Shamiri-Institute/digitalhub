@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { PrintRunsTable } from "#/components/common/survey/print-runs-table";
+import { SurveyExportDialog } from "#/components/common/survey/survey-export-dialog";
+import { SurveyProgressTable } from "#/components/common/survey/survey-progress-table";
 import { ViewerTimeZoneCookie } from "#/components/common/viewer-time-zone";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
@@ -10,6 +12,8 @@ import { Separator } from "#/components/ui/separator";
 import { SurveyStatus } from "#/db/enums";
 import { surveyScope } from "#/lib/auth/admin-access";
 import { fetchPrintRuns } from "#/lib/survey/print-run-queries";
+import { fetchExportChoices } from "#/lib/survey/survey-export";
+import { fetchSurveyProgress } from "#/lib/survey/survey-progress";
 import { viewerTimeZone } from "#/lib/viewer-time-zone";
 import { SurveyStatusBadge } from "../components/status-badges";
 import { fetchSurveyWithVersions } from "../queries";
@@ -23,9 +27,11 @@ export default async function AdminSurveyPage(props: { params: Promise<{ surveyI
   }
   const viewer = { kind: "project", ...scope } as const;
 
-  const [survey, runs, timeZone] = await Promise.all([
+  const [survey, runs, progress, exportChoices, timeZone] = await Promise.all([
     fetchSurveyWithVersions(surveyId, scope),
     fetchPrintRuns(viewer, surveyId),
+    fetchSurveyProgress(viewer, surveyId),
+    fetchExportChoices(scope, surveyId),
     viewerTimeZone(),
   ]);
   if (!survey) {
@@ -60,6 +66,13 @@ export default async function AdminSurveyPage(props: { params: Promise<{ surveyI
           runsPath={survey.status === SurveyStatus.ACTIVE ? runsPath : undefined}
           timeZone={timeZone}
         />
+        <section className="space-y-3 pt-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold">Progress</h2>
+            <SurveyExportDialog surveyId={survey.id} choices={exportChoices} />
+          </div>
+          <SurveyProgressTable rows={progress} showHub />
+        </section>
         <section className="space-y-3 pt-6">
           <h2 className="text-xl font-semibold">Print runs</h2>
           <PrintRunsTable runs={runs} runsPath={runsPath} showHub timeZone={timeZone} />
