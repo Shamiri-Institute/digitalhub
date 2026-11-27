@@ -90,6 +90,7 @@ export async function createPublishedSurvey({
   prefill = "NONE",
   form = TWO_QUESTIONS,
   versionCount = 1,
+  forms = Array.from({ length: versionCount }, () => form),
 }: {
   code: string;
   implementerId: string;
@@ -98,6 +99,8 @@ export async function createPublishedSurvey({
   prefill?: SurveyVersionPrefill;
   form?: SurveyForm;
   versionCount?: number;
+  /** Each version's form, from v1 on, in place of `form` and `versionCount`. */
+  forms?: SurveyForm[];
 }) {
   const [created] = await db
     .insert(survey)
@@ -111,14 +114,17 @@ export async function createPublishedSurvey({
     })
     .returning();
   if (!created) throw new Error("The survey was not created");
-  const publishable = checkPublish(form, [], prefill);
-  if (!publishable.ok) throw new Error(`The form can't be published with prefill ${prefill}`);
   const versionIds: string[] = [];
+  let pageCount = 0;
   /* oxlint-disable eslint/no-await-in-loop -- each version is published after the one before */
-  for (let versionNumber = 1; versionNumber <= versionCount; versionNumber++) {
+  for (const [index, versionForm] of forms.entries()) {
+    const versionNumber = index + 1;
+    const publishable = checkPublish(versionForm, [], prefill);
+    if (!publishable.ok) throw new Error(`The form can't be published with prefill ${prefill}`);
+    pageCount ||= publishable.layout.pages.length;
     const [version] = await db
       .insert(surveyVersion)
-      .values({ surveyId: created.id, versionNumber, createdBy, form })
+      .values({ surveyId: created.id, versionNumber, createdBy, form: versionForm })
       .returning();
     if (!version) throw new Error("The version was not created");
     await db.transaction((tx) =>
@@ -139,7 +145,8 @@ export async function createPublishedSurvey({
     code,
     title: created.title,
     versionId,
-    pageCount: publishable.layout.pages.length,
+    versionIds,
+    pageCount,
   };
 }
 

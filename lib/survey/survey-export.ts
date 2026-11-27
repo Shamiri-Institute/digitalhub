@@ -1,4 +1,4 @@
-import { and, asc, eq, ne } from "drizzle-orm";
+import { and, asc, count, eq, inArray, isNotNull, ne } from "drizzle-orm";
 
 import { db, type Transaction } from "#/db/client";
 import { SurveyAuditActor, SurveyQuestionnaireStatus } from "#/db/enums";
@@ -13,26 +13,84 @@ import {
 import type { AdminScope } from "#/lib/auth/admin-access";
 import { type FieldQuestion, fieldQuestionsOf } from "#/lib/survey/answer-fields";
 import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
+import {
+  type ExportCellValues,
+  EXPORTED_COPY_STATUSES,
+  MULTIPLE_CODES_SEPARATOR,
+  NOT_ASKED,
+  type SurveyExportFile,
+  type SurveyExportOptions,
+} from "#/lib/survey/export-options";
 import type { SurveyForm } from "#/lib/survey/form";
-
-export const SURVEY_EXPORT_FILES = ["answers", "codebook"] as const;
-export type SurveyExportFile = (typeof SURVEY_EXPORT_FILES)[number];
-
-export function isSurveyExportFile(file: string): file is SurveyExportFile {
-  return (SURVEY_EXPORT_FILES as readonly string[]).includes(file);
-}
-
-/** Between the codes of a multiple-choice answer, in one cell. */
-export const MULTIPLE_CODES_SEPARATOR = ";";
 
 const COPY_COLUMNS = ["serial", "hub", "school", "student_id", "version", "status"];
 const CODEBOOK_COLUMNS = ["version", "field", "kind", "required", "prompt", "row", "code", "label"];
 
 /**
- * One of a survey's export files, read in one snapshot, and its download recorded in the audit log.
- * Null for a survey outside the Research admin's implementer and project.
+ * What the export dialog offers: each published version, newest first, with its answer fields and
+ * its copies counted by school and status, so the dialog can say what each choice would export.
  */
-export async function exportSurvey(scope: AdminScope, surveyId: string, file: SurveyExportFile) {
+export async function fetchExportChoices(scope: AdminScope, surveyId: string) {
+  const found = await db.query.survey.findFirst({
+    where: (s, { and, eq }) =>
+      and(
+        eq(s.id, surveyId),
+        eq(s.implementerId, scope.implementerId),
+        eq(s.projectId, scope.projectId),
+      ),
+    columns: { id: true },
+    with: {
+      versions: {
+        where: (v, { isNotNull }) => isNotNull(v.publishedAt),
+        columns: { id: true, versionNumber: true, form: true },
+        orderBy: (v, { desc }) => desc(v.versionNumber),
+      },
+    },
+  });
+  if (!found) {
+    return [];
+  }
+  const copyCounts = await db
+    .select({
+      versionId: surveyQuestionnaire.versionId,
+      schoolId: surveyQuestionnaire.schoolId,
+      status: surveyQuestionnaire.status,
+      copies: count(),
+    })
+    .from(surveyQuestionnaire)
+    .where(
+      and(
+        eq(surveyQuestionnaire.surveyId, found.id),
+        ne(surveyQuestionnaire.status, SurveyQuestionnaireStatus.VOID),
+      ),
+    )
+    .groupBy(
+      surveyQuestionnaire.versionId,
+      surveyQuestionnaire.schoolId,
+      surveyQuestionnaire.status,
+    );
+  return found.versions.map((version) => ({
+    versionNumber: version.versionNumber,
+    fields: [...fieldQuestionsOf(version.form).keys()],
+    copyCounts: copyCounts
+      .filter((counted) => counted.versionId === version.id)
+      .map(({ schoolId, status, copies }) => ({ schoolId, status, copies })),
+  }));
+}
+
+export type ExportChoices = Awaited<ReturnType<typeof fetchExportChoices>>;
+
+/**
+ * One of a survey's export files, read in one snapshot, and its download recorded in the audit log.
+ * Null for a survey outside the Research admin's implementer and project, or a version it hasn't
+ * published.
+ */
+export async function exportSurvey(
+  scope: AdminScope,
+  surveyId: string,
+  file: SurveyExportFile,
+  options: SurveyExportOptions,
+) {
   return db.transaction(
     async (tx) => {
       const found = await tx.query.survey.findFirst({
@@ -45,26 +103,27 @@ export async function exportSurvey(scope: AdminScope, surveyId: string, file: Su
         columns: { id: true, code: true },
         with: {
           versions: {
-            where: (v, { isNotNull }) => isNotNull(v.publishedAt),
+            where: (v, { and, inArray, isNotNull }) =>
+              and(isNotNull(v.publishedAt), inArray(v.versionNumber, options.versions)),
             columns: { id: true, versionNumber: true, form: true },
-            orderBy: (v, { asc }) => asc(v.versionNumber),
+            orderBy: (v, { desc }) => desc(v.versionNumber),
           },
         },
       });
-      if (!found) {
+      if (!found || found.versions.length !== options.versions.length) {
         return null;
       }
       const table =
         file === "answers"
-          ? await answersTable(tx, found.id, found.versions)
-          : codebookTable(found.versions);
+          ? await answersTable(tx, found.versions, options)
+          : codebookTable(found.versions.toReversed());
       await recordSurveyEvent(tx, {
         actor: { kind: SurveyAuditActor.USER, userId: scope.userId },
         entityType: SurveyAuditEntity.SURVEY,
         entityId: found.id,
         surveyId: found.id,
         action: SurveyAuditAction.SURVEY_EXPORTED,
-        after: { file, rows: table.length - 1 },
+        after: { file, rows: table.length - 1, ...options },
       });
       return { fileName: `${found.code}-${file}.csv`, csv: csvOf(table) };
     },
@@ -74,14 +133,27 @@ export async function exportSurvey(scope: AdminScope, surveyId: string, file: Su
 
 type PublishedVersion = { id: string; versionNumber: number; form: SurveyForm };
 
-/** One row per copy that wasn't voided, in serial order, with a column per field of any version. */
-async function answersTable(tx: Transaction, surveyId: string, versions: PublishedVersion[]) {
+/**
+ * One row per chosen copy, in serial order. The columns are the newest version's fields in its
+ * order, then the fields only older versions asked.
+ */
+async function answersTable(
+  tx: Transaction,
+  newestFirst: PublishedVersion[],
+  { values, copies: exportedCopies }: SurveyExportOptions,
+) {
+  const questionsByVersion = new Map(
+    newestFirst.map((version) => [version.id, fieldQuestionsOf(version.form)]),
+  );
   const fields = [
-    ...new Set(versions.flatMap((version) => [...fieldQuestionsOf(version.form).keys()])),
+    ...new Set([...questionsByVersion.values()].flatMap((questions) => [...questions.keys()])),
   ];
-  const ofSurvey = and(
-    eq(surveyQuestionnaire.surveyId, surveyId),
-    ne(surveyQuestionnaire.status, SurveyQuestionnaireStatus.VOID),
+  const chosenCopies = and(
+    inArray(
+      surveyQuestionnaire.versionId,
+      newestFirst.map((version) => version.id),
+    ),
+    inArray(surveyQuestionnaire.status, EXPORTED_COPY_STATUSES[exportedCopies]),
   );
   const [copies, answers] = await Promise.all([
     tx
@@ -91,6 +163,7 @@ async function answersTable(tx: Transaction, surveyId: string, versions: Publish
         hubName: hub.hubName,
         schoolName: school.schoolName,
         studentId: surveyQuestionnaire.studentId,
+        versionId: surveyQuestionnaire.versionId,
         versionNumber: surveyVersion.versionNumber,
         status: surveyQuestionnaire.status,
       })
@@ -98,7 +171,7 @@ async function answersTable(tx: Transaction, surveyId: string, versions: Publish
       .innerJoin(hub, eq(hub.id, surveyQuestionnaire.hubId))
       .innerJoin(school, eq(school.id, surveyQuestionnaire.schoolId))
       .innerJoin(surveyVersion, eq(surveyVersion.id, surveyQuestionnaire.versionId))
-      .where(ofSurvey)
+      .where(chosenCopies)
       .orderBy(asc(surveyQuestionnaire.serialNumber)),
     tx
       .select({
@@ -108,7 +181,7 @@ async function answersTable(tx: Transaction, surveyId: string, versions: Publish
       })
       .from(surveyAnswer)
       .innerJoin(surveyQuestionnaire, eq(surveyQuestionnaire.id, surveyAnswer.questionnaireId))
-      .where(ofSurvey),
+      .where(and(chosenCopies, isNotNull(surveyAnswer.value))),
   ]);
   const answersByCopy = new Map<string, Map<string, JsonValue | null>>();
   for (const answer of answers) {
@@ -121,6 +194,7 @@ async function answersTable(tx: Transaction, surveyId: string, versions: Publish
     [...COPY_COLUMNS, ...fields],
     ...copies.map((copy) => {
       const copyAnswers = answersByCopy.get(copy.id);
+      const questions = questionsByVersion.get(copy.versionId);
       return [
         copy.serial,
         copy.hubName,
@@ -128,31 +202,57 @@ async function answersTable(tx: Transaction, surveyId: string, versions: Publish
         copy.studentId ?? "",
         String(copy.versionNumber),
         copy.status,
-        ...fields.map((field) => answerCell(copyAnswers?.get(field) ?? null)),
+        ...fields.map((field) =>
+          answerCell(questions?.get(field), copyAnswers?.get(field) ?? null, values),
+        ),
       ];
     }),
   ];
 }
 
-/** An answer as a cell: its option code or codes, its digits, date or text, or 1 for signed. */
-export function answerCell(value: JsonValue | null): string {
+/**
+ * An answer as a cell: option codes, their labels, or both, and digits, a date or text as written.
+ * A question the copy's version didn't print is NOT_ASKED; one left blank is empty.
+ */
+export function answerCell(
+  question: FieldQuestion | undefined,
+  value: JsonValue | null,
+  values: ExportCellValues,
+): string {
+  if (!question) {
+    return NOT_ASKED;
+  }
   if (value === null) {
     return "";
   }
-  if (Array.isArray(value)) {
-    return value.map(String).join(MULTIPLE_CODES_SEPARATOR);
+  const { input } = question;
+  if (input.kind === "choice") {
+    const codes = Array.isArray(value) ? value : [value];
+    return codes
+      .map((code) => (typeof code === "string" ? code : JSON.stringify(code)))
+      .map((code) =>
+        cellOf(code, input.options.find((option) => option.code === code)?.label, values),
+      )
+      .join(MULTIPLE_CODES_SEPARATOR);
   }
-  if (value === true) {
-    return "1";
+  if (input.kind === "signature" && value === true) {
+    return cellOf("1", "Signed", values);
   }
   return typeof value === "object" ? JSON.stringify(value) : String(value);
 }
 
+function cellOf(code: string, label: string | undefined, values: ExportCellValues) {
+  if (values === "codes" || label === undefined) {
+    return code;
+  }
+  return values === "text" ? label : `${code}: ${label}`;
+}
+
 /** One row per field of each version, and per option of a choice field. */
-function codebookTable(versions: PublishedVersion[]) {
+function codebookTable(oldestFirst: PublishedVersion[]) {
   return [
     CODEBOOK_COLUMNS,
-    ...versions.flatMap((version) =>
+    ...oldestFirst.flatMap((version) =>
       [...fieldQuestionsOf(version.form).values()].flatMap((question) => {
         const described = [
           String(version.versionNumber),

@@ -1,10 +1,11 @@
 import { requireSurveyScope } from "#/lib/auth/admin-access";
 import { ForbiddenRoleError, UnauthenticatedError } from "#/lib/auth/require-auth-role";
-import { exportSurvey, isSurveyExportFile } from "#/lib/survey/survey-export";
+import { isSurveyExportFile, surveyExportOptionsOf } from "#/lib/survey/export-options";
+import { exportSurvey } from "#/lib/survey/survey-export";
 
 /** A survey's answers or codebook as CSV, for the Research team only. */
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ surveyId: string; file: string }> },
 ) {
   try {
@@ -13,7 +14,11 @@ export async function GET(
     if (!isSurveyExportFile(file)) {
       return new Response("Not found", { status: 404 });
     }
-    const exported = await exportSurvey(scope, surveyId, file);
+    const options = surveyExportOptionsOf(new URL(request.url).searchParams);
+    if (!options) {
+      return new Response("Choose the versions, cell values and copies to export", { status: 400 });
+    }
+    const exported = await exportSurvey(scope, surveyId, file, options);
     if (!exported) {
       return new Response("Not found", { status: 404 });
     }

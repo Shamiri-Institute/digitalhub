@@ -8,8 +8,11 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { db } from "#/db/client";
 import { hub, project, surveyAuditEvent, surveyQuestionnaire } from "#/db/schema";
 import type { SurveyViewer } from "#/lib/auth/survey-access";
+import { fieldQuestionOf } from "#/lib/survey/answer-fields";
+import type { SurveyExportOptions } from "#/lib/survey/export-options";
+import type { SurveyForm } from "#/lib/survey/form";
 import type { FieldRead } from "#/lib/survey/scan-wire";
-import { csvOf, exportSurvey } from "#/lib/survey/survey-export";
+import { answerCell, csvOf, exportSurvey } from "#/lib/survey/survey-export";
 import { fetchSurveyProgress } from "#/lib/survey/survey-progress";
 import {
   createPrintSchool,
@@ -40,6 +43,40 @@ const CLEAN_READS: Record<number, FieldRead[]> = {
   3: [{ field: "notes", value: null, status: "blank", confidence: null }, ok("sign", true)],
 };
 
+/** v1 without "Who do you live with?" and with a question of its own after "Which do you play?". */
+const PRINT_FORM_V2: SurveyForm = {
+  ...PRINT_FORM,
+  pages: PRINT_FORM.pages.map((page, index) =>
+    index === 0
+      ? {
+          ...page,
+          items: [
+            ...page.items.filter((item) => item.id !== "q_home" && item.kind !== "divider"),
+            {
+              id: "q_club",
+              kind: "single_choice",
+              key: "club",
+              prompt: "Are you in a school club?",
+              required: true,
+              options: [
+                { code: "1", label: "Yes" },
+                { code: "2", label: "No" },
+              ],
+            },
+          ],
+        }
+      : page,
+  ),
+};
+
+const CLEAN_READS_V2: Record<number, FieldRead[]> = {
+  ...CLEAN_READS,
+  1: [ok("mood", "3"), ok("sport", ["football", "netball"]), ok("club", "2")],
+};
+
+const BOTH_VERSIONS: SurveyExportOptions = { versions: [1, 2], values: "codes", copies: "all" };
+const V1: SurveyExportOptions = { versions: [1], values: "codes", copies: "all" };
+
 const surveyCode = `P${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 let admin: Extract<SurveyViewer, { kind: "project" }>;
 let coordinator: Extract<SurveyViewer, { kind: "hub" }>;
@@ -47,13 +84,15 @@ let surveyId: string;
 let hubName: string;
 let schoolName: string;
 let otherSchoolName: string;
-const copyIds: Record<"printed" | "partial" | "unsure" | "clean" | "otherHub", string> = {
-  printed: "",
-  partial: "",
-  unsure: "",
-  clean: "",
-  otherHub: "",
-};
+const copyIds: Record<"printed" | "partial" | "unsure" | "clean" | "otherHub" | "cleanV2", string> =
+  {
+    printed: "",
+    partial: "",
+    unsure: "",
+    clean: "",
+    otherHub: "",
+    cleanV2: "",
+  };
 const removals: (() => Promise<void>)[] = [];
 
 beforeAll(async () => {
@@ -111,8 +150,10 @@ beforeAll(async () => {
     implementerId,
     projectId,
     createdBy: member.userId,
-    form: PRINT_FORM,
+    forms: [PRINT_FORM, PRINT_FORM_V2],
   });
+  const [, v2VersionId] = published.versionIds;
+  if (!v2VersionId) throw new Error("v2 wasn't published");
   surveyId = published.id;
   const at = { versionId: published.versionId, schoolId: school.schoolId };
   const scope = { ...firstHub, userId: member.userId };
@@ -121,6 +162,12 @@ beforeAll(async () => {
   const partial = await createScannedCopy({ scope, ...at, pageNumbers: [1] });
   const unsure = await createScannedCopy({ scope, ...at });
   const clean = await createScannedCopy({ scope, ...at, reads: CLEAN_READS });
+  const cleanV2 = await createScannedCopy({
+    scope,
+    versionId: v2VersionId,
+    schoolId: school.schoolId,
+    reads: CLEAN_READS_V2,
+  });
   copyIds.otherHub = await issueCopy({
     scope: { ...otherHub, userId: member.userId },
     versionId: published.versionId,
@@ -129,8 +176,9 @@ beforeAll(async () => {
   copyIds.partial = partial.questionnaireId;
   copyIds.unsure = unsure.questionnaireId;
   copyIds.clean = clean.questionnaireId;
+  copyIds.cleanV2 = cleanV2.questionnaireId;
   // Scans first, then the survey and its copies, then the schools the copies name.
-  removals.unshift(partial.remove, unsure.remove, clean.remove, () =>
+  removals.unshift(partial.remove, unsure.remove, clean.remove, cleanV2.remove, () =>
     removeSurvey({ code: surveyCode }),
   );
 });
@@ -158,12 +206,12 @@ describe("fetchSurveyProgress", () => {
     expect(progress.map(({ schoolName, ...counts }) => ({ schoolName, ...counts }))).toEqual([
       expect.objectContaining({
         schoolName,
-        issued: 4,
-        returned: 3,
+        issued: 5,
+        returned: 4,
         missingPages: 1,
         // The copy missing pages has an unsure answer on the page that came back.
         needsReview: 2,
-        ready: 1,
+        ready: 2,
         verified: 0,
       }),
       expect.objectContaining({
@@ -195,9 +243,29 @@ describe("fetchSurveyProgress", () => {
   });
 });
 
+async function latestExportEvent() {
+  const [event] = await db
+    .select({
+      actorUserId: surveyAuditEvent.actorUserId,
+      action: surveyAuditEvent.action,
+      after: surveyAuditEvent.after,
+    })
+    .from(surveyAuditEvent)
+    .where(eq(surveyAuditEvent.surveyId, surveyId))
+    .orderBy(desc(surveyAuditEvent.id))
+    .limit(1);
+  return event;
+}
+
+async function exportedLines(file: "answers" | "codebook", options: SurveyExportOptions) {
+  const exported = await exportSurvey(admin, surveyId, file, options);
+  if (!exported) throw new Error("The survey wasn't exported");
+  return exported.csv.split("\r\n");
+}
+
 describe("exportSurvey", () => {
-  it("writes one row per copy with each field's option codes, and records the export", async () => {
-    const exported = await exportSurvey(admin, surveyId, "answers");
+  it("writes one row per copy of a version with each field's option codes, and records the export", async () => {
+    const exported = await exportSurvey(admin, surveyId, "answers", V1);
     if (!exported) throw new Error("The survey wasn't exported");
     const lines = exported.csv.split("\r\n");
 
@@ -216,43 +284,70 @@ describe("exportSurvey", () => {
       `${await serialOf(copyIds.unsure)},${csvName(hubName)},${csvName(schoolName)},,1,NEEDS_REVIEW,,1,football,0,0,0,0,0,150,2011-02-28,,1`,
     );
     expect(lines).toHaveLength(1 + 5 + 1);
-
-    const [event] = await db
-      .select({
-        actorUserId: surveyAuditEvent.actorUserId,
-        action: surveyAuditEvent.action,
-        after: surveyAuditEvent.after,
-      })
-      .from(surveyAuditEvent)
-      .where(eq(surveyAuditEvent.surveyId, surveyId))
-      .orderBy(desc(surveyAuditEvent.id))
-      .limit(1);
-    expect(event).toEqual({
+    expect(await latestExportEvent()).toEqual({
       actorUserId: admin.userId,
       action: "SURVEY_EXPORTED",
-      after: { file: "answers", rows: 5 },
+      after: { file: "answers", rows: 5, ...V1 },
     });
   });
 
-  it("writes a codebook row per option of each field", async () => {
-    const exported = await exportSurvey(admin, surveyId, "codebook");
-    if (!exported) throw new Error("The survey wasn't exported");
-    const lines = exported.csv.split("\r\n");
+  it("marks a question a copy's version didn't print as not asked, across versions", async () => {
+    const lines = await exportedLines("answers", BOTH_VERSIONS);
+
+    // The newest version's fields in its order, then the field only v1 asked.
+    expect(lines[0]).toBe(
+      "serial,hub,school,student_id,version,status,mood,sport,club,phq.1,phq.2,phq.3,phq.4,phq.5,age,dob,notes,sign,home",
+    );
+    expect(lines).toContain(
+      `${await serialOf(copyIds.clean)},${csvName(hubName)},${csvName(schoolName)},,1,READY,3,football;netball,NOT_ASKED,0,0,0,0,0,14,2011-02-28,,1,1`,
+    );
+    expect(lines).toContain(
+      `${await serialOf(copyIds.cleanV2)},${csvName(hubName)},${csvName(schoolName)},,2,READY,3,football;netball,2,0,0,0,0,0,14,2011-02-28,,1,NOT_ASKED`,
+    );
+    expect(lines).toHaveLength(1 + 6 + 1);
+  });
+
+  it("writes option labels for text, and only the copies scanned", async () => {
+    const lines = await exportedLines("answers", { ...V1, values: "text", copies: "returned" });
+
+    expect(lines).toContain(
+      `${await serialOf(copyIds.clean)},${csvName(hubName)},${csvName(schoolName)},,1,READY,3,Both parents,Football;Netball,Not at all,Not at all,Not at all,Not at all,Not at all,14,2011-02-28,,Signed`,
+    );
+    // The partial, unsure and clean copies; not the copies only printed.
+    expect(lines).toHaveLength(1 + 3 + 1);
+  });
+
+  it("exports no copy before one is verified", async () => {
+    expect(await exportedLines("answers", { ...BOTH_VERSIONS, copies: "verified" })).toHaveLength(
+      1 + 1,
+    );
+  });
+
+  it("writes a codebook row per option of each field of the chosen versions", async () => {
+    const lines = await exportedLines("codebook", { ...V1, versions: [2] });
 
     expect(lines[0]).toBe("version,field,kind,required,prompt,row,code,label");
     expect(lines).toContain(
-      '1,phq.1,grid_row,yes,"Over the last two weeks, how often have you been bothered by:",Little interest or pleasure in doing things,3,Nearly every day',
+      '2,phq.1,grid_row,yes,"Over the last two weeks, how often have you been bothered by:",Little interest or pleasure in doing things,3,Nearly every day',
     );
-    expect(lines).toContain(
-      "1,sport,multiple_choice,no,Which of these do you play?,,none,None of these",
-    );
-    expect(lines).toContain("1,sign,signature,yes,Signature,,,");
+    expect(lines).toContain("2,club,single_choice,yes,Are you in a school club?,,2,No");
+    expect(lines).toContain("2,sign,signature,yes,Signature,,,");
+    expect(lines.filter((line) => line.startsWith("1,"))).toEqual([]);
   });
 
-  it("exports nothing of a survey outside the admin's project", async () => {
+  it("exports nothing of a version that wasn't published, or a survey outside the admin's project", async () => {
+    expect(await exportSurvey(admin, surveyId, "answers", { ...V1, versions: [3] })).toBeNull();
     expect(
-      await exportSurvey({ ...admin, projectId: "another-project" }, surveyId, "answers"),
+      await exportSurvey({ ...admin, projectId: "another-project" }, surveyId, "answers", V1),
     ).toBeNull();
+  });
+});
+
+describe("answerCell", () => {
+  it("writes each code with its label for both", () => {
+    expect(answerCell(fieldQuestionOf(PRINT_FORM, "sport"), ["football", "netball"], "both")).toBe(
+      "football: Football;netball: Netball",
+    );
   });
 });
 
