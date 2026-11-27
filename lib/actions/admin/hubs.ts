@@ -16,7 +16,7 @@ import { requireSuperAdmin } from "#/lib/auth/admin-access";
 import { objectId } from "#/lib/crypto";
 import type { ActionResponse } from "#/types/actions.types";
 import { actionFailure, AdminActionError } from "./action-error";
-import { findCallerHub } from "./caller-hub";
+import { lockCallerHub } from "./caller-hub";
 import { CreateHubSchema, UpdateHubSchema } from "./hub-schemas";
 
 const DUPLICATE_NAME_MESSAGE = "A hub with this name already exists in this project";
@@ -188,7 +188,7 @@ export async function updateHub(data: z.infer<typeof UpdateHubSchema>): Promise<
     await db.transaction(async (tx) => {
       // Locked, so two edits of one hub run one after the other and cannot give two new session
       // types the same code.
-      const existing = await findCallerHub(tx, parsed.hubId, implementerId);
+      const existing = await lockCallerHub(tx, parsed.hubId, implementerId);
 
       if (parsed.hubName !== existing.hubName) {
         await assertHubNameIsFree(tx, {

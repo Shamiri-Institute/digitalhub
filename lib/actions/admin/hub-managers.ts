@@ -11,7 +11,7 @@ import { requireSuperAdmin } from "#/lib/auth/admin-access";
 import { objectId } from "#/lib/crypto";
 import type { ActionResponse } from "#/types/actions.types";
 import { actionFailure, AdminActionError } from "./action-error";
-import { findCallerHub } from "./caller-hub";
+import { lockCallerHub } from "./caller-hub";
 import { CreateHubManagerSchema, HubManagerRefSchema } from "./hub-manager-schemas";
 import { addImplementerMember } from "./members";
 
@@ -60,7 +60,7 @@ export async function createHubManager(
     const parsed = CreateHubManagerSchema.parse(data);
 
     await db.transaction(async (tx) => {
-      const callerHub = await findCallerHub(tx, hubId, implementerId);
+      const callerHub = await lockCallerHub(tx, hubId, implementerId);
       await assertHubManagerEmailIsFree(tx, parsed.coordinatorEmail, implementerId);
 
       // visible_id is deprecated but NOT NULL and unique, so a new row reuses its id.
@@ -99,7 +99,7 @@ export async function archiveHubManager(
     const parsed = HubManagerRefSchema.parse(data);
 
     const archived = await db.transaction(async (tx) => {
-      const callerHub = await findCallerHub(tx, parsed.hubId, implementerId);
+      const callerHub = await lockCallerHub(tx, parsed.hubId, implementerId);
       const [archivedManager] = await tx
         .update(hubCoordinator)
         .set({ archivedAt: new Date() })
@@ -135,7 +135,7 @@ export async function restoreHubManager(
     const parsed = HubManagerRefSchema.parse(data);
 
     const restored = await db.transaction(async (tx) => {
-      const callerHub = await findCallerHub(tx, parsed.hubId, implementerId);
+      const callerHub = await lockCallerHub(tx, parsed.hubId, implementerId);
       const [restoredManager] = await tx
         .update(hubCoordinator)
         .set({ archivedAt: null })
