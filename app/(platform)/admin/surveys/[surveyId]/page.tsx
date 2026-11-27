@@ -5,7 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { PrintRunsTable } from "#/components/common/survey/print-runs-table";
 import { SurveyProgressTable } from "#/components/common/survey/survey-progress-table";
 import { ViewerTimeZoneCookie } from "#/components/common/viewer-time-zone";
-import { buttonVariants } from "#/components/ui/button";
+import { buttonVariants } from "#/components/ui/button-variants";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";

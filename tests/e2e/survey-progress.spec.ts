@@ -165,7 +165,7 @@ test("R-SURV-PROGRESS: a hub coordinator sees only their hub's progress and cann
   await signInWithEmail(context, setup.coordinatorEmail);
 
   await page.goto(getUrl("/hc/surveys"));
-  await page.getByRole("radio", { name: "Select Progress" }).click();
+  await page.getByRole("button", { name: "Select Progress" }).click();
   await expect(page).toHaveURL(/\/hc\/surveys\/progress$/);
   const section = page.locator("section", {
     has: page.getByRole("heading", { name: setup.published.title }),
