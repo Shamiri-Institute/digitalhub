@@ -26,20 +26,27 @@ let removeSchool: (() => Promise<void>) | undefined;
 let setup: Awaited<ReturnType<typeof surveyForReview>> | undefined;
 
 async function surveyForReview() {
-  const [[researchHub], user] = await Promise.all([
-    db
-      .select({ hubId: hub.id, implementerId: hub.implementerId, projectId: hub.projectId })
-      .from(hub)
-      .innerJoin(project, eq(project.id, hub.projectId))
-      .where(and(eq(project.isDefault, true), isNull(hub.archivedAt)))
-      .orderBy(asc(hub.id))
-      .limit(1),
+  const [user, admin] = await Promise.all([
     db.query.user.findFirst({ where: (u, { eq }) => eq(u.email, researchAdminEmail) }),
+    db.query.adminUser.findFirst({ where: (a, { eq }) => eq(a.email, researchAdminEmail) }),
   ]);
-  const admin = await db.query.adminUser.findFirst({
-    where: (a, { eq }) => eq(a.email, researchAdminEmail),
-  });
-  if (!researchHub || !user || !admin) throw new Error("The seed has no Research team admin");
+  if (!user || !admin) throw new Error("The seed has no Research team admin");
+  // The admin's own implementer, and the oldest hub: specs running alongside create hubs, some
+  // for other implementers, and a survey outside the admin's implementer can't be printed.
+  const [researchHub] = await db
+    .select({ hubId: hub.id, projectId: hub.projectId })
+    .from(hub)
+    .innerJoin(project, eq(project.id, hub.projectId))
+    .where(
+      and(
+        eq(project.isDefault, true),
+        eq(hub.implementerId, admin.implementerId),
+        isNull(hub.archivedAt),
+      ),
+    )
+    .orderBy(asc(hub.createdAt), asc(hub.id))
+    .limit(1);
+  if (!researchHub) throw new Error("The seed has no hub for the Research team admin");
   const scope = { ...researchHub, implementerId: admin.implementerId, userId: user.id };
   const printSchool = await createPrintSchool({
     hubId: scope.hubId,
@@ -75,6 +82,11 @@ test.afterAll(async () => {
   }
   await removeSurvey({ code: surveyCode });
   await removeSchool?.();
+  // With fullyParallel, a worker can run this hook and then be handed more of this file's tests
+  // while the module stays loaded, so the next test must build the survey again.
+  copyRemovals.length = 0;
+  removeSchool = undefined;
+  setup = undefined;
 });
 
 test("R-SURV-REVIEW: a Research admin corrects an unsure answer and sees it after a reload", async ({

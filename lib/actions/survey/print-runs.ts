@@ -94,6 +94,12 @@ export async function voidQuestionnaire(
       throw new NotFoundError("Copy");
     }
     refresh();
+    if (outcome === "verified") {
+      return {
+        success: false,
+        message: "This copy is verified. Ask the Research team to reopen it first.",
+      };
+    }
     return { success: true, message: "The copy is void" };
   } catch (error) {
     return failure(error, "Sorry, could not void the copy.");

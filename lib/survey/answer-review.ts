@@ -62,7 +62,7 @@ export type ReviewFilters = {
 };
 
 // A hub coordinator reviews their hub's copies; a Research admin every copy of their project's surveys.
-function inScope(viewer: SurveyViewer) {
+export function inScope(viewer: SurveyViewer) {
   return and(
     eq(survey.implementerId, viewer.implementerId),
     eq(survey.projectId, viewer.projectId),
@@ -273,6 +273,7 @@ export async function fetchAnswerForReview(viewer: SurveyViewer, answerId: strin
   const [answerInScope] = await db
     .select({
       answer: surveyAnswer,
+      copyId: surveyQuestionnaire.id,
       serial: surveyQuestionnaire.serial,
       copyStatus: surveyQuestionnaire.status,
       schoolName: school.schoolName,
@@ -330,6 +331,7 @@ export async function fetchAnswerForReview(viewer: SurveyViewer, answerId: strin
     reviewedAt: answerInScope.answer.reviewedAt,
     viewerMayChange: viewerMayChange(viewer, answerInScope.answer),
     copy: {
+      id: answerInScope.copyId,
       serial: answerInScope.serial,
       status: answerInScope.copyStatus,
       schoolName: answerInScope.schoolName,
@@ -344,9 +346,9 @@ export type AnswerForReview = NonNullable<Awaited<ReturnType<typeof fetchAnswerF
 
 /**
  * A short-lived link to a scan page's image, made from the key on its row. Callers reach the row
- * only through an answer the viewer may review, so no key or other page is ever reachable.
+ * only through a copy the viewer may see, so no key or other page is ever reachable.
  */
-async function pageImageOf(
+export async function pageImageOf(
   scanPage: { imageS3Key: string | null; aligned: boolean | null } | null,
 ) {
   if (!scanPage?.imageS3Key) {

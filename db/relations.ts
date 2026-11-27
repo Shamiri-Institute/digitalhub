@@ -19,6 +19,7 @@ import {
   surveyPrintFile,
   surveyPrintRun,
   surveyAnswer,
+  surveyAuditEvent,
   surveyQuestionnaire,
   surveyQuestionnairePage,
   surveyScanPage,
@@ -432,6 +433,14 @@ export const surveyQuestionnaireRelations = relations(surveyQuestionnaire, ({ on
   }),
   pages: many(surveyQuestionnairePage, { relationName: "SurveyQuestionnairePage_questionnaire" }),
   answers: many(surveyAnswer, { relationName: "SurveyAnswer_questionnaire" }),
+}));
+
+export const surveyAuditEventRelations = relations(surveyAuditEvent, ({ one }) => ({
+  actorUser: one(user, {
+    fields: [surveyAuditEvent.actorUserId],
+    references: [user.id],
+    relationName: "SurveyAuditEvent_actorUser",
+  }),
 }));
 
 export const surveyQuestionnairePageRelations = relations(

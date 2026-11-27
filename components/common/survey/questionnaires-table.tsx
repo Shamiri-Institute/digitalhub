@@ -4,22 +4,29 @@ import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 
 import DataTable from "#/components/data-table";
-import { Badge } from "#/components/ui/badge";
-import {
-  SURVEY_QUESTIONNAIRE_STATUS_LABELS,
-  SurveyQuestionnaireStatus,
-  SurveyVersionPrefill,
-} from "#/db/enums";
+import { SurveyQuestionnaireStatus, SurveyVersionPrefill } from "#/db/enums";
+import type { SurveyViewer } from "#/lib/auth/survey-access";
+import { copyHref } from "#/lib/survey/copy/paths";
 import type { PrintRunCopies, PrintRunCopy } from "#/lib/survey/print-run-queries";
+import { QuestionnaireStatusBadge } from "./questionnaire-status-badge";
 import { QuestionnaireVoidDialog } from "./questionnaire-void-dialog";
 
-function copyColumns(showsStudent: boolean): ColumnDef<PrintRunCopy>[] {
+type LinkedCopy = PrintRunCopy & { href: string; viewerMayVoid: boolean };
+
+function copyColumns(showsStudent: boolean): ColumnDef<LinkedCopy>[] {
   return [
     {
       accessorKey: "serial",
       header: "Serial",
       id: "Serial",
-      cell: ({ row }) => <span className="tabular-nums">{row.original.serial}</span>,
+      cell: ({ row }) => (
+        <Link
+          href={row.original.href}
+          className="font-mono text-shamiri-new-blue tabular-nums underline-offset-4 hover:underline"
+        >
+          {row.original.serial}
+        </Link>
+      ),
     },
     {
       accessorFn: (copy) => copy.school.schoolName,
@@ -43,7 +50,7 @@ function copyColumns(showsStudent: boolean): ColumnDef<PrintRunCopy>[] {
                 </>
               );
             },
-          } satisfies ColumnDef<PrintRunCopy>,
+          } satisfies ColumnDef<LinkedCopy>,
         ]
       : []),
     {
@@ -61,20 +68,12 @@ function copyColumns(showsStudent: boolean): ColumnDef<PrintRunCopy>[] {
       accessorKey: "status",
       header: "Status",
       id: "Status",
-      cell: ({ row }) => (
-        <Badge
-          variant={
-            row.original.status === SurveyQuestionnaireStatus.VOID ? "destructive" : "outline-solid"
-          }
-        >
-          {SURVEY_QUESTIONNAIRE_STATUS_LABELS[row.original.status]}
-        </Badge>
-      ),
+      cell: ({ row }) => <QuestionnaireStatusBadge status={row.original.status} />,
     },
     {
       id: "button",
       cell: ({ row }) =>
-        row.original.status !== SurveyQuestionnaireStatus.VOID && (
+        row.original.viewerMayVoid && (
           <QuestionnaireVoidDialog copy={{ id: row.original.id, serial: row.original.serial }} />
         ),
       enableHiding: false,
@@ -97,11 +96,23 @@ export function QuestionnairesTable({
   page,
   prefill,
   runPath,
-}: PrintRunCopies & { prefill: SurveyVersionPrefill | null; runPath: string }) {
+  viewerKind,
+}: PrintRunCopies & {
+  prefill: SurveyVersionPrefill | null;
+  runPath: string;
+  viewerKind: SurveyViewer["kind"];
+}) {
   return (
     <div className="space-y-3">
       <DataTable
-        data={copies}
+        data={copies.map((copy) => ({
+          ...copy,
+          href: copyHref(viewerKind, copy.id),
+          // Only Research undoes a verified copy.
+          viewerMayVoid:
+            copy.status !== SurveyQuestionnaireStatus.VOID &&
+            (viewerKind === "project" || copy.status !== SurveyQuestionnaireStatus.VERIFIED),
+        }))}
         columns={prefill === SurveyVersionPrefill.STUDENT ? STUDENT_COPY_COLUMNS : COPY_COLUMNS}
         className="data-table data-table-action bg-white"
         emptyStateMessage="Copies appear here as their files are made"

@@ -3,6 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { preload } from "react-dom";
 
+import type { SurveyViewer } from "#/lib/auth/survey-access";
 import type {
   AnswerForReview,
   ReviewFilterOptions,
@@ -21,6 +22,7 @@ export function ReviewWorkbench({
   nextAnswerId,
   nextImageUrl,
   timeZone,
+  viewerKind,
 }: {
   queue: ReviewQueue;
   filters: ReviewFilters;
@@ -30,6 +32,7 @@ export function ReviewWorkbench({
   nextImageUrl: string | null;
   /** The viewer's, from `viewerTimeZone()`; null until the browser has set it. */
   timeZone: string | null;
+  viewerKind: SurveyViewer["kind"];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -79,6 +82,7 @@ export function ReviewWorkbench({
                 nextHref: nextAnswerId ? hrefFor(nextAnswerId) : null,
               }}
               timeZone={timeZone}
+              viewerKind={viewerKind}
               onDone={() => router.push(hrefFor(nextAnswerId), { scroll: false })}
             />
           ) : (

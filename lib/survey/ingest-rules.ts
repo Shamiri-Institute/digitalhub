@@ -9,6 +9,7 @@ import {
   SurveyScanRejection,
 } from "#/db/enums";
 import type { JsonValue } from "#/db/schema";
+import { isSettledCopy } from "#/lib/survey/answer-fields";
 import { gridRowField, isQuestion, type SurveyForm } from "#/lib/survey/form";
 import { pageIdFromQrText } from "#/lib/survey/print-qr";
 import {
@@ -365,26 +366,27 @@ export function keepsFormRule(rule: AnswerRule, value: string | string[] | true)
   }
 }
 
-export function copyStatusOf({
-  current,
-  printedPages,
-  matchedPages,
-  answersNeedingReview,
-}: {
-  current: SurveyQuestionnaireStatus;
+export type CopyProgress = {
   printedPages: number;
   matchedPages: number;
   answersNeedingReview: number;
-}): SurveyQuestionnaireStatus {
-  if (
-    current === SurveyQuestionnaireStatus.VOID ||
-    current === SurveyQuestionnaireStatus.VERIFIED
-  ) {
-    return current;
-  }
+};
+
+export function progressStatusOf({
+  printedPages,
+  matchedPages,
+  answersNeedingReview,
+}: CopyProgress): SurveyQuestionnaireStatus {
   if (matchedPages === 0) return SurveyQuestionnaireStatus.ISSUED;
   if (matchedPages < printedPages) return SurveyQuestionnaireStatus.PARTIAL;
   return answersNeedingReview > 0
     ? SurveyQuestionnaireStatus.NEEDS_REVIEW
     : SurveyQuestionnaireStatus.READY;
+}
+
+export function copyStatusOf({
+  current,
+  ...progress
+}: CopyProgress & { current: SurveyQuestionnaireStatus }): SurveyQuestionnaireStatus {
+  return isSettledCopy(current) ? current : progressStatusOf(progress);
 }

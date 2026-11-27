@@ -59,6 +59,7 @@ export async function SurveyReview({
       nextAnswerId={nextId ?? null}
       nextImageUrl={nextImage?.url ?? null}
       timeZone={timeZone}
+      viewerKind={viewer.kind}
     />
   );
 }

@@ -263,6 +263,16 @@ export const FLAGGED_PRINT_FORM_READS: Record<number, FieldRead[]> = {
   ],
 };
 
+export const CLEAN_PRINT_FORM_READS: Record<number, FieldRead[]> = {
+  1: [okRead("mood", "3"), okRead("home", "1"), okRead("sport", ["football", "netball"])],
+  2: [
+    ...["1", "2", "3", "4", "5"].map((row) => okRead(`phq.${row}`, "0")),
+    okRead("age", "14"),
+    okRead("dob", "2011-02-28"),
+  ],
+  3: [{ field: "notes", value: null, status: "blank", confidence: null }, okRead("sign", true)],
+};
+
 type CopyScope = { hubId: string; implementerId: string; projectId: string; userId: string };
 
 /** One printed copy of a published version, issued as the print job issues it, and never scanned. */
@@ -316,6 +326,61 @@ export async function createScannedCopy({
   pageNumbers?: number[];
 }) {
   const questionnaireId = await issueCopy({ scope, versionId, schoolId });
+  const scan = await ingestCopyScan({ scope, questionnaireId, reads, pageNumbers });
+
+  const answers = await db
+    .select({ id: surveyAnswer.id, field: surveyAnswer.field })
+    .from(surveyAnswer)
+    .where(eq(surveyAnswer.questionnaireId, questionnaireId));
+  return {
+    questionnaireId,
+    answerId(field: string) {
+      const answer = answers.find((candidate) => candidate.field === field);
+      if (!answer) throw new Error(`The copy has no answer for ${field}`);
+      return answer.id;
+    },
+    async remove() {
+      await db.delete(surveyAnswer).where(eq(surveyAnswer.questionnaireId, questionnaireId));
+      await scan.remove();
+    },
+  };
+}
+
+/**
+ * Another upload with pages of a copy already scanned, ingested as the pipeline would post it.
+ * `remove` deletes the answers read from its pages, then its scans and upload. Run it before the
+ * copy's own `remove`: a rescan of a page that already has a matched scan is stored DUPLICATE, and
+ * its restrict foreign key to that scan blocks deleting the original first.
+ */
+export async function rescanCopyPages({
+  scope,
+  questionnaireId,
+  pageNumbers,
+  reads = FLAGGED_PRINT_FORM_READS,
+  fileName = "rescan.pdf",
+}: {
+  scope: CopyScope;
+  questionnaireId: string;
+  pageNumbers: number[];
+  reads?: Record<number, FieldRead[]>;
+  fileName?: string;
+}) {
+  return ingestCopyScan({ scope, questionnaireId, reads, pageNumbers, fileName });
+}
+
+async function ingestCopyScan({
+  scope,
+  questionnaireId,
+  reads,
+  pageNumbers,
+  fileName = "batch.pdf",
+}: {
+  scope: CopyScope;
+  questionnaireId: string;
+  reads: Record<number, FieldRead[]>;
+  pageNumbers?: number[];
+  fileName?: string;
+}) {
   const printedPages = await db
     .select({ id: surveyQuestionnairePage.id, pageNumber: surveyQuestionnairePage.pageNumber })
     .from(surveyQuestionnairePage)
@@ -331,7 +396,7 @@ export async function createScannedCopy({
     hubId: scope.hubId,
     uploadedBy: scope.userId,
     s3Key: `scans/${uploadId}`,
-    fileName: "batch.pdf",
+    fileName,
     sha256: createHash("sha256").update(uploadId).digest("hex"),
     contentType: "application/pdf",
     byteSize: 1000,
@@ -367,20 +432,20 @@ export async function createScannedCopy({
   if (ingested.kind !== "ingested") {
     throw new Error(`The scan wasn't ingested: ${ingested.kind}`);
   }
-
-  const answers = await db
-    .select({ id: surveyAnswer.id, field: surveyAnswer.field })
-    .from(surveyAnswer)
-    .where(eq(surveyAnswer.questionnaireId, questionnaireId));
   return {
-    questionnaireId,
-    answerId(field: string) {
-      const answer = answers.find((candidate) => candidate.field === field);
-      if (!answer) throw new Error(`The copy has no answer for ${field}`);
-      return answer.id;
-    },
     async remove() {
-      await db.delete(surveyAnswer).where(eq(surveyAnswer.questionnaireId, questionnaireId));
+      // An answer's scan page is a restrict foreign key, so the answers read from this upload go first.
+      await db
+        .delete(surveyAnswer)
+        .where(
+          inArray(
+            surveyAnswer.scanPageId,
+            db
+              .select({ id: surveyScanPage.id })
+              .from(surveyScanPage)
+              .where(eq(surveyScanPage.uploadId, uploadId)),
+          ),
+        );
       await db.delete(surveyScanPage).where(eq(surveyScanPage.uploadId, uploadId));
       await db.delete(surveyUpload).where(eq(surveyUpload.id, uploadId));
     },

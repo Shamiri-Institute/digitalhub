@@ -28,7 +28,9 @@ import {
   pipelineReadText,
   reviewedByAPerson,
 } from "#/lib/survey/answer-fields";
+import type { SurveyViewer } from "#/lib/auth/survey-access";
 import type { AnswerForReview } from "#/lib/survey/answer-review";
+import { copyHref } from "#/lib/survey/copy/paths";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "#/lib/zod-resolver";
 import { AnswerCutout } from "./answer-cutout";
@@ -50,11 +52,13 @@ export function AnswerPanel({
   answer,
   position,
   timeZone,
+  viewerKind,
   onDone,
 }: {
   answer: AnswerForReview;
   position: QueuePosition;
   timeZone: string | null;
+  viewerKind: SurveyViewer["kind"];
   onDone: () => void;
 }) {
   const form = useForm<ReviewDraft>({
@@ -111,9 +115,12 @@ export function AnswerPanel({
       <div className="space-y-5 p-5">
         <header className="space-y-2">
           <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm text-shamiri-text-grey">
-            <span className="font-mono font-medium text-shamiri-black tabular-nums">
+            <Link
+              href={copyHref(viewerKind, answer.copy.id)}
+              className="font-mono font-medium text-shamiri-new-blue tabular-nums underline-offset-4 hover:underline"
+            >
               {answer.copy.serial}
-            </span>
+            </Link>
             <span>{answer.copy.schoolName}</span>
             <span>Page {answer.copy.pageNumber}</span>
           </p>

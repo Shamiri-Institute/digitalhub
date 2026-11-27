@@ -614,6 +614,46 @@ describe("hub scope", () => {
       );
     expect(events).toEqual([{ reason: "Torn in transit", actorUserId: scope.userId }]);
   });
+
+  it("leaves a verified copy to Research to void", async () => {
+    const published = await publish();
+    const issued = await issue(published.versionId, counts(1));
+    const [copy] = await db
+      .update(surveyQuestionnaire)
+      .set({ status: "VERIFIED" })
+      .where(eq(surveyQuestionnaire.printRunId, issued.printRunId))
+      .returning({ id: surveyQuestionnaire.id });
+    if (!copy) throw new Error("No copy");
+    const request = { questionnaireId: copy.id, reason: "Torn in transit" };
+    const statusOfCopy = async () =>
+      (
+        await db.query.surveyQuestionnaire.findFirst({
+          columns: { status: true },
+          where: (q, { eq }) => eq(q.id, copy.id),
+        })
+      )?.status;
+    const voidEvents = () =>
+      db
+        .select({ actorUserId: surveyAuditEvent.actorUserId })
+        .from(surveyAuditEvent)
+        .where(
+          and(
+            eq(surveyAuditEvent.entityId, copy.id),
+            eq(surveyAuditEvent.action, "QUESTIONNAIRE_VOIDED"),
+          ),
+        );
+
+    const coordinator = { kind: "hub" as const, ...scope };
+    expect(await db.transaction((tx) => voidCopy(tx, coordinator, request))).toBe("verified");
+    expect(await statusOfCopy()).toBe("VERIFIED");
+    expect(await voidEvents()).toEqual([]);
+
+    const { hubId: _, ...projectScope } = scope;
+    const research = { kind: "project" as const, ...projectScope };
+    expect(await db.transaction((tx) => voidCopy(tx, research, request))).toBe("voided");
+    expect(await statusOfCopy()).toBe("VOID");
+    expect(await voidEvents()).toEqual([{ actorUserId: scope.userId }]);
+  });
 });
 
 describe("print-run triggers", () => {
