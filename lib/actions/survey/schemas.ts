@@ -82,13 +82,25 @@ export const CreatePrintRunSchema = z.object({
   ]),
 });
 
-export const VoidQuestionnaireSchema = z.object({
-  questionnaireId: stringValidation("Missing copy"),
-  reason: z
+const copyChangeReason = (missing: string) =>
+  z
     .string()
     .trim()
-    .min(3, { error: "Say why this copy is void" })
-    .max(500, { error: "Keep the reason under 500 characters" }),
+    .min(3, { error: missing })
+    .max(500, { error: "Keep the reason under 500 characters" });
+
+export const VoidQuestionnaireSchema = z.object({
+  questionnaireId: stringValidation("Missing copy"),
+  reason: copyChangeReason("Say why this copy is void"),
+});
+
+export const VerifyQuestionnaireSchema = z.object({
+  questionnaireId: stringValidation("Missing copy"),
+});
+
+export const ReopenQuestionnaireSchema = z.object({
+  questionnaireId: stringValidation("Missing copy"),
+  reason: copyChangeReason("Say why this copy is reopened"),
 });
 
 export const RetryPrintRunSchema = z.object({

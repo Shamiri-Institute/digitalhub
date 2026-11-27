@@ -429,13 +429,14 @@ async function insertInChunks<T extends PgTable>(
 /**
  * Voids a copy the viewer may see, with the reason in the audit history. Voiding a void copy
  * changes nothing, so a resubmitted form is harmless. A copy outside the viewer's scope is
- * "not-found", like a missing one, so ids of other hubs reveal nothing.
+ * "not-found", like a missing one, so ids of other hubs reveal nothing. Only Research undoes a
+ * verified copy, so a hub coordinator voiding one is refused.
  */
 export async function voidCopy(
   tx: Transaction,
   viewer: SurveyViewer,
   { questionnaireId, reason }: { questionnaireId: string; reason: string },
-): Promise<"voided" | "already-void" | "not-found"> {
+): Promise<"voided" | "already-void" | "verified" | "not-found"> {
   const [copy] = await tx
     .select({
       id: surveyQuestionnaire.id,
@@ -462,6 +463,9 @@ export async function voidCopy(
   }
   if (copy.status === SurveyQuestionnaireStatus.VOID) {
     return "already-void";
+  }
+  if (viewer.kind === "hub" && copy.status === SurveyQuestionnaireStatus.VERIFIED) {
+    return "verified";
   }
 
   const [voided] = await tx

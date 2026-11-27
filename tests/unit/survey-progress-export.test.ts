@@ -15,6 +15,7 @@ import type { FieldRead } from "#/lib/survey/scan-wire";
 import { answerCell, csvOf, exportSurvey, fieldCell } from "#/lib/survey/survey-export";
 import { fetchSurveyProgress } from "#/lib/survey/survey-progress";
 import {
+  CLEAN_PRINT_FORM_READS,
   createPrintSchool,
   createPublishedSurvey,
   createScannedCopy,
@@ -32,16 +33,6 @@ const ok = (field: string, value: NonNullable<FieldRead["value"]>): FieldRead =>
 
 /** A name as the CSV writes it: quoted when it holds a comma or a quote. */
 const csvName = (name: string) => (/[",]/.test(name) ? `"${name.replaceAll('"', '""')}"` : name);
-
-const CLEAN_READS: Record<number, FieldRead[]> = {
-  1: [ok("mood", "3"), ok("home", "1"), ok("sport", ["football", "netball"])],
-  2: [
-    ...["1", "2", "3", "4", "5"].map((row) => ok(`phq.${row}`, "0")),
-    ok("age", "14"),
-    ok("dob", "2011-02-28"),
-  ],
-  3: [{ field: "notes", value: null, status: "blank", confidence: null }, ok("sign", true)],
-};
 
 /** v1 without "Who do you live with?" and with a question of its own after "Which do you play?". */
 const PRINT_FORM_V2: SurveyForm = {
@@ -70,7 +61,7 @@ const PRINT_FORM_V2: SurveyForm = {
 };
 
 const CLEAN_READS_V2: Record<number, FieldRead[]> = {
-  ...CLEAN_READS,
+  ...CLEAN_PRINT_FORM_READS,
   1: [ok("mood", "3"), ok("sport", ["football", "netball"]), ok("club", "2")],
 };
 
@@ -164,7 +155,7 @@ beforeAll(async () => {
   removals.push(partial.remove);
   const unsure = await createScannedCopy({ scope, ...at });
   removals.push(unsure.remove);
-  const clean = await createScannedCopy({ scope, ...at, reads: CLEAN_READS });
+  const clean = await createScannedCopy({ scope, ...at, reads: CLEAN_PRINT_FORM_READS });
   removals.push(clean.remove);
   const cleanV2 = await createScannedCopy({
     scope,

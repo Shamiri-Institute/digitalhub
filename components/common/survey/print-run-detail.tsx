@@ -1,4 +1,5 @@
 import { SURVEY_VERSION_PREFILL_LABELS } from "#/db/enums";
+import type { SurveyViewer } from "#/lib/auth/survey-access";
 import { formatDateTimeIn } from "#/lib/date-utils";
 import type { PrintRunCopies, PrintRunDetail } from "#/lib/survey/print-run-queries";
 import { PrintFilesTable } from "./print-files-table";
@@ -10,8 +11,10 @@ export function PrintRunDetailView({
   copies,
   runPath,
   timeZone,
+  viewerKind,
 }: {
   run: PrintRunDetail;
+  viewerKind: SurveyViewer["kind"];
   /** The viewer's, from `viewerTimeZone()`; null until the browser has set it. */
   timeZone: string | null;
   copies: PrintRunCopies;
@@ -56,7 +59,12 @@ export function PrintRunDetailView({
       </section>
       <section className="space-y-3">
         <h3 className="text-base font-semibold">Copies</h3>
-        <QuestionnairesTable {...copies} prefill={run.version.prefill} runPath={runPath} />
+        <QuestionnairesTable
+          {...copies}
+          prefill={run.version.prefill}
+          runPath={runPath}
+          viewerKind={viewerKind}
+        />
       </section>
     </div>
   );

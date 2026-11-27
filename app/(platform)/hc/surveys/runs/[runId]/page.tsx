@@ -48,6 +48,7 @@ export default async function HubPrintRunPage(props: {
           copies={copies}
           runPath={`/hc/surveys/runs/${run.id}`}
           timeZone={timeZone}
+          viewerKind={viewer.kind}
         />
         <ViewerTimeZoneCookie serverTimeZone={timeZone} />
       </div>

@@ -48,6 +48,7 @@ export default async function AdminPrintRunPage(props: {
           copies={copies}
           runPath={`/admin/surveys/${surveyId}/runs/${run.id}`}
           timeZone={timeZone}
+          viewerKind={viewer.kind}
         />
         <ViewerTimeZoneCookie serverTimeZone={timeZone} />
       </div>
