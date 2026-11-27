@@ -277,7 +277,7 @@ function SurveyExportForm({
                   <dt className="text-shamiri-text-grey">Empty</dt>
                   <dd>The student left it blank</dd>
                   <dt className="font-medium">{EXPORT_MARKERS.needsReview}</dt>
-                  <dd>Read, but not checked by a reviewer yet</dd>
+                  <dd>The pipeline was unsure; waiting for a reviewer</dd>
                   <dt className="font-medium">{EXPORT_MARKERS.notScanned}</dt>
                   <dd>Its page hasn&rsquo;t been scanned</dd>
                   {askDifferentQuestions && (
@@ -289,7 +289,8 @@ function SurveyExportForm({
                 </dl>
                 <p className="text-shamiri-text-grey">
                   Choices are separated by &ldquo;{MULTIPLE_CODES_SEPARATOR}&rdquo;, which labels
-                  may also hold. Typed answers starting with = + - @ get a leading &rsquo;.
+                  may also hold. Any cell starting with = + - @ gets a leading {"'"} so a
+                  spreadsheet can&rsquo;t run it.
                 </p>
               </div>
             </>

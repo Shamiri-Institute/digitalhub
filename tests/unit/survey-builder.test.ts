@@ -224,18 +224,14 @@ describe("checkForm", () => {
     expect(checkForm(FORM, []).success).toBe(true);
   });
 
-  it("refuses a key the answers export already uses for each copy", () => {
+  it.each(["school", "answer_school"])("refuses %s, a column the answers export uses", (key) => {
     const form = structuredClone(FORM);
     const age = form.pages[0]?.items[1];
     if (age?.kind !== "number") throw new Error("FORM's age question moved");
-    age.key = "school";
+    age.key = key;
 
     expect(checkForm(form, []).issues).toEqual([
-      {
-        itemId: "age",
-        field: "key",
-        message: "The export already has a school column for each copy",
-      },
+      { itemId: "age", field: "key", message: `The export uses ${key} as a column of its own` },
     ]);
   });
 

@@ -15,8 +15,18 @@ export const MULTIPLE_CODES_SEPARATOR = ";";
 /** The answers file's columns for each copy, ahead of one column per question key. */
 export const COPY_COLUMNS = ["serial", "hub", "school", "student_id", "version", "status"] as const;
 
-export function isCopyColumn(name: string) {
+function isCopyColumn(name: string) {
   return (COPY_COLUMNS as readonly string[]).includes(name);
+}
+
+const RENAMED_FIELD_PREFIX = "answer_";
+
+/** A key a new question can't take: a copy column, or the name the export gives an old one. */
+export function isReservedKey(key: string) {
+  return (
+    isCopyColumn(key) ||
+    (key.startsWith(RENAMED_FIELD_PREFIX) && isCopyColumn(key.slice(RENAMED_FIELD_PREFIX.length)))
+  );
 }
 
 /**
@@ -24,7 +34,7 @@ export function isCopyColumn(name: string) {
  * refused may have a question keyed like a copy column, which gets a prefix so no column repeats.
  */
 export function fieldColumnOf(field: string) {
-  return isCopyColumn(field) ? `answer_${field}` : field;
+  return isCopyColumn(field) ? `${RENAMED_FIELD_PREFIX}${field}` : field;
 }
 
 /**
