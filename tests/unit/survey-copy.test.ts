@@ -1,11 +1,21 @@
 // @vitest-environment node
 // Verifying and reopening a copy, on copies made the way scans make them. The audit events and a
 // copy's stored status are read from the database where no page shows them.
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, isNull, notExists } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { db } from "#/db/client";
-import { hub, project, surveyAuditEvent, surveyQuestionnaire, surveyScanPage } from "#/db/schema";
+import {
+  hub,
+  hubCoordinator,
+  implementerMember,
+  project,
+  surveyAuditEvent,
+  surveyQuestionnaire,
+  surveyScanPage,
+  user,
+} from "#/db/schema";
 import type { SurveyViewer } from "#/lib/auth/survey-access";
 import { reviewAnswer } from "#/lib/survey/answer-review";
 import { applyCopyCommand, loadCopy } from "#/lib/survey/copy/copy";
@@ -362,32 +372,85 @@ describe("what a copy's page shows", () => {
     });
   });
 
-  it("names who acted: 'you' for the viewer, and an address only for the Research team", async () => {
+  it("names who acted by account name, else hub coordinator profile name, else an address for the Research team only", async () => {
+    // Seeded hub coordinators' accounts have no name; their profiles do.
+    const [seededCoordinator] = await db
+      .select({ userId: implementerMember.userId, name: hubCoordinator.coordinatorName })
+      .from(implementerMember)
+      .innerJoin(hubCoordinator, eq(hubCoordinator.id, implementerMember.identifier))
+      .innerJoin(user, eq(user.id, implementerMember.userId))
+      .where(
+        and(
+          eq(implementerMember.implementerId, admin.implementerId),
+          eq(implementerMember.role, "HUB_COORDINATOR"),
+          isNull(user.name),
+        ),
+      )
+      .orderBy(asc(implementerMember.id))
+      .limit(1);
+    // Anyone with neither an account name nor a coordinator profile, as seeded supervisors are.
+    const coordinatorMember = alias(implementerMember, "coordinator_member");
+    const [nameless] = await db
+      .select({ userId: user.id, email: user.email })
+      .from(implementerMember)
+      .innerJoin(user, eq(user.id, implementerMember.userId))
+      .where(
+        and(
+          eq(implementerMember.implementerId, admin.implementerId),
+          eq(implementerMember.role, "SUPERVISOR"),
+          isNull(user.name),
+          notExists(
+            db
+              .select({ id: coordinatorMember.id })
+              .from(coordinatorMember)
+              .where(
+                and(
+                  eq(coordinatorMember.userId, user.id),
+                  eq(coordinatorMember.role, "HUB_COORDINATOR"),
+                ),
+              ),
+          ),
+        ),
+      )
+      .orderBy(asc(user.id))
+      .limit(1);
+    const adminUser = await db.query.user.findFirst({
+      where: (u, { eq }) => eq(u.id, admin.userId),
+      columns: { name: true },
+    });
+    if (!seededCoordinator || !nameless?.email || !adminUser?.name) {
+      throw new Error("Seed the database first");
+    }
+    const namedCoordinator: SurveyViewer = { ...coordinator, userId: seededCoordinator.userId };
+    const namelessViewer: SurveyViewer = { ...coordinator, userId: nameless.userId };
     const { questionnaireId } = await cleanCopy();
-    await apply(coordinator, questionnaireId, await shownVerify(questionnaireId));
-    const [coordinatorUser, adminUser] = await Promise.all(
-      [coordinator.userId, admin.userId].map((id) =>
-        db.query.user.findFirst({
-          where: (u, { eq }) => eq(u.id, id),
-          columns: { name: true, email: true },
-        }),
-      ),
-    );
 
-    const ownView = await loadCopy(coordinator, questionnaireId);
-    expect(ownView?.history[0]?.actor).toEqual({ kind: "viewer" });
-    const researchView = await loadCopy(admin, questionnaireId);
-    const coordinatorShown = coordinatorUser?.name || coordinatorUser?.email;
-    expect(researchView?.history[0]?.actor).toEqual(
-      coordinatorShown ? { kind: "named", name: coordinatorShown } : { kind: "unnamed" },
-    );
+    await apply(namedCoordinator, questionnaireId, await shownVerify(questionnaireId));
+    expect((await loadCopy(namedCoordinator, questionnaireId))?.history[0]?.actor).toEqual({
+      name: seededCoordinator.name,
+      isViewer: true,
+    });
+    expect((await loadCopy(admin, questionnaireId))?.history[0]?.actor).toEqual({
+      name: seededCoordinator.name,
+      isViewer: false,
+    });
 
     await apply(admin, questionnaireId, await shownReopen(questionnaireId, "Second look"));
-    const coordinatorView = await loadCopy(coordinator, questionnaireId);
-    // Never the admin's address, for a hub coordinator.
-    expect(coordinatorView?.history[0]?.actor).toEqual(
-      adminUser?.name ? { kind: "named", name: adminUser.name } : { kind: "unnamed" },
-    );
+    expect((await loadCopy(namedCoordinator, questionnaireId))?.history[0]?.actor).toEqual({
+      name: adminUser.name,
+      isViewer: false,
+    });
+
+    await apply(namelessViewer, questionnaireId, await shownVerify(questionnaireId));
+    expect((await loadCopy(admin, questionnaireId))?.history[0]?.actor).toEqual({
+      name: nameless.email,
+      isViewer: false,
+    });
+    // Never an address, for a hub coordinator.
+    expect((await loadCopy(namedCoordinator, questionnaireId))?.history[0]?.actor).toEqual({
+      name: null,
+      isViewer: false,
+    });
   });
 
   it("derives each open copy's status as its stored status from the same facts", async () => {

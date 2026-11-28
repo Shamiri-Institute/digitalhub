@@ -12,7 +12,7 @@ import type {
   MissingPagesFilterOptions,
   MissingPagesFilters,
 } from "#/lib/survey/scan-pages/missing";
-import type { UnidentifiedPageHubs } from "#/lib/survey/scan-pages/unidentified";
+import type { UnplacedPageHubs } from "#/lib/survey/scan-pages/unidentified";
 
 function Total({ count, noun }: { count: number; noun: string }) {
   return (
@@ -22,18 +22,22 @@ function Total({ count, noun }: { count: number; noun: string }) {
   );
 }
 
-export function UnidentifiedPagesFilterBar({
-  hubId,
+export function UnplacedPagesFilterBar({
+  filterHubId,
   hubOptions,
   upload,
   total,
+  totalNoun,
+  emptyHubLabel,
 }: {
-  hubId: string | undefined;
+  filterHubId: string | undefined;
   /** A Research admin's only; a hub coordinator's pages are their hub's. */
-  hubOptions: UnidentifiedPageHubs | undefined;
+  hubOptions: UnplacedPageHubs | undefined;
   /** The one upload the list shows, with the address of the list without it. */
   upload: { fileName: string; clearHref: string } | null;
   total: number;
+  totalNoun: string;
+  emptyHubLabel: string;
 }) {
   // A hub is chosen across every upload, from the first page of the list.
   const choose = useSearchParamFilter(["upload", "page"]);
@@ -43,9 +47,10 @@ export function UnidentifiedPagesFilterBar({
         <FilterSelect
           label="Hub"
           everyLabel="Every hub"
-          value={hubId}
+          value={filterHubId}
           options={withCounts(hubOptions)}
           onChange={(value) => choose("hub", value)}
+          emptyChoiceLabel={emptyHubLabel}
         />
       )}
       {upload && (
@@ -63,7 +68,7 @@ export function UnidentifiedPagesFilterBar({
           </p>
         </div>
       )}
-      <Total count={total} noun="to place" />
+      <Total count={total} noun={totalNoun} />
     </div>
   );
 }

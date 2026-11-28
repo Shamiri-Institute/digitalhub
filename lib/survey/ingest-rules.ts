@@ -143,7 +143,8 @@ const uploadProcessedConflict = (): RepostDecision => ({
 
 // Nothing points at a stored page that names no printed page, so a post may replace it: with other
 // content, or with the same content from a later attempt, whose image is then the one stored. A
-// failed post never replaces a read, and once the upload is processed a post only replays.
+// page a person set aside is kept as a placed one is. A failed post never replaces a read, and once
+// the upload is processed a post only replays.
 export function decideRepost(
   storedScan: StoredScan | undefined,
   {
@@ -154,7 +155,9 @@ export function decideRepost(
   }: { attempt: number; postedSha256: string; postedFailed: boolean; uploadProcessed: boolean },
 ): RepostDecision {
   if (!storedScan) return uploadProcessed ? uploadProcessedConflict() : { kind: "new" };
-  const placed = storedScan.questionnairePageId !== null;
+  const placed =
+    storedScan.questionnairePageId !== null ||
+    storedScan.rejectedReason === SurveyScanRejection.NOT_A_SURVEY_PAGE;
   const sameContent = storedScan.postedSha256 === postedSha256;
   if (sameContent && (placed || uploadProcessed || storedScan.attempt === attempt)) {
     return { kind: "unchanged", status: storedScan.status };

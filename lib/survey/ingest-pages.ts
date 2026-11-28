@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
 
 import type { Transaction } from "#/db/client";
 import {
@@ -8,6 +8,7 @@ import {
   SurveyAuditActor,
   type SurveyFieldKind,
   SurveyScanPageStatus,
+  SurveyScanRejection,
   SurveyUploadStatus,
 } from "#/db/enums";
 import {
@@ -552,7 +553,13 @@ async function storeScanPages(tx: Transaction, plannedScans: readonly PlannedSca
         postedResult: sql`excluded.posted_result`,
         postedSha256: sql`excluded.posted_sha256`,
       },
-      setWhere: isNull(surveyScanPage.questionnairePageId),
+      setWhere: and(
+        isNull(surveyScanPage.questionnairePageId),
+        or(
+          isNull(surveyScanPage.rejectedReason),
+          ne(surveyScanPage.rejectedReason, SurveyScanRejection.NOT_A_SURVEY_PAGE),
+        ),
+      ),
     })
     .returning({ id: surveyScanPage.id });
   const storedIds = new Set(stored.map(({ id }) => id));

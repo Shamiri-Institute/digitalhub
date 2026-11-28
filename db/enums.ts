@@ -361,6 +361,8 @@ export const SurveyScanRejection = {
   VOID_COPY: "VOID_COPY",
   OTHER_HUB: "OTHER_HUB",
   VERIFIED_COPY: "VERIFIED_COPY",
+  // Set aside by a person: a blank back of a duplex scan, a cover sheet.
+  NOT_A_SURVEY_PAGE: "NOT_A_SURVEY_PAGE",
 } as const;
 export type SurveyScanRejection = (typeof SurveyScanRejection)[keyof typeof SurveyScanRejection];
 
@@ -378,6 +380,7 @@ export const SURVEY_SCAN_REJECTION_LABELS: Record<SurveyScanRejection, string> =
   VOID_COPY: "void copy",
   OTHER_HUB: "another hub's copy",
   VERIFIED_COPY: "verified copy",
+  NOT_A_SURVEY_PAGE: "not a survey page",
 };
 
 export const SurveyAnswerReadStatus = {

@@ -432,6 +432,15 @@ describe("a re-post", () => {
       reason: "already stored by attempt 1",
     });
   });
+
+  it("of another attempt leaves a page a person set aside, as it leaves a placed one", () => {
+    const setAside: StoredScan = { ...unplaced, rejectedReason: "NOT_A_SURVEY_PAGE" };
+    expect(repost(setAside, 2, "a".repeat(64))).toEqual({ kind: "unchanged", status: "REJECTED" });
+    expect(repost(setAside, 2, "b".repeat(64))).toEqual({
+      kind: "conflict",
+      reason: "already stored by attempt 1",
+    });
+  });
 });
 
 describe("a re-post that is a failed page", () => {

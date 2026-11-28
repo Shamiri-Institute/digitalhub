@@ -8,15 +8,10 @@ import type { SurveyViewer } from "#/lib/auth/survey-access";
 import { formatDateIn, formatDateTimeIn } from "#/lib/date-utils";
 import { isSettledCopy } from "#/lib/survey/answer-fields";
 import { SurveyAuditAction } from "#/lib/survey/audit";
-import type {
-  CopyAnswer,
-  CopyHistoryEvent,
-  CopyPage,
-  CopyView,
-  ShownPerson,
-} from "#/lib/survey/copy/copy";
+import type { CopyAnswer, CopyHistoryEvent, CopyPage, CopyView } from "#/lib/survey/copy/copy";
 import { progressOf, refusalMessage } from "#/lib/survey/copy/decide";
 import { printRunHref, reviewAnswerHref } from "#/lib/survey/copy/paths";
+import { personWord } from "#/lib/survey/person-word";
 import { cn } from "#/lib/utils";
 import { CopyReopenDialog, CopyVerifyDialog } from "./copy-actions";
 import { CopyPageImage } from "./copy-page-image";
@@ -376,15 +371,4 @@ function CopyHistory({
       )}
     </section>
   );
-}
-
-function personWord(person: ShownPerson, { startsSentence = false } = {}) {
-  switch (person.kind) {
-    case "viewer":
-      return startsSentence ? "You" : "you";
-    case "named":
-      return person.name;
-    case "unnamed":
-      return startsSentence ? "Someone" : "someone";
-  }
 }

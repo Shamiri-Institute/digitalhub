@@ -10,6 +10,7 @@ import {
   hub,
   project,
   surveyAnswer,
+  surveyAuditEvent,
   surveyQuestionnaire,
   surveyQuestionnairePage,
   surveyScanPage,
@@ -22,10 +23,15 @@ import { rerunScanUpload } from "#/lib/survey/pipeline-jobs";
 import { voidCopy } from "#/lib/survey/print-run";
 import { fetchMissingPages } from "#/lib/survey/scan-pages/missing";
 import { normalisePageCode, placeScanPage } from "#/lib/survey/scan-pages/place";
+import { putScanPageBack, setScanPageAside } from "#/lib/survey/scan-pages/set-aside";
 import {
+  fetchSetAsidePages,
   fetchUnidentifiedPages,
+  fetchUnplacedPageHubs,
   type UnidentifiedPagesFilters,
 } from "#/lib/survey/scan-pages/unidentified";
+import { fetchScanUploads } from "#/lib/survey/scan-upload-queries";
+import { pageOutcomeSummary } from "#/lib/survey/scan-upload-status";
 import {
   CLEAN_PRINT_FORM_READS,
   createPrintSchool,
@@ -170,6 +176,14 @@ function place(viewer: SurveyViewer, scanPageId: string, code: string) {
   return db.transaction((tx) => placeScanPage(tx, viewer, { scanPageId, code }));
 }
 
+function setAside(viewer: SurveyViewer, scanPageId: string) {
+  return db.transaction((tx) => setScanPageAside(tx, viewer, { scanPageId }));
+}
+
+function putBack(viewer: SurveyViewer, scanPageId: string) {
+  return db.transaction((tx) => putScanPageBack(tx, viewer, { scanPageId }));
+}
+
 async function pageCode(copyId: string, pageNumber: number) {
   const [printed] = await db
     .select({ code: surveyQuestionnairePage.code })
@@ -205,6 +219,7 @@ async function storedScan(scanPageId: string) {
   const [scan] = await db
     .select({
       status: surveyScanPage.status,
+      rejectedReason: surveyScanPage.rejectedReason,
       questionnairePageId: surveyScanPage.questionnairePageId,
       duplicateOfId: surveyScanPage.duplicateOfId,
     })
@@ -264,7 +279,7 @@ describe("placing an unidentified page", () => {
     expect(view?.pages.map((page) => page.scan !== null)).toEqual([true, true, true]);
     expect(view?.history[0]).toMatchObject({
       action: "QUESTIONNAIRE_PAGE_PLACED",
-      actor: { kind: "viewer" },
+      actor: { isViewer: true },
       placedPage: { pageNumber: 3 },
       after: {
         scanPageId,
@@ -301,6 +316,7 @@ describe("placing an unidentified page", () => {
     });
     expect(await storedScan(scanPageId)).toEqual({
       status: "UNIDENTIFIED",
+      rejectedReason: null,
       questionnairePageId: null,
       duplicateOfId: null,
     });
@@ -593,5 +609,154 @@ describe("unidentified pages", () => {
     expect([...first.pages, ...last.pages].map((page) => page.id).toSorted()).toEqual(
       long.scanPageIds.toSorted(),
     );
+  });
+});
+
+describe("setting a page aside", () => {
+  it("moves it from the unidentified pages to those set aside and back, recording who did each", async () => {
+    const { uploadId, scanPageIds } = await unidentifiedUpload(admin, "cover sheet.pdf");
+    const [scanPageId = ""] = scanPageIds;
+    const listedIds = async (
+      fetchPages: typeof fetchUnidentifiedPages | typeof fetchSetAsidePages,
+      viewer: SurveyViewer = admin,
+    ) => (await fetchPages(viewer, { uploadId }, 1)).pages.map((page) => page.id);
+
+    expect(await setAside(coordinator, scanPageId)).toEqual({ kind: "moved" });
+    expect(await storedScan(scanPageId)).toEqual({
+      status: "REJECTED",
+      rejectedReason: "NOT_A_SURVEY_PAGE",
+      questionnairePageId: null,
+      duplicateOfId: null,
+    });
+    expect(await listedIds(fetchUnidentifiedPages)).toEqual([]);
+    const ownList = await fetchSetAsidePages(coordinator, { uploadId }, 1);
+    expect(ownList).toMatchObject({
+      total: 1,
+      pages: [
+        {
+          id: scanPageId,
+          fileName: "cover sheet.pdf",
+          pageIndex: 0,
+          image: { url: expect.stringContaining("http") },
+          setAside: { by: { isViewer: true }, at: expect.any(Date) },
+        },
+      ],
+    });
+    const adminList = await fetchSetAsidePages(admin, { uploadId }, 1);
+    expect(adminList.pages[0]?.setAside?.by.isViewer).toBe(false);
+
+    const [upload] = (await fetchScanUploads(admin)).filter((listed) => listed.id === uploadId);
+    expect(pageOutcomeSummary(upload?.pageOutcomes ?? [])).toEqual([
+      { kind: "SET_ASIDE", text: "1 set aside" },
+    ]);
+
+    expect(await putBack(admin, scanPageId)).toEqual({ kind: "moved" });
+    expect(await storedScan(scanPageId)).toMatchObject({
+      status: "UNIDENTIFIED",
+      rejectedReason: null,
+    });
+    expect(await listedIds(fetchUnidentifiedPages)).toEqual([scanPageId]);
+    expect(await listedIds(fetchSetAsidePages)).toEqual([]);
+    // No page shows the put back, so its record is read here.
+    const events = await db
+      .select({
+        action: surveyAuditEvent.action,
+        actorUserId: surveyAuditEvent.actorUserId,
+        surveyId: surveyAuditEvent.surveyId,
+        after: surveyAuditEvent.after,
+      })
+      .from(surveyAuditEvent)
+      .where(
+        and(
+          eq(surveyAuditEvent.entityType, "SCAN_PAGE"),
+          eq(surveyAuditEvent.entityId, scanPageId),
+        ),
+      )
+      .orderBy(asc(surveyAuditEvent.id));
+    expect(events.slice(1)).toEqual([
+      {
+        action: "SCAN_PAGE_SET_ASIDE",
+        actorUserId: coordinator.userId,
+        surveyId: null,
+        after: { uploadId, pageIndex: 0 },
+      },
+      {
+        action: "SCAN_PAGE_PUT_BACK",
+        actorUserId: admin.userId,
+        surveyId: null,
+        after: { uploadId, pageIndex: 0 },
+      },
+    ]);
+  });
+
+  it("counts the pages set aside apart from those waiting, by hub", async () => {
+    const { scanPageIds } = await unidentifiedUpload(otherHubScope, "blank backs.pdf", 3);
+    const countOf = async (unplaced: "unidentified" | "set-aside") =>
+      (await fetchUnplacedPageHubs(otherHubCoordinator, unplaced))[0]?.count ?? 0;
+    const unidentifiedBefore = await countOf("unidentified");
+    const setAsideBefore = await countOf("set-aside");
+
+    await setAside(otherHubCoordinator, scanPageIds[0] ?? "");
+    await setAside(otherHubCoordinator, scanPageIds[1] ?? "");
+    expect(await countOf("unidentified")).toBe(unidentifiedBefore - 2);
+    expect(await countOf("set-aside")).toBe(setAsideBefore + 2);
+  });
+
+  it("tells a page changed since the list was drawn, and changes nothing", async () => {
+    const { questionnaireId } = await copy({ reads: CLEAN_PRINT_FORM_READS, pageNumbers: [1] });
+    const serial = await serialOf(questionnaireId);
+    const scanPageId = await unidentifiedPage();
+
+    expect(await putBack(admin, scanPageId)).toEqual({ kind: "unavailable", because: "waiting" });
+    expect(await setAside(admin, scanPageId)).toEqual({ kind: "moved" });
+    expect(await setAside(coordinator, scanPageId)).toEqual({
+      kind: "unavailable",
+      because: "set-aside",
+    });
+    expect(await place(admin, scanPageId, `${serial}-P2`)).toEqual({
+      kind: "not-waiting",
+      because: "set-aside",
+    });
+    expect(await storedScan(scanPageId)).toMatchObject({ rejectedReason: "NOT_A_SURVEY_PAGE" });
+
+    expect(await putBack(admin, scanPageId)).toEqual({ kind: "moved" });
+    expect(await place(admin, scanPageId, `${serial}-P2`)).toMatchObject({ kind: "placed" });
+    expect(await setAside(admin, scanPageId)).toEqual({
+      kind: "unavailable",
+      because: "already-placed",
+    });
+    expect(await putBack(admin, scanPageId)).toEqual({
+      kind: "unavailable",
+      because: "already-placed",
+    });
+    expect(await storedScan(scanPageId)).toMatchObject({ status: "MATCHED" });
+  });
+
+  it("waits for an upload run again to finish reading", async () => {
+    const { uploadId, scanPageIds } = await unidentifiedUpload(admin, "rerun cover.pdf");
+    const [scanPageId = ""] = scanPageIds;
+    await db
+      .update(surveyUpload)
+      .set({ status: "FAILED", error: "The pipeline stopped" })
+      .where(eq(surveyUpload.id, uploadId));
+    await rerunScanUpload(admin, uploadId);
+
+    expect(await setAside(admin, scanPageId)).toEqual({
+      kind: "unavailable",
+      because: "file-being-read",
+    });
+    expect(await storedScan(scanPageId)).toMatchObject({ status: "UNIDENTIFIED" });
+  });
+
+  it("finds no page of another hub for a hub coordinator", async () => {
+    const scanPageId = await unidentifiedPage(otherHubScope, "other hub cover.pdf");
+
+    expect(await setAside(coordinator, scanPageId)).toEqual({ kind: "not-found" });
+    expect(await setAside(admin, scanPageId)).toEqual({ kind: "moved" });
+    expect(await putBack(coordinator, scanPageId)).toEqual({ kind: "not-found" });
+    expect(await storedScan(scanPageId)).toMatchObject({ rejectedReason: "NOT_A_SURVEY_PAGE" });
+    expect(
+      (await fetchSetAsidePages(coordinator, {}, 1)).pages.map((page) => page.id),
+    ).not.toContain(scanPageId);
   });
 });

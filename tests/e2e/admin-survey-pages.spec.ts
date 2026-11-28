@@ -44,6 +44,15 @@ async function researchHubScope() {
   return { ...researchHub, implementerId: admin.implementerId, userId: user.id };
 }
 
+async function researchAdminName() {
+  const account = await db.query.user.findFirst({
+    where: (u, { eq }) => eq(u.email, researchAdminEmail),
+    columns: { name: true },
+  });
+  required(account?.name, "a Research team admin with a name");
+  return account.name;
+}
+
 /** A survey of the Research admin's oldest hub with one copy scanned on `pageNumbers`. */
 async function partlyScannedCopy(code: string, pageNumbers: number[], undo: Undo) {
   const scope = await researchHubScope();
@@ -105,7 +114,7 @@ test("a Research admin places an unidentified page by its code, and its copy sho
   await expect(page.getByRole("link", { name: "Needs review", exact: true })).toHaveCount(2);
   await expect(
     page.getByRole("region", { name: "History" }).getByRole("listitem").first(),
-  ).toContainText("You placed page 3");
+  ).toContainText(`${await researchAdminName()} (you) placed page 3`);
 
   await page.goto(uploadPagesUrl);
   await expect(page.getByText("No unidentified pages.")).toBeVisible();
@@ -140,6 +149,53 @@ test("a Research admin is told a page placed from another tab meanwhile, and the
   await card.getByRole("button", { name: "Place page" }).click();
   await expect(page.getByText("This page was placed already.")).toBeVisible();
   await expect(card).toHaveCount(0);
+});
+
+test("a Research admin sets a page aside, undoes it, and puts it back from the pages set aside", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const fileName = `cover-${surveyCode}E.pdf`;
+  const unread = await createUnidentifiedPages({ scope: await researchHubScope(), fileName });
+  undo(unread.remove);
+  const uploadPagesUrl = getUrl(`/admin/surveys/pages?upload=${unread.uploadId}`);
+
+  await signInWithEmail(context, researchAdminEmail);
+  await page.goto(uploadPagesUrl);
+  const card = page.getByRole("listitem").filter({ hasText: fileName });
+  await card.getByRole("button", { name: "Not a survey page" }).click();
+  await expect(page.getByText("Set aside as not a survey page")).toBeVisible();
+  await expect(card).toHaveCount(0);
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(page.getByText("Put back among the pages to place")).toBeVisible();
+  await page.reload();
+  await expect(card).toHaveCount(1);
+
+  await card.getByRole("button", { name: "Not a survey page" }).click();
+  await expect(card).toHaveCount(0);
+  await page.goto(getUrl("/admin/surveys/scans"));
+  await page
+    .getByRole("row")
+    .filter({ hasText: fileName })
+    .getByRole("link", { name: "1 set aside" })
+    .click();
+  await expect(page).toHaveURL(
+    getUrl(`/admin/surveys/pages?view=set-aside&upload=${unread.uploadId}`),
+  );
+  await expect(page.getByRole("link", { name: /^Set aside/ })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expect(card).toContainText("Page 1 of the file");
+  await expect(card).toContainText(`Set aside by ${await researchAdminName()} (you)`);
+  await card.getByRole("button", { name: "Put back" }).click();
+  await expect(page.getByText("Put back among the pages to place")).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByText("No pages set aside.")).toBeVisible();
+  await page.goto(uploadPagesUrl);
+  await expect(card).toHaveCount(1);
 });
 
 test("a Research admin pages through one upload's unidentified pages, then every file's", async ({

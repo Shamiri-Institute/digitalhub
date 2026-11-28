@@ -1,0 +1,1 @@
+ALTER TYPE "public"."survey_scan_rejection" ADD VALUE 'NOT_A_SURVEY_PAGE';

@@ -3,8 +3,9 @@ import Link from "next/link";
 import { MissingPagesTable } from "#/components/common/survey/scan-pages/missing-pages-table";
 import {
   MissingPagesFilterBar,
-  UnidentifiedPagesFilterBar,
+  UnplacedPagesFilterBar,
 } from "#/components/common/survey/scan-pages/scan-pages-filters";
+import { SetAsidePageCard } from "#/components/common/survey/scan-pages/set-aside-page-card";
 import { UnidentifiedPageCard } from "#/components/common/survey/scan-pages/unidentified-page-card";
 import type { SurveyViewer } from "#/lib/auth/survey-access";
 import { type SurveyPagesView, surveyPagesHref } from "#/lib/survey/copy/paths";
@@ -16,10 +17,11 @@ import {
   type MissingPagesFilters,
 } from "#/lib/survey/scan-pages/missing";
 import {
-  fetchUnidentifiedPageHubs,
+  fetchSetAsidePages,
   fetchUnidentifiedPages,
-  type UnidentifiedPageHubs,
+  fetchUnplacedPageHubs,
   type UnidentifiedPagesFilters,
+  type UnplacedPageHubs,
 } from "#/lib/survey/scan-pages/unidentified";
 import { cn } from "#/lib/utils";
 
@@ -32,7 +34,7 @@ const countOf = (options: readonly FilterOption[]) =>
 
 /**
  * Scanned pages that need a person: pages whose QR couldn't be read, to place on their copy by the
- * code printed under it, and copies still missing pages.
+ * code printed under it or set aside, and copies still missing pages.
  */
 export async function SurveyPages({
   viewer,
@@ -43,14 +45,15 @@ export async function SurveyPages({
   searchParams: PagesSearchParams;
   timeZone: string | null;
 }) {
-  const view: SurveyPagesView =
-    searchParamValue(searchParams.view) === "missing" ? "missing" : "unidentified";
+  const view = viewOf(searchParamValue(searchParams.view));
   // A hub coordinator's pages are their hub's already.
   const filterHubId = viewer.kind === "project" ? searchParamValue(searchParams.hub) : undefined;
-  const [unidentifiedHubs, missingOptions] = await Promise.all([
-    fetchUnidentifiedPageHubs(viewer),
+  const [unidentifiedHubs, setAsideHubs, missingOptions] = await Promise.all([
+    fetchUnplacedPageHubs(viewer, "unidentified"),
+    fetchUnplacedPageHubs(viewer, "set-aside"),
     fetchMissingPagesFilterOptions(viewer),
   ]);
+  const unplacedFilters = { hubId: filterHubId, uploadId: searchParamValue(searchParams.upload) };
   return (
     <div className="space-y-6">
       <nav
@@ -73,16 +76,34 @@ export async function SurveyPages({
         >
           Missing pages
         </ViewLink>
+        <ViewLink
+          viewerKind={viewer.kind}
+          view="set-aside"
+          current={view}
+          count={countOf(setAsideHubs)}
+        >
+          Set aside
+        </ViewLink>
       </nav>
-      {view === "unidentified" ? (
+      {view === "unidentified" && (
         <UnidentifiedView
           viewer={viewer}
-          filters={{ hubId: filterHubId, uploadId: searchParamValue(searchParams.upload) }}
+          filters={unplacedFilters}
           requestedPage={listPageOf(searchParams.page)}
           hubOptions={viewer.kind === "project" ? unidentifiedHubs : undefined}
           timeZone={timeZone}
         />
-      ) : (
+      )}
+      {view === "set-aside" && (
+        <SetAsideView
+          viewer={viewer}
+          filters={unplacedFilters}
+          requestedPage={listPageOf(searchParams.page)}
+          hubOptions={viewer.kind === "project" ? setAsideHubs : undefined}
+          timeZone={timeZone}
+        />
+      )}
+      {view === "missing" && (
         <MissingView
           viewer={viewer}
           filters={{
@@ -96,6 +117,10 @@ export async function SurveyPages({
       )}
     </div>
   );
+}
+
+function viewOf(value: string | undefined): SurveyPagesView {
+  return value === "missing" || value === "set-aside" ? value : "unidentified";
 }
 
 function ViewLink({
@@ -128,11 +153,19 @@ function ViewLink({
   );
 }
 
-/** The page of the list the address asks for; fetchUnidentifiedPages clamps it to the last. */
+/** The page of the list the address asks for; the list's fetch clamps it to the last. */
 function listPageOf(value: string | string[] | undefined) {
   const page = Number(searchParamValue(value));
   return Number.isInteger(page) && page >= 1 ? page : 1;
 }
+
+type UnplacedViewProps = {
+  viewer: SurveyViewer;
+  filters: UnidentifiedPagesFilters;
+  requestedPage: number;
+  hubOptions: UnplacedPageHubs | undefined;
+  timeZone: string | null;
+};
 
 async function UnidentifiedView({
   viewer,
@@ -140,50 +173,32 @@ async function UnidentifiedView({
   requestedPage,
   hubOptions,
   timeZone,
-}: {
-  viewer: SurveyViewer;
-  filters: UnidentifiedPagesFilters;
-  requestedPage: number;
-  hubOptions: UnidentifiedPageHubs | undefined;
-  timeZone: string | null;
-}) {
-  const {
-    pages,
-    upload,
-    total,
-    page: shownListPage,
-    pageCount: listPageCount,
-  } = await fetchUnidentifiedPages(viewer, filters, requestedPage);
-  const listPageHref = (listPage: number) =>
-    surveyPagesHref(viewer.kind, {
-      hub: filters.hubId,
-      upload: upload?.id,
-      page: listPage > 1 ? String(listPage) : undefined,
-    });
+}: UnplacedViewProps) {
+  const listed = await fetchUnidentifiedPages(viewer, filters, requestedPage);
   return (
     <section className="space-y-4">
       <p className="max-w-prose text-sm text-shamiri-text-grey">
         Scanned pages whose QR code couldn&apos;t be read. Type the code printed under the QR to
-        place each one on its copy.
+        place each one on its copy. Set aside a blank back or a cover sheet as not a survey page.
       </p>
-      <UnidentifiedPagesFilterBar
-        hubId={filters.hubId}
+      <UnplacedPagesFilterBar
+        filterHubId={filters.hubId}
         hubOptions={hubOptions}
         upload={
-          upload && {
-            fileName: upload.fileName,
+          listed.upload && {
+            fileName: listed.upload.fileName,
             clearHref: surveyPagesHref(viewer.kind, { hub: filters.hubId }),
           }
         }
-        total={total}
+        total={listed.total}
+        totalNoun="to place"
+        emptyHubLabel="Nothing waiting here"
       />
-      {pages.length === 0 ? (
-        <p className="rounded-lg bg-muted px-4 py-8 text-center text-sm text-shamiri-text-grey">
-          No unidentified pages.
-        </p>
+      {listed.pages.length === 0 ? (
+        <EmptyList>No unidentified pages.</EmptyList>
       ) : (
         <ul className="grid gap-6 lg:grid-cols-2">
-          {pages.map((page) => (
+          {listed.pages.map((page) => (
             <UnidentifiedPageCard
               key={page.id}
               page={page}
@@ -193,24 +208,113 @@ async function UnidentifiedView({
           ))}
         </ul>
       )}
-      {listPageCount > 1 && (
-        <nav aria-label="Pages of the list" className="flex items-center justify-end gap-4 text-sm">
-          {shownListPage > 1 && (
-            <Link href={listPageHref(shownListPage - 1)} className="text-shamiri-new-blue">
-              Previous
-            </Link>
-          )}
-          <span className="text-shamiri-text-grey">
-            Page {shownListPage} of {listPageCount}
-          </span>
-          {shownListPage < listPageCount && (
-            <Link href={listPageHref(shownListPage + 1)} className="text-shamiri-new-blue">
-              Next
-            </Link>
-          )}
-        </nav>
-      )}
+      <ListPager
+        listPage={listed.page}
+        listPageCount={listed.pageCount}
+        href={(listPage) =>
+          surveyPagesHref(viewer.kind, {
+            hub: filters.hubId,
+            upload: listed.upload?.id,
+            page: listPage > 1 ? String(listPage) : undefined,
+          })
+        }
+      />
     </section>
+  );
+}
+
+async function SetAsideView({
+  viewer,
+  filters,
+  requestedPage,
+  hubOptions,
+  timeZone,
+}: UnplacedViewProps) {
+  const listed = await fetchSetAsidePages(viewer, filters, requestedPage);
+  return (
+    <section className="space-y-4">
+      <p className="max-w-prose text-sm text-shamiri-text-grey">
+        Scanned pages set aside as not survey pages. Put one back to place it on its copy.
+      </p>
+      <UnplacedPagesFilterBar
+        filterHubId={filters.hubId}
+        hubOptions={hubOptions}
+        upload={
+          listed.upload && {
+            fileName: listed.upload.fileName,
+            clearHref: surveyPagesHref(viewer.kind, { view: "set-aside", hub: filters.hubId }),
+          }
+        }
+        total={listed.total}
+        totalNoun="set aside"
+        emptyHubLabel="None set aside here"
+      />
+      {listed.pages.length === 0 ? (
+        <EmptyList>No pages set aside.</EmptyList>
+      ) : (
+        <ul className="grid gap-6 lg:grid-cols-2">
+          {listed.pages.map((page) => (
+            <SetAsidePageCard
+              key={page.id}
+              page={page}
+              showHub={viewer.kind === "project"}
+              timeZone={timeZone}
+            />
+          ))}
+        </ul>
+      )}
+      <ListPager
+        listPage={listed.page}
+        listPageCount={listed.pageCount}
+        href={(listPage) =>
+          surveyPagesHref(viewer.kind, {
+            view: "set-aside",
+            hub: filters.hubId,
+            upload: listed.upload?.id,
+            page: listPage > 1 ? String(listPage) : undefined,
+          })
+        }
+      />
+    </section>
+  );
+}
+
+function EmptyList({ children }: { children: string }) {
+  return (
+    <p className="rounded-lg bg-muted px-4 py-8 text-center text-sm text-shamiri-text-grey">
+      {children}
+    </p>
+  );
+}
+
+function ListPager({
+  listPage,
+  listPageCount,
+  href,
+}: {
+  listPage: number;
+  listPageCount: number;
+  href: (listPage: number) => string;
+}) {
+  if (listPageCount <= 1) {
+    return null;
+  }
+  return (
+    <nav aria-label="Pages of the list" className="flex items-center justify-end gap-4 text-sm">
+      {listPage > 1 && (
+        <Link href={href(listPage - 1)} className="text-shamiri-new-blue">
+          Previous
+        </Link>
+      )}
+      <span className="text-shamiri-text-grey">
+        Page {listPage} of {listPageCount}
+      </span>
+      {listPage < listPageCount && (
+        <Link href={href(listPage + 1)} className="text-shamiri-new-blue">
+          Next
+        </Link>
+      )}
+    </nav>
   );
 }
 
