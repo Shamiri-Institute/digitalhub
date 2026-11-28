@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
-import { CopyPageImage } from "#/components/common/survey/copy/copy-page-image";
+import { ScanPageFigure } from "#/components/common/survey/scan-pages/scan-page-figure";
 import { Button } from "#/components/ui/button";
 import {
   Form,
@@ -15,10 +16,9 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import { toast, toastOnError } from "#/components/ui/use-toast";
-import { placeScanPage } from "#/lib/actions/survey/scan-pages";
+import { toast, toastOnError, toastOnFailure } from "#/components/ui/use-toast";
+import { placeScanPage, putScanPageBack, setScanPageAside } from "#/lib/actions/survey/scan-pages";
 import { PlaceScanPageSchema } from "#/lib/actions/survey/schemas";
-import { formatDateTimeIn } from "#/lib/date-utils";
 import type { UnidentifiedPage } from "#/lib/survey/scan-pages/unidentified";
 import { zodResolver } from "#/lib/zod-resolver";
 
@@ -29,41 +29,48 @@ export function UnidentifiedPageCard({
 }: {
   page: UnidentifiedPage;
   showHub: boolean;
-  /** Null until the browser has set the viewer's zone. */
   timeZone: string | null;
 }) {
-  const facts = [
-    `Page ${page.pageIndex + 1} of the file`,
-    timeZone && `received ${formatDateTimeIn(page.receivedAt, timeZone)}`,
-    showHub && page.hubName,
-  ].filter(Boolean);
   return (
     <li className="space-y-3 rounded-lg border border-grey-border bg-white p-4">
-      <div className="rounded-lg bg-muted p-3">
-        {page.image ? (
-          <a
-            href={page.image.url}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`Open page ${page.pageIndex + 1} of ${page.fileName} full size`}
-            className="block focus-visible:ring-2 focus-visible:ring-shamiri-new-blue focus-visible:outline-none"
-          >
-            <CopyPageImage
-              url={page.image.url}
-              alt={`Page ${page.pageIndex + 1} of ${page.fileName}, as scanned`}
-              className="max-h-[70vh] w-auto"
-            />
-          </a>
-        ) : (
-          <CopyPageImage url={null} alt="" />
-        )}
-      </div>
-      <div className="space-y-0.5 text-sm">
-        <p className="font-medium break-words text-shamiri-black">{page.fileName}</p>
-        <p className="text-shamiri-text-grey">{facts.join(" · ")}</p>
-      </div>
+      <ScanPageFigure page={page} showHub={showHub} timeZone={timeZone} />
       <PlacePageForm scanPageId={page.id} />
+      <SetAsideButton scanPageId={page.id} />
     </li>
+  );
+}
+
+/** Undone from its toast, since a blank back or a cover sheet is set aside at a glance. */
+function SetAsideButton({ scanPageId }: { scanPageId: string }) {
+  const [isPending, startTransition] = useTransition();
+  const undo = toastOnError(async () => {
+    const response = await putScanPageBack({ scanPageId });
+    toast({
+      description: response.message,
+      variant: response.success ? "default" : "destructive",
+    });
+  });
+  const onClick = () =>
+    startTransition(() =>
+      toastOnFailure(async () => {
+        const response = await setScanPageAside({ scanPageId });
+        toast(
+          response.success
+            ? { description: response.message, action: { label: "Undo", onClick: undo } }
+            : { description: response.message, variant: "destructive" },
+        );
+      }),
+    );
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      onClick={onClick}
+      disabled={isPending}
+      loading={isPending}
+    >
+      Not a survey page
+    </Button>
   );
 }
 

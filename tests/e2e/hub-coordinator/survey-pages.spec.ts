@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNull, ne } from "drizzle-orm";
 
 import { db } from "#/db/client";
-import { hub, surveyQuestionnaire } from "#/db/schema";
+import { hub, hubCoordinator, implementerMember, surveyQuestionnaire, user } from "#/db/schema";
 import { expect, test } from "#/tests/fixtures";
 import { required, signInAs } from "#/tests/helpers";
 import { getUrl } from "#/tests/pages/helpers";
@@ -111,5 +111,60 @@ test("a hub coordinator places their hub's unidentified page, and another hub's 
   await expect(page.getByRole("link", { name: /^Page 3/ })).toContainText("not scanned");
   await expect(
     page.getByRole("region", { name: "History" }).getByRole("listitem").first(),
-  ).toContainText("You placed page 2");
+  ).toContainText(`${await coordinatorName(coordinator.id)} (you) placed page 2`);
 });
+
+test("a hub coordinator sets their hub's page aside, undoes it, and puts it back", async ({
+  page,
+  context,
+  undo,
+}) => {
+  const coordinator = await signInAs(context, "HUB_COORDINATOR");
+  const profile = await db.query.hubCoordinator.findFirst({
+    where: (hc, { eq }) => eq(hc.id, coordinator.identifier ?? ""),
+    with: { assignedHub: { columns: { id: true, implementerId: true, projectId: true } } },
+  });
+  required(profile?.assignedHub, "a hub coordinator with a hub");
+  const { id: hubId, implementerId, projectId } = profile.assignedHub;
+  const fileName = `blank-back-${surveyCode}.pdf`;
+  const unread = await createUnidentifiedPages({
+    scope: { hubId, implementerId, projectId, userId: coordinator.id },
+    fileName,
+  });
+  undo(unread.remove);
+  const uploadPagesUrl = getUrl(`/hc/surveys/pages?upload=${unread.uploadId}`);
+
+  await page.goto(uploadPagesUrl);
+  const card = page.getByRole("listitem").filter({ hasText: fileName });
+  await card.getByRole("button", { name: "Not a survey page" }).click();
+  await expect(page.getByText("Set aside as not a survey page")).toBeVisible();
+  await expect(card).toHaveCount(0);
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(page.getByText("Put back among the pages to place")).toBeVisible();
+  await page.reload();
+  await expect(card).toHaveCount(1);
+
+  await card.getByRole("button", { name: "Not a survey page" }).click();
+  await expect(card).toHaveCount(0);
+  await page.goto(getUrl(`/hc/surveys/pages?view=set-aside&upload=${unread.uploadId}`));
+  await expect(card).toContainText(`Set aside by ${await coordinatorName(coordinator.id)} (you)`);
+  await card.getByRole("button", { name: "Put back" }).click();
+  await expect(page.getByText("Put back among the pages to place")).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByText("No pages set aside.")).toBeVisible();
+  await page.goto(uploadPagesUrl);
+  await expect(card).toHaveCount(1);
+});
+
+/** As the pages show a hub coordinator: their account's name, else their profile's. */
+async function coordinatorName(userId: string) {
+  const [account] = await db
+    .select({ name: user.name, coordinatorName: hubCoordinator.coordinatorName })
+    .from(user)
+    .innerJoin(implementerMember, eq(implementerMember.userId, user.id))
+    .innerJoin(hubCoordinator, eq(hubCoordinator.id, implementerMember.identifier))
+    .where(and(eq(user.id, userId), eq(implementerMember.role, "HUB_COORDINATOR")));
+  required(account, "the hub coordinator's profile");
+  return account.name || account.coordinatorName;
+}

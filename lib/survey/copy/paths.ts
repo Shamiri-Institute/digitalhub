@@ -23,7 +23,7 @@ export function reviewAnswerHref(
   return `${SURVEYS_ROOT[viewerKind]}/review?survey=${surveyId}&answer=${answerId}`;
 }
 
-export type SurveyPagesView = "unidentified" | "missing";
+export type SurveyPagesView = "unidentified" | "set-aside" | "missing";
 
 /** The Pages tab, on one of its views, with its filters and page of the list. */
 export function surveyPagesHref(

@@ -498,6 +498,13 @@
       "when": 1795686170447,
       "tag": "0070_ticket_comments",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1795859317016,
+      "tag": "0071_survey_scan_not_a_survey_page",
+      "breakpoints": true
     }
   ]
 }

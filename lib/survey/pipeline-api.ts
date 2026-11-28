@@ -9,7 +9,12 @@ import type { PgUpdateSetSource } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
 import { db, type Transaction } from "#/db/client";
-import { SurveyAuditActor, SurveyUploadStatus, SurveyVersionStatus } from "#/db/enums";
+import {
+  SurveyAuditActor,
+  SurveyScanRejection,
+  SurveyUploadStatus,
+  SurveyVersionStatus,
+} from "#/db/enums";
 import { surveyScanPage, surveyScanPageImage, surveyUpload, surveyVersion } from "#/db/schema";
 import { getPresignedUploadUrl, getPresignedUrl } from "#/lib/s3/s3.service";
 import { hexChecksum } from "#/lib/s3/utils/checksum";
@@ -354,7 +359,10 @@ async function placedPageIndexes(tx: Transaction, uploadId: string, pageIndexes:
       and(
         eq(surveyScanPage.uploadId, uploadId),
         inArray(surveyScanPage.pageIndex, pageIndexes),
-        isNotNull(surveyScanPage.questionnairePageId),
+        or(
+          isNotNull(surveyScanPage.questionnairePageId),
+          eq(surveyScanPage.rejectedReason, SurveyScanRejection.NOT_A_SURVEY_PAGE),
+        ),
       ),
     );
   return new Set(placed.map(({ pageIndex }) => pageIndex));

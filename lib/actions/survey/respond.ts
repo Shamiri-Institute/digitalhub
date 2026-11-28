@@ -10,6 +10,8 @@ import { SurveyQuestionnaireStatus } from "#/db/enums";
 import type { CopyCommandResult } from "#/lib/survey/copy/copy";
 import { refusalMessage } from "#/lib/survey/copy/decide";
 import { PrintRunError } from "#/lib/survey/print-run";
+import { unavailableMessage } from "#/lib/survey/scan-pages/place";
+import type { MoveResult } from "#/lib/survey/scan-pages/set-aside";
 import type { ActionResponse } from "#/types/actions.types";
 
 /** An expected failure whose message is safe to show the research user. */
@@ -63,6 +65,29 @@ export function copyActionResponse(result: CopyCommandResult): ActionResponse {
       return { success: false, message: refusalMessage(result.refusal) };
     case "not-found":
       throw new NotFoundError("Copy");
+    default:
+      return result satisfies never;
+  }
+}
+
+// A deleted upload or a page out of the viewer's scope; refreshing takes its card off the list.
+export const SCAN_PAGE_GONE_MESSAGE = "This page is no longer in your list.";
+
+/** The reply to setting a page aside or putting it back. Either way it leaves the viewer's list. */
+export function scanPageMoveResponse(
+  result: MoveResult<"waiting"> | MoveResult<"set-aside">,
+  movedMessage: string,
+): ActionResponse {
+  switch (result.kind) {
+    case "moved":
+      refresh();
+      return { success: true, message: movedMessage };
+    case "unavailable":
+      refresh();
+      return { success: false, message: unavailableMessage(result.because) };
+    case "not-found":
+      refresh();
+      return { success: false, message: SCAN_PAGE_GONE_MESSAGE };
     default:
       return result satisfies never;
   }

@@ -861,6 +861,32 @@ describe("page images", () => {
       await reportStatus(uploadId, { attempt: 1, status: "FAILED", error: "old job" }),
     ).toEqual({ status: 409, body: { error: "stale-attempt", currentAttempt: 2 } });
   });
+  it("gives no link on a re-run for a page set aside as not a survey page", async () => {
+    const uploadId = await createUpload();
+    await reportStatus(uploadId, { attempt: 1, status: "PROCESSING", pageCount: 1 });
+    const image = await uploadPageImage(uploadId, 1, 0);
+    await postPageResults(uploadId, {
+      attempt: 1,
+      pages: [{ ...readPage(0, "", { image }), qrs: [] }],
+    });
+    await db
+      .update(surveyScanPage)
+      .set({ status: "REJECTED", rejectedReason: "NOT_A_SURVEY_PAGE" })
+      .where(eq(surveyScanPage.uploadId, uploadId));
+
+    await db
+      .update(surveyUpload)
+      .set({ attempt: 2, status: "QUEUED" })
+      .where(eq(surveyUpload.id, uploadId));
+    const rerunImage = imageOf("re-run");
+    const links = await askImageLinks(uploadId, {
+      attempt: 2,
+      images: [
+        { pageIndex: 0, byteSize: rerunImage.byteSize, sha256: rerunImage.sha256, ...A4_IMAGE },
+      ],
+    });
+    expect(links.body).toEqual({ images: [{ pageIndex: 0, alreadyStored: true }] });
+  });
 });
 
 describe("upload state", () => {

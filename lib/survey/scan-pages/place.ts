@@ -36,7 +36,7 @@ export type PlaceResult =
   // The typed code names a page this scan can't go on. Nothing is stored.
   | { kind: "refused"; refusal: PlaceRefusal }
   // The scan changed since the viewer's list was drawn. Nothing is stored.
-  | { kind: "not-waiting"; because: NotWaitingReason }
+  | { kind: "not-waiting"; because: Exclude<ScanPageUnavailable, "waiting"> }
   // The scan is missing or outside the viewer's scope, alike.
   | { kind: "not-found" };
 
@@ -50,22 +50,75 @@ export type PlaceRefusal =
   // Refused rather than kept as a duplicate, which a mistyped code would leave out of sight.
   | { kind: "page-already-scanned"; serial: string; pageNumber: number };
 
-export type NotWaitingReason =
-  // Placed on a copy meanwhile, by someone else or by a rerun of its upload.
+/** Where a scan stands for the people sorting the pages ingest couldn't place. */
+export type ScanPageStanding =
+  // Unidentified, for a person to place or set aside.
+  | "waiting"
+  // Set aside by a person as not a survey page.
+  | "set-aside"
+  // Placed on a copy, by a person or by a rerun of its upload.
   | "already-placed"
-  // A rerun of its upload read the page again and set it aside.
-  | "read-again"
+  // A rerun of its upload read the page again and rejected it.
+  | "read-again";
+
+export type ScanPageUnavailable =
+  | ScanPageStanding
   // Its upload is being read, so the page may yet change.
   | "file-being-read";
 
-const NOT_WAITING_BECAUSE = {
-  [SurveyScanPageStatus.MATCHED]: "already-placed",
-  [SurveyScanPageStatus.DUPLICATE]: "already-placed",
-  [SurveyScanPageStatus.REJECTED]: "read-again",
-} as const satisfies Record<
-  Exclude<SurveyScanPageStatus, typeof SurveyScanPageStatus.UNIDENTIFIED>,
-  NotWaitingReason
->;
+function standingOf(scan: {
+  status: SurveyScanPageStatus;
+  rejectedReason: SurveyScanRejection | null;
+}): ScanPageStanding {
+  switch (scan.status) {
+    case SurveyScanPageStatus.UNIDENTIFIED:
+      return "waiting";
+    case SurveyScanPageStatus.MATCHED:
+    case SurveyScanPageStatus.DUPLICATE:
+      return "already-placed";
+    case SurveyScanPageStatus.REJECTED:
+      return scan.rejectedReason === SurveyScanRejection.NOT_A_SURVEY_PAGE
+        ? "set-aside"
+        : "read-again";
+  }
+}
+
+/**
+ * Locks the scan's upload, scoped by the hub it was uploaded for, then reads the scan. Every
+ * change to an unplaced scan takes this lock first, as ingest does. Null when the scan is missing
+ * or outside the viewer's scope, alike.
+ */
+export async function lockScanPage(tx: Transaction, viewer: SurveyViewer, scanPageId: string) {
+  const [upload] = await tx
+    .select({ id: surveyUpload.id, hubId: surveyUpload.hubId, status: surveyUpload.status })
+    .from(surveyScanPage)
+    .innerJoin(surveyUpload, eq(surveyUpload.id, surveyScanPage.uploadId))
+    .where(and(eq(surveyScanPage.id, scanPageId), uploadHubInScope(viewer, surveyUpload.hubId)))
+    .for("update", { of: surveyUpload });
+  if (!upload) {
+    return null;
+  }
+  // A separate statement after the lock, so it sees an ingest or a change that just committed.
+  const [scan] = await tx
+    .select({
+      status: surveyScanPage.status,
+      rejectedReason: surveyScanPage.rejectedReason,
+      pageIndex: surveyScanPage.pageIndex,
+      postedResult: surveyScanPage.postedResult,
+    })
+    .from(surveyScanPage)
+    .where(eq(surveyScanPage.id, scanPageId));
+  if (!scan) {
+    return null;
+  }
+  return {
+    upload,
+    scan,
+    standing: standingOf(scan),
+    uploadFinished: FINISHED_UPLOAD_STATUSES.includes(upload.status),
+  };
+}
+export type LockedScanPage = NonNullable<Awaited<ReturnType<typeof lockScanPage>>>;
 
 const REFUSAL_OF_REJECTION = {
   [SurveyScanRejection.OTHER_HUB]: { kind: "other-hub" },
@@ -84,33 +137,15 @@ export async function placeScanPage(
   viewer: SurveyViewer,
   command: PlaceCommand,
 ): Promise<PlaceResult> {
-  const [upload] = await tx
-    .select({ id: surveyUpload.id, hubId: surveyUpload.hubId, status: surveyUpload.status })
-    .from(surveyScanPage)
-    .innerJoin(surveyUpload, eq(surveyUpload.id, surveyScanPage.uploadId))
-    .where(
-      and(eq(surveyScanPage.id, command.scanPageId), uploadHubInScope(viewer, surveyUpload.hubId)),
-    )
-    .for("update", { of: surveyUpload });
-  if (!upload) {
+  const locked = await lockScanPage(tx, viewer, command.scanPageId);
+  if (!locked) {
     return { kind: "not-found" };
   }
-  // A separate statement after the lock, so it sees an ingest or a placement that just committed.
-  const [scan] = await tx
-    .select({
-      status: surveyScanPage.status,
-      pageIndex: surveyScanPage.pageIndex,
-      postedResult: surveyScanPage.postedResult,
-    })
-    .from(surveyScanPage)
-    .where(eq(surveyScanPage.id, command.scanPageId));
-  if (!scan) {
-    return { kind: "not-found" };
+  const { upload, scan } = locked;
+  if (locked.standing !== "waiting") {
+    return { kind: "not-waiting", because: locked.standing };
   }
-  if (scan.status !== SurveyScanPageStatus.UNIDENTIFIED) {
-    return { kind: "not-waiting", because: NOT_WAITING_BECAUSE[scan.status] };
-  }
-  if (!FINISHED_UPLOAD_STATUSES.includes(upload.status)) {
+  if (!locked.uploadFinished) {
     return { kind: "not-waiting", because: "file-being-read" };
   }
   if ("error" in scan.postedResult) {
@@ -237,8 +272,12 @@ export function placeRefusalMessage(refusal: PlaceRefusal): string {
 }
 
 // The list refreshes without the page, so these don't ask the viewer to.
-export function notWaitingMessage(because: NotWaitingReason): string {
+export function unavailableMessage(because: ScanPageUnavailable): string {
   switch (because) {
+    case "waiting":
+      return "This page was put back already.";
+    case "set-aside":
+      return "This page was set aside as not a survey page.";
     case "already-placed":
       return "This page was placed already.";
     case "read-again":

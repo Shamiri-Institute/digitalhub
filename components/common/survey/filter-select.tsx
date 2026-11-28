@@ -45,12 +45,15 @@ export function FilterSelect({
   value,
   options,
   onChange,
+  emptyChoiceLabel = "Nothing waiting here",
 }: {
   label: string;
   everyLabel: string;
   value: string | undefined;
   options: { value: string; label: string }[];
   onChange: (value: string) => void;
+  /** Names a filter chosen before its last item left the list. */
+  emptyChoiceLabel?: string;
 }) {
   return (
     <div className="space-y-1">
@@ -63,7 +66,7 @@ export function FilterSelect({
           <SelectItem value={EVERY}>{everyLabel}</SelectItem>
           {/* A filter chosen before its last item left the list stays visible. */}
           {value && !options.some((option) => option.value === value) && (
-            <SelectItem value={value}>Nothing waiting here</SelectItem>
+            <SelectItem value={value}>{emptyChoiceLabel}</SelectItem>
           )}
           {options.map((option) => (
             <SelectItem key={option.value} value={option.value}>

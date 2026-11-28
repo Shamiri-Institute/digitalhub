@@ -955,6 +955,31 @@ describe("re-running an upload", () => {
     expect(await scansOf(uploadId)).toEqual(scansAfterRerun);
   });
 
+  it("keeps a page a person set aside, whether it reads the page the same or otherwise", async () => {
+    const copy = await issueCopy();
+    const uploadId = await createUpload();
+    const posted = [readPost(copy.pages[0], 0, { qrs: [] })];
+    await ingest(uploadId, posted);
+    // As setScanPageAside leaves it; the upload is locked there, and nothing else runs here.
+    await db
+      .update(surveyScanPage)
+      .set({ status: "REJECTED", rejectedReason: "NOT_A_SURVEY_PAGE" })
+      .where(eq(surveyScanPage.uploadId, uploadId));
+    const scansBefore = await scansOf(uploadId);
+
+    await rerun(uploadId);
+    expect(await ingest(uploadId, posted, 2)).toEqual({
+      kind: "ingested",
+      pages: [unchanged(0, "REJECTED")],
+    });
+    expect(await ingest(uploadId, [readPost(copy.pages[0], 0)], 2)).toEqual({
+      kind: "ingested",
+      pages: [{ pageIndex: 0, result: "conflict", reason: "already stored by attempt 1" }],
+    });
+    expect(await scansOf(uploadId)).toEqual(scansBefore);
+    expect(await answersOf(copy.questionnaireId)).toEqual([]);
+  });
+
   it("never replaces a page it stored against a printed page", async () => {
     const copy = await issueCopy();
     const uploadId = await createUpload();

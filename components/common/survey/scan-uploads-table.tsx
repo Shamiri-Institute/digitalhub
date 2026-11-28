@@ -26,6 +26,7 @@ import type { SurveyViewer } from "#/lib/auth/survey-access";
 import { surveyPagesHref } from "#/lib/survey/copy/paths";
 import type { ScanUploads } from "#/lib/survey/scan-upload-queries";
 import {
+  FINISHED_UPLOAD_STATUSES,
   isUploadUnfinished,
   mayRunAgain,
   pageOutcomeSummary,
@@ -207,14 +208,18 @@ function UploadStatusCell({
       {reason && (
         <p className="text-xs break-words whitespace-normal text-shamiri-text-grey">{reason}</p>
       )}
-      {upload.status === SurveyUploadStatus.PROCESSED && upload.pageOutcomes.length > 0 && (
+      {FINISHED_UPLOAD_STATUSES.includes(upload.status) && upload.pageOutcomes.length > 0 && (
         <p className="text-xs break-words whitespace-normal text-shamiri-text-grey">
           {pageOutcomeSummary(upload.pageOutcomes).map((outcome, index) => (
-            <Fragment key={outcome.status}>
+            <Fragment key={outcome.kind}>
               {index > 0 && " · "}
-              {outcome.status === SurveyScanPageStatus.UNIDENTIFIED ? (
+              {outcome.kind === SurveyScanPageStatus.UNIDENTIFIED ||
+              outcome.kind === "SET_ASIDE" ? (
                 <Link
-                  href={surveyPagesHref(viewerKind, { upload: upload.id })}
+                  href={surveyPagesHref(viewerKind, {
+                    view: outcome.kind === "SET_ASIDE" ? "set-aside" : undefined,
+                    upload: upload.id,
+                  })}
                   className="font-medium text-shamiri-new-blue underline-offset-4 hover:underline"
                 >
                   {outcome.text}

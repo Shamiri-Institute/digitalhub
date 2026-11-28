@@ -162,3 +162,5 @@ export const CorrectAnswerSchema = z.object({
     z.null(),
   ]),
 });
+
+export const ScanPageIdSchema = z.object({ scanPageId: stringValidation("Missing page") });

@@ -35,6 +35,7 @@ import {
   type CopyRefusal,
   decideCopyAction,
 } from "#/lib/survey/copy/decide";
+import { loadShownPeople } from "#/lib/survey/shown-person";
 
 export type CopyCommandResult =
   | { kind: "changed"; from: SurveyQuestionnaireStatus; to: SurveyQuestionnaireStatus }
@@ -195,6 +196,10 @@ export async function loadCopy(viewer: SurveyViewer, copyId: string) {
     copyPrintedPages(header.id),
     copyAnswers(header.id),
   ]);
+  const shownPerson = await loadShownPeople(viewer, [
+    ...events.map((event) => event.actorUser),
+    ...answers.map((answer) => answer.reviewedByUser),
+  ]);
   const questions = fieldQuestionsOf(header.form);
   const printedOrder = [...questions.keys()];
   const answerViews = answers
@@ -211,7 +216,7 @@ export async function loadCopy(viewer: SurveyViewer, copyId: string) {
           : JSON.stringify(answer.value),
         isBlank: answer.value === null,
         reviewStatus: answer.reviewStatus,
-        reviewer: shownPerson(answer.reviewedByUser, viewer),
+        reviewer: shownPerson(answer.reviewedByUser),
       };
     })
     .toSorted((a, b) => printedOrder.indexOf(a.field) - printedOrder.indexOf(b.field));
@@ -266,7 +271,7 @@ export async function loadCopy(viewer: SurveyViewer, copyId: string) {
     answersNeedingReview,
     history: events.map(({ actorUser, ...event }) => ({
       ...event,
-      actor: shownPerson(actorUser, viewer),
+      actor: shownPerson(actorUser),
       answerLabel:
         event.entityType === SurveyAuditEntity.ANSWER
           ? (answerLabels.get(event.entityId) ?? null)
@@ -287,24 +292,6 @@ export type CopyView = NonNullable<Awaited<ReturnType<typeof loadCopy>>>;
 /** What a placement's audit event says about the page, as placeScanPage writes it. */
 const PlacedPage = z.object({ pageNumber: z.int() });
 
-export type ShownPerson =
-  | { kind: "viewer" }
-  | { kind: "named"; name: string }
-  | { kind: "unnamed" };
-
-/**
- * Who acted, as this viewer may see them. A hub coordinator sees names only, never addresses, so a
- * person without a name stays unnamed to them; the Research team sees the address instead.
- */
-function shownPerson(
-  person: { id: string; name: string | null; email: string | null } | null,
-  viewer: SurveyViewer,
-): ShownPerson {
-  if (!person) return { kind: "unnamed" };
-  if (person.id === viewer.userId) return { kind: "viewer" };
-  const name = person.name || (viewer.kind === "project" ? person.email : null);
-  return name ? { kind: "named", name } : { kind: "unnamed" };
-}
 export type CopyPage = CopyView["pages"][number];
 export type CopyAnswer = CopyPage["answers"][number];
 export type CopyHistoryEvent = CopyView["history"][number];
@@ -339,7 +326,7 @@ async function copyAnswers(copyId: string) {
     orderBy: (answer, { asc }) => asc(answer.field),
     with: {
       versionField: { columns: { pageNumber: true } },
-      // The address only reaches the page through shownPerson, for the Research team.
+      // The address only reaches the page through loadShownPeople, for the Research team.
       reviewedByUser: { columns: { id: true, name: true, email: true } },
     },
   });
