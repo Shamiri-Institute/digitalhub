@@ -41,6 +41,7 @@ import {
 } from "#/lib/survey/answer-fields";
 import type { Layout, LayoutPage } from "#/lib/survey/layout";
 import { recordSurveyEvent, SurveyAuditAction, SurveyAuditEntity } from "#/lib/survey/audit";
+import { filterOptionsOf } from "#/lib/survey/filter-options";
 import { recomputeCopyStatuses } from "#/lib/survey/ingest-pages";
 import { type AnswerRule, answerRulesOf, keepsFormRule } from "#/lib/survey/ingest-rules";
 import { storable } from "#/lib/survey/scan-wire";
@@ -224,7 +225,7 @@ export async function fetchReviewFilterOptions(viewer: SurveyViewer) {
         hubName: hub.hubName,
         schoolId: school.id,
         schoolName: school.schoolName,
-        waiting: count(),
+        count: count(),
       })
       .from(surveyAnswer)
       .$dynamic(),
@@ -241,25 +242,7 @@ export async function fetchReviewFilterOptions(viewer: SurveyViewer) {
       school.id,
       school.schoolName,
     );
-  const summed = (key: (group: (typeof groups)[number]) => { id: string; label: string }) => {
-    const totals = new Map<string, { id: string; label: string; waiting: number }>();
-    for (const group of groups) {
-      const { id, label } = key(group);
-      const total = totals.get(id) ?? { id, label, waiting: 0 };
-      total.waiting += group.waiting;
-      totals.set(id, total);
-    }
-    return [...totals.values()].toSorted((a, b) => a.label.localeCompare(b.label));
-  };
-  return {
-    surveys: summed((group) => ({ id: group.surveyId, label: group.surveyLabel })),
-    // A hub coordinator's queue is their hub's, so they have no hub to choose.
-    hubs:
-      viewer.kind === "project"
-        ? summed((group) => ({ id: group.hubId, label: group.hubName }))
-        : undefined,
-    schools: summed((group) => ({ id: group.schoolId, label: group.schoolName })),
-  };
+  return filterOptionsOf(viewer.kind, groups);
 }
 export type ReviewFilterOptions = Awaited<ReturnType<typeof fetchReviewFilterOptions>>;
 
@@ -346,7 +329,7 @@ export type AnswerForReview = NonNullable<Awaited<ReturnType<typeof fetchAnswerF
 
 /**
  * A short-lived link to a scan page's image, made from the key on its row. Callers reach the row
- * only through a copy the viewer may see, so no key or other page is ever reachable.
+ * only through a copy or an upload the viewer may see, so no key or other page is ever reachable.
  */
 export async function pageImageOf(
   scanPage: { imageS3Key: string | null; aligned: boolean | null } | null,

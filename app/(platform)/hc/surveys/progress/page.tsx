@@ -34,7 +34,7 @@ export default async function HubSurveyProgressPage() {
                   {survey.surveyCode}
                 </span>
               </h2>
-              <SurveyProgressTable rows={survey.schools} showHub={false} />
+              <SurveyProgressTable rows={survey.schools} viewerKind="hub" />
             </section>
           ))
         )}

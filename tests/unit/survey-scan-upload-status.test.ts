@@ -11,7 +11,11 @@ describe("a processed upload's page outcomes", () => {
         { status: "MATCHED", rejectedReason: null, pages: 40 },
         { status: "REJECTED", rejectedReason: "UNKNOWN_CODE", pages: 2 },
       ]),
-    ).toBe("40 matched · 2 unidentified · 3 rejected (unknown code: 2, another hub's copy: 1)");
+    ).toEqual([
+      { status: "MATCHED", text: "40 matched" },
+      { status: "UNIDENTIFIED", text: "2 unidentified" },
+      { status: "REJECTED", text: "3 rejected (unknown code: 2, another hub's copy: 1)" },
+    ]);
   });
 
   it("leaves out a lone reason's count, and outcomes that didn't occur", () => {
@@ -20,7 +24,10 @@ describe("a processed upload's page outcomes", () => {
         { status: "DUPLICATE", rejectedReason: null, pages: 18 },
         { status: "REJECTED", rejectedReason: "UNREADABLE", pages: 3 },
       ]),
-    ).toBe("18 duplicate · 3 rejected (unreadable)");
-    expect(pageOutcomeSummary([])).toBe("");
+    ).toEqual([
+      { status: "DUPLICATE", text: "18 duplicate" },
+      { status: "REJECTED", text: "3 rejected (unreadable)" },
+    ]);
+    expect(pageOutcomeSummary([])).toEqual([]);
   });
 });

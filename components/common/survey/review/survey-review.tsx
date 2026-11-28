@@ -8,14 +8,11 @@ import {
   pageImageForAnswer,
   type ReviewFilters,
 } from "#/lib/survey/answer-review";
+import { searchParamValue } from "#/lib/survey/filter-options";
 
 export type ReviewSearchParams = Partial<
   Record<"survey" | "hub" | "school" | "flag" | "answer", string | string[]>
 >;
-
-function one(value: string | string[] | undefined) {
-  return typeof value === "string" && value !== "" ? value : undefined;
-}
 
 export async function SurveyReview({
   viewer,
@@ -26,17 +23,17 @@ export async function SurveyReview({
   searchParams: ReviewSearchParams;
   timeZone: string | null;
 }) {
-  const flag = one(searchParams.flag);
+  const flag = searchParamValue(searchParams.flag);
   const filters: ReviewFilters = {
-    surveyId: one(searchParams.survey),
+    surveyId: searchParamValue(searchParams.survey),
     // A hub coordinator's queue is their hub's already.
-    hubId: viewer.kind === "project" ? one(searchParams.hub) : undefined,
-    schoolId: one(searchParams.school),
+    hubId: viewer.kind === "project" ? searchParamValue(searchParams.hub) : undefined,
+    schoolId: searchParamValue(searchParams.school),
     flag: Object.values(SurveyAnswerFlag).find((known) => known === flag),
   };
 
   // An answer the address names loads alongside the queue; otherwise the queue's first.
-  const requestedId = one(searchParams.answer);
+  const requestedId = searchParamValue(searchParams.answer);
   const [queue, filterOptions, requested] = await Promise.all([
     fetchReviewQueue(viewer, filters),
     fetchReviewFilterOptions(viewer),
