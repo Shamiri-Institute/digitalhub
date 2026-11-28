@@ -322,6 +322,13 @@ function CopyState({
   );
 }
 
+function eventWords(event: CopyHistoryEvent) {
+  if (event.placedPage) {
+    return `placed page ${event.placedPage.pageNumber}`;
+  }
+  return EVENT_WORDS[event.action] ?? event.action.toLowerCase();
+}
+
 const EVENT_WORDS: Partial<Record<string, string>> = {
   [SurveyAuditAction.QUESTIONNAIRE_VERIFIED]: "verified the copy",
   [SurveyAuditAction.QUESTIONNAIRE_REOPENED]: "reopened the copy",
@@ -352,7 +359,7 @@ function CopyHistory({
                 <span className="text-shamiri-black">
                   {personWord(event.actor, { startsSentence: true })}
                 </span>{" "}
-                {EVENT_WORDS[event.action] ?? event.action.toLowerCase()}
+                {eventWords(event)}
                 {event.answerLabel && (
                   <span className="text-shamiri-black"> {event.answerLabel}</span>
                 )}

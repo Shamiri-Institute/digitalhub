@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import {
   Table,
   TableBody,
@@ -7,6 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from "#/components/ui/table";
+import type { SurveyViewer } from "#/lib/auth/survey-access";
+import { surveyPagesHref } from "#/lib/survey/copy/paths";
 import {
   PROGRESS_COUNTS,
   type ProgressCounts,
@@ -26,11 +30,13 @@ const COUNT_HEADINGS: Record<keyof ProgressCounts, string> = {
 /** Each school's copies of one survey, by how far they have come back, with a total. */
 export function SurveyProgressTable({
   rows,
-  showHub,
+  viewerKind,
 }: {
   rows: readonly SurveyProgressRow[];
-  showHub: boolean;
+  /** A Research admin's rows are by hub as well as school. */
+  viewerKind: SurveyViewer["kind"];
 }) {
+  const showHub = viewerKind === "project";
   if (rows.length === 0) {
     return <p className="text-sm text-shamiri-text-grey">No copies have been printed yet.</p>;
   }
@@ -55,7 +61,21 @@ export function SurveyProgressTable({
             <TableCell>{schoolProgress.schoolName}</TableCell>
             {PROGRESS_COUNTS.map((count) => (
               <TableCell key={count} className="text-right tabular-nums">
-                {schoolProgress[count]}
+                {count === "missingPages" && schoolProgress.missingPages > 0 ? (
+                  <Link
+                    href={surveyPagesHref(viewerKind, {
+                      view: "missing",
+                      survey: schoolProgress.surveyId,
+                      hub: showHub ? schoolProgress.hubId : undefined,
+                      school: schoolProgress.schoolId,
+                    })}
+                    className="font-medium text-shamiri-new-blue underline-offset-4 hover:underline"
+                  >
+                    {schoolProgress.missingPages}
+                  </Link>
+                ) : (
+                  schoolProgress[count]
+                )}
               </TableCell>
             ))}
           </TableRow>

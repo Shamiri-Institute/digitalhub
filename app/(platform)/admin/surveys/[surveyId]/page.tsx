@@ -71,7 +71,7 @@ export default async function AdminSurveyPage(props: { params: Promise<{ surveyI
             <h2 className="text-xl font-semibold">Progress</h2>
             <SurveyExportDialog surveyId={survey.id} choices={exportChoices} />
           </div>
-          <SurveyProgressTable rows={progress} showHub />
+          <SurveyProgressTable rows={progress} viewerKind="project" />
         </section>
         <section className="space-y-3 pt-6">
           <h2 className="text-xl font-semibold">Print runs</h2>

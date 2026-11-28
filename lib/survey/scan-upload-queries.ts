@@ -1,7 +1,7 @@
 // What the scan upload pages read. Like the print-run queries, each takes a SurveyViewer, so a hub
 // coordinator only ever sees their hub's uploads.
 
-import { sql } from "drizzle-orm";
+import { type AnyColumn, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "#/db/client";
 import { countOf, qualified } from "#/db/sql";
@@ -12,16 +12,18 @@ import type { SurveyViewer } from "#/lib/auth/survey-access";
 import { isStuck } from "#/lib/survey/pipeline-deadlines";
 import type { PageOutcome } from "#/lib/survey/scan-upload-status";
 
+/** An upload's hub is one the viewer sees: a hub coordinator's own, a Research admin's project's. */
+export function uploadHubInScope(viewer: SurveyViewer, uploadHubId: AnyColumn) {
+  return viewer.kind === "hub"
+    ? eq(uploadHubId, viewer.hubId)
+    : inArray(uploadHubId, implementerHubsInProject(viewer.implementerId, viewer.projectId));
+}
+
 /** The viewer's uploads, newest first. PENDING ones are left out: their file isn't checked yet. */
 export async function fetchScanUploads(viewer: SurveyViewer) {
   return db.query.surveyUpload.findMany({
-    where: (u, { and, eq, inArray, ne }) =>
-      and(
-        ne(u.status, SurveyUploadStatus.PENDING),
-        viewer.kind === "hub"
-          ? eq(u.hubId, viewer.hubId)
-          : inArray(u.hubId, implementerHubsInProject(viewer.implementerId, viewer.projectId)),
-      ),
+    where: (u, { and, ne }) =>
+      and(ne(u.status, SurveyUploadStatus.PENDING), uploadHubInScope(viewer, u.hubId)),
     columns: {
       id: true,
       fileName: true,

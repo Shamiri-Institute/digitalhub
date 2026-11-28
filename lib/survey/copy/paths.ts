@@ -22,3 +22,24 @@ export function reviewAnswerHref(
 ) {
   return `${SURVEYS_ROOT[viewerKind]}/review?survey=${surveyId}&answer=${answerId}`;
 }
+
+export type SurveyPagesView = "unidentified" | "missing";
+
+/** The Pages tab, on one of its views, with its filters and page of the list. */
+export function surveyPagesHref(
+  viewerKind: SurveyViewer["kind"],
+  query: {
+    view?: SurveyPagesView;
+    survey?: string;
+    hub?: string;
+    school?: string;
+    upload?: string;
+    page?: string;
+  } = {},
+) {
+  const params = new URLSearchParams(
+    Object.entries(query).filter((entry): entry is [string, string] => entry[1] !== undefined),
+  );
+  const search = params.toString();
+  return `${SURVEYS_ROOT[viewerKind]}/pages${search ? `?${search}` : ""}`;
+}

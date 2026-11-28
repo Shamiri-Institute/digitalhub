@@ -1,6 +1,7 @@
 import "server-only";
 
 import { type AnyColumn, and, asc, count, eq, inArray, max, or } from "drizzle-orm";
+import { z } from "zod";
 
 import { db, type Transaction } from "#/db/client";
 import {
@@ -270,6 +271,10 @@ export async function loadCopy(viewer: SurveyViewer, copyId: string) {
         event.entityType === SurveyAuditEntity.ANSWER
           ? (answerLabels.get(event.entityId) ?? null)
           : null,
+      placedPage:
+        event.action === SurveyAuditAction.QUESTIONNAIRE_PAGE_PLACED
+          ? (PlacedPage.safeParse(event.after).data ?? null)
+          : null,
     })),
     actions: {
       verify: decideCopyAction(facts, "verify", viewer.kind),
@@ -278,6 +283,9 @@ export async function loadCopy(viewer: SurveyViewer, copyId: string) {
   };
 }
 export type CopyView = NonNullable<Awaited<ReturnType<typeof loadCopy>>>;
+
+/** What a placement's audit event says about the page, as placeScanPage writes it. */
+const PlacedPage = z.object({ pageNumber: z.int() });
 
 export type ShownPerson =
   | { kind: "viewer" }

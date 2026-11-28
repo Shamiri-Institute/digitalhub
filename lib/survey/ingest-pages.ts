@@ -39,7 +39,12 @@ import {
 } from "#/lib/survey/ingest-rules";
 import { pageIdFromQrText } from "#/lib/survey/print-qr";
 import { hexChecksum } from "#/lib/s3/utils/checksum";
-import { type ParsedPage, parsePostedPage, type PostedPage } from "#/lib/survey/scan-wire";
+import {
+  type ParsedPage,
+  parsePostedPage,
+  type PostedPage,
+  type ReadPage,
+} from "#/lib/survey/scan-wire";
 
 export type PageIngestResult = { pageIndex: number } & (
   | { result: "stored" | "unchanged"; status: SurveyScanPageStatus }
@@ -70,7 +75,7 @@ export function pageImageRef(pageIndex: number, sha256Hex: string) {
 
 const A4_HEIGHT_PER_WIDTH = 841.89 / 595.28;
 
-type IngestContext = {
+export type IngestContext = {
   printedPagesById: Map<string, PrintedPage>;
   fieldsByVersionPage: Map<string, PrintedField[]>;
   rulesByVersion: Map<string, ReadonlyMap<string, AnswerRule>>;
@@ -225,7 +230,12 @@ export async function ingestPages(
   }
 
   await storeScanPages(tx, plannedScans);
-  const answerCountsByScan = await writeAnswers(tx, plannedScans);
+  const answerCountsByScan = await writeAnswers(
+    tx,
+    plannedScans.flatMap(({ scanRow, answersToWrite }) =>
+      answersToWrite ? [{ scanPageId: scanRow.id, ...answersToWrite }] : [],
+    ),
+  );
   await recordSurveyEvents(
     tx,
     plannedScans.map(({ scanRow, outcome, replacedScan }) => ({
@@ -334,19 +344,10 @@ function planScan(
       outcome.status === SurveyScanPageStatus.DUPLICATE) &&
     parsed.kind === "read"
   ) {
-    const { copy, pageNumber } = outcome.page;
-    const rules = context.rulesByVersion.get(copy.versionId);
-    // loadIngestContext loads rules for every version it loads fields for, so this can't miss.
-    if (!rules) throw new Error(`No form loaded for version ${copy.versionId}`);
-    const planned = planAnswers({
-      page: parsed.page,
-      printedFields: context.fieldsByVersionPage.get(`${copy.versionId}:${pageNumber}`) ?? [],
-      rules,
-      kindsUnderReview: context.kindsUnderReview,
-    });
+    const planned = planPageAnswers(context, outcome.page, parsed.page);
     if (!planned.ok) return planned;
     if (outcome.status === SurveyScanPageStatus.MATCHED) {
-      answersToWrite = { copy, answers: planned.answers };
+      answersToWrite = { copy: outcome.page.copy, answers: planned.answers };
     }
   }
 
@@ -378,6 +379,20 @@ function planScan(
       replacedScan,
     },
   };
+}
+
+/** The answers a read of a printed page gives, one for every field the page prints. */
+export function planPageAnswers(context: IngestContext, page: PrintedPage, read: ReadPage) {
+  const { copy, pageNumber } = page;
+  const rules = context.rulesByVersion.get(copy.versionId);
+  // loadIngestContext loads rules for every version it loads fields for, so this can't miss.
+  if (!rules) throw new Error(`No form loaded for version ${copy.versionId}`);
+  return planAnswers({
+    page: read,
+    printedFields: context.fieldsByVersionPage.get(`${copy.versionId}:${pageNumber}`) ?? [],
+    rules,
+    kindsUnderReview: context.kindsUnderReview,
+  });
 }
 
 async function loadStoredScans(tx: Transaction, uploadId: string, pageIndexes: number[]) {
@@ -417,7 +432,7 @@ async function loadQuestionnairePages(tx: Transaction, pageIds: string[]) {
 export type QuestionnairePages = Awaited<ReturnType<typeof loadQuestionnairePages>>;
 
 // Postgres locks the rows in the order the sort returns them.
-async function lockCopies(tx: Transaction, copyIds: string[]) {
+export async function lockCopies(tx: Transaction, copyIds: string[]) {
   if (copyIds.length === 0) {
     return new Map<string, Copy>();
   }
@@ -436,7 +451,7 @@ async function lockCopies(tx: Transaction, copyIds: string[]) {
   return new Map(copies.map((copy) => [copy.id, copy]));
 }
 
-async function loadIngestContext(
+export async function loadIngestContext(
   tx: Transaction,
   {
     namedPages,
@@ -548,24 +563,29 @@ async function storeScanPages(tx: Transaction, plannedScans: readonly PlannedSca
 // Postgres takes at most 65,535 parameters per statement; an answer row binds 14.
 const ANSWERS_PER_INSERT = 2_000;
 
-async function writeAnswers(tx: Transaction, plannedScans: readonly PlannedScan[]) {
-  const answerRows = plannedScans.flatMap(({ scanRow, answersToWrite }) =>
-    answersToWrite
-      ? answersToWrite.answers.map((answer) => ({
-          questionnaireId: answersToWrite.copy.id,
-          versionId: answersToWrite.copy.versionId,
-          field: answer.field,
-          scanPageId: scanRow.id,
-          recognizedValue: answer.recognizedValue,
-          confidence: answer.confidence,
-          readStatus: answer.readStatus,
-          readDetail: answer.readDetail,
-          value: answer.recognizedValue,
-          source: SurveyAnswerSource.PIPELINE,
-          reviewStatus: reviewStatusOf(answer.flags),
-          flags: answer.flags,
-        }))
-      : [],
+export type ScanAnswers = {
+  scanPageId: string;
+  copy: Pick<Copy, "id" | "versionId">;
+  answers: PlannedAnswer[];
+};
+
+/** Writes each matched scan's answers, keeping any answer the copy already has for a field. */
+export async function writeAnswers(tx: Transaction, scans: readonly ScanAnswers[]) {
+  const answerRows = scans.flatMap(({ scanPageId, copy, answers }) =>
+    answers.map((answer) => ({
+      questionnaireId: copy.id,
+      versionId: copy.versionId,
+      field: answer.field,
+      scanPageId,
+      recognizedValue: answer.recognizedValue,
+      confidence: answer.confidence,
+      readStatus: answer.readStatus,
+      readDetail: answer.readDetail,
+      value: answer.recognizedValue,
+      source: SurveyAnswerSource.PIPELINE,
+      reviewStatus: reviewStatusOf(answer.flags),
+      flags: answer.flags,
+    })),
   );
   const writtenKeys = new Set<string>();
   /* oxlint-disable eslint/no-await-in-loop -- one transaction runs one statement at a time */
@@ -582,13 +602,11 @@ async function writeAnswers(tx: Transaction, plannedScans: readonly PlannedScan[
   /* oxlint-enable eslint/no-await-in-loop */
 
   const answerCountsByScan = new Map<string, AnswerCounts>();
-  for (const { scanRow, answersToWrite } of plannedScans) {
-    if (!answersToWrite) continue;
-    const { answers } = answersToWrite;
+  for (const { scanPageId, answers } of scans) {
     const writtenAnswers = answers.filter((answer) =>
-      writtenKeys.has(`${scanRow.id}:${answer.field}`),
+      writtenKeys.has(`${scanPageId}:${answer.field}`),
     );
-    answerCountsByScan.set(scanRow.id, {
+    answerCountsByScan.set(scanPageId, {
       total: writtenAnswers.length,
       autoAccepted: writtenAnswers.filter((answer) => answer.flags.length === 0).length,
       needsReview: writtenAnswers.filter((answer) => answer.flags.length > 0).length,
@@ -601,7 +619,7 @@ async function writeAnswers(tx: Transaction, plannedScans: readonly PlannedScan[
   return answerCountsByScan;
 }
 
-type AnswerCounts = {
+export type AnswerCounts = {
   total: number;
   autoAccepted: number;
   needsReview: number;

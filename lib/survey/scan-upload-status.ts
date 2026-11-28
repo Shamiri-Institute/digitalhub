@@ -20,6 +20,12 @@ export function isUploadUnfinished(status: SurveyUploadStatus) {
   );
 }
 
+/** A processed or failed upload's pages stay as they are until someone runs it again. */
+export const FINISHED_UPLOAD_STATUSES: readonly SurveyUploadStatus[] = [
+  SurveyUploadStatus.PROCESSED,
+  SurveyUploadStatus.FAILED,
+];
+
 export function mayRunAgain(upload: { status: SurveyUploadStatus; stuck: boolean }) {
   return upload.status === SurveyUploadStatus.FAILED || upload.stuck;
 }
@@ -32,9 +38,12 @@ const OUTCOME_WORDS: Record<SurveyScanPageStatus, string> = {
   REJECTED: "rejected",
 };
 
-export function pageOutcomeSummary(outcomes: PageOutcome[]) {
-  return Object.entries(OUTCOME_WORDS)
-    .flatMap(([status, word]) => {
+/** Each outcome that occurred, in words, in the order the summary lists them. */
+export function pageOutcomeSummary(
+  outcomes: PageOutcome[],
+): { status: SurveyScanPageStatus; text: string }[] {
+  return (Object.entries(OUTCOME_WORDS) as [SurveyScanPageStatus, string][]).flatMap(
+    ([status, word]) => {
       const ofStatus = outcomes.filter((outcome) => outcome.status === status);
       const pages = ofStatus.reduce((total, outcome) => total + outcome.pages, 0);
       if (pages === 0) {
@@ -50,7 +59,9 @@ export function pageOutcomeSummary(outcomes: PageOutcome[]) {
           return reasonPages === pages ? label : `${label}: ${reasonPages}`;
         });
       const summary = `${pages} ${word}`;
-      return [reasons.length > 0 ? `${summary} (${reasons.join(", ")})` : summary];
-    })
-    .join(" · ");
+      return [
+        { status, text: reasons.length > 0 ? `${summary} (${reasons.join(", ")})` : summary },
+      ];
+    },
+  );
 }

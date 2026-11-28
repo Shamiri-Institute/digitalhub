@@ -133,6 +133,16 @@ export const ScanUploadSchema = z.object({
   uploadId: stringValidation("Missing upload"),
 });
 
+export const PlaceScanPageSchema = z.object({
+  scanPageId: stringValidation("Missing page"),
+  /** As typed from the paper; case, and spaces or dashes of any kind between parts, are forgiven. */
+  code: z
+    .string()
+    .trim()
+    .min(1, { error: "Type the code printed under the QR" })
+    .max(60, { error: "A page code is at most 60 characters" }),
+});
+
 /** When the reviewer's page showed the answer last reviewed, or null if it hadn't been. */
 const SeenReviewedAt = z.iso.datetime().nullable();
 

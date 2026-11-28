@@ -1,7 +1,8 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { useState } from "react";
+import Link from "next/link";
+import { Fragment, useState } from "react";
 
 import { ActionButton, toastResponse } from "#/components/common/action-button";
 import DataTable from "#/components/data-table";
@@ -17,11 +18,12 @@ import {
   DialogTitle,
   useDialogSave,
 } from "#/components/ui/dialog";
-import { SURVEY_UPLOAD_STATUS_LABELS, SurveyUploadStatus } from "#/db/enums";
+import { SURVEY_UPLOAD_STATUS_LABELS, SurveyScanPageStatus, SurveyUploadStatus } from "#/db/enums";
 import { rerunScanUpload } from "#/lib/actions/survey/scan-uploads";
 import { formatDateTimeIn } from "#/lib/date-utils";
 import { useRefreshWhile } from "#/lib/hooks/use-refresh-while";
 import type { SurveyViewer } from "#/lib/auth/survey-access";
+import { surveyPagesHref } from "#/lib/survey/copy/paths";
 import type { ScanUploads } from "#/lib/survey/scan-upload-queries";
 import {
   isUploadUnfinished,
@@ -90,7 +92,7 @@ function scanUploadColumns(viewerKind: ViewerKind): ColumnDef<ScanUploadRow>[] {
       accessorKey: "status",
       header: "Status",
       id: "Status",
-      cell: ({ row }) => <UploadStatusCell upload={row.original} />,
+      cell: ({ row }) => <UploadStatusCell upload={row.original} viewerKind={viewerKind} />,
     },
     ...(isAdmin
       ? [
@@ -178,7 +180,13 @@ function pagesOf(upload: ScanUploadRow) {
     : `${upload.pagesPosted} of ${upload.pageCount}`;
 }
 
-function UploadStatusCell({ upload }: { upload: ScanUploadRow }) {
+function UploadStatusCell({
+  upload,
+  viewerKind,
+}: {
+  upload: ScanUploadRow;
+  viewerKind: ViewerKind;
+}) {
   const reason =
     upload.status === SurveyUploadStatus.FAILED
       ? upload.error
@@ -201,7 +209,21 @@ function UploadStatusCell({ upload }: { upload: ScanUploadRow }) {
       )}
       {upload.status === SurveyUploadStatus.PROCESSED && upload.pageOutcomes.length > 0 && (
         <p className="text-xs break-words whitespace-normal text-shamiri-text-grey">
-          {pageOutcomeSummary(upload.pageOutcomes)}
+          {pageOutcomeSummary(upload.pageOutcomes).map((outcome, index) => (
+            <Fragment key={outcome.status}>
+              {index > 0 && " · "}
+              {outcome.status === SurveyScanPageStatus.UNIDENTIFIED ? (
+                <Link
+                  href={surveyPagesHref(viewerKind, { upload: upload.id })}
+                  className="font-medium text-shamiri-new-blue underline-offset-4 hover:underline"
+                >
+                  {outcome.text}
+                </Link>
+              ) : (
+                outcome.text
+              )}
+            </Fragment>
+          ))}
         </p>
       )}
     </div>
